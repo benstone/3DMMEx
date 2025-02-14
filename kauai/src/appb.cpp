@@ -429,7 +429,7 @@ bool APPB::FCmdIdle(PCMD pcmd)
             _ypMouse = pt.yp;
             _grfcustMouse = grfcust;
 
-            ClearPb(&cmd, size(cmd));
+            ClearPb(&cmd, SIZEOF(cmd));
             cmd.cid = cidMouseMove;
             cmd.pcmh = pgob;
             cmd.xp = pt.xp;
@@ -942,7 +942,7 @@ void APPB::_MarkRegnRc(PREGN pregn, RC *prc, PGOB pgobCoo)
 
     if (pvNil == _pglmkrgn)
     {
-        if (pvNil == (_pglmkrgn = GL::PglNew(size(MKRGN))))
+        if (pvNil == (_pglmkrgn = GL::PglNew(SIZEOF(MKRGN))))
             goto LFail;
     }
     else
@@ -1372,7 +1372,7 @@ bool APPB::_FSetProp(long prid, long lw)
     if (pvNil == _pglprop)
     {
         Assert(iprop == 0, 0);
-        if (pvNil == (_pglprop = GL::PglNew(size(PROP))))
+        if (pvNil == (_pglprop = GL::PglNew(SIZEOF(PROP))))
             return fFalse;
     }
 
@@ -1546,7 +1546,7 @@ bool APPB::FImportClip(long clfm, void *pv, long cb, PDOCB *ppdocb, bool *pfDela
 
         ((PTXTB)(*ppdocb))->SuspendUndo();
         cpMac = ((PTXTB)(*ppdocb))->CpMac();
-        ((PTXTB)(*ppdocb))->FReplaceRgch(pv, cb / size(achar), 0, cpMac - 1);
+        ((PTXTB)(*ppdocb))->FReplaceRgch(pv, cb / SIZEOF(achar), 0, cpMac - 1);
         ((PTXTB)(*ppdocb))->ResumeUndo();
         return fTrue;
     }
@@ -1562,7 +1562,7 @@ bool APPB::FPushModal(PCEX pcex)
     MODCX modcx;
     PUSAC pusacNew = pvNil;
 
-    if (pvNil == _pglmodcx && pvNil == (_pglmodcx = GL::PglNew(size(MODCX))))
+    if (pvNil == _pglmodcx && pvNil == (_pglmodcx = GL::PglNew(SIZEOF(MODCX))))
     {
         return fFalse;
     }

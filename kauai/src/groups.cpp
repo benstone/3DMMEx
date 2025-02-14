@@ -476,7 +476,7 @@ const BOM kbomGlf = 0x5F000000L;
 long GL::CbOnFile(void)
 {
     AssertThis(0);
-    return size(GLF) + LwMul(_cbEntry, _ivMac);
+    return SIZEOF(GLF) + LwMul(_cbEntry, _ivMac);
 }
 
 /***************************************************************************
@@ -501,7 +501,7 @@ bool GL::FWrite(PBLCK pblck, short bo, short osk)
         Assert(glf.bo == bo, "wrong bo");
         Assert(glf.osk == osk, "osk not invariant under byte swapping");
     }
-    return _FWrite(pblck, &glf, size(glf), LwMul(_cbEntry, _ivMac), 0);
+    return _FWrite(pblck, &glf, SIZEOF(glf), LwMul(_cbEntry, _ivMac), 0);
 }
 
 /***************************************************************************
@@ -522,10 +522,10 @@ bool GL::_FRead(PBLCK pblck, short *pbo, short *posk)
         goto LFail;
 
     cb = pblck->Cb();
-    if (cb < size(glf))
+    if (cb < SIZEOF(glf))
         goto LBug;
 
-    if (!pblck->FReadRgb(&glf, size(glf), 0))
+    if (!pblck->FReadRgb(&glf, SIZEOF(glf), 0))
         goto LFail;
 
     if (pbo != pvNil)
@@ -536,7 +536,7 @@ bool GL::_FRead(PBLCK pblck, short *pbo, short *posk)
     if (glf.bo == kboOther)
         SwapBytesBom(&glf, kbomGlf);
 
-    cb -= size(glf);
+    cb -= SIZEOF(glf);
     if (glf.bo != kboCur || glf.cbEntry <= 0 || glf.ivMac < 0 || cb != glf.cbEntry * glf.ivMac)
     {
     LBug:
@@ -546,7 +546,7 @@ bool GL::_FRead(PBLCK pblck, short *pbo, short *posk)
 
     _cbEntry = glf.cbEntry;
     _ivMac = glf.ivMac;
-    fRet = _FReadData(pblck, cb, 0, size(glf));
+    fRet = _FReadData(pblck, cb, 0, SIZEOF(glf));
 
 LFail:
     TrashVarIf(!fRet, pbo);
@@ -829,7 +829,7 @@ long AL::CbOnFile(void)
 {
     AssertThis(fobjAssertFull);
 
-    return size(ALF) + LwMul(_cbEntry, _ivMac) + CbFromCbit(_ivMac);
+    return SIZEOF(ALF) + LwMul(_cbEntry, _ivMac) + CbFromCbit(_ivMac);
 }
 
 /***************************************************************************
@@ -855,7 +855,7 @@ bool AL::FWrite(PBLCK pblck, short bo, short osk)
         Assert(alf.bo == bo, "wrong bo");
         Assert(alf.osk == osk, "osk not invariant under byte swapping");
     }
-    return _FWrite(pblck, &alf, size(alf), LwMul(_cbEntry, _ivMac), CbFromCbit(_ivMac));
+    return _FWrite(pblck, &alf, SIZEOF(alf), LwMul(_cbEntry, _ivMac), CbFromCbit(_ivMac));
 }
 
 /***************************************************************************
@@ -877,10 +877,10 @@ bool AL::_FRead(PBLCK pblck, short *pbo, short *posk)
         goto LFail;
 
     cb = pblck->Cb();
-    if (cb < size(alf))
+    if (cb < SIZEOF(alf))
         goto LBug;
 
-    if (!pblck->FReadRgb(&alf, size(alf), 0))
+    if (!pblck->FReadRgb(&alf, SIZEOF(alf), 0))
         goto LFail;
 
     if (pbo != pvNil)
@@ -891,7 +891,7 @@ bool AL::_FRead(PBLCK pblck, short *pbo, short *posk)
     if (alf.bo == kboOther)
         SwapBytesBom(&alf, kbomAlf);
 
-    cb -= size(alf);
+    cb -= SIZEOF(alf);
     cbT = alf.cbEntry * alf.ivMac;
     if (alf.bo != kboCur || alf.cbEntry <= 0 || alf.ivMac < 0 || cb != cbT + CbFromCbit(alf.ivMac) ||
         alf.cvFree >= LwMax(1, alf.ivMac))
@@ -904,7 +904,7 @@ bool AL::_FRead(PBLCK pblck, short *pbo, short *posk)
     _cbEntry = alf.cbEntry;
     _ivMac = alf.ivMac;
     _cvFree = alf.cvFree;
-    fRet = _FReadData(pblck, cbT, cb - cbT, size(alf));
+    fRet = _FReadData(pblck, cbT, cb - cbT, SIZEOF(alf));
 
 LFail:
     TrashVarIf(!fRet, pbo);
@@ -1086,7 +1086,7 @@ GGB::GGB(long cbFixed, bool fAllowFree)
     // use some reasonable values for _cbMinGrow* - code can always set
     // set these to something else
     _cbMinGrow1 = LwMin(1024, 16 * cbFixed);
-    _cbMinGrow2 = 16 * size(LOC);
+    _cbMinGrow2 = 16 * SIZEOF(LOC);
     AssertThis(fobjAssertFull);
 }
 
@@ -1099,7 +1099,7 @@ bool GGB::_FDup(PGGB pggbDst)
     AssertPo(pggbDst, fobjAssertFull);
     Assert(_cbFixed == pggbDst->_cbFixed, "why do these have different sized fixed portions?");
 
-    if (!GGB_PAR::_FDup(pggbDst, _bvMac, LwMul(_ivMac, size(LOC))))
+    if (!GGB_PAR::_FDup(pggbDst, _bvMac, LwMul(_ivMac, SIZEOF(LOC))))
         return fFalse;
 
     pggbDst->_bvMac = _bvMac;
@@ -1129,7 +1129,7 @@ const BOM kbomGgf = 0x5FF00000L;
 long GGB::CbOnFile(void)
 {
     AssertThis(fobjAssertFull);
-    return size(GGF) + LwMul(_ivMac, size(LOC)) + _bvMac;
+    return SIZEOF(GGF) + LwMul(_ivMac, SIZEOF(LOC)) + _bvMac;
 }
 
 /***************************************************************************
@@ -1152,20 +1152,20 @@ bool GGB::FWrite(PBLCK pblck, short bo, short osk)
     ggf.bvMac = _bvMac;
     ggf.clocFree = _clocFree;
     ggf.cbFixed = _cbFixed;
-    AssertBomRglw(kbomLoc, size(LOC));
+    AssertBomRglw(kbomLoc, SIZEOF(LOC));
     if (kboOther == bo)
     {
         // swap the stuff
         SwapBytesBom(&ggf, kbomGgf);
         Assert(ggf.bo == bo, "wrong bo");
         Assert(ggf.osk == osk, "osk not invariant under byte swapping");
-        SwapBytesRglw(_Qb2(0), LwMulDiv(_ivMac, size(LOC), size(long)));
+        SwapBytesRglw(_Qb2(0), LwMulDiv(_ivMac, SIZEOF(LOC), SIZEOF(long)));
     }
-    fRet = _FWrite(pblck, &ggf, size(ggf), _bvMac, LwMul(_ivMac, size(LOC)));
+    fRet = _FWrite(pblck, &ggf, SIZEOF(ggf), _bvMac, LwMul(_ivMac, SIZEOF(LOC)));
     if (kboOther == bo)
     {
         // swap the rgloc back
-        SwapBytesRglw(_Qb2(0), LwMulDiv(_ivMac, size(LOC), size(long)));
+        SwapBytesRglw(_Qb2(0), LwMulDiv(_ivMac, SIZEOF(LOC), SIZEOF(long)));
     }
     return fRet;
 }
@@ -1190,10 +1190,10 @@ bool GGB::_FRead(PBLCK pblck, short *pbo, short *posk)
         goto LFail;
 
     cb = pblck->Cb();
-    if (cb < size(ggf))
+    if (cb < SIZEOF(ggf))
         goto LBug;
 
-    if (!pblck->FReadRgb(&ggf, size(ggf), 0))
+    if (!pblck->FReadRgb(&ggf, SIZEOF(ggf), 0))
         goto LFail;
 
     if (pbo != pvNil)
@@ -1204,8 +1204,8 @@ bool GGB::_FRead(PBLCK pblck, short *pbo, short *posk)
     if ((bo = ggf.bo) == kboOther)
         SwapBytesBom(&ggf, kbomGgf);
 
-    cb -= size(ggf);
-    cbT = ggf.ilocMac * size(LOC);
+    cb -= SIZEOF(ggf);
+    cbT = ggf.ilocMac * SIZEOF(LOC);
     if (ggf.bo != kboCur || ggf.bvMac < 0 || ggf.ilocMac < 0 || cb != cbT + ggf.bvMac || ggf.cbFixed < 0 ||
         ggf.cbFixed >= kcbMax || (ggf.clocFree == cvNil) != (_clocFree == cvNil) ||
         ggf.clocFree != cvNil && (ggf.clocFree < 0 || ggf.clocFree >= ggf.ilocMac))
@@ -1219,12 +1219,12 @@ bool GGB::_FRead(PBLCK pblck, short *pbo, short *posk)
     _bvMac = ggf.bvMac;
     _clocFree = ggf.clocFree;
     _cbFixed = ggf.cbFixed;
-    fRet = _FReadData(pblck, cb - cbT, cbT, size(ggf));
-    AssertBomRglw(kbomLoc, size(LOC));
+    fRet = _FReadData(pblck, cb - cbT, cbT, SIZEOF(ggf));
+    AssertBomRglw(kbomLoc, SIZEOF(LOC));
     if (bo == kboOther && fRet)
     {
         // adjust the byte order on the loc's.
-        SwapBytesRglw(_Qb2(0), LwMulDiv(_ivMac, size(LOC), size(long)));
+        SwapBytesRglw(_Qb2(0), LwMulDiv(_ivMac, SIZEOF(LOC), SIZEOF(long)));
     }
 
 LFail:
@@ -1270,16 +1270,16 @@ bool GGB::FEnsureSpace(long cvAdd, long cbAdd, ulong grfgrp)
     else
         clocAdd = LwMax(0, cvAdd - _clocFree);
 
-    // we waste at most (size(long) - 1) bytes per element
-    if (clocAdd > kcbMax / size(LOC) - _ivMac || cvAdd > (kcbMax / (_cbFixed + size(long) - 1)) - _bvMac ||
-        cbAdd > kcbMax - _bvMac - cvAdd * (_cbFixed + size(long) - 1))
+    // we waste at most (SIZEOF(long) - 1) bytes per element
+    if (clocAdd > kcbMax / SIZEOF(LOC) - _ivMac || cvAdd > (kcbMax / (_cbFixed + SIZEOF(long) - 1)) - _bvMac ||
+        cbAdd > kcbMax - _bvMac - cvAdd * (_cbFixed + SIZEOF(long) - 1))
     {
         Bug("why is this group growing so large?");
         return fFalse;
     }
 
-    return _FEnsureSizes(_bvMac + cbAdd + LwMul(cvAdd, _cbFixed + size(long) - 1), LwMul(_ivMac + clocAdd, size(LOC)),
-                         grfgrp);
+    return _FEnsureSizes(_bvMac + cbAdd + LwMul(cvAdd, _cbFixed + SIZEOF(long) - 1),
+                         LwMul(_ivMac + clocAdd, SIZEOF(LOC)), grfgrp);
 }
 
 /***************************************************************************
@@ -1291,8 +1291,8 @@ void GGB::SetMinGrow(long cvAdd, long cbAdd)
     AssertIn(cvAdd, 0, kcbMax);
     AssertIn(cbAdd, 0, kcbMax);
 
-    _cbMinGrow1 = CbRoundToLong(cbAdd + LwMul(cvAdd, _cbFixed + size(long) - 1));
-    _cbMinGrow2 = LwMul(cvAdd, size(LOC));
+    _cbMinGrow1 = CbRoundToLong(cbAdd + LwMul(cvAdd, _cbFixed + SIZEOF(long) - 1));
+    _cbMinGrow2 = LwMul(cvAdd, SIZEOF(LOC));
 }
 
 /***************************************************************************
@@ -1303,7 +1303,7 @@ void GGB::_RemoveRgb(long bv, long cb)
     AssertBaseThis(0);
     AssertIn(bv, 0, _bvMac);
     AssertIn(cb, 1, _bvMac - bv + 1);
-    Assert(cb == CbRoundToLong(cb), "cb not divisible by size(long)");
+    Assert(cb == CbRoundToLong(cb), "cb not divisible by SIZEOF(long)");
     byte *qb;
 
     if (bv + cb < _bvMac)
@@ -1326,7 +1326,7 @@ void GGB::_AdjustLocs(long bvMin, long bvLim, long dcb)
     AssertIn(bvMin, 0, _bvMac + 2);
     AssertIn(bvLim, bvMin, _bvMac + 2);
     AssertIn(dcb, -_bvMac, kcbMax);
-    Assert((dcb % size(long)) == 0, "dcb not divisible by size(long)");
+    Assert((dcb % SIZEOF(long)) == 0, "dcb not divisible by SIZEOF(long)");
     long cloc;
     LOC *qloc;
 
@@ -1626,7 +1626,7 @@ bool GGB::FInsertRgb(long iv, long bv, long cb, const void *pv)
     {
         long bvT;
 
-        if (!_FEnsureSizes(_bvMac + cbAdd, LwMul(_ivMac, size(LOC)), fgrpNil))
+        if (!_FEnsureSizes(_bvMac + cbAdd, LwMul(_ivMac, SIZEOF(LOC)), fgrpNil))
             return fFalse;
 
         // move later entries back
@@ -1666,7 +1666,7 @@ bool GGB::FInsertRgb(long iv, long bv, long cb, const void *pv)
 /***************************************************************************
     Move cb bytes from position bvSrc in ivSrc to position bvDst in ivDst.
     This can fail only because of the padding used for each entry (at most
-    size(long) additional bytes will need to be allocated).
+    SIZEOF(long) additional bytes will need to be allocated).
 ***************************************************************************/
 bool GGB::FMoveRgb(long ivSrc, long bvSrc, long ivDst, long bvDst, long cb)
 {
@@ -1691,14 +1691,14 @@ bool GGB::FMoveRgb(long ivSrc, long bvSrc, long ivDst, long bvDst, long cb)
           (CbRoundToLong(locSrc.cb) - CbRoundToLong(locSrc.cb - cb));
     if (cbT > 0)
     {
-        Assert(cb % size(long) != 0, "why are we here when cb is a multiple of size(long)?");
-        if (!_FEnsureSizes(_bvMac + cbT, LwMul(_ivMac, size(LOC)), fgrpNil))
+        Assert(cb % SIZEOF(long) != 0, "why are we here when cb is a multiple of SIZEOF(long)?");
+        if (!_FEnsureSizes(_bvMac + cbT, LwMul(_ivMac, SIZEOF(LOC)), fgrpNil))
             return fFalse;
     }
 
     // move most of the bytes
-    cbMove = LwRoundToward(cb, size(long));
-    AssertIn(cb, cbMove, cbMove + size(long));
+    cbMove = LwRoundToward(cb, SIZEOF(long));
+    AssertIn(cb, cbMove, cbMove + SIZEOF(long));
     if (cbMove > 0)
     {
         long bv1 = locSrc.bv + bvSrc + _cbFixed;
@@ -1733,7 +1733,7 @@ bool GGB::FMoveRgb(long ivSrc, long bvSrc, long ivDst, long bvDst, long cb)
     // move the last few bytes
     if (cb > cbMove)
     {
-        byte rgb[size(long)];
+        byte rgb[SIZEOF(long)];
 
         GetRgb(ivSrc, bvSrc, cb - cbMove, rgb);
         DeleteRgb(ivSrc, bvSrc, cb - cbMove);
@@ -1749,7 +1749,7 @@ bool GGB::FMoveRgb(long ivSrc, long bvSrc, long ivDst, long bvDst, long cb)
     NOTE: this is kind of goofy.  The only time FMoveRgb could possibly
     fail if we just do the naive thing (FMoveRgb the entire var data,
     then delete the source element) is if _cbFixed is not a multiple
-    of size(long).
+    of SIZEOF(long).
 ***************************************************************************/
 void GGB::Merge(long ivSrc, long ivDst)
 {
@@ -1760,10 +1760,10 @@ void GGB::Merge(long ivSrc, long ivDst)
     Assert(!FFree(ivDst), "element free!");
     Assert(ivSrc != ivDst, "can't merge an element with itself!");
     long cb, cbMove, bv;
-    byte rgb[size(long)];
+    byte rgb[SIZEOF(long)];
 
     cb = Cb(ivSrc);
-    cbMove = LwRoundToward(cb, size(long));
+    cbMove = LwRoundToward(cb, SIZEOF(long));
     if (cb > cbMove)
         GetRgb(ivSrc, cbMove, cb - cbMove, rgb); // get the tail bytes
 
@@ -1802,7 +1802,7 @@ void GGB::AssertValid(ulong grfobj)
     AssertIn(_ivMac, 0, kcbMax);
     AssertIn(_bvMac, 0, kcbMax);
     Assert(_Cb1() >= _bvMac, "group area too small");
-    Assert(_Cb2() >= LwMul(_ivMac, size(LOC)), "rgloc area too small");
+    Assert(_Cb2() >= LwMul(_ivMac, SIZEOF(LOC)), "rgloc area too small");
     Assert(_clocFree == cvNil || _clocFree == 0 || _clocFree > 0 && _clocFree < _ivMac, "_clocFree is wrong");
     AssertIn(_cbFixed, 0, kcbMax);
 
@@ -1924,13 +1924,13 @@ bool GG::FInsert(long iv, long cb, const void *pv, const void *pvFixed)
     loc.bv = cb == 0 ? 0 : _bvMac;
     cb = CbRoundToLong(cb);
 
-    if (!_FEnsureSizes(_bvMac + cb, LwMul(_ivMac + 1, size(LOC)), fgrpNil))
+    if (!_FEnsureSizes(_bvMac + cb, LwMul(_ivMac + 1, SIZEOF(LOC)), fgrpNil))
         return fFalse;
 
     // make room for the entry
     qloc = _Qloc(iv);
     if (iv < _ivMac)
-        BltPb(qloc, qloc + 1, LwMul(_ivMac - iv, size(LOC)));
+        BltPb(qloc, qloc + 1, LwMul(_ivMac - iv, SIZEOF(LOC)));
     *qloc = loc;
 
     if (pvNil != pv && cb > 0)
@@ -2036,8 +2036,8 @@ void GG::Delete(long iv)
     qloc = _Qloc(iv);
     loc = *qloc;
     if (iv < --_ivMac)
-        BltPb(qloc + 1, qloc, LwMul(_ivMac - iv, size(LOC)));
-    TrashPvCb(_Qloc(_ivMac), size(LOC));
+        BltPb(qloc + 1, qloc, LwMul(_ivMac - iv, SIZEOF(LOC)));
+    TrashPvCb(_Qloc(_ivMac), SIZEOF(LOC));
     if (loc.cb > 0)
         _RemoveRgb(loc.bv, CbRoundToLong(loc.cb));
     AssertThis(fobjAssertFull);
@@ -2057,7 +2057,7 @@ void GG::Move(long ivSrc, long ivTarget)
     AssertIn(ivSrc, 0, _ivMac);
     AssertIn(ivTarget, 0, _ivMac + 1);
 
-    MoveElement(_Qloc(0), size(LOC), ivSrc, ivTarget);
+    MoveElement(_Qloc(0), SIZEOF(LOC), ivSrc, ivTarget);
     AssertThis(0);
 }
 
@@ -2070,7 +2070,7 @@ void GG::Swap(long iv1, long iv2)
     AssertIn(iv1, 0, _ivMac);
     AssertIn(iv2, 0, _ivMac);
 
-    SwapPb(_Qloc(iv1), _Qloc(iv2), size(LOC));
+    SwapPb(_Qloc(iv1), _Qloc(iv2), SIZEOF(LOC));
     AssertThis(0);
 }
 
@@ -2198,7 +2198,7 @@ bool AG::FAdd(long cb, long *piv, void *pv, void *pvFixed)
     loc.bv = cb == 0 ? 0 : _bvMac;
     cb = CbRoundToLong(cb);
 
-    if (!_FEnsureSizes(_bvMac + cb, LwMul(_ivMac, size(LOC)), fgrpNil))
+    if (!_FEnsureSizes(_bvMac + cb, LwMul(_ivMac, SIZEOF(LOC)), fgrpNil))
     {
         if (iloc == _ivMac - 1)
             _ivMac--;
@@ -2257,7 +2257,7 @@ void AG::Delete(long iv)
         // move _ivMac back past any free entries on the end
         while (--_ivMac > 0 && (--qloc)->bv == bvNil)
             _clocFree--;
-        TrashPvCb(_Qloc(_ivMac), LwMul(iv - _ivMac + 1, size(LOC)));
+        TrashPvCb(_Qloc(_ivMac), LwMul(iv - _ivMac + 1, SIZEOF(LOC)));
     }
     else
     {

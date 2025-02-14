@@ -325,7 +325,7 @@ struct OLY // pOLYgon
 
     ASSERT
 };
-const long kcbOlyBase = size(OLY) - size(PTS);
+const long kcbOlyBase = SIZEOF(OLY) - SIZEOF(PTS);
 
 /****************************************
     High level polygon - a GL of PT's.

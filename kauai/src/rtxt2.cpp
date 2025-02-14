@@ -541,7 +541,7 @@ bool TXTG::_FInit(void)
 
     if (!TXTG_PAR::_FInit())
         return fFalse;
-    if (pvNil == (_pgllin = GL::PglNew(size(LIN))))
+    if (pvNil == (_pgllin = GL::PglNew(SIZEOF(LIN))))
         return fFalse;
 
     // Allocate the GNV for formatting. Use an offscreen one iff _fMark
@@ -651,7 +651,7 @@ void TXTG::_FetchLin(long ilin, LIN *plin, long *pilinActual)
     {
         cpLim = 0;
         dypTot = 0;
-        ClearPb(plin, size(LIN));
+        ClearPb(plin, SIZEOF(LIN));
     }
     else
     {
@@ -773,7 +773,7 @@ void TXTG::_FindCp(long cpFind, LIN *plin, long *pilin, bool fCalcLines)
             if (ilinMac > 0)
                 *plin = *(LIN *)_pgllin->QvGet(ilinMac - 1);
             else
-                ClearPb(plin, size(LIN));
+                ClearPb(plin, SIZEOF(LIN));
         }
         return;
     }
@@ -893,7 +893,7 @@ void TXTG::_FindDyp(long dypFind, LIN *plin, long *pilin, bool fCalcLines)
             if (ilinMac > 0)
                 *plin = *(LIN *)_pgllin->QvGet(ilinMac - 1);
             else
-                ClearPb(plin, size(LIN));
+                ClearPb(plin, SIZEOF(LIN));
         }
         return;
     }
@@ -907,7 +907,7 @@ void TXTG::_FindDyp(long dypFind, LIN *plin, long *pilin, bool fCalcLines)
             if (ilinMac > 0)
                 _pgllin->Get(ilinMac - 1, &lin);
             else
-                ClearPb(&lin, size(LIN));
+                ClearPb(&lin, SIZEOF(LIN));
         }
         _ilinInval = ilinMac;
     }
@@ -2607,7 +2607,7 @@ void TXLG::_FetchPap(long cp, PPAP ppap, long *pcpMin, long *pcpLim)
     AssertNilOrVarMem(pcpMin);
     AssertNilOrVarMem(pcpLim);
 
-    ClearPb(ppap, size(PAP));
+    ClearPb(ppap, SIZEOF(PAP));
     ppap->dxpTab = (short)LwMul(_cchTab, _dxpChar);
     ppap->numLine = kdenLine;
     ppap->numAfter = kdenAfter;
@@ -2767,7 +2767,7 @@ void TXRG::SetDxpTab(long dxp)
 
     dxp = LwRoundClosest(dxp, kdzpInch / 8);
     dxp = LwBound(dxp, kdzpInch / 8, 100 * kdzpInch);
-    ClearPb(&papOld, size(PAP));
+    ClearPb(&papOld, SIZEOF(PAP));
     papNew = papOld;
 
     cpMin = LwMin(cpAnchor = _cpAnchor, cpOther = _cpOther);
@@ -3080,7 +3080,7 @@ bool TXRG::FCmdApplyProperty(PCMD pcmd)
     long onn;
     STN stn;
 
-    ClearPb(&papOld, size(PAP));
+    ClearPb(&papOld, SIZEOF(PAP));
     papNew = papOld;
 
     _EnsureChpIns();

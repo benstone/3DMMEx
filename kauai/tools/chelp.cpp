@@ -433,7 +433,7 @@ bool APP::FLoadResFile(PFNI pfni)
     {
         PGL pglclr;
 
-        if (pvNil != (pglclr = GL::PglRead(&blck)) && pglclr->CbEntry() == size(CLR))
+        if (pvNil != (pglclr = GL::PglRead(&blck)) && pglclr->CbEntry() == SIZEOF(CLR))
         {
             GPT::SetActiveColors(pglclr, fpalIdentity);
         }
@@ -588,7 +588,7 @@ bool LID::_FInit(PCRM pcrm, CTG ctg, CHID chid)
     AssertPo(pcrm, 0);
     GCB gcb;
 
-    if (pvNil == (_pglcach = GL::PglNew(size(CACH))))
+    if (pvNil == (_pglcach = GL::PglNew(SIZEOF(CACH))))
         return fFalse;
     _pglcach->SetMinGrow(100);
 

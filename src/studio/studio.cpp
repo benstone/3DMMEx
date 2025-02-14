@@ -1228,7 +1228,7 @@ bool STDIO::FCmdCreatePopup(PCMD pcmd)
         PGST pgst;
         long onnCur, onnSystem = vntl.OnnSystem();
 
-        if ((pgst = GST::PgstNew(size(onnCur))) == pvNil)
+        if ((pgst = GST::PgstNew(SIZEOF(onnCur))) == pvNil)
             break;
 
         for (onnCur = 0; onnCur < vntl.OnnMac(); onnCur++)

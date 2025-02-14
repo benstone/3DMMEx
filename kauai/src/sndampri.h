@@ -90,7 +90,7 @@ class STBL : public STBL_PAR
     static PSTBL PstblNew(FLO *pflo, bool fPacked);
     long CbMem(void)
     {
-        return size(STBL) + _blck.CbMem();
+        return SIZEOF(STBL) + _blck.CbMem();
     }
     bool FInMemory(void)
     {

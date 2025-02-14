@@ -681,7 +681,7 @@ const TRANS SCRT::_mplwtrans[] = {
     transFadeToBlack,
     transFadeToWhite,
 };
-#define kctrans (size(_mplwtrans) / size(_mplwtrans[0]))
+#define kctrans (SIZEOF(_mplwtrans) / SIZEOF(_mplwtrans[0]))
 
 /******************************************************************************
     _FResetTransition

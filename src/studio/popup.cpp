@@ -226,7 +226,7 @@ PMPFNT MPFNT::PmpfntNew(PRCA prca, long kidParent, long kidMenu, PCMD pcmd, long
         return pvNil;
     }
 
-    if (pgst->CbExtra() != size(long))
+    if (pgst->CbExtra() != SIZEOF(long))
     {
         Bug("GST CbExtra isn't the right size for an onn");
         return pvNil;

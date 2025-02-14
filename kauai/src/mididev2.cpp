@@ -22,7 +22,7 @@ RTCLASS(WMS)
 RTCLASS(OMS)
 
 const long kdtsMinSlip = kdtsSecond / 30;
-const long kcbMaxWmsBuffer = 0x0000FFFF / size(MEV) * size(MEV);
+const long kcbMaxWmsBuffer = 0x0000FFFF / SIZEOF(MEV) * SIZEOF(MEV);
 
 /***************************************************************************
     Constructor for the midi stream device.
@@ -199,7 +199,7 @@ bool MDWS::FReadMdws(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
         TrashVar(pcb);
         return fFalse;
     }
-    *pcb = pmdws->_pglmev->IvMac() * size(MEV) + size(MDWS);
+    *pcb = pmdws->_pglmev->IvMac() * SIZEOF(MEV) + SIZEOF(MDWS);
 
     *ppbaco = pmdws;
     return fTrue;
@@ -241,12 +241,12 @@ bool MDWS::_FInit(PMIDS pmids)
     MIDEV midev;
     bool fEvt;
 
-    if (pvNil == (_pglmev = GL::PglNew(size(MEV))))
+    if (pvNil == (_pglmev = GL::PglNew(SIZEOF(MEV))))
         return fFalse;
 
     Assert(MEVT_SHORTMSG == 0, "this code assumes MEVT_SHORTMSG is 0 and it's not");
 
-    ClearPb(rgmev, size(rgmev));
+    ClearPb(rgmev, SIZEOF(rgmev));
     pmev = rgmev;
     pmevLim = rgmev + CvFromRgv(rgmev);
 
@@ -270,7 +270,7 @@ bool MDWS::_FInit(PMIDS pmids)
             cmev = pmev - rgmev;
             if (!_pglmev->FSetIvMac(imev + cmev))
                 return fFalse;
-            CopyPb(rgmev, _pglmev->QvGet(imev), LwMul(cmev, size(MEV)));
+            CopyPb(rgmev, _pglmev->QvGet(imev), LwMul(cmev, SIZEOF(MEV)));
             if (!fEvt)
             {
                 // Add a final NOP so when we seek and there's only one
@@ -308,7 +308,7 @@ void *MDWS::PvLockData(long *pcb)
     AssertThis(0);
     AssertVarMem(pcb);
 
-    *pcb = LwMul(_pglmev->IvMac(), size(MEV));
+    *pcb = LwMul(_pglmev->IvMac(), SIZEOF(MEV));
     return _pglmev->PvLock(0);
 }
 
@@ -576,7 +576,7 @@ bool MSMIX::_FInit(void)
     AssertBaseThis(0);
     ulong luThread;
 
-    if (pvNil == (_pglmsos = GL::PglNew(size(MSOS))))
+    if (pvNil == (_pglmsos = GL::PglNew(SIZEOF(MSOS))))
         return fFalse;
     _pglmsos->SetMinGrow(1);
 
@@ -756,7 +756,7 @@ bool MSMIX::FPlay(PMSQUE pmsque, PMDWS pmdws, long sii, long spr, long cactPlay,
             _StopStream();
         }
 
-        ClearPb(&msos, size(msos));
+        ClearPb(&msos, SIZEOF(msos));
         msos.pmsque = pmsque;
         msos.pmdws = pmdws;
         msos.sii = sii;
@@ -849,7 +849,7 @@ void MSMIX::_SubmitBuffers(ulong tsCur)
             if (!_FGetKeyEvents(msos.pmdws, tsCur - msos.tsStart, &cbSkip))
                 goto LTryNext;
 
-            cb = LwMul(_pglmevKey->IvMac(), size(MEV));
+            cb = LwMul(_pglmevKey->IvMac(), SIZEOF(MEV));
             if (0 < cb)
             {
                 pvData = _pglmevKey->PvLock(0);
@@ -899,7 +899,7 @@ void MSMIX::_SubmitBuffers(ulong tsCur)
         long cmsos = _pglmsos->IvMac();
 
         AssertIn(imsos, 1, cmsos);
-        SwapBlocks(_pglmsos->QvGet(0), LwMul(imsos, size(MSOS)), LwMul(cmsos - imsos, size(MSOS)));
+        SwapBlocks(_pglmsos->QvGet(0), LwMul(imsos, SIZEOF(MSOS)), LwMul(cmsos - imsos, SIZEOF(MSOS)));
     }
 }
 
@@ -941,15 +941,15 @@ bool MSMIX::_FGetKeyEvents(PMDWS pmdws, ulong dtsSeek, long *pcbSkip)
     ushort *pgrfbit;
     byte bT;
 
-    ClearPb(&mkey, size(mkey));
-    ClearPb(rgmev, size(rgmev));
+    ClearPb(&mkey, SIZEOF(mkey));
+    ClearPb(rgmev, SIZEOF(rgmev));
 
-    if (pvNil == _pglmevKey && (pvNil == (_pglmevKey = GL::PglNew(size(MEV)))))
+    if (pvNil == _pglmevKey && (pvNil == (_pglmevKey = GL::PglNew(SIZEOF(MEV)))))
         return fFalse;
     _pglmevKey->FSetIvMac(0);
 
     pmevMin = (PMEV)pmdws->PvLockData(&cb);
-    cb = LwRoundToward(cb, size(MEV));
+    cb = LwRoundToward(cb, SIZEOF(MEV));
     pmevLim = (PMEV)PvAddBv(pmevMin, cb);
 
     dts = 0;
@@ -997,8 +997,8 @@ bool MSMIX::_FGetKeyEvents(PMDWS pmdws, ulong dtsSeek, long *pcbSkip)
             }
 
             qrgmev = (PMEV)_pglmevKey->QvGet(0);
-            BltPb(qrgmev, qrgmev + cmevNew, LwMul(cmev, size(MEV)));
-            CopyPb(pmevDst, qrgmev, LwMul(cmevNew, size(MEV)));
+            BltPb(qrgmev, qrgmev + cmevNew, LwMul(cmev, SIZEOF(MEV)));
+            CopyPb(pmevDst, qrgmev, LwMul(cmevNew, SIZEOF(MEV)));
 
             if (pmev <= pmevMin)
                 break;
@@ -1433,7 +1433,7 @@ bool WMS::_FInit(void)
 
     // Make sure we're on Win95 and not NT, since the API exists on NT 3.51
     // but it fails.
-    osv.dwOSVersionInfoSize = size(osv);
+    osv.dwOSVersionInfoSize = SIZEOF(osv);
     if (!GetVersionEx(&osv))
         return fFalse;
 
@@ -1468,7 +1468,7 @@ bool WMS::_FInit(void)
 
 #undef _Get
 
-    if (pvNil == (_pglpmsir = GL::PglNew(size(PMSIR))))
+    if (pvNil == (_pglpmsir = GL::PglNew(SIZEOF(PMSIR))))
         return fFalse;
     _pglpmsir->SetMinGrow(1);
 
@@ -1561,7 +1561,7 @@ bool WMS::_FOpen(void)
     // We set the time division to 1000 ticks per beat, so clients can
     // use 1 beat per second and just use milliseconds for timing.
     // We also un-pause the stream.
-    mt.cbStruct = size(mt);
+    mt.cbStruct = SIZEOF(mt);
     mt.dwTimeDiv = 1000;
 
     if (MMSYSERR_NOERROR != (*_pfnProperty)(_hms, (byte *)&mt, MIDIPROP_SET | MIDIPROP_TIMEDIV))
@@ -1682,8 +1682,8 @@ bool WMS::FQueueBuffer(void *pvData, long cb, long ibStart, long cactPlay, ulong
     AssertThis(0);
     AssertPvCb(pvData, cb);
     AssertIn(ibStart, 0, cb);
-    Assert(cb % size(MEV) == 0, "bad cb");
-    Assert(ibStart % size(MEV) == 0, "bad cb");
+    Assert(cb % SIZEOF(MEV) == 0, "bad cb");
+    Assert(ibStart % SIZEOF(MEV) == 0, "bad cb");
 
     long ipmsir;
     PMSIR pmsir = pvNil;
@@ -1694,7 +1694,7 @@ bool WMS::FQueueBuffer(void *pvData, long cb, long ibStart, long cactPlay, ulong
     if (hNil == _hms)
         goto LFail;
 
-    if (!FAllocPv((void **)&pmsir, size(MSIR), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&pmsir, SIZEOF(MSIR), fmemClear, mprNormal))
         goto LFail;
 
     pmsir->pvData = pvData;
@@ -1799,9 +1799,9 @@ bool WMS::_FSubmit(PMH pmh)
     if (MMSYSERR_NOERROR != midiOutPrepareHeader(_hms, (PMHO)pmh, sizeof(*pmh)))
         return fFalse;
 
-    if (MMSYSERR_NOERROR != (*_pfnOut)(_hms, (PMHO)pmh, size(*pmh)))
+    if (MMSYSERR_NOERROR != (*_pfnOut)(_hms, (PMHO)pmh, SIZEOF(*pmh)))
     {
-        midiOutUnprepareHeader(_hms, (PMHO)pmh, size(*pmh));
+        midiOutUnprepareHeader(_hms, (PMHO)pmh, SIZEOF(*pmh));
         return fFalse;
     }
     _cmhOut++;
@@ -1870,7 +1870,7 @@ void WMS::_Notify(HMS hms, PMH pmh)
 
     Assert(hms == _hms, "wrong hms");
 
-    midiOutUnprepareHeader(hms, (PMHO)pmh, size(*pmh));
+    midiOutUnprepareHeader(hms, (PMHO)pmh, SIZEOF(*pmh));
     pmsir = (PMSIR)pmh->dwUser;
     AssertVarMem(pmsir);
     AssertPvCb(pmsir->pvData, pmsir->cb);
@@ -2044,7 +2044,7 @@ bool OMS::_FInit(void)
     AssertBaseThis(0);
     ulong luThread;
 
-    if (pvNil == (_pglmsb = GL::PglNew(size(MSB))))
+    if (pvNil == (_pglmsb = GL::PglNew(SIZEOF(MSB))))
         return fFalse;
     _pglmsb->SetMinGrow(1);
 
@@ -2170,8 +2170,8 @@ bool OMS::FQueueBuffer(void *pvData, long cb, long ibStart, long cactPlay, ulong
     AssertThis(0);
     AssertPvCb(pvData, cb);
     AssertIn(ibStart, 0, cb);
-    Assert(cb % size(MEV) == 0, "bad cb");
-    Assert(ibStart % size(MEV) == 0, "bad cb");
+    Assert(cb % SIZEOF(MEV) == 0, "bad cb");
+    Assert(ibStart % SIZEOF(MEV) == 0, "bad cb");
 
     MSB msb;
 

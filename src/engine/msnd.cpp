@@ -55,7 +55,7 @@ bool MSND::FReadMsnd(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
 
     MSND *pmsnd;
 
-    *pcb = size(MSND); // estimate MSND size
+    *pcb = SIZEOF(MSND); // estimate MSND size
     if (pvNil == ppbaco)
         return fTrue;
 
@@ -120,9 +120,9 @@ bool MSND::_FInit(PCFL pcfl, CTG ctg, CNO cno)
 
     if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData())
         goto LFail;
-    if (blck.Cb() > size(MSNDF))
+    if (blck.Cb() > SIZEOF(MSNDF))
         goto LFail;
-    if (!blck.FReadRgb(&msndf, size(MSNDF), 0))
+    if (!blck.FReadRgb(&msndf, SIZEOF(MSNDF), 0))
         goto LFail;
     if (kboCur != msndf.bo)
         SwapBytesBom(&msndf, kbomBkgdf);
@@ -176,7 +176,7 @@ bool MSND::FWriteMidi(PCFL pcflDest, PMIDS pmids, STN *pstnName, CNO *pcno)
     msndf.fInvalid = fFalse;
 
     // Create the msnd chunk
-    if (!pcflDest->FAddPv(&msndf, size(MSNDF), kctgMsnd, pcno))
+    if (!pcflDest->FAddPv(&msndf, SIZEOF(MSNDF), kctgMsnd, pcno))
         return fFalse;
 
     // Create the midi chunk as a child of the msnd chunk
@@ -225,7 +225,7 @@ bool MSND::FWriteWave(PFIL pfilSrc, PCFL pcflDest, long sty, STN *pstnName, CNO 
     floSrc.fp = 0;
 
     // Create the msnd chunk
-    if (!pcflDest->FAddPv(&msndf, size(MSNDF), kctgMsnd, pcno))
+    if (!pcflDest->FAddPv(&msndf, SIZEOF(MSNDF), kctgMsnd, pcno))
         return fFalse;
 
     // Create the wave chunk as a child of the msnd chunk
@@ -348,7 +348,7 @@ bool MSND::FCopyWave(PFIL pfilSrc, PCFL pcflDest, long sty, CNO *pcno, PSTN pstn
     // open the file as a pSound
     if (FAILED(AllocSoundFromFile(&psnd, stn.Psz(), 0, fTrue, pvNil)))
         goto LFailPushError;
-    if (FAILED(psnd->GetFormat((LPWAVEFORMATEX)&wfxSrc, size(WAVEFORMATEX))))
+    if (FAILED(psnd->GetFormat((LPWAVEFORMATEX)&wfxSrc, SIZEOF(WAVEFORMATEX))))
         goto LFailPushError;
 
     // Check if high quality sound import is enabled
@@ -586,7 +586,7 @@ bool MSND::FInvalidate(void)
     msndf.sty = _sty;
     msndf.vlmDefault = _vlm;
     msndf.fInvalid = fTrue;
-    if (!Pcrf()->Pcfl()->FPutPv(&msndf, size(MSNDF), Ctg(), Cno()))
+    if (!Pcrf()->Pcfl()->FPutPv(&msndf, SIZEOF(MSNDF), Ctg(), Cno()))
         return fFalse;
     Pcrf()->Pcfl()->DeleteChild(Ctg(), Cno(), kid.cki.ctg, kid.cki.cno);
 
@@ -726,7 +726,7 @@ PMSQ MSQ::PmsqNew(void)
     if (pvNil == (pmsq = NewObj MSQ(khidMsq)))
         return pvNil;
 
-    if (pvNil == (pmsq->_pglsqe = GL::PglNew(size(SQE), kcsqeGrow)))
+    if (pvNil == (pmsq->_pglsqe = GL::PglNew(SIZEOF(SQE), kcsqeGrow)))
     {
         ReleasePpo(&pmsq);
         return pvNil;

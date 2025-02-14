@@ -280,7 +280,7 @@ PMVIE MVIE::PmvieNew(bool fHalfMode, PMCC pmcc, FNI *pfni, CNO cno)
     //
     // Create the GL for holding undo events
     //
-    pmvie->_pglpundb = GL::PglNew(size(PUNDB), 1);
+    pmvie->_pglpundb = GL::PglNew(SIZEOF(PUNDB), 1);
     if (pmvie->_pglpundb == pvNil)
     {
         goto LFail;
@@ -291,7 +291,7 @@ PMVIE MVIE::PmvieNew(bool fHalfMode, PMCC pmcc, FNI *pfni, CNO cno)
     //
     if (pvNil == pfni)
     {
-        pmvie->_pgstmactr = GST::PgstNew(size(MACTR));
+        pmvie->_pgstmactr = GST::PgstNew(SIZEOF(MACTR));
         if (pmvie->_pgstmactr == pvNil)
         {
             goto LFail;
@@ -763,7 +763,7 @@ PTAGL MVIE::_PtaglFetch(void)
 bool MVIE::FGetArid(long iarid, long *parid, PSTN pstn, long *pcactRef, PTAG ptagTmpl)
 {
     AssertThis(0);
-    AssertPvCb(parid, size(long));
+    AssertPvCb(parid, SIZEOF(long));
     AssertVarMem(pcactRef);
 
     MACTR mactr;
@@ -1242,7 +1242,7 @@ bool MVIE::FSwitchScen(long iscen)
     //
 #ifdef WIN
     MEMORYSTATUS ms;
-    ms.dwLength = size(MEMORYSTATUS);
+    ms.dwLength = SIZEOF(MEMORYSTATUS);
     GlobalMemoryStatus(&ms);
     if (ms.dwMemoryLoad == 100)
     {
@@ -1804,8 +1804,8 @@ bool MVIE::FVerifyVersion(PCFL pcfl, CNO *pcno)
     }
 
     // Get version number of the file
-    if (!pcfl->FFind(kctgMvie, cnoMvie, &blck) || !blck.FUnpackData() || (blck.Cb() != size(MFP)) ||
-        !blck.FReadRgb(&mfp, size(MFP), 0))
+    if (!pcfl->FFind(kctgMvie, cnoMvie, &blck) || !blck.FUnpackData() || (blck.Cb() != SIZEOF(MFP)) ||
+        !blck.FReadRgb(&mfp, SIZEOF(MFP), 0))
     {
         PushErc(ercSocBadFile);
         return fFalse;
@@ -2486,7 +2486,7 @@ LRetry:
     //
     if (_cno == cnoNil)
     {
-        if (!pcfl->FAdd(size(MFP), kctgMvie, &_cno, &blck))
+        if (!pcfl->FAdd(SIZEOF(MFP), kctgMvie, &_cno, &blck))
         {
             goto LFail0;
         }
@@ -2788,7 +2788,7 @@ bool MVIE::_FDoMtrlTmplGC(PCFL pcfl)
     if (ptagl == pvNil)
         goto LEnd; // no work to do
 
-    pglckiDoomed = GL::PglNew(size(CKI), 0);
+    pglckiDoomed = GL::PglNew(SIZEOF(CKI), 0);
     if (pvNil == pglckiDoomed)
         goto LFail;
 
@@ -3114,7 +3114,7 @@ bool MVIE::FChangeCam(long icam)
 bool MVIE::FInsTbox(RC *prc, bool fStory)
 {
     AssertThis(0);
-    AssertPvCb(prc, size(RC));
+    AssertPvCb(prc, SIZEOF(RC));
     AssertPo(Pscen(), 0);
 
     PTBOX ptbox;
@@ -3351,7 +3351,7 @@ PMVU MVIE::PmvuFirst(void)
 bool MVIE::FInsActr(PTAG ptag)
 {
     AssertThis(0);
-    AssertPvCb(ptag, size(TAG));
+    AssertPvCb(ptag, SIZEOF(TAG));
     AssertPo(Pscen(), 0);
 
     PACTR pactr;
@@ -3855,7 +3855,7 @@ LFail0:
 bool MVIE::FAddScen(PTAG ptag)
 {
     AssertThis(0);
-    AssertPvCb(ptag, size(TAG));
+    AssertPvCb(ptag, SIZEOF(TAG));
 
     long iscen;
     TAG tagOld;
@@ -4115,7 +4115,7 @@ bool MVIE::FCmdAlarm(PCMD pcmd)
 
         SetFIdleSeen(fFalse);
 
-        ClearPb(&cmd, size(CMD));
+        ClearPb(&cmd, SIZEOF(CMD));
 
         cmd.pcmh = this;
         cmd.cid = cidRender;
@@ -4647,12 +4647,12 @@ bool MVIE::FAddToCmvi(PCMVI pcmvi, long *piscendIns)
     if (!FAutoSave(pvNil, fFalse))
         goto LFail;
 
-    if ((pcmvi->pglscend == pvNil) && (pcmvi->pglscend = GL::PglNew(size(SCEND))) == pvNil)
+    if ((pcmvi->pglscend == pvNil) && (pcmvi->pglscend = GL::PglNew(SIZEOF(SCEND))) == pvNil)
     {
         goto LFail;
     }
 
-    if ((pcmvi->pglmvied == pvNil) && (pcmvi->pglmvied = GL::PglNew(size(MVIED))) == pvNil)
+    if ((pcmvi->pglmvied == pvNil) && (pcmvi->pglmvied = GL::PglNew(SIZEOF(MVIED))) == pvNil)
     {
         goto LFail;
     }
@@ -4998,7 +4998,7 @@ bool MVIE::_FAddMvieToRollCall(CNO cno, long aridMin)
         KID kid;
         CGE cge;
 
-        if ((pglcno = GL::PglNew(size(CNO))) == pvNil)
+        if ((pglcno = GL::PglNew(SIZEOF(CNO))) == pvNil)
             goto LFail;
         cge.Init(pcfl, kctgMvie, cno);
         while (cge.FNextKid(&kid, &ckiPar, &grfcge, fcgeNil))
@@ -5501,7 +5501,7 @@ void MVIE::DoTrans(PGNV pgnvDst, PGNV pgnvSrc, RC *prcDst, RC *prcSrc)
     if (pvNil != pglclrSystem && pvNil != pglclrBkgd)
     {
         Assert(pglclrBkgd->IvMac() + iclrMin <= pglclrSystem->IvMac(), "Background palette too large");
-        CopyPb(pglclrBkgd->QvGet(0), pglclrSystem->QvGet(iclrMin), LwMul(size(CLR), pglclrBkgd->IvMac()));
+        CopyPb(pglclrBkgd->QvGet(0), pglclrSystem->QvGet(iclrMin), LwMul(SIZEOF(CLR), pglclrBkgd->IvMac()));
     }
 
     switch (_trans)
@@ -5853,7 +5853,7 @@ MVU *MVU::PmvuNew(PMVIE pmvie, PGCB pgcb, long dxp, long dyp)
         return (pvNil);
     }
 
-    CopyPb(rgr, pmvu->_rgrAxis, size(rgr));
+    CopyPb(rgr, pmvu->_rgrAxis, SIZEOF(rgr));
     pmvu->_fRecordDefault = fTrue;
     pmvu->_fRespectGround = fFalse;
     pmvu->_dxp = dxp;

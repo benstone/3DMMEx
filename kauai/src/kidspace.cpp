@@ -546,7 +546,7 @@ bool GOK::_FSetGmsCore(long gms, ulong grfact, bool *pfStable)
     {
         CMD_MOUSE cmd;
 
-        ClearPb(&cmd, size(cmd));
+        ClearPb(&cmd, SIZEOF(cmd));
         cmd.cid = cidClicked;
         cmd.pcmh = this;
         cmd.grfcust = _grfcust;
@@ -648,7 +648,7 @@ bool GOK::_FSetRep(CHID chid, ulong grfgok, CTG ctg, long dxp, long dyp, bool *p
             continue;
         }
 
-        if (!(grfgok & fgokReset) && pvNil != _pgorp && FEqualRgb(&kid.cki, &_ckiGorp, size(CKI)))
+        if (!(grfgok & fgokReset) && pvNil != _pgorp && FEqualRgb(&kid.cki, &_ckiGorp, SIZEOF(CKI)))
         {
             fSet = fTrue;
             break;
@@ -1059,7 +1059,7 @@ bool GOK::FFilterCidHid(long cid, long hid, CHID chidScript)
         return fTrue;
     }
 
-    if (pvNil == _pglcmflt && pvNil == (_pglcmflt = GL::PglNew(size(CMFLT))))
+    if (pvNil == _pglcmflt && pvNil == (_pglcmflt = GL::PglNew(SIZEOF(CMFLT))))
         return fFalse;
 
     cmflt.cid = cid;
@@ -1981,7 +1981,7 @@ PGORF GORF::PgorfNew(PGOK pgok, PCRF pcrf, CTG ctg, CNO cno)
     PGORF pgorf;
 
     pcfl = pcrf->Pcfl();
-    if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData() || blck.Cb() != size(GOKFL) || !blck.FRead(&gokfl))
+    if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData() || blck.Cb() != SIZEOF(GOKFL) || !blck.FRead(&gokfl))
     {
         Warn("couldn't load indicated fill");
         return pvNil;
@@ -1999,7 +1999,7 @@ PGORF GORF::PgorfNew(PGOK pgok, PCRF pcrf, CTG ctg, CNO cno)
 
     pgorf->_acrFore.SetFromLw(gokfl.lwAcrFore);
     pgorf->_acrBack.SetFromLw(gokfl.lwAcrBack);
-    CopyPb(gokfl.rgbPat, pgorf->_apt.rgb, size(gokfl.rgbPat));
+    CopyPb(gokfl.rgbPat, pgorf->_apt.rgb, SIZEOF(gokfl.rgbPat));
     pgorf->_rc = gokfl.rc;
     pgorf->_dxp = gokfl.rc.Dxp();
     pgorf->_dyp = gokfl.rc.Dyp();
@@ -2224,14 +2224,14 @@ PGORT GORT::PgortNew(PGOK pgok, PCRF pcrf, CTG ctg, CNO cno)
     KID kid;
 
     pcfl = pcrf->Pcfl();
-    if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData() || blck.Cb() != size(GOTIL) || !blck.FRead(&gotil))
+    if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData() || blck.Cb() != SIZEOF(GOTIL) || !blck.FRead(&gotil))
     {
         Warn("couldn't load indicated tile chunk");
         return pvNil;
     }
 
     if (kboOther == gotil.bo)
-        SwapBytesRgsw(&gotil, size(gotil) / size(short));
+        SwapBytesRgsw(&gotil, SIZEOF(gotil) / SIZEOF(short));
 
 #pragma warning(push)
 #pragma warning(disable : 4804)
@@ -2267,8 +2267,8 @@ PGORT GORT::PgortNew(PGOK pgok, PCRF pcrf, CTG ctg, CNO cno)
     if (pvNil == (pgort = NewObj GORT))
         return pvNil;
 
-    CopyPb(gotil.rgdxp, pgort->_rgdxp, size(gotil.rgdxp));
-    CopyPb(gotil.rgdyp, pgort->_rgdyp, size(gotil.rgdyp));
+    CopyPb(gotil.rgdxp, pgort->_rgdxp, SIZEOF(gotil.rgdxp));
+    CopyPb(gotil.rgdyp, pgort->_rgdyp, SIZEOF(gotil.rgdyp));
     pgort->_pcrf = pcrf;
     pgort->_pcrf->AddRef();
     pgort->_ctg = kid.cki.ctg;
@@ -2469,7 +2469,7 @@ void GORT::_MapZpToMbmp(long *pzp, short *prgdzp, long dzpLeftFlex, long dzpRigh
 {
     AssertThis(0);
     AssertVarMem(pzp);
-    AssertPvCb(prgdzp, LwMul(idzpLimGort, size(short)));
+    AssertPvCb(prgdzp, LwMul(idzpLimGort, SIZEOF(short)));
     long dzp;
 
     if (*pzp < (dzp = prgdzp[idzpLeft]))
@@ -2511,7 +2511,7 @@ void GORT::_ComputeFlexZp(long *pdzpLeftFlex, long *pdzpRightFlex, long dzp, sho
     AssertThis(0);
     AssertVarMem(pdzpLeftFlex);
     AssertVarMem(pdzpRightFlex);
-    AssertPvCb(prgdzp, LwMul(idzpLimGort, size(short)));
+    AssertPvCb(prgdzp, LwMul(idzpLimGort, SIZEOF(short)));
 
     *pdzpRightFlex = LwMax(0, dzp - prgdzp[idzpLeft] - prgdzp[idzpMid] - prgdzp[idzpRight]);
     *pdzpLeftFlex = LwMulDiv(*pdzpRightFlex, prgdzp[idzpLeftFlex], prgdzp[idzpLeftFlex] + prgdzp[idzpRightFlex]);
@@ -2569,7 +2569,7 @@ void GORT::_MapZpFlex(long *pzp, short *prgdzp, long dzpLeftFlex, long dzpRightF
 {
     AssertThis(0);
     AssertVarMem(pzp);
-    AssertPvCb(prgdzp, LwMul(idzpLimGort, size(short)));
+    AssertPvCb(prgdzp, LwMul(idzpLimGort, SIZEOF(short)));
     long dzp;
 
     if (*pzp < (dzp = prgdzp[idzpLeft]))

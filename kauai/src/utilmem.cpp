@@ -151,8 +151,8 @@ bool FAllocPv(void **ppv, long cb, ulong grfmem, long mpr)
         _AssertMbh(_pmbhFirst);
     vmutxMem.Leave();
 
-    Assert(cb + size(MBH) + size(MBF) > cb, 0);
-    cb += size(MBH) + size(MBF);
+    Assert(cb + SIZEOF(MBH) + SIZEOF(MBF) > cb, 0);
+    cb += SIZEOF(MBH) + SIZEOF(MBF);
 #endif // DEBUG
 
     for (;;)
@@ -209,7 +209,7 @@ bool FAllocPv(void **ppv, long cb, ulong grfmem, long mpr)
     __asm { mov plw,ebp }
     for (ilw = 0; ilw < kclwStackMbh; ilw++)
     {
-        if (pvNil == plw || IsBadReadPtr(plw, 2 * size(long)) || *plw <= (long)plw)
+        if (pvNil == plw || IsBadReadPtr(plw, 2 * SIZEOF(long)) || *plw <= (long)plw)
         {
             pmbh->rglwStack[ilw] = 0;
             plw = pvNil;
@@ -225,15 +225,15 @@ bool FAllocPv(void **ppv, long cb, ulong grfmem, long mpr)
     // write the footer
     MBF mbf;
     mbf.swMagic = kswMagicMem;
-    CopyPb(&mbf, PvAddBv(pmbh, cb - size(MBF)), size(MBF));
+    CopyPb(&mbf, PvAddBv(pmbh, cb - SIZEOF(MBF)), SIZEOF(MBF));
 
     // link the block
     _LinkMbh(pmbh);
 
     // update statistics
-    pdmagl->Allocate(cb - size(MBF) - size(MBH));
+    pdmagl->Allocate(cb - SIZEOF(MBF) - SIZEOF(MBH));
 
-    AssertPvAlloced(*ppv, cb - size(MBF) - size(MBH));
+    AssertPvAlloced(*ppv, cb - SIZEOF(MBF) - SIZEOF(MBH));
 #endif // DEBUG
 
     return fTrue;
@@ -258,7 +258,7 @@ bool _FResizePpv(void **ppv, long cbNew, long cbOld, ulong grfmem, long mpr)
     void *pvNew, *pvOld;
 
 #ifdef DEBUG
-    MBH *pmbh = (MBH *)PvSubBv(*ppv, size(MBH));
+    MBH *pmbh = (MBH *)PvSubBv(*ppv, SIZEOF(MBH));
     _AssertMbh(pmbh);
 #endif // DEBUG
 
@@ -275,10 +275,10 @@ bool _FResizePpv(void **ppv, long cbNew, long cbOld, ulong grfmem, long mpr)
         goto LFail;
 
     // assert we don't overflow (the limit of kcbMax should ensure this)
-    Assert(cbOld + size(MBH) + size(MBF) > cbOld, 0);
-    Assert(cbNew + size(MBH) + size(MBF) > cbNew, 0);
-    cbOld += size(MBH) + size(MBF);
-    cbNew += size(MBH) + size(MBF);
+    Assert(cbOld + SIZEOF(MBH) + SIZEOF(MBF) > cbOld, 0);
+    Assert(cbNew + SIZEOF(MBH) + SIZEOF(MBF) > cbNew, 0);
+    cbOld += SIZEOF(MBH) + SIZEOF(MBF);
+    cbNew += SIZEOF(MBH) + SIZEOF(MBF);
     AssertVar(pmbh->cb == cbOld, "bad cbOld value passed to _FResizePpv", &cbOld);
 
     // trash the old stuff
@@ -315,7 +315,7 @@ bool _FResizePpv(void **ppv, long cbNew, long cbOld, ulong grfmem, long mpr)
     {
         Assert(cbOld < cbNew, "why did shrinking fail?");
     LFail:
-        AssertPvAlloced(*ppv, cbOld - size(MBH) - size(MBF));
+        AssertPvAlloced(*ppv, cbOld - SIZEOF(MBH) - SIZEOF(MBF));
         PushErc(ercOomPv);
 
         return fFalse;
@@ -330,11 +330,11 @@ bool _FResizePpv(void **ppv, long cbNew, long cbOld, ulong grfmem, long mpr)
 
 #ifdef DEBUG
     if ((grfmem & fmemClear) && cbOld < cbNew)
-        ClearPb(PvAddBv(pvNew, cbOld - size(MBF)), size(MBF));
+        ClearPb(PvAddBv(pvNew, cbOld - SIZEOF(MBF)), SIZEOF(MBF));
     else if (cbOld < cbNew)
     {
         // fill the new stuff with garbage
-        FillPb(PvAddBv(pvNew, cbOld - size(MBF)), cbNew - cbOld + size(MBF), kbGarbage);
+        FillPb(PvAddBv(pvNew, cbOld - SIZEOF(MBF)), cbNew - cbOld + SIZEOF(MBF), kbGarbage);
     }
 
     // update the header
@@ -350,8 +350,8 @@ bool _FResizePpv(void **ppv, long cbNew, long cbOld, ulong grfmem, long mpr)
     // write the footer
     MBF mbf;
     mbf.swMagic = kswMagicMem;
-    CopyPb(&mbf, PvAddBv(pmbh, cbNew - size(MBF)), size(MBF));
-    AssertPvAlloced(*ppv, cbNew - size(MBF) - size(MBH));
+    CopyPb(&mbf, PvAddBv(pmbh, cbNew - SIZEOF(MBF)), SIZEOF(MBF));
+    AssertPvAlloced(*ppv, cbNew - SIZEOF(MBF) - SIZEOF(MBH));
 
     // update statistics
     pdmagl->Resize(cbNew - cbOld);
@@ -375,12 +375,12 @@ void FreePpv(void **ppv)
         return;
 
 #ifdef DEBUG
-    MBH *pmbh = (MBH *)PvSubBv(*ppv, size(MBH));
+    MBH *pmbh = (MBH *)PvSubBv(*ppv, SIZEOF(MBH));
     _AssertMbh(pmbh);
     _UnlinkMbh(pmbh, pmbh);
 
     // update statistics
-    pdmagl->Free(pmbh->cb - size(MBF) - size(MBH));
+    pdmagl->Free(pmbh->cb - SIZEOF(MBF) - SIZEOF(MBH));
 
     // fill the block with garbage before freeing it
     FillPb(pmbh, pmbh->cb, kbGarbage);
@@ -457,7 +457,7 @@ void _AssertMbh(MBH *pmbh)
     vmutxMem.Enter();
     AssertVarMem(pmbh);
     Assert(pmbh->swMagic == kswMagicMem, "bad magic number");
-    AssertIn(pmbh->cb - size(MBH) - size(MBF), 0, kcbMax);
+    AssertIn(pmbh->cb - SIZEOF(MBH) - SIZEOF(MBF), 0, kcbMax);
     Win(Assert(pmbh->cb <= (long)_msize(pmbh), "bigger than malloced block");) AssertPvCb(pmbh, pmbh->cb);
     if (pmbh->pmbhPrev != pvNil)
     {
@@ -487,10 +487,10 @@ void AssertPvAlloced(void *pv, long cb)
         return;
 
     Assert(pv != pvNil, "nil pv");
-    MBH *pmbh = (MBH *)PvSubBv(pv, size(MBH));
+    MBH *pmbh = (MBH *)PvSubBv(pv, SIZEOF(MBH));
     _AssertMbh(pmbh);
     if (cb != cvNil)
-        Assert(pmbh->cb == cb + size(MBH) + size(MBF), "wrong cb");
+        Assert(pmbh->cb == cb + SIZEOF(MBH) + SIZEOF(MBF), "wrong cb");
 }
 
 /***************************************************************************
@@ -515,7 +515,7 @@ void AssertUnmarkedMem(void)
             stn.FFormatSz(PszLit("\nLost block: size=%d, StackTrace=(use map file)"), pmbh->cb);
             stn.GetSzs(szs);
 
-            if (FAssertProc(pmbh->pszsFile, pmbh->lwLine, szs, pmbh->rglwStack, kclwStackMbh * size(long)))
+            if (FAssertProc(pmbh->pszsFile, pmbh->lwLine, szs, pmbh->rglwStack, kclwStackMbh * SIZEOF(long)))
             {
                 Debugger();
             }
@@ -558,7 +558,7 @@ void MarkPv(void *pv)
     if (pvNil != pv)
     {
         AssertPvAlloced(pv, cvNil);
-        MBH *pmbh = (MBH *)PvSubBv(pv, size(MBH));
+        MBH *pmbh = (MBH *)PvSubBv(pv, SIZEOF(MBH));
         pmbh->cactRef++;
     }
 }

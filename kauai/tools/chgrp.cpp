@@ -163,7 +163,7 @@ bool DOCG::_FRead(PBLCK pblck)
         if (idit != kiditOkGrpbNew)
             goto LFail;
 
-        if (!pdlg->FGetLwFromEdit(kiditSizeGrpbNew, &cb, &fEmpty) && !fEmpty || !FIn(cb, cbMin, kcbMax / size(long)))
+        if (!pdlg->FGetLwFromEdit(kiditSizeGrpbNew, &cb, &fEmpty) && !fEmpty || !FIn(cb, cbMin, kcbMax / SIZEOF(long)))
         {
             goto LFail;
         }
@@ -183,10 +183,10 @@ bool DOCG::_FRead(PBLCK pblck)
             _pgrpb = AG::PagNew(cb);
             break;
         case kclsGST:
-            _pgrpb = GST::PgstNew(cb * size(long));
+            _pgrpb = GST::PgstNew(cb * SIZEOF(long));
             break;
         case kclsAST:
-            _pgrpb = AST::PastNew(cb * size(long));
+            _pgrpb = AST::PastNew(cb * SIZEOF(long));
             break;
         default:
             BugVar("bad cls value", &_cls);
@@ -1151,14 +1151,14 @@ void DCST::Draw(PGNV pgnv, RC *prcClip)
     HQ hqExtra = hqNil;
     byte *pbExtra = rgb;
 
-    Assert(size(rgb) >= kcbMaxDispGrp, "rgb too small");
+    Assert(SIZEOF(rgb) >= kcbMaxDispGrp, "rgb too small");
     pgnv->ClipRc(prcClip);
     pgnv->GetRcSrc(&rc);
     pgnv->FillRc(prcClip, kacrWhite);
     pgnv->SetOnn(_onn);
 
     pgstb = (PGSTB)_pgrpb;
-    if (size(rgb) < (cbExtra = pgstb->CbExtra()))
+    if (SIZEOF(rgb) < (cbExtra = pgstb->CbExtra()))
     {
         if (FAllocHq(&hqExtra, cbExtra, fmemNil, mprNormal))
             pbExtra = (byte *)PvLockHq(hqExtra);
@@ -1454,7 +1454,7 @@ bool DOCI::_FWrite(long iv)
         if (_dln == 0)
         {
             cb = LwMin(cb, kcchMaxStz);
-            fRet = ((PGSTB)_pgrpb)->FPutRgch(iv, (achar *)pv, cb / size(achar));
+            fRet = ((PGSTB)_pgrpb)->FPutRgch(iv, (achar *)pv, cb / SIZEOF(achar));
         }
         else
         {
@@ -1506,7 +1506,7 @@ HQ DOCI::_HqRead(void)
         if (_dln == 0)
         {
             ((PGSTB)_pgrpb)->GetStn(_iv, &stn);
-            cb = stn.Cch() * size(achar);
+            cb = stn.Cch() * SIZEOF(achar);
             _fFixed = fFalse;
         }
         else
@@ -1537,7 +1537,7 @@ HQ DOCI::_HqRead(void)
     case kclsGST:
     case kclsAST:
         if (_dln == 0)
-            CopyPb(stn.Prgch(), pv, stn.Cch() * size(achar));
+            CopyPb(stn.Prgch(), pv, stn.Cch() * SIZEOF(achar));
         else
             ((PGSTB)_pgrpb)->GetExtra(_iv, pv);
         break;

@@ -140,9 +140,9 @@ PBACT BODY::_pbactClosestClicked;
 BODY *BODY::PbodyNew(PGL pglibactPar, PGL pglibset)
 {
     AssertPo(pglibactPar, 0);
-    Assert(pglibactPar->CbEntry() == size(short), "bad pglibactPar");
+    Assert(pglibactPar->CbEntry() == SIZEOF(short), "bad pglibactPar");
     AssertPo(pglibset, 0);
-    Assert(pglibset->CbEntry() == size(short), "bad pglibset");
+    Assert(pglibset->CbEntry() == SIZEOF(short), "bad pglibset");
 
     BODY *pbody;
 
@@ -196,9 +196,9 @@ bool BODY::_FInitShape(PGL pglibactPar, PGL pglibset)
 {
     AssertBaseThis(0);
     AssertPo(pglibactPar, 0);
-    Assert(pglibactPar->CbEntry() == size(short), "bad pglibactPar");
+    Assert(pglibactPar->CbEntry() == SIZEOF(short), "bad pglibactPar");
     AssertPo(pglibset, 0);
-    Assert(pglibset->CbEntry() == size(short), "bad pglibset");
+    Assert(pglibset->CbEntry() == SIZEOF(short), "bad pglibset");
     Assert(pglibactPar->IvMac() == 0 || ivNil == *(short *)pglibactPar->QvGet(0), "bad first item in pglibactPar");
     Assert(pglibactPar->IvMac() == pglibset->IvMac(), "pglibactPar must be same size as pglibset");
 
@@ -223,14 +223,14 @@ bool BODY::_FInitShape(PGL pglibactPar, PGL pglibset)
     }
     _cbset++;
 
-    if (!FAllocPv((void **)&_prgpcmtl, LwMul(_cbset, size(PCMTL)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&_prgpcmtl, LwMul(_cbset, SIZEOF(PCMTL)), fmemClear, mprNormal))
     {
         return fFalse;
     }
 
     _cbactPart = pglibactPar->IvMac();
     Assert(_cbset <= _cbactPart, "More sets than body parts?");
-    if (!FAllocPv((void **)&_prgbact, LwMul(_Cbact(), size(BACT)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&_prgbact, LwMul(_Cbact(), SIZEOF(BACT)), fmemClear, mprNormal))
     {
         return fFalse;
     }
@@ -524,11 +524,11 @@ PBODY BODY::PbodyDup(void)
     pbodyDup->_fFound = _fFound;
     pbodyDup->_ibset = _ibset;
 
-    if (!FAllocPv((void **)&pbodyDup->_prgbact, LwMul(_Cbact(), size(BACT)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&pbodyDup->_prgbact, LwMul(_Cbact(), SIZEOF(BACT)), fmemClear, mprNormal))
     {
         goto LFail;
     }
-    CopyPb(_prgbact, pbodyDup->_prgbact, LwMul(_Cbact(), size(BACT)));
+    CopyPb(_prgbact, pbodyDup->_prgbact, LwMul(_Cbact(), SIZEOF(BACT)));
     // need to update BACT parent, child, next, prev pointers
     bv = BvSubPvs(pbodyDup->_prgbact, _prgbact);
     for (ibact = 0; ibact < _Cbact(); ibact++)
@@ -566,11 +566,11 @@ PBODY BODY::PbodyDup(void)
     if (pvNil == pbodyDup->_pglibset)
         goto LFail;
 
-    if (!FAllocPv((void **)&pbodyDup->_prgpcmtl, LwMul(_cbset, size(PCMTL)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&pbodyDup->_prgpcmtl, LwMul(_cbset, SIZEOF(PCMTL)), fmemClear, mprNormal))
     {
         goto LFail;
     }
-    CopyPb(_prgpcmtl, pbodyDup->_prgpcmtl, LwMul(_cbset, size(PCMTL)));
+    CopyPb(_prgpcmtl, pbodyDup->_prgpcmtl, LwMul(_cbset, SIZEOF(PCMTL)));
 
     pbodyDup->_rcBounds = _rcBounds;
     pbodyDup->_rcBoundsLastVis = _rcBoundsLastVis;
@@ -1003,7 +1003,7 @@ void BODY::_PrepareToRender(PBACT pbact)
         // Need to temporarily change type to 'none' so that the bounding
         // box isn't counted when calculating size of actor
         pbody->GetBcbBounds(&bcb);
-        Assert(size(BRB) == size(BCB), "should be same structure");
+        Assert(SIZEOF(BRB) == SIZEOF(BCB), "should be same structure");
         BrBoundsToMatrix34(&pbody->_PbactHilite()->t.t.mat, (BRB *)&bcb);
     }
 }
@@ -1042,7 +1042,7 @@ void BODY::GetBcbBounds(BCB *pbcb, bool fWorld)
     br_vector3 bv3;
 
     _PbactHilite()->type = BR_ACTOR_NONE;
-    Assert(size(BRB) == size(BCB), "should be same structure");
+    Assert(SIZEOF(BRB) == SIZEOF(BCB), "should be same structure");
     BrActorToBounds(&brb, _PbactRoot());
     _PbactHilite()->type = type;
     *(BRB *)pbcb = brb;
@@ -1193,12 +1193,12 @@ void BODY::AssertValid(ulong grf)
     BODY_PAR::AssertValid(fobjAllocated);
     AssertIn(_cactHidden, 0, 100); // 100 is sanity check
     AssertIn(_cbset, 0, _cbactPart + 1);
-    AssertPvCb(_prgbact, LwMul(_Cbact(), size(BACT)));
-    AssertPvCb(_prgpcmtl, LwMul(_cbset, size(PCMTL)));
+    AssertPvCb(_prgbact, LwMul(_Cbact(), SIZEOF(BACT)));
+    AssertPvCb(_prgpcmtl, LwMul(_cbset, SIZEOF(PCMTL)));
     Assert(pvNil == _PbactRoot()->model, "BODY root shouldn't have a model!!");
     Assert(pvNil == _PbactRoot()->material, "BODY root shouldn't have a material!!");
     AssertPo(_pglibset, 0);
-    Assert(_pglibset->CbEntry() == size(short), "bad _pglibset");
+    Assert(_pglibset->CbEntry() == SIZEOF(short), "bad _pglibset");
 
     if (grf & fobjAssertFull)
     {
@@ -1309,7 +1309,7 @@ bool COST::FGet(BODY *pbody)
 
     _Clear(); // drop previous costume, if any
 
-    if (!FAllocPv((void **)&_prgpo, LwMul(size(BASE *), pbody->Cbset()), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&_prgpo, LwMul(SIZEOF(BASE *), pbody->Cbset()), fmemClear, mprNormal))
     {
         return fFalse;
     }
@@ -1379,7 +1379,7 @@ void COST::AssertValid(ulong grf)
 
     if (pvNil != _prgpo)
     {
-        AssertPvCb(_prgpo, LwMul(size(BASE *), _cbset));
+        AssertPvCb(_prgpo, LwMul(SIZEOF(BASE *), _cbset));
         for (ibset = 0; ibset < _cbset; ibset++)
         {
             po = _prgpo[ibset];

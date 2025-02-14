@@ -265,7 +265,7 @@ bool CLIP::_FImportFormat(long clfm, void *pv, long cb, PDOCB *ppdocb, bool *pfD
             wchar *pchw, *pchwLim;
 
             pchw = (wchar *)pv;
-            pchwLim = (wchar *)pv + cb / size(wchar);
+            pchwLim = (wchar *)pv + cb / SIZEOF(wchar);
             while (pchw < pchwLim && *pchw != 0)
                 pchw++;
             cb = BvSubPvs(pchw, pv);
@@ -344,8 +344,8 @@ void *CLIP::PvExport(long cb, long clfm)
     switch (clfm)
     {
     case kclfmText:
-        // need to add size(achar) for the terminating zero character
-        cb = LwRoundAway(cb + size(achar), size(achar));
+        // need to add SIZEOF(achar) for the terminating zero character
+        cb = LwRoundAway(cb + SIZEOF(achar), SIZEOF(achar));
         break;
     }
 

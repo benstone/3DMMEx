@@ -101,7 +101,7 @@ void SFL::AssertValid(ulong grf)
     if (_hqrglw != hqNil)
     {
         AssertHq(_hqrglw);
-        Assert(CbOfHq(_hqrglw) == LwMul(_clw, size(long)), "HQ wrong size");
+        Assert(CbOfHq(_hqrglw) == LwMul(_clw, SIZEOF(long)), "HQ wrong size");
     }
     else
         Assert(0 == _clw, "_clw wrong");
@@ -149,7 +149,7 @@ void SFL::ShuffleRglw(long clw, long *prglw)
 {
     AssertThis(0);
     AssertIn(clw, 0, kcbMax);
-    AssertPvCb(prglw, LwMul(clw, size(long)));
+    AssertPvCb(prglw, LwMul(clw, SIZEOF(long)));
 
     if (!_FEnsureHq(clw))
         return;
@@ -157,7 +157,7 @@ void SFL::ShuffleRglw(long clw, long *prglw)
     Assert(_clw == clw, "wrong _clw");
 
     // fill the HQ with the stuff in prglw
-    CopyPb(prglw, QvFromHq(_hqrglw), LwMul(clw, size(long)));
+    CopyPb(prglw, QvFromHq(_hqrglw), LwMul(clw, SIZEOF(long)));
 
     _fCustom = fTrue;
     _ShuffleCore();
@@ -199,11 +199,11 @@ bool SFL::_FEnsureHq(long clw)
     if (clw <= 0)
         goto LFail;
 
-    if (_hqrglw == hqNil && !FAllocHq(&_hqrglw, LwMul(_clw = clw, size(long)), fmemNil, mprNormal))
+    if (_hqrglw == hqNil && !FAllocHq(&_hqrglw, LwMul(_clw = clw, SIZEOF(long)), fmemNil, mprNormal))
     {
         goto LFail;
     }
-    if (clw != _clw && !FResizePhq(&_hqrglw, LwMul(_clw = clw, size(long)), fmemNil, mprNormal))
+    if (clw != _clw && !FResizePhq(&_hqrglw, LwMul(_clw = clw, SIZEOF(long)), fmemNil, mprNormal))
     {
     LFail:
         // we are low on memory, so be nice and give some up

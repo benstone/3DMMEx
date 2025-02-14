@@ -534,7 +534,7 @@ bool ACTR::FQuerySnd(long sty, bool fMotionMatch, PGL *pglTagSnd, long *pvlm, bo
     long ismm;
     SMM smm;
 
-    if (pvNil == (pgltag = GL::PglNew(size(TAG), kctagSndGrow)))
+    if (pvNil == (pgltag = GL::PglNew(SIZEOF(TAG), kctagSndGrow)))
         return fFalse;
     pgltag->SetMinGrow(kctagSndGrow);
 

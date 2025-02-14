@@ -455,7 +455,7 @@ void SCB::MouseDown(long xp, long yp, long cact, ulong grfcust)
             if (fLit)
             {
                 // send the command - this doesn't get recorded
-                ClearPb(&cmd, size(cmd));
+                ClearPb(&cmd, SIZEOF(cmd));
                 cmd.cid = cidDoScroll;
                 cmd.pcmh = PgobPar();
                 cmd.rglw[0] = Hid();
@@ -499,7 +499,7 @@ void SCB::TrackScroll(long sb, long lwVal)
     CMD cmd;
     long val;
 
-    ClearPb(&cmd, size(cmd));
+    ClearPb(&cmd, SIZEOF(cmd));
     cmd.cid = cidDoScroll;
     cmd.pcmh = PgobPar();
     cmd.rglw[0] = Hid();

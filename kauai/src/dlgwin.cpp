@@ -68,11 +68,11 @@ bool DLG::_FInit(void)
 
     // get and skip the dtm
     dtm = *(DLGTEMPLATE *)psw;
-    psw = (short *)PvAddBv(psw, size(dtm));
+    psw = (short *)PvAddBv(psw, SIZEOF(dtm));
 
     // get the number of items and ensure space in the GGDIT
     Assert(dtm.cdit > 0, "no items in this dialog");
-    if (!FEnsureSpace(dtm.cdit, size(long), fgrpNil))
+    if (!FEnsureSpace(dtm.cdit, SIZEOF(long), fgrpNil))
         goto LFail;
 
     // skip over the menu field
@@ -116,7 +116,7 @@ bool DLG::_FInit(void)
 
         // get and skip the ditm
         ditm = *(DLGITEMTEMPLATE *)psw;
-        psw = (short *)PvAddBv(psw, size(ditm));
+        psw = (short *)PvAddBv(psw, SIZEOF(ditm));
 
         // get and skip the class
         if (*psw == -1)
@@ -141,7 +141,7 @@ bool DLG::_FInit(void)
         }
 
         // the next word is a size of extra stuff
-        psw = (short *)PvAddBv(psw, psw[0] + size(short));
+        psw = (short *)PvAddBv(psw, psw[0] + SIZEOF(short));
 
         // We should be at the end of this item (except for possible padding).
         // Now figure out what to do with the item.
@@ -167,7 +167,7 @@ bool DLG::_FInit(void)
             case 3:
                 // check box
                 dit.ditk = ditkCheckBox;
-                cbEntry = size(long);
+                cbEntry = SIZEOF(long);
                 break;
 
             case 4:
@@ -189,7 +189,7 @@ bool DLG::_FInit(void)
 
                 // new group
                 dit.ditk = ditkRadioGroup;
-                cbEntry = size(long);
+                cbEntry = SIZEOF(long);
                 break;
 
             default:

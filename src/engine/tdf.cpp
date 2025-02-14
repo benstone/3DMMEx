@@ -66,7 +66,7 @@ bool TDF::FReadTdf(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, long
 
     // Estimate TDF size in memory.
     if (pblck->FPacked())
-        *pcb = size(TDF) + LwMul(kcchTdfDefault, size(BRS) + size(BRS));
+        *pcb = SIZEOF(TDF) + LwMul(kcchTdfDefault, SIZEOF(BRS) + SIZEOF(BRS));
     else
         *pcb = pblck->Cb();
     if (pvNil == ppbaco)
@@ -80,7 +80,7 @@ bool TDF::FReadTdf(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, long
         return fFalse;
     }
     AssertPo(ptdf, 0);
-    *pcb = size(TDF) + LwMul(ptdf->_cch, size(BRS) + size(BRS));
+    *pcb = SIZEOF(TDF) + LwMul(ptdf->_cch, SIZEOF(BRS) + SIZEOF(BRS));
     *ppbaco = ptdf;
     return fTrue;
 }
@@ -99,19 +99,19 @@ bool TDF::_FInit(PBLCK pblck)
 
     if (!pblck->FUnpackData())
         return fFalse;
-    if (pblck->Cb() < size(TDFF))
+    if (pblck->Cb() < SIZEOF(TDFF))
     {
         PushErc(ercSocBadTdf);
         return fFalse;
     }
-    if (!pblck->FReadRgb(&tdff, size(TDFF), 0))
+    if (!pblck->FReadRgb(&tdff, SIZEOF(TDFF), 0))
         return fFalse;
     if (kboCur != tdff.bo)
         SwapBytesBom(&tdff, kbomTdff);
     Assert(kboCur == tdff.bo, "bad TDFF");
     _cch = tdff.cch;
-    cbrgdwr = LwMul(_cch, size(BRS));
-    if (pblck->Cb() != size(TDFF) + cbrgdwr + cbrgdwr)
+    cbrgdwr = LwMul(_cch, SIZEOF(BRS));
+    if (pblck->Cb() != SIZEOF(TDFF) + cbrgdwr + cbrgdwr)
     {
         PushErc(ercSocBadTdf);
         return fFalse;
@@ -121,18 +121,18 @@ bool TDF::_FInit(PBLCK pblck)
     // Read _prgdxr
     if (!FAllocPv((void **)&_prgdxr, cbrgdwr, fmemNil, mprNormal))
         return fFalse;
-    if (!pblck->FReadRgb(_prgdxr, cbrgdwr, size(TDFF)))
+    if (!pblck->FReadRgb(_prgdxr, cbrgdwr, SIZEOF(TDFF)))
         return fFalse;
-    AssertBomRglw(kbomBrs, size(BRS));
+    AssertBomRglw(kbomBrs, SIZEOF(BRS));
     if (kboCur != tdff.bo)
         SwapBytesRglw(_prgdxr, _cch);
 
     // Read _prgdyr
     if (!FAllocPv((void **)&_prgdyr, cbrgdwr, fmemNil, mprNormal))
         return fFalse;
-    if (!pblck->FReadRgb(_prgdyr, cbrgdwr, size(TDFF) + cbrgdwr))
+    if (!pblck->FReadRgb(_prgdyr, cbrgdwr, SIZEOF(TDFF) + cbrgdwr))
         return fFalse;
-    AssertBomRglw(kbomBrs, size(BRS));
+    AssertBomRglw(kbomBrs, SIZEOF(BRS));
     if (kboCur != tdff.bo)
         SwapBytesRglw(_prgdyr, _cch);
 
@@ -192,7 +192,7 @@ bool TDF::FCreate(PCRF pcrf, PGL pglkid, STN *pstn, CKI *pckiTdf)
     tdff.osk = koskCur;
     tdff.cch = chidMax + 1;
     tdff.dyrMax = rZero;
-    cbrgdwr = LwMul(tdff.cch, size(BRS));
+    cbrgdwr = LwMul(tdff.cch, SIZEOF(BRS));
     if (!FAllocPv((void **)&prgdxr, cbrgdwr, fmemClear, mprNormal))
         goto LFail;
     if (!FAllocPv((void **)&prgdyr, cbrgdwr, fmemClear, mprNormal))
@@ -200,7 +200,7 @@ bool TDF::FCreate(PCRF pcrf, PGL pglkid, STN *pstn, CKI *pckiTdf)
 
     // Create the TDF chunk
     ckiTdf.ctg = kctgTdf;
-    if (!pcrf->Pcfl()->FAdd(size(TDFF) + cbrgdwr + cbrgdwr, ckiTdf.ctg, &ckiTdf.cno, &blck))
+    if (!pcrf->Pcfl()->FAdd(SIZEOF(TDFF) + cbrgdwr + cbrgdwr, ckiTdf.ctg, &ckiTdf.cno, &blck))
     {
         goto LFail;
     }
@@ -232,11 +232,11 @@ bool TDF::FCreate(PCRF pcrf, PGL pglkid, STN *pstn, CKI *pckiTdf)
             tdff.dyrMax = prgdyr[kid.chid];
         ReleasePpo(&pmodl);
     }
-    if (!blck.FWriteRgb(&tdff, size(TDFF), 0))
+    if (!blck.FWriteRgb(&tdff, SIZEOF(TDFF), 0))
         goto LFail;
-    if (!blck.FWriteRgb(prgdxr, cbrgdwr, size(TDFF)))
+    if (!blck.FWriteRgb(prgdxr, cbrgdwr, SIZEOF(TDFF)))
         goto LFail;
-    if (!blck.FWriteRgb(prgdyr, cbrgdwr, size(TDFF) + cbrgdwr))
+    if (!blck.FWriteRgb(prgdyr, cbrgdwr, SIZEOF(TDFF) + cbrgdwr))
         goto LFail;
     FreePpv((void **)&prgdxr);
     FreePpv((void **)&prgdyr);
@@ -302,8 +302,8 @@ void TDF::AssertValid(ulong grf)
     TDF_PAR::AssertValid(fobjAllocated);
     AssertIn(_cch, 0, klwMax);
     AssertIn(_dyrMax, 0, BR_SCALAR_MAX);
-    AssertPvCb(_prgdxr, LwMul(_cch, size(BRS)));
-    AssertPvCb(_prgdyr, LwMul(_cch, size(BRS)));
+    AssertPvCb(_prgdxr, LwMul(_cch, SIZEOF(BRS)));
+    AssertPvCb(_prgdyr, LwMul(_cch, SIZEOF(BRS)));
 }
 
 /***************************************************************************

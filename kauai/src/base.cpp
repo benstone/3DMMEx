@@ -37,7 +37,7 @@ struct DOI
     DOI **ppdoiPrev;
 };
 
-#define kcbBaseDebug size(DOI)
+#define kcbBaseDebug SIZEOF(DOI)
 
 priv void _AssertDoi(DOI *pdoi, bool tLinked);
 inline DOI *_PdoiFromBase(void *pv)
@@ -230,7 +230,7 @@ void *BASE::operator new(size_t cb)
         __asm { mov plw,ebp }
         for (ilw = 0; ilw < kclwStackDoi; ilw++)
         {
-            if (pvNil == plw || IsBadReadPtr(plw, 2 * size(long)) || *plw <= (long)plw)
+            if (pvNil == plw || IsBadReadPtr(plw, 2 * SIZEOF(long)) || *plw <= (long)plw)
             {
                 pdoi->rglwStack[ilw] = 0;
                 plw = pvNil;
@@ -301,7 +301,7 @@ void BASE::AssertValid(ulong grfobj)
     {
         Assert(!(grfobj & fobjAllocated), "should be allocated");
         AssertVar(_lwMagic == klwMagicNonAllocBase, "_lwMagic wrong", &_lwMagic);
-        AssertPvCb(this, size(BASE));
+        AssertPvCb(this, SIZEOF(BASE));
         return;
     }
     Assert(!(grfobj & fobjNotAllocated), "should not be allocated");
@@ -350,8 +350,8 @@ void _AssertDoi(DOI *pdoi, bool tLinked)
 {
     _Enter();
 
-    AssertPvCb(pdoi, size(BASE) + kcbBaseDebug);
-    AssertIn(pdoi->cbTot, size(BASE) + kcbBaseDebug, kcbMax);
+    AssertPvCb(pdoi, SIZEOF(BASE) + kcbBaseDebug);
+    AssertIn(pdoi->cbTot, SIZEOF(BASE) + kcbBaseDebug, kcbMax);
     AssertPvCb(pdoi, pdoi->cbTot);
 
     AssertVar(pdoi->swMagic == kswMagicMem, "magic number has been hammered", &pdoi->swMagic);
@@ -476,10 +476,10 @@ void AssertUnmarkedObjs(void)
             if (fAssert)
             {
                 stn.FFormatSz(PszLit("\nLost object: cls='%f', size=%d, ") PszLit("StackTrace=(use map file)"),
-                              pbase->Cls(), pdoi->cbTot - size(DOI));
+                              pbase->Cls(), pdoi->cbTot - SIZEOF(DOI));
                 stn.GetSzs(szs);
 
-                if (FAssertProc(pdoi->pszsFile, pdoi->lwLine, szs, pdoi->rglwStack, kclwStackDoi * size(long)))
+                if (FAssertProc(pdoi->pszsFile, pdoi->lwLine, szs, pdoi->rglwStack, kclwStackDoi * SIZEOF(long)))
                 {
                     Debugger();
                 }

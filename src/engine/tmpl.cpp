@@ -133,7 +133,7 @@ bool ACTN::FReadActn(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
     }
     AssertPo(pactn, 0);
     *ppbaco = pactn;
-    *pcb = size(ACTN) + pactn->_pggcel->CbOnFile() + pactn->_pglbmat34->CbOnFile();
+    *pcb = SIZEOF(ACTN) + pactn->_pggcel->CbOnFile() + pactn->_pglbmat34->CbOnFile();
     return fTrue;
 }
 
@@ -153,9 +153,9 @@ bool ACTN::_FInit(PCFL pcfl, CTG ctg, CNO cno)
     if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData())
         return fFalse;
 
-    if (blck.Cb() < size(ACTNF))
+    if (blck.Cb() < SIZEOF(ACTNF))
         return fFalse;
-    if (!blck.FReadRgb(&actnf, size(ACTNF), 0))
+    if (!blck.FReadRgb(&actnf, SIZEOF(ACTNF), 0))
         return fFalse;
     if (kboOther == actnf.bo)
         SwapBytesBom(&actnf, kbomActnf);
@@ -170,14 +170,14 @@ bool ACTN::_FInit(PCFL pcfl, CTG ctg, CNO cno)
     _pggcel = GG::PggRead(&blck, &bo);
     if (pvNil == _pggcel)
         return fFalse;
-    AssertBomRglw(kbomCel, size(CEL));
-    AssertBomRgsw(kbomCps, size(CPS));
+    AssertBomRglw(kbomCel, SIZEOF(CEL));
+    AssertBomRgsw(kbomCps, SIZEOF(CPS));
     if (kboOther == bo)
     {
         for (icel = 0; icel < _pggcel->IvMac(); icel++)
         {
-            SwapBytesRglw(_pggcel->QvFixedGet(icel), size(CEL) / size(long));
-            SwapBytesRgsw(_pggcel->QvGet(icel), _pggcel->Cb(icel) / size(short));
+            SwapBytesRglw(_pggcel->QvFixedGet(icel), SIZEOF(CEL) / SIZEOF(long));
+            SwapBytesRgsw(_pggcel->QvGet(icel), _pggcel->Cb(icel) / SIZEOF(short));
         }
     }
 
@@ -189,10 +189,10 @@ bool ACTN::_FInit(PCFL pcfl, CTG ctg, CNO cno)
     _pglbmat34 = GL::PglRead(&blck, &bo);
     if (pvNil == _pglbmat34)
         return fFalse;
-    AssertBomRglw(kbomBmat34, size(BMAT34));
+    AssertBomRglw(kbomBmat34, SIZEOF(BMAT34));
     if (kboOther == bo)
     {
-        SwapBytesRglw(_pglbmat34->QvGet(0), LwMul(_pglbmat34->IvMac(), size(BMAT34) / size(long)));
+        SwapBytesRglw(_pglbmat34->QvGet(0), LwMul(_pglbmat34->IvMac(), SIZEOF(BMAT34) / SIZEOF(long)));
     }
 
     // read (optional) GL of motion-match sounds (chid 0, ctg kctgGlms):
@@ -203,10 +203,10 @@ bool ACTN::_FInit(PCFL pcfl, CTG ctg, CNO cno)
         _pgltagSnd = GL::PglRead(&blck, &bo);
         if (pvNil == _pgltagSnd)
             return fFalse;
-        AssertBomRglw(kbomTag, size(TAG));
+        AssertBomRglw(kbomTag, SIZEOF(TAG));
         if (kboOther == bo)
         {
-            SwapBytesRglw(_pgltagSnd->QvGet(0), LwMul(_pgltagSnd->IvMac(), size(TAG) / size(long)));
+            SwapBytesRglw(_pgltagSnd->QvGet(0), LwMul(_pgltagSnd->IvMac(), SIZEOF(TAG) / SIZEOF(long)));
         }
     }
 
@@ -242,7 +242,7 @@ void ACTN::GetCps(long icel, long icps, CPS *pcps)
 {
     AssertThis(0);
     AssertIn(icel, 0, Ccel());
-    AssertIn(icps, 0, _pggcel->Cb(icel) / size(CPS));
+    AssertIn(icps, 0, _pggcel->Cb(icel) / SIZEOF(CPS));
     AssertVarMem(pcps);
 
     CPS *prgcps = (CPS *)_pggcel->QvGet(icel);
@@ -339,12 +339,12 @@ bool TMPL::FReadTmpl(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
     *ppbaco = ptmpl;
     if (ptmpl->_grftmpl & ftmplTdt)
     {
-        *pcb = size(TDT);
+        *pcb = SIZEOF(TDT);
     }
     else
     {
         *pcb =
-            size(TMPL) + ptmpl->_pglibactPar->CbOnFile() + ptmpl->_pglibset->CbOnFile() + ptmpl->_pggcmid->CbOnFile();
+            SIZEOF(TMPL) + ptmpl->_pglibactPar->CbOnFile() + ptmpl->_pglibset->CbOnFile() + ptmpl->_pggcmid->CbOnFile();
     }
     return fTrue;
 }
@@ -362,9 +362,9 @@ bool TMPL::_FReadTmplf(PCFL pcfl, CTG ctg, CNO cno)
     if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData())
         return fFalse;
 
-    if (blck.Cb() < size(TMPLF))
+    if (blck.Cb() < SIZEOF(TMPLF))
         return fFalse;
-    if (!blck.FReadRgb(&tmplf, size(TMPLF), 0))
+    if (!blck.FReadRgb(&tmplf, SIZEOF(TMPLF), 0))
         return fFalse;
 
     if (kboOther == tmplf.bo)
@@ -401,7 +401,7 @@ bool TMPL::_FWriteTmplf(PCFL pcfl, CTG ctg, CNO *pcno)
     tmplf.zaRest = _zaRest;
     tmplf.grftmpl = _grftmpl;
 
-    if (!pcfl->FAddPv(&tmplf, size(TMPLF), ctg, pcno))
+    if (!pcfl->FAddPv(&tmplf, SIZEOF(TMPLF), ctg, pcno))
         return fFalse;
     if (!pcfl->FSetName(kctgTmpl, *pcno, &_stn))
     {
@@ -435,7 +435,7 @@ bool TMPL::_FInit(PCFL pcfl, CTG ctg, CNO cno)
     _pglibactPar = GL::PglRead(&blck, &bo);
     if (pvNil == _pglibactPar)
         return fFalse;
-    Assert(_pglibactPar->CbEntry() == size(short), "Bad _pglibactPar!");
+    Assert(_pglibactPar->CbEntry() == SIZEOF(short), "Bad _pglibactPar!");
     if (kboOther == bo)
         SwapBytesRgsw(_pglibactPar->QvGet(0), _pglibactPar->IvMac());
 
@@ -447,7 +447,7 @@ bool TMPL::_FInit(PCFL pcfl, CTG ctg, CNO cno)
     _pglibset = GL::PglRead(&blck, &bo);
     if (pvNil == _pglibset)
         return fFalse;
-    Assert(_pglibset->CbEntry() == size(short), "Bad TMPL _pglibset!");
+    Assert(_pglibset->CbEntry() == SIZEOF(short), "Bad TMPL _pglibset!");
     if (kboOther == bo)
         SwapBytesRgsw(_pglibset->QvGet(0), _pglibset->IvMac());
 
@@ -489,7 +489,7 @@ bool TMPL::_FInit(PCFL pcfl, CTG ctg, CNO cno)
     _pggcmid = GG::PggRead(&blck, &bo);
     if (pvNil == _pggcmid)
         return fFalse;
-    Assert(_pggcmid->CbFixed() == size(long), "Bad TMPL _pggcmid");
+    Assert(_pggcmid->CbFixed() == SIZEOF(long), "Bad TMPL _pggcmid");
     Assert(_pggcmid->IvMac() == _cbset, "Bad TMPL _pggcmid");
     if (kboOther == bo)
     {
@@ -514,7 +514,7 @@ LBuildGgcm:
     if (pvNil == pcrf)
         return fFalse;
 
-    _pggcmid = GG::PggNew(size(long));
+    _pggcmid = GG::PggNew(SIZEOF(long));
     if (pvNil == _pggcmid)
     {
         ReleasePpo(&pcrf);
@@ -541,7 +541,7 @@ LBuildGgcm:
             }
             ReleasePpo(&pcmtl);
         }
-        if (!_pggcmid->FAdd(ccmid * size(long), pvNil, rgcmid, &ccmid))
+        if (!_pggcmid->FAdd(ccmid * SIZEOF(long), pvNil, rgcmid, &ccmid))
         {
             ReleasePpo(&pcrf);
             return fFalse;
@@ -687,7 +687,7 @@ bool TMPL::FSetActnCel(BODY *pbody, long anid, long celn, BRS *pdwr)
         icel += pactn->Ccel();
     pactn->GetCel(icel, &cel);
 
-    if (!FAllocPv((void **)&prgpmodl, LwMul(cbprt, size(PMODL)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&prgpmodl, LwMul(cbprt, SIZEOF(PMODL)), fmemClear, mprNormal))
     {
         goto LEnd;
     }
@@ -848,7 +848,7 @@ bool TMPL::FSetDefaultCost(BODY *pbody)
     PCMTL *prgpcmtl;
     bool fRet = fFalse;
 
-    if (!FAllocPv((void **)&prgpcmtl, LwMul(_cbset, size(PCMTL)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&prgpcmtl, LwMul(_cbset, SIZEOF(PCMTL)), fmemClear, mprNormal))
     {
         goto LEnd;
     }
@@ -1043,7 +1043,7 @@ void TMPL::AssertValid(ulong grftmpl)
     for (ibset = 0; ibset < _cbset; ibset++)
     {
         ccmid = *(long *)_pggcmid->QvFixedGet(ibset);
-        Assert(_pggcmid->Cb(ibset) / size(long) == ccmid, 0);
+        Assert(_pggcmid->Cb(ibset) / SIZEOF(long) == ccmid, 0);
     }
 }
 

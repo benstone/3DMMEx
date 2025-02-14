@@ -20,7 +20,7 @@ RTCLASS(CODC)
     The header on a compressed block consists of the cfmt (a long in big
     endian order) and the decompressed length (a long in big endian order).
 ***************************************************************************/
-const long kcbCodecHeader = 2 * size(long);
+const long kcbCodecHeader = 2 * SIZEOF(long);
 
 /***************************************************************************
     Constructor for the compression manager. pcodc is an optional default
@@ -122,7 +122,7 @@ bool CODM::FRegisterCodec(PCODC pcodc)
     AssertThis(0);
     AssertPo(pcodc, 0);
 
-    if (pvNil == _pglpcodc && pvNil == (_pglpcodc = GL::PglNew(size(PCODC))))
+    if (pvNil == _pglpcodc && pvNil == (_pglpcodc = GL::PglNew(SIZEOF(PCODC))))
         return fFalse;
 
     if (!_pglpcodc->FAdd(&pcodc))
@@ -159,10 +159,10 @@ bool CODM::FGetCfmtFromBlck(PBLCK pblck, long *pcfmt)
     byte rgb[4];
 
     TrashVar(pcfmt);
-    if (pblck->Cb(fTrue) < 2 * size(rgb))
+    if (pblck->Cb(fTrue) < 2 * SIZEOF(rgb))
         return fFalse;
 
-    if (!pblck->FReadRgb(rgb, size(rgb), 0, fTrue))
+    if (!pblck->FReadRgb(rgb, SIZEOF(rgb), 0, fTrue))
         return fFalse;
 
     *pcfmt = LwFromBytes(rgb[0], rgb[1], rgb[2], rgb[3]);

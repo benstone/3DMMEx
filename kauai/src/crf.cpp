@@ -205,7 +205,7 @@ PCRF CRF::PcrfNew(PCFL pcfl, long cbMax)
     AssertIn(cbMax, 0, kcbMax);
     PCRF pcrf;
 
-    if (pvNil != (pcrf = NewObj CRF(pcfl, cbMax)) && pvNil == (pcrf->_pglcre = GL::PglNew(size(CRE), 5)))
+    if (pvNil != (pcrf = NewObj CRF(pcfl, cbMax)) && pvNil == (pcrf->_pglcre = GL::PglNew(SIZEOF(CRE), 5)))
     {
         ReleasePpo(&pcrf);
     }
@@ -785,7 +785,7 @@ PCRM CRM::PcrmNew(long ccrfInit)
 
     if (pvNil == (pcrm = NewObj CRM()))
         return pvNil;
-    if (pvNil == (pcrm->_pglpcrf = GL::PglNew(size(PCRF), ccrfInit)))
+    if (pvNil == (pcrm->_pglpcrf = GL::PglNew(SIZEOF(PCRF), ccrfInit)))
     {
         ReleasePpo(&pcrm);
         return pvNil;

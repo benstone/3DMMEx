@@ -280,7 +280,8 @@ bool CEX::_FInit(long ccmdInit, long ccmhInit)
     AssertIn(ccmdInit, 0, kcbMax);
     AssertIn(ccmhInit, 0, kcbMax);
 
-    if (pvNil == (_pglcmd = GL::PglNew(size(CMD), ccmdInit)) || pvNil == (_pglcmhe = GL::PglNew(size(CMHE), ccmhInit)))
+    if (pvNil == (_pglcmd = GL::PglNew(SIZEOF(CMD), ccmdInit)) ||
+        pvNil == (_pglcmhe = GL::PglNew(SIZEOF(CMHE), ccmhInit)))
     {
         return fFalse;
     }
@@ -313,7 +314,7 @@ void CEX::Record(PCFL pcfl)
     _cact = 0;
     Assert(_pglcmdf == pvNil, "why isn't _pglcmdf nil?");
 
-    if ((_pglcmdf = GL::PglNew(size(CMDF), 100)) == pvNil)
+    if ((_pglcmdf = GL::PglNew(SIZEOF(CMDF), 100)) == pvNil)
         _rec = recMemError;
     else if (!_pcfl->FAdd(0, kctgMacro, &_cno))
     {
@@ -396,7 +397,7 @@ void CEX::RecordCmd(PCMD pcmd)
 
     if (_cact > 0)
     {
-        if (_cmd.pgg == pvNil && FEqualRgb(pcmd, &_cmd, size(_cmd)))
+        if (_cmd.pgg == pvNil && FEqualRgb(pcmd, &_cmd, SIZEOF(_cmd)))
         {
             // commands are the same, just increment the _cact
             if (pcmd->cid < cidMinNoRepeat || pcmd->cid >= cidLimNoRepeat)
@@ -423,7 +424,7 @@ void CEX::RecordCmd(PCMD pcmd)
     cmdf.hid = pcmd->pcmh == pvNil ? hidNil : pcmd->pcmh->Hid();
     cmdf.cact = 1;
     cmdf.chidGg = pcmd->pgg != pvNil ? ++_chidLast : 0;
-    CopyPb(pcmd->rglw, cmdf.rglw, kclwCmd * size(long));
+    CopyPb(pcmd->rglw, cmdf.rglw, kclwCmd * SIZEOF(long));
 
     if (!_pglcmdf->FInsert(_icmdf, &cmdf))
     {
@@ -540,11 +541,11 @@ bool CEX::_FReadCmd(PCMD pcmd)
 
     _pglcmdf->Get(_icmdf, &cmdf);
 
-    ClearPb(pcmd, size(*pcmd));
+    ClearPb(pcmd, SIZEOF(*pcmd));
     pcmd->cid = cmdf.cid;
     pcmd->pcmh = vpappb->PcmhFromHid(cmdf.hid);
     pcmd->pgg = pvNil;
-    CopyPb(cmdf.rglw, pcmd->rglw, kclwCmd * size(long));
+    CopyPb(cmdf.rglw, pcmd->rglw, kclwCmd * SIZEOF(long));
 
     if (cmdf.chidGg != 0)
     {
@@ -889,7 +890,7 @@ tribool CEX::_TGetNextCmd(void)
     // get the next command from the command stream
     if (!_pglcmd->FPop(&_cmdCur))
     {
-        ClearPb(&_cmdCur, size(_cmdCur));
+        ClearPb(&_cmdCur, SIZEOF(_cmdCur));
         if (pvNil == _pgobTrack)
             return tNo;
 

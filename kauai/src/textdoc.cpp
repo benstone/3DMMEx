@@ -258,7 +258,7 @@ bool TXDD::_FInit(void)
 
     if (!TXDD_PAR::_FInit())
         return fFalse;
-    if (pvNil == (_pglichStarts = GL::PglNew(size(long))))
+    if (pvNil == (_pglichStarts = GL::PglNew(SIZEOF(long))))
         return fFalse;
 
     _pglichStarts->SetMinGrow(20);
@@ -430,8 +430,8 @@ bool TXDD::_FFetchCh(long ich, achar *pch)
         }
 
         // need to fetch some characters - try to center ich in the new cached data
-        ichMinCache = LwMax(0, LwMin(ich - size(_rgchCache) / 2, ichLim - size(_rgchCache)));
-        ichLimCache = LwMin(ichLim, ichMinCache + size(_rgchCache));
+        ichMinCache = LwMax(0, LwMin(ich - SIZEOF(_rgchCache) / 2, ichLim - SIZEOF(_rgchCache)));
+        ichLimCache = LwMin(ichLim, ichMinCache + SIZEOF(_rgchCache));
         AssertIn(ich, ichMinCache, ichLimCache);
 
         // see if we can use some of the currently cached characters
@@ -442,7 +442,7 @@ bool TXDD::_FFetchCh(long ich, achar *pch)
             if (ichLimCache > _ichLimCache)
             {
                 ichLimCache = _ichLimCache;
-                ichMinCache = LwMax(0, ichLimCache - size(_rgchCache));
+                ichMinCache = LwMax(0, ichLimCache - SIZEOF(_rgchCache));
             }
             BltPb(_rgchCache, _rgchCache + (_ichMinCache - ichMinCache), ichLimCache - _ichMinCache);
             _pbsf->FetchRgb(ichMinCache, _ichMinCache - ichMinCache, _rgchCache);
@@ -452,7 +452,7 @@ bool TXDD::_FFetchCh(long ich, achar *pch)
             if (ichMinCache < _ichMinCache)
             {
                 ichMinCache = _ichMinCache;
-                ichLimCache = LwMin(ichLim, ichMinCache + size(_rgchCache));
+                ichLimCache = LwMin(ichLim, ichMinCache + SIZEOF(_rgchCache));
             }
             BltPb(_rgchCache + (ichMinCache - _ichMinCache), _rgchCache, _ichLimCache - ichMinCache);
             _pbsf->FetchRgb(_ichLimCache, ichLimCache - _ichLimCache, _rgchCache + (_ichLimCache - ichMinCache));
@@ -638,7 +638,7 @@ void TXDD::Draw(PGNV pgnv, RC *prcClip)
     lnLim = LwMin(_pglichStarts->IvMac(), LwDivAway(rc.ypBottom, _dypLine));
     for (; ln < lnLim; yp += _dypLine)
     {
-        _FetchLineLn(ln++, rgch, size(rgch), &cchDraw);
+        _FetchLineLn(ln++, rgch, SIZEOF(rgch), &cchDraw);
         _DrawLine(pgnv, prcClip, yp, rgch, cchDraw);
     }
     rc.ypTop = yp;
@@ -1121,7 +1121,7 @@ long TXDD::_XpFromLnIch(PGNV pgnv, long ln, long ich)
         return 0;
 
     ichT = *_QichLn(ln);
-    _FetchLineLn(ln, rgch, LwMin(ich - ichT, size(rgch)), &cch);
+    _FetchLineLn(ln, rgch, LwMin(ich - ichT, SIZEOF(rgch)), &cch);
     return _XpFromRgch(pgnv, rgch, cch);
 }
 
@@ -1139,7 +1139,7 @@ long TXDD::_XpFromIch(long ich)
 
     GNV gnv(this);
 
-    cch = LwMin(size(rgch), ich - ichMin);
+    cch = LwMin(SIZEOF(rgch), ich - ichMin);
     _pbsf->FetchRgb(ichMin, cch, rgch);
     return _XpFromRgch(&gnv, rgch, cch);
 }
@@ -1213,7 +1213,7 @@ long TXDD::_IchFromLnXp(long ln, long xp)
     if (ln < 0)
         return 0;
 
-    _FetchLineLn(ln, rgch, size(rgch), &cch, &ichMin);
+    _FetchLineLn(ln, rgch, SIZEOF(rgch), &cch, &ichMin);
     return _IchFromRgchXp(rgch, cch, ichMin, xp);
 }
 
@@ -1227,7 +1227,7 @@ long TXDD::_IchFromIchXp(long ich, long xp)
     long ichMin, cch;
     achar rgch[kcchMaxLine];
 
-    _FetchLineIch(ich, rgch, size(rgch), &cch, &ichMin);
+    _FetchLineIch(ich, rgch, SIZEOF(rgch), &cch, &ichMin);
     return _IchFromRgchXp(rgch, cch, ichMin, xp);
 }
 

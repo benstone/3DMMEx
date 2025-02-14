@@ -86,7 +86,7 @@ bool MSTP::FGetEvent(PMIDEV pmidev, bool fAdvance)
     long ibSend;
     ulong tsCur;
 
-    ClearPb(&midev, size(midev));
+    ClearPb(&midev, SIZEOF(midev));
     midev.lwTempo = _lwTempo;
     if (pvNil == _pmids)
         goto LFail;
@@ -418,7 +418,7 @@ PMIDS MIDS::PmidsReadNative(FNI *pfni)
     flo.cb = flo.pfil->FpMac();
 
     // get the header chunk
-    if (flo.cb < size(MIDHED) || !flo.FReadRgb(&midhed, size(midhed), 0))
+    if (flo.cb < SIZEOF(MIDHED) || !flo.FReadRgb(&midhed, SIZEOF(midhed), 0))
         goto LFail;
 
         // byte order is always big endian
@@ -427,24 +427,24 @@ PMIDS MIDS::PmidsReadNative(FNI *pfni)
 #endif // LITTLE_ENDIAN
 
     // make sure it's a valid header chunk
-    if (midhed.midchd.lwSig != 'MThd' || !FIn(midhed.midchd.cb + size(midchd), size(midhed), flo.cb))
+    if (midhed.midchd.lwSig != 'MThd' || !FIn(midhed.midchd.cb + SIZEOF(midchd), SIZEOF(midhed), flo.cb))
     {
         goto LFail;
     }
 
     // allocate the list of tracks to parse
-    if (pvNil == (pglmidtr = GL::PglNew(size(MIDTR))))
+    if (pvNil == (pglmidtr = GL::PglNew(SIZEOF(MIDTR))))
         goto LFail;
 
     // build the track list...
-    for (fp = midhed.midchd.cb + size(midchd); fp < flo.cb;)
+    for (fp = midhed.midchd.cb + SIZEOF(midchd); fp < flo.cb;)
     {
         // read the next midi chunk header
-        if (fp + size(midchd) > flo.cb || !flo.FReadRgb(&midchd, size(midchd), fp))
+        if (fp + SIZEOF(midchd) > flo.cb || !flo.FReadRgb(&midchd, SIZEOF(midchd), fp))
         {
             goto LFail;
         }
-        fp += size(midchd);
+        fp += SIZEOF(midchd);
 
 #ifdef LITTLE_ENDIAN
         SwapBytesBom(&midchd, kbomMidchd);

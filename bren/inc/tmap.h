@@ -102,7 +102,7 @@ class TMAP : public TMAP_PAR
     // Some useful file methods
     long CbOnFile(void)
     {
-        return (size(TMAPF) + LwMul(_bpmp.row_bytes, _bpmp.height));
+        return (SIZEOF(TMAPF) + LwMul(_bpmp.row_bytes, _bpmp.height));
     }
     bool FWrite(PBLCK pblck);
 

@@ -20,23 +20,23 @@ RTCLASS(MODL)
 PMODL MODL::PmodlNew(long cbrv, BRV *prgbrv, long cbrf, BRF *prgbrf)
 {
     AssertIn(cbrv, 0, ksuMax); // ushort in br_model
-    AssertPvCb(prgbrv, LwMul(cbrv, size(BRV)));
+    AssertPvCb(prgbrv, LwMul(cbrv, SIZEOF(BRV)));
     AssertIn(cbrf, 0, ksuMax); // ushort in br_model
-    AssertPvCb(prgbrf, LwMul(cbrf, size(BRF)));
+    AssertPvCb(prgbrf, LwMul(cbrf, SIZEOF(BRF)));
 
     PMODL pmodl;
-    char szIdentifier[size(PMODL) + 1];
+    char szIdentifier[SIZEOF(PMODL) + 1];
 
     pmodl = NewObj MODL;
     if (pvNil == pmodl)
         goto LFail;
-    ClearPb(szIdentifier, size(PMODL) + 1);
+    ClearPb(szIdentifier, SIZEOF(PMODL) + 1);
     pmodl->_pbmdl = BrModelAllocate(szIdentifier, cbrv, cbrf);
     if (pvNil == pmodl->_pbmdl)
         goto LFail;
-    CopyPb(&pmodl, pmodl->_pbmdl->identifier, size(PMODL));
-    CopyPb(prgbrv, pmodl->_pbmdl->vertices, LwMul(cbrv, size(BRV)));
-    CopyPb(prgbrf, pmodl->_pbmdl->faces, LwMul(cbrf, size(BRF)));
+    CopyPb(&pmodl, pmodl->_pbmdl->identifier, SIZEOF(PMODL));
+    CopyPb(prgbrv, pmodl->_pbmdl->vertices, LwMul(cbrv, SIZEOF(BRV)));
+    CopyPb(prgbrf, pmodl->_pbmdl->faces, LwMul(cbrf, SIZEOF(BRF)));
     BrModelAdd(pmodl->_pbmdl);
     AssertPo(pmodl, 0);
     return pmodl;
@@ -96,22 +96,22 @@ bool MODL::_FInit(PBLCK pblck)
     long ibrf;
     BRF *pbrf;
     MODL *pmodlThis = this;
-    char szIdentifier[size(PMODL) + 1];
+    char szIdentifier[SIZEOF(PMODL) + 1];
 
-    ClearPb(szIdentifier, size(PMODL) + 1);
+    ClearPb(szIdentifier, SIZEOF(PMODL) + 1);
     if (!pblck->FUnpackData())
         return fFalse;
-    if (pblck->Cb() < size(MODLF))
+    if (pblck->Cb() < SIZEOF(MODLF))
         return fFalse;
-    if (!pblck->FReadRgb(&modlf, size(MODLF), 0))
+    if (!pblck->FReadRgb(&modlf, SIZEOF(MODLF), 0))
         return fFalse;
     if (kboOther == modlf.bo)
         SwapBytesBom(&modlf, kbomModlf);
     Assert(kboCur == modlf.bo, "bad MODL!");
 
     // Allocate space for the BMDL, array of vertices, and array of faces
-    cbrgbrv = LwMul(modlf.cver, size(BRV));
-    cbrgbrf = LwMul(modlf.cfac, size(BRF));
+    cbrgbrv = LwMul(modlf.cver, SIZEOF(BRV));
+    cbrgbrf = LwMul(modlf.cfac, SIZEOF(BRF));
 
     if (modlf.rRadius == rZero)
     {
@@ -120,10 +120,10 @@ bool MODL::_FInit(PBLCK pblck)
         _pbmdl = BrModelAllocate(szIdentifier, modlf.cver, modlf.cfac);
         if (pvNil == _pbmdl)
             return fFalse;
-        CopyPb(&pmodlThis, _pbmdl->identifier, size(PMODL));
-        if (!pblck->FReadRgb(_pbmdl->vertices, cbrgbrv, size(MODLF)))
+        CopyPb(&pmodlThis, _pbmdl->identifier, SIZEOF(PMODL));
+        if (!pblck->FReadRgb(_pbmdl->vertices, cbrgbrv, SIZEOF(MODLF)))
             return fFalse;
-        if (!pblck->FReadRgb(_pbmdl->faces, cbrgbrf, size(MODLF) + cbrgbrv))
+        if (!pblck->FReadRgb(_pbmdl->faces, cbrgbrf, SIZEOF(MODLF) + cbrgbrv))
             return fFalse;
 
         BrModelAdd(_pbmdl);
@@ -139,17 +139,17 @@ bool MODL::_FInit(PBLCK pblck)
         _pbmdl = BrModelAllocate(szIdentifier, 0, 0);
         if (pvNil == _pbmdl)
             return fFalse;
-        CopyPb(&pmodlThis, _pbmdl->identifier, size(PMODL));
+        CopyPb(&pmodlThis, _pbmdl->identifier, SIZEOF(PMODL));
 
         _pbmdl->prepared_vertices =
-            (BRV *)BrResAllocate(_pbmdl, LwMul(modlf.cver, size(BRV)), BR_MEMORY_PREPARED_VERTICES);
+            (BRV *)BrResAllocate(_pbmdl, LwMul(modlf.cver, SIZEOF(BRV)), BR_MEMORY_PREPARED_VERTICES);
         if (pvNil == _pbmdl->prepared_vertices)
             return fFalse;
-        _pbmdl->prepared_faces = (BRF *)BrResAllocate(_pbmdl, LwMul(modlf.cfac, size(BRF)), BR_MEMORY_PREPARED_FACES);
+        _pbmdl->prepared_faces = (BRF *)BrResAllocate(_pbmdl, LwMul(modlf.cfac, SIZEOF(BRF)), BR_MEMORY_PREPARED_FACES);
         if (pvNil == _pbmdl->prepared_faces)
             return fFalse;
 
-        if (!pblck->FReadRgb(_pbmdl->prepared_vertices, cbrgbrv, size(MODLF)))
+        if (!pblck->FReadRgb(_pbmdl->prepared_vertices, cbrgbrv, SIZEOF(MODLF)))
         {
             return fFalse;
         }
@@ -160,7 +160,7 @@ bool MODL::_FInit(PBLCK pblck)
                 SwapBytesBom(pbrv, kbomBrv);
             }
         }
-        if (!pblck->FReadRgb(_pbmdl->prepared_faces, cbrgbrf, size(MODLF) + cbrgbrv))
+        if (!pblck->FReadRgb(_pbmdl->prepared_faces, cbrgbrf, SIZEOF(MODLF) + cbrgbrv))
         {
             return fFalse;
         }
@@ -181,13 +181,13 @@ bool MODL::_FInit(PBLCK pblck)
         // to change to read vertex groups and face groups from file.
         _pbmdl->nvertex_groups = 1;
         _pbmdl->nface_groups = 1;
-        _pbmdl->vertex_groups = (br_vertex_group *)BrResAllocate(_pbmdl, size(br_vertex_group), BR_MEMORY_GROUPS);
+        _pbmdl->vertex_groups = (br_vertex_group *)BrResAllocate(_pbmdl, SIZEOF(br_vertex_group), BR_MEMORY_GROUPS);
         if (pvNil == _pbmdl->vertex_groups)
             return fFalse;
         _pbmdl->vertex_groups->material = pvNil;
         _pbmdl->vertex_groups->vertices = _pbmdl->prepared_vertices;
         _pbmdl->vertex_groups->nvertices = _pbmdl->nprepared_vertices;
-        _pbmdl->face_groups = (br_face_group *)BrResAllocate(_pbmdl, size(br_face_group), BR_MEMORY_GROUPS);
+        _pbmdl->face_groups = (br_face_group *)BrResAllocate(_pbmdl, SIZEOF(br_face_group), BR_MEMORY_GROUPS);
         if (pvNil == _pbmdl->face_groups)
             return fFalse;
         _pbmdl->face_groups->material = pvNil;
@@ -220,8 +220,8 @@ PMODL MODL::PmodlReadFromDat(FNI *pfni)
         goto LFail;
     pmodl->_pbmdl->flags |= BR_MODF_KEEP_ORIGINAL;
     BrModelPrepare(pmodl->_pbmdl, BR_MPREP_ALL);
-    Assert(CchSz(pmodl->_pbmdl->identifier) >= size(void *), "no room for pmodl ptr");
-    CopyPb(&pmodl, pmodl->_pbmdl->identifier, size(void *));
+    Assert(CchSz(pmodl->_pbmdl->identifier) >= SIZEOF(void *), "no room for pmodl ptr");
+    CopyPb(&pmodl, pmodl->_pbmdl->identifier, SIZEOF(void *));
     AssertPo(pmodl, 0);
     return pmodl;
 LFail:
@@ -266,9 +266,9 @@ bool MODL::FWrite(PCFL pcfl, CTG ctg, CNO cno)
     long cbrgbrf;
     MODLF *pmodlf;
 
-    cbrgbrv = LwMul(_pbmdl->nprepared_vertices, size(br_vertex));
-    cbrgbrf = LwMul(_pbmdl->nprepared_faces, size(br_face));
-    cb = size(MODLF) + cbrgbrv + cbrgbrf;
+    cbrgbrv = LwMul(_pbmdl->nprepared_vertices, SIZEOF(br_vertex));
+    cbrgbrf = LwMul(_pbmdl->nprepared_faces, SIZEOF(br_face));
+    cb = SIZEOF(MODLF) + cbrgbrv + cbrgbrf;
     if (!FAllocPv((void **)&pmodlf, cb, fmemClear, mprNormal))
         goto LFail;
     pmodlf->bo = kboCur;
@@ -278,8 +278,8 @@ bool MODL::FWrite(PCFL pcfl, CTG ctg, CNO cno)
     pmodlf->rRadius = _pbmdl->radius;
     pmodlf->brb = _pbmdl->bounds;
     pmodlf->bvec3Pivot = _pbmdl->pivot;
-    CopyPb(_pbmdl->prepared_vertices, PvAddBv(pmodlf, size(MODLF)), cbrgbrv);
-    CopyPb(_pbmdl->prepared_faces, PvAddBv(pmodlf, size(MODLF) + cbrgbrv), cbrgbrf);
+    CopyPb(_pbmdl->prepared_vertices, PvAddBv(pmodlf, SIZEOF(MODLF)), cbrgbrv);
+    CopyPb(_pbmdl->prepared_faces, PvAddBv(pmodlf, SIZEOF(MODLF) + cbrgbrv), cbrgbrf);
     if (!pcfl->FPutPv(pmodlf, cb, ctg, cno))
         goto LFail;
     FreePpv((void **)&pmodlf);
@@ -332,7 +332,7 @@ void MODL::AdjustTdfCharacter(void)
 bool MODL::_FPrelight(long cblit, BVEC3 *prgbvec3Light)
 {
     AssertIn(cblit, 1, 10);
-    AssertPvCb(prgbvec3Light, LwMul(cblit, size(BVEC3)));
+    AssertPvCb(prgbvec3Light, LwMul(cblit, SIZEOF(BVEC3)));
     AssertBaseThis(0);
 
     PBACT pbactWorld;
@@ -360,7 +360,7 @@ bool MODL::_FPrelight(long cblit, BVEC3 *prgbvec3Light)
     const BRS krPowerHilite = BR_SCALAR(50);
     const long kiclrHilite = 108; // palette index for hilite color
 
-    ClearPb(&blit, size(BLIT));
+    ClearPb(&blit, SIZEOF(BLIT));
     blit.colour = BR_COLOUR_RGB(0xff, 0xff, 0xff);
     blit.type = BR_LIGHT_DIRECT;
     blit.attenuation_c = BR_SCALAR(1.0);

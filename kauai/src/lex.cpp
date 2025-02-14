@@ -215,7 +215,7 @@ long _TtFromCh(achar ch);
 ***************************************************************************/
 long _TtFromCh(achar ch)
 {
-    AssertIn(ch, kchMinTok, kchMinTok + size(_rgtt) / size(_rgtt[0]));
+    AssertIn(ch, kchMinTok, kchMinTok + SIZEOF(_rgtt) / SIZEOF(_rgtt[0]));
     return _rgtt[(byte)ch - kchMinTok];
 }
 
@@ -367,7 +367,7 @@ void LEXB::AssertValid(ulong grf)
     AssertIn(_fpCur, 0, _fpMac + 1);
     AssertIn(_fpMac, 0, kcbMax);
     AssertIn(_ichCur, 0, _ichLim + 1);
-    AssertIn(_ichLim, 0, size(_rgch) + 1);
+    AssertIn(_ichLim, 0, SIZEOF(_rgch) + 1);
 }
 
 /***************************************************************************
@@ -400,14 +400,14 @@ bool LEXB::_FFetchRgch(achar *prgch, long cch)
 {
     AssertThis(0);
     AssertIn(cch, 1, kcchLexbBuf);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
 
     if (_ichLim < _ichCur + cch)
     {
         // need to read some more data
         long cchT;
 
-        if (_fpCur + (_ichCur + cch - _ichLim) * size(achar) > _fpMac)
+        if (_fpCur + (_ichCur + cch - _ichLim) * SIZEOF(achar) > _fpMac)
         {
             // hit the eof
             return fFalse;
@@ -416,7 +416,7 @@ bool LEXB::_FFetchRgch(achar *prgch, long cch)
         // keep any valid characters
         if (_ichCur < _ichLim)
         {
-            BltPb(_rgch + _ichCur, _rgch, (_ichLim - _ichCur) * size(achar));
+            BltPb(_rgch + _ichCur, _rgch, (_ichLim - _ichCur) * SIZEOF(achar));
             _ichLim -= _ichCur;
         }
         else
@@ -424,12 +424,12 @@ bool LEXB::_FFetchRgch(achar *prgch, long cch)
         _ichCur = 0;
 
         // read new stuff
-        cchT = LwMin((_fpMac - _fpCur) / size(achar), kcchLexbBuf - _ichLim);
+        cchT = LwMin((_fpMac - _fpCur) / SIZEOF(achar), kcchLexbBuf - _ichLim);
         AssertIn(cchT, cch - _ichLim, kcchLexbBuf + 1);
         if (pvNil != _pfil)
         {
             AssertPo(_pfil, 0);
-            if (!_pfil->FReadRgb(_rgch + _ichLim, cchT * size(achar), _fpCur))
+            if (!_pfil->FReadRgb(_rgch + _ichLim, cchT * SIZEOF(achar), _fpCur))
             {
                 Warn("Error reading file, truncating logical file");
                 _fpMac = _fpCur;
@@ -439,15 +439,15 @@ bool LEXB::_FFetchRgch(achar *prgch, long cch)
         else
         {
             AssertPo(_pbsf, 0);
-            _pbsf->FetchRgb(_fpCur, cchT * size(achar), _rgch + _ichLim);
+            _pbsf->FetchRgb(_fpCur, cchT * SIZEOF(achar), _rgch + _ichLim);
         }
         _ichLim += cchT;
-        _fpCur += cchT * size(achar);
+        _fpCur += cchT * SIZEOF(achar);
         AssertIn(_ichLim, _ichCur + cch, kcchLexbBuf + 1);
     }
 
     // get the text
-    CopyPb(_rgch + _ichCur, prgch, cch * size(achar));
+    CopyPb(_rgch + _ichCur, prgch, cch * SIZEOF(achar));
     AssertThis(0);
     return fTrue;
 }

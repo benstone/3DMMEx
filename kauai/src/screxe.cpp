@@ -137,7 +137,7 @@ bool SCEB::FAttachScript(PSCPT pscpt, long *prglw, long clw)
     AssertThis(0);
     AssertPo(pscpt, 0);
     AssertIn(clw, 0, kcbMax);
-    AssertPvCb(prglw, LwMul(clw, size(long)));
+    AssertPvCb(prglw, LwMul(clw, SIZEOF(long)));
     long lw;
     DVER dver;
 
@@ -183,7 +183,7 @@ bool SCEB::FAttachScript(PSCPT pscpt, long *prglw, long clw)
     _fError = fFalse;
 
     // create the stack GL
-    if (pvNil == (_pgllwStack = GL::PglNew(size(long), 10)))
+    if (pvNil == (_pgllwStack = GL::PglNew(SIZEOF(long), 10)))
         goto LFail;
     _pgllwStack->SetMinGrow(10);
 
@@ -291,7 +291,7 @@ bool SCEB::FResume(long *plwReturn, bool *pfPaused)
                 _Error(fFalse);
                 break;
             }
-            CopyPb(_pscpt->_pgllw->QvGet(_ilwCur), _pgllwStack->QvGet(ilw), LwMul(clwPush, size(long)));
+            CopyPb(_pscpt->_pgllw->QvGet(_ilwCur), _pgllwStack->QvGet(ilw), LwMul(clwPush, SIZEOF(long)));
             _ilwCur += clwPush;
         }
     }
@@ -316,7 +316,7 @@ void SCEB::_AddParameters(long *prglw, long clw)
 {
     AssertThis(0);
     AssertIn(clw, 1, kcbMax);
-    AssertPvCb(prglw, LwMul(clw, size(long)));
+    AssertPvCb(prglw, LwMul(clw, SIZEOF(long)));
     STN stn;
     long ilw;
     RTVN rtvn;
@@ -813,7 +813,7 @@ void SCEB::_Rotate(long clwTot, long clwShift)
         AssertIn(clwShift, 0, clwTot);
         if (clwShift != 0)
         {
-            SwapBlocks(qlw, LwMul(clwShift, size(long)), LwMul(clwTot - clwShift, size(long)));
+            SwapBlocks(qlw, LwMul(clwShift, SIZEOF(long)), LwMul(clwTot - clwShift, SIZEOF(long)));
         }
     }
 }
@@ -863,7 +863,7 @@ void SCEB::_DupList(long clw)
     {
         qlw = _QlwGet(clw * 2);
         Assert(qlw != pvNil, "why did _QlwGet fail?");
-        CopyPb(qlw, qlw + clw, LwMul(clw, size(long)));
+        CopyPb(qlw, qlw + clw, LwMul(clw, SIZEOF(long)));
     }
 }
 
@@ -1054,7 +1054,7 @@ bool _FReadStringReg(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
         return fFalse;
     *pcb = pblck->Cb();
 
-    if (pvNil == (pgst = GST::PgstRead(pblck, &bo)) || pgst->CbExtra() != size(long))
+    if (pvNil == (pgst = GST::PgstRead(pblck, &bo)) || pgst->CbExtra() != SIZEOF(long))
     {
         goto LFail;
     }
@@ -1121,7 +1121,7 @@ void SCEB::_MergeStrings(CNO cno, RSC rsc)
 
     Assert(pcabo->po->FIs(kclsGST), 0);
     pgst = (PGST)pcabo->po;
-    Assert(pgst->CbExtra() == size(long), 0);
+    Assert(pgst->CbExtra() == SIZEOF(long), 0);
 
     fFail = fFalse;
     for (istn = pgst->IvMac(); istn-- > 0;)
@@ -1352,7 +1352,7 @@ bool FAssignRtvm(PGL *ppglrtvm, RTVN *prtvn, long lw)
     rtvm.rtvn = *prtvn;
     if (pvNil == *ppglrtvm)
     {
-        if (pvNil == (*ppglrtvm = GL::PglNew(size(RTVM))))
+        if (pvNil == (*ppglrtvm = GL::PglNew(SIZEOF(RTVM))))
             return fFalse;
         (*ppglrtvm)->SetMinGrow(10);
         irtvm = 0;
@@ -1399,7 +1399,7 @@ PSCPT SCPT::PscptRead(PCFL pcfl, CTG ctg, CNO cno)
     if (!pcfl->FFind(ctg, cno, &blck))
         goto LFail;
 
-    if (pvNil == (pgllw = GL::PglRead(&blck, &bo)) || pgllw->CbEntry() != size(long))
+    if (pvNil == (pgllw = GL::PglRead(&blck, &bo)) || pgllw->CbEntry() != SIZEOF(long))
     {
         goto LFail;
     }
@@ -1721,7 +1721,7 @@ bool STRG::_FEnsureGst(void)
 
     if (pvNil != _pgst)
         return fTrue;
-    _pgst = GST::PgstNew(size(long));
+    _pgst = GST::PgstNew(SIZEOF(long));
     AssertThis(0);
 
     return pvNil != _pgst;

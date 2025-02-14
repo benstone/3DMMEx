@@ -220,7 +220,7 @@ bool CLOK::FSetAlarm(long dtim, PCMH pcmhNotify, long lwUser, bool fAdjustForDel
     alad.pcmh = pcmhNotify;
     alad.tim = TimCur(fAdjustForDelay) + LwMax(dtim, 1);
     alad.lw = lwUser;
-    if (pvNil == _pglalad && pvNil == (_pglalad = GL::PglNew(size(ALAD), 1)))
+    if (pvNil == _pglalad && pvNil == (_pglalad = GL::PglNew(SIZEOF(ALAD), 1)))
         return fFalse;
     for (ialadMin = 0, ialadLim = _pglalad->IvMac(); ialadMin < ialadLim;)
     {
@@ -313,7 +313,7 @@ bool CLOK::FCmdAll(PCMD pcmd)
         }
 
         // send the alarm
-        ClearPb(&cmd, size(CMD));
+        ClearPb(&cmd, SIZEOF(CMD));
         cmd.cid = cidAlarm;
         cmd.pcmh = alad.pcmh;
         cmd.rglw[0] = Hid();

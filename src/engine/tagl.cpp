@@ -67,7 +67,7 @@ bool TAGL::_FInit(void)
 {
     AssertBaseThis(0);
 
-    _pggtagf = GG::PggNew(size(TAGF));
+    _pggtagf = GG::PggNew(SIZEOF(TAGF));
     if (pvNil == _pggtagf)
         return fFalse;
     return fTrue;
@@ -221,10 +221,10 @@ bool TAGL::FInsertChild(PTAG ptag, CHID chid, CTG ctg)
 
     ccNew.chid = chid;
     ccNew.ctg = ctg;
-    ccc = _pggtagf->Cb(itagf) / size(CC);
+    ccc = _pggtagf->Cb(itagf) / SIZEOF(CC);
     if (ccc == 0)
     {
-        if (!_pggtagf->FPut(itagf, size(CC), &ccNew))
+        if (!_pggtagf->FPut(itagf, SIZEOF(CC), &ccNew))
             return fFalse;
         return fTrue;
     }
@@ -237,7 +237,7 @@ bool TAGL::FInsertChild(PTAG ptag, CHID chid, CTG ctg)
         if (prgcc[icc].ctg == ccNew.ctg && prgcc[icc].chid > ccNew.chid)
             break;
     }
-    if (!_pggtagf->FInsertRgb(itagf, icc * size(CC), size(CC), &ccNew))
+    if (!_pggtagf->FInsertRgb(itagf, icc * SIZEOF(CC), SIZEOF(CC), &ccNew))
         return fFalse;
     return fTrue;
 }
@@ -264,10 +264,10 @@ bool TAGL::FCacheTags(void)
             return fFalse;
 
         // Cache the child tags
-        ccc = _pggtagf->Cb(itagf) / size(CC);
+        ccc = _pggtagf->Cb(itagf) / SIZEOF(CC);
         for (icc = 0; icc < ccc; icc++)
         {
-            _pggtagf->GetRgb(itagf, icc * size(CC), size(CC), &cc);
+            _pggtagf->GetRgb(itagf, icc * SIZEOF(CC), SIZEOF(CC), &cc);
             if (!vptagm->FBuildChildTag(&tagf.tag, cc.chid, cc.ctg, &tag))
                 return fFalse;
             // Note that if we ever have the case where we don't always

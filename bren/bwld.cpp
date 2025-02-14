@@ -307,7 +307,7 @@ inline void SqueezePb(void *pvSrc, void *pvDst, long cbSrc)
     AssertPvCb(pvSrc, cbSrc);
     AssertPvCb(pvDst, cbSrc / 2);
 
-    Assert(size(short) == kcbPixelZ, 0);
+    Assert(SIZEOF(short) == kcbPixelZ, 0);
     short *pswSrc = (short *)pvSrc;
     short *pswDst = (short *)pvDst;
 

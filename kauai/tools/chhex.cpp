@@ -157,7 +157,7 @@ void DCH::Draw(PGNV pgnv, RC *prcClip)
     if (prcClip->ypTop < _dypHeader)
         _DrawHeader(pgnv);
 
-    Assert(_cbLine <= size(rgb), "lines too long");
+    Assert(_cbLine <= SIZEOF(rgb), "lines too long");
     cb = _pbsf->IbMac();
     xp = _XpFromIch(0);
     ib = LwMul(_cbLine, _LnFromYp(LwMax(_dypHeader, prcClip->ypTop)));
@@ -343,14 +343,14 @@ bool DCH::FCmdKey(PCMD_KEY pcmd)
                 else
                     break;
             }
-            for (cact = 0; cact < pcmd->cact && ibLim < size(rgb); cact++)
+            for (cact = 0; cact < pcmd->cact && ibLim < SIZEOF(rgb); cact++)
                 rgb[ibLim++] = bT;
             break;
         }
 
         grfcust = pcmd->grfcust;
         pcmd = (PCMD_KEY)&cmd;
-    } while (0 == dibSel && 0 == dibDel && ibLim < size(rgb) && vpcex->FGetNextKey(&cmd));
+    } while (0 == dibSel && 0 == dibDel && ibLim < SIZEOF(rgb) && vpcex->FGetNextKey(&cmd));
 
     if (ibLim > 0)
     {
@@ -1054,7 +1054,7 @@ bool DCH::_FPaste(PCLIP pclip, bool fDoIt, long cid)
     }
     else if (pclip->FGetFormat(kclsTXTB, &pdocb))
     {
-        if (pvNil == (pbsf = ((PTXTB)pdocb)->Pbsf()) || 0 >= (cb = pbsf->IbMac() - size(achar)))
+        if (pvNil == (pbsf = ((PTXTB)pdocb)->Pbsf()) || 0 >= (cb = pbsf->IbMac() - SIZEOF(achar)))
         {
             ReleasePpo(&pdocb);
             return fFalse;

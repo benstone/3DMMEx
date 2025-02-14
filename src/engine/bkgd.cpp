@@ -126,7 +126,7 @@ bool BKGD::FReadBkgd(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
 
     BKGD *pbkgd;
 
-    *pcb = size(BKGD) + size(BACT) + size(BLIT); // estimate BKGD size
+    *pcb = SIZEOF(BKGD) + SIZEOF(BACT) + SIZEOF(BLIT); // estimate BKGD size
     if (pvNil == ppbaco)
         return fTrue;
     pbkgd = NewObj BKGD;
@@ -139,8 +139,8 @@ bool BKGD::FReadBkgd(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
     }
     AssertPo(pbkgd, 0);
     *ppbaco = pbkgd;
-    *pcb =
-        size(BKGD) + LwMul(pbkgd->_cbactLight, size(BACT)) + LwMul(pbkgd->_cbactLight, size(BLIT)); // actual BKGD size
+    *pcb = SIZEOF(BKGD) + LwMul(pbkgd->_cbactLight, SIZEOF(BACT)) +
+           LwMul(pbkgd->_cbactLight, SIZEOF(BLIT)); // actual BKGD size
     return fTrue;
 }
 
@@ -166,9 +166,9 @@ bool BKGD::_FInit(PCFL pcfl, CTG ctg, CNO cno)
 
     if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData())
         goto LFail;
-    if (blck.Cb() != size(BKGDF))
+    if (blck.Cb() != SIZEOF(BKGDF))
         goto LFail;
-    if (!blck.FReadRgb(&bkgdf, size(BKGDF), 0))
+    if (!blck.FReadRgb(&bkgdf, SIZEOF(BKGDF), 0))
         goto LFail;
     if (kboCur != bkgdf.bo)
         SwapBytesBom(&bkgdf, kbomBkgdf);
@@ -182,9 +182,9 @@ bool BKGD::_FInit(PCFL pcfl, CTG ctg, CNO cno)
     {
         if (!pcfl->FFind(kid.cki.ctg, kid.cki.cno, &blck) || !blck.FUnpackData())
             goto LFail;
-        if (blck.Cb() != size(BDS))
+        if (blck.Cb() != SIZEOF(BDS))
             goto LFail;
-        if (!blck.FReadRgb(&_bds, size(BDS), 0))
+        if (!blck.FReadRgb(&_bds, SIZEOF(BDS), 0))
             goto LFail;
         if (kboCur != _bds.bo)
             SwapBytesBom(&_bds, kbomBds);
@@ -219,18 +219,18 @@ bool BKGD::_FInit(PCFL pcfl, CTG ctg, CNO cno)
     pgllite = GL::PglRead(&blck, &bo);
     if (pvNil == pgllite)
         goto LFail;
-    Assert(pgllite->CbEntry() == size(LITE), "bad pgllite...you may need to update bkgds.chk");
-    AssertBomRglw(kbomLite, size(LITE));
+    Assert(pgllite->CbEntry() == SIZEOF(LITE), "bad pgllite...you may need to update bkgds.chk");
+    AssertBomRglw(kbomLite, SIZEOF(LITE));
     if (kboOther == bo)
     {
-        SwapBytesRglw(pgllite->QvGet(0), LwMul(pgllite->IvMac(), size(LITE) / size(long)));
+        SwapBytesRglw(pgllite->QvGet(0), LwMul(pgllite->IvMac(), SIZEOF(LITE) / SIZEOF(long)));
     }
     _cbactLight = pgllite->IvMac();
-    if (!FAllocPv((void **)&_prgbactLight, LwMul(_cbactLight, size(BACT)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&_prgbactLight, LwMul(_cbactLight, SIZEOF(BACT)), fmemClear, mprNormal))
     {
         goto LFail;
     }
-    if (!FAllocPv((void **)&_prgblitLight, LwMul(_cbactLight, size(BLIT)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&_prgblitLight, LwMul(_cbactLight, SIZEOF(BLIT)), fmemClear, mprNormal))
     {
         goto LFail;
     }
@@ -340,7 +340,7 @@ bool BKGD::FGetPalette(PGL *ppglclr, long *piclrMin)
     *piclrMin = _bIndexBase;
     if (pvNil == _pglclr) // no custom palette
     {
-        *ppglclr = GL::PglNew(size(CLR)); // "palette" with 0 entries
+        *ppglclr = GL::PglNew(SIZEOF(CLR)); // "palette" with 0 entries
     }
     else
     {
@@ -439,19 +439,19 @@ bool BKGD::FSetCamera(PBWLD pbwld, long icam)
         return fFalse;
 
     // Need at least one actor position
-    if (blck.Cb() < size(CAM))
+    if (blck.Cb() < SIZEOF(CAM))
     {
         Bug("CAM chunk not large enough");
         return fFalse;
     }
-    capos = (blck.Cb() - size(CAM)) / size(APOS);
-    if ((capos * size(APOS) + size(CAM)) != blck.Cb())
+    capos = (blck.Cb() - SIZEOF(CAM)) / SIZEOF(APOS);
+    if ((capos * SIZEOF(APOS) + SIZEOF(CAM)) != blck.Cb())
     {
-        Bug("CAM chunk's extra data not an even multiple of size(APOS)");
+        Bug("CAM chunk's extra data not an even multiple of SIZEOF(APOS)");
         return fFalse;
     }
 
-    if (!blck.FReadRgb(&cam, size(CAM), 0))
+    if (!blck.FReadRgb(&cam, SIZEOF(CAM), 0))
         return fFalse;
 
 #ifdef DEBUG
@@ -461,12 +461,12 @@ bool BKGD::FSetCamera(PBWLD pbwld, long icam)
     }
 #endif // DEBUG
 
-    Assert((size(APOS) / size(long)) * size(long) == size(APOS), "APOS not an even number of longs");
+    Assert((SIZEOF(APOS) / SIZEOF(long)) * SIZEOF(long) == SIZEOF(APOS), "APOS not an even number of longs");
     if (kboOther == cam.bo)
     {
         SwapBytesBom(&cam, kbomCam);
-        SwapBytesRglw(PvAddBv(&cam, offset(CAM, bmat34Cam)), size(cam.bmat34Cam) / size(long));
-        SwapBytesRglw(PvAddBv(&cam, size(CAM)), capos * (size(APOS) / size(long)));
+        SwapBytesRglw(PvAddBv(&cam, offset(CAM, bmat34Cam)), SIZEOF(cam.bmat34Cam) / SIZEOF(long));
+        SwapBytesRglw(PvAddBv(&cam, SIZEOF(CAM)), capos * (SIZEOF(APOS) / SIZEOF(long)));
     }
     Assert(kboCur == cam.bo, "bad cam");
 
@@ -488,11 +488,11 @@ bool BKGD::FSetCamera(PBWLD pbwld, long icam)
     // Get actor placements
     ReleasePpo(&_pglapos);
     _iaposNext = _iaposLast = 0;
-    if (capos > 0 && (_pglapos = GL::PglNew(size(APOS), capos)) != pvNil)
+    if (capos > 0 && (_pglapos = GL::PglNew(SIZEOF(APOS), capos)) != pvNil)
     {
         AssertDo(_pglapos->FSetIvMac(capos), "Should never fail");
         _pglapos->Lock();
-        if (!blck.FReadRgb(_pglapos->QvGet(0), size(APOS) * capos, size(CAM)))
+        if (!blck.FReadRgb(_pglapos->QvGet(0), SIZEOF(APOS) * capos, SIZEOF(CAM)))
         {
             ReleasePpo(&_pglapos);
             return fFalse;
@@ -639,8 +639,8 @@ void BKGD::AssertValid(ulong grf)
     AssertIn(_cbactLight, 1, 100); // 100 is sanity check
     AssertIn(_ccam, 1, 100);       // 100 is sanity check
     Assert(_icam == ivNil || (_icam >= 0 && _icam < _ccam), "bad _icam");
-    AssertPvCb(_prgbactLight, LwMul(_cbactLight, size(BACT)));
-    AssertPvCb(_prgblitLight, LwMul(_cbactLight, size(BLIT)));
+    AssertPvCb(_prgbactLight, LwMul(_cbactLight, SIZEOF(BACT)));
+    AssertPvCb(_prgblitLight, LwMul(_cbactLight, SIZEOF(BLIT)));
     AssertPo(&_stn, 0);
     AssertNilOrPo(_pglapos, 0);
 }

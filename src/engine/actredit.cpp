@@ -228,7 +228,7 @@ bool ACTR::FCopy(PACTR *ppactr, bool fEntireScene)
 
         prptSrc = (RPT *)_pglrpt->QvGet(_rtelCur.irpt + 1);
         prptDest = (RPT *)(*ppactr)->_pglrpt->QvGet(1);
-        CopyPb(prptSrc, prptDest, LwMul(irptLim - (_rtelCur.irpt + 1), size(RPT)));
+        CopyPb(prptSrc, prptDest, LwMul(irptLim - (_rtelCur.irpt + 1), SIZEOF(RPT)));
     }
     else
     {
@@ -427,7 +427,7 @@ bool ACTR::_FDupCopy(PACTR pactrSrc, PACTR pactrDest)
 
         prptSrc = (RPT *)pactrSrc->_pglrpt->QvGet(0);
         prptDest = (RPT *)pactrDest->_pglrpt->QvGet(0);
-        CopyPb(prptSrc, prptDest, LwMul(pactrSrc->_pglrpt->IvMac(), size(RPT)));
+        CopyPb(prptSrc, prptDest, LwMul(pactrSrc->_pglrpt->IvMac(), SIZEOF(RPT)));
     }
 
     //
@@ -442,7 +442,7 @@ bool ACTR::_FDupCopy(PACTR pactrSrc, PACTR pactrDest)
 
         psmmSrc = (SMM *)pactrSrc->_pglsmm->QvGet(0);
         psmmDest = (SMM *)pactrDest->_pglsmm->QvGet(0);
-        CopyPb(psmmSrc, psmmDest, LwMul(pactrSrc->_pglsmm->IvMac(), size(SMM)));
+        CopyPb(psmmSrc, psmmDest, LwMul(pactrSrc->_pglsmm->IvMac(), SIZEOF(SMM)));
     }
 
     return fTrue;
@@ -944,7 +944,7 @@ PACLP ACLP::PaclpNew(PACTR pactr, bool fRteOnly, bool fEntireScene)
 
         pactr->Pscen()->Pmvie()->Pmcc()->GetStn(idsEngineCopyOf, &stnCopyOf);
 
-        if (!FEqualRgb(stn.Psz(), stnCopyOf.Psz(), CchSz(stnCopyOf.Psz()) * size(achar)))
+        if (!FEqualRgb(stn.Psz(), stnCopyOf.Psz(), CchSz(stnCopyOf.Psz()) * SIZEOF(achar)))
         {
             paclp->_stnName = stnCopyOf;
             if (!paclp->_stnName.FAppendCh(kchSpace) || !paclp->_stnName.FAppendStn(&stn))

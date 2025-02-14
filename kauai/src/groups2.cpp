@@ -35,9 +35,9 @@ RTCLASS(AST)
 GSTB::GSTB(long cbExtra, ulong grfgst)
 {
     AssertIn(cbExtra, 0, kcbMax);
-    Assert(cbExtra % size(long) == 0, "cbExtra not multiple of size(long)");
+    Assert(cbExtra % SIZEOF(long) == 0, "cbExtra not multiple of SIZEOF(long)");
 
-    _cbEntry = cbExtra + size(long);
+    _cbEntry = cbExtra + SIZEOF(long);
     _cbstFree = (grfgst & fgstAllowFree) ? 0 : cvNil;
 
     // use some reasonable values for _cbMinGrow* - code can always set
@@ -86,7 +86,7 @@ const BOM kbomGstf = 0x5FF00000L;
 long GSTB::CbOnFile(void)
 {
     AssertThis(0);
-    return size(GSTF) + LwMul(_ivMac, _cbEntry) + _bstMac;
+    return SIZEOF(GSTF) + LwMul(_ivMac, _cbEntry) + _bstMac;
 }
 
 /***************************************************************************
@@ -140,7 +140,7 @@ bool GSTB::FWrite(PBLCK pblck, short bo, short osk)
     }
     if (koskCur != osk)
         _TranslateGrst(osk, fFalse);
-    fRet = _FWrite(pblck, &gstf, size(gstf), _bstMac, LwMul(_cbEntry, _ivMac));
+    fRet = _FWrite(pblck, &gstf, SIZEOF(gstf), _bstMac, LwMul(_cbEntry, _ivMac));
     if (koskCur != osk)
         _TranslateGrst(osk, fTrue);
     if (kboOther == bo)
@@ -168,10 +168,10 @@ bool GSTB::_FRead(PBLCK pblck, short *pbo, short *posk)
         goto LFail;
 
     cb = pblck->Cb();
-    if (cb < size(gstf))
+    if (cb < SIZEOF(gstf))
         goto LBug;
 
-    if (!pblck->FReadRgb(&gstf, size(gstf), 0))
+    if (!pblck->FReadRgb(&gstf, SIZEOF(gstf), 0))
         goto LFail;
 
     if (pbo != pvNil)
@@ -182,11 +182,11 @@ bool GSTB::_FRead(PBLCK pblck, short *pbo, short *posk)
     if ((bo = gstf.bo) == kboOther)
         SwapBytesBom(&gstf, kbomGstf);
 
-    cb -= size(gstf);
+    cb -= SIZEOF(gstf);
     // don't use LwMul, in case the file is corrupted, we don't want to assert,
     // we should detect it below.
     cbT = gstf.cbEntry * gstf.ibstMac;
-    if (gstf.bo != kboCur || !FIn(gstf.cbEntry, size(long), kcbMax) || (gstf.cbEntry % size(long)) != 0 ||
+    if (gstf.bo != kboCur || !FIn(gstf.cbEntry, SIZEOF(long), kcbMax) || (gstf.cbEntry % SIZEOF(long)) != 0 ||
         !FIn(gstf.ibstMac, 0, kcbMax) || !FIn(gstf.bstMac, gstf.ibstMac - LwMax(0, gstf.cbstFree), kcbMax) ||
         cb != cbT + gstf.bstMac || (gstf.cbstFree == cvNil) != (_cbstFree == cvNil) ||
         gstf.cbstFree != cvNil && !FIn(gstf.cbstFree, 0, LwMax(1, gstf.ibstMac)))
@@ -200,7 +200,7 @@ bool GSTB::_FRead(PBLCK pblck, short *pbo, short *posk)
     _ivMac = gstf.ibstMac;
     _bstMac = gstf.bstMac;
     _cbstFree = gstf.cbstFree;
-    fRet = _FReadData(pblck, cb - cbT, cbT, size(gstf));
+    fRet = _FReadData(pblck, cb - cbT, cbT, SIZEOF(gstf));
     if (fRet)
     {
         if (bo == kboOther)
@@ -226,7 +226,7 @@ bool GSTB::FEnsureSpace(long cstnAdd, long cchAdd, ulong grfgrp)
     AssertIn(cstnAdd, 0, kcbMax);
     AssertIn(cchAdd, 0, kcbMax);
     long cbstAdd;
-    long cbAdd = cchAdd * size(achar);
+    long cbAdd = cchAdd * SIZEOF(achar);
 
     if (cvNil == _cbstFree)
         cbstAdd = cstnAdd;
@@ -250,7 +250,7 @@ void GSTB::SetMinGrow(long cstnAdd, long cchAdd)
     AssertIn(cstnAdd, 0, kcbMax);
     AssertIn(cchAdd, 0, kcbMax);
 
-    _cbMinGrow1 = CbRoundToLong(cchAdd * size(achar) + cstnAdd);
+    _cbMinGrow1 = CbRoundToLong(cchAdd * SIZEOF(achar) + cstnAdd);
     _cbMinGrow2 = LwMul(cstnAdd, _cbEntry);
 }
 
@@ -274,7 +274,7 @@ bool GSTB::FPutRgch(long istn, const achar *prgch, long cch)
     AssertIn(istn, 0, _ivMac);
     Assert(!FFree(istn), "string entry is free!");
     AssertIn(cch, 0, kcchMaxGst + 1);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
 
     long cchOld;
     long bstOld;
@@ -283,10 +283,10 @@ bool GSTB::FPutRgch(long istn, const achar *prgch, long cch)
     qst = _Qst(istn);
     if ((cchOld = CchSt(qst)) == cch)
     {
-        CopyPb(prgch, PrgchSt(qst), cch * size(achar));
+        CopyPb(prgch, PrgchSt(qst), cch * SIZEOF(achar));
         goto LDone;
     }
-    if (cchOld < cch && !_FEnsureSizes(_bstMac + (cch - cchOld) * size(achar), LwMul(_ivMac, _cbEntry), fgrpNil))
+    if (cchOld < cch && !_FEnsureSizes(_bstMac + (cch - cchOld) * SIZEOF(achar), LwMul(_ivMac, _cbEntry), fgrpNil))
     {
         return fFalse;
     }
@@ -324,12 +324,12 @@ void GSTB::GetRgch(long istn, achar *prgch, long cchMax, long *pcch)
     AssertIn(istn, 0, _ivMac);
     Assert(!FFree(istn), "string entry is free!");
     AssertIn(cchMax, 0, kcbMax);
-    AssertPvCb(prgch, cchMax * size(achar));
+    AssertPvCb(prgch, cchMax * SIZEOF(achar));
     AssertVarMem(pcch);
     PST qst = _Qst(istn);
 
     *pcch = LwMin(cchMax, CchSt(qst));
-    CopyPb(PrgchSt(qst), prgch, *pcch * size(achar));
+    CopyPb(PrgchSt(qst), prgch, *pcch * SIZEOF(achar));
 }
 
 /***************************************************************************
@@ -365,7 +365,7 @@ bool GSTB::FFindRgch(const achar *prgch, long cch, long *pistn, ulong grfgst)
 {
     AssertThis(0);
     AssertIn(cch, 0, kcchMaxGst + 1);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
     AssertVarMem(pistn);
     long istn, bst;
     PST qst;
@@ -381,7 +381,7 @@ bool GSTB::FFindRgch(const achar *prgch, long cch, long *pistn, ulong grfgst)
         }
         AssertIn(bst, 0, _bstMac);
         qst = (achar *)_Qb1(bst);
-        if (CchSt(qst) == cch && FEqualRgb(PrgchSt(qst), prgch, cch * size(achar)))
+        if (CchSt(qst) == cch && FEqualRgb(PrgchSt(qst), prgch, cch * SIZEOF(achar)))
         {
             *pistn = istn;
             return fTrue;
@@ -415,7 +415,7 @@ bool GSTB::FFindExtra(const void *prgbFind, PSTN pstn, long *pistn)
 
     for (istn = 0; istn < ivMac; istn++)
     {
-        qbExtra = (byte *)_Qbst(istn) + size(long);
+        qbExtra = (byte *)_Qbst(istn) + SIZEOF(long);
         if (FEqualRgb(prgbFind, qbExtra, cbExtra))
         {
             if (pstn != pvNil)
@@ -440,13 +440,13 @@ void GSTB::GetExtra(long istn, void *pv)
     AssertThis(0);
     AssertIn(istn, 0, _ivMac);
     Assert(!FFree(istn), "string entry is free!");
-    Assert(_cbEntry > size(long), "no extra data");
-    AssertPvCb(pv, _cbEntry - size(long));
+    Assert(_cbEntry > SIZEOF(long), "no extra data");
+    AssertPvCb(pv, _cbEntry - SIZEOF(long));
 
     byte *qb;
 
-    qb = (byte *)_Qbst(istn) + size(long);
-    CopyPb(qb, pv, _cbEntry - size(long));
+    qb = (byte *)_Qbst(istn) + SIZEOF(long);
+    CopyPb(qb, pv, _cbEntry - SIZEOF(long));
 }
 
 /***************************************************************************
@@ -457,13 +457,13 @@ void GSTB::PutExtra(long istn, void *pv)
     AssertThis(0);
     AssertIn(istn, 0, _ivMac);
     Assert(!FFree(istn), "string entry is free!");
-    Assert(_cbEntry > size(long), "no extra data");
-    AssertPvCb(pv, _cbEntry - size(long));
+    Assert(_cbEntry > SIZEOF(long), "no extra data");
+    AssertPvCb(pv, _cbEntry - SIZEOF(long));
 
     byte *qb;
 
-    qb = (byte *)_Qbst(istn) + size(long);
-    CopyPb(pv, qb, _cbEntry - size(long));
+    qb = (byte *)_Qbst(istn) + SIZEOF(long);
+    CopyPb(pv, qb, _cbEntry - SIZEOF(long));
     AssertThis(0);
 }
 
@@ -485,15 +485,15 @@ achar *GSTB::_Qst(long ibst)
 void GSTB::_AppendRgch(const achar *prgch, long cch)
 {
     AssertIn(cch, 0, kcchMaxGst + 1);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
 
     achar *qch;
 
-    Assert(_Cb1() >= _bstMac + (cch + 1) * size(achar), "first block not big enough");
+    Assert(_Cb1() >= _bstMac + (cch + 1) * SIZEOF(achar), "first block not big enough");
     qch = (achar *)_Qb1(_bstMac);
     *qch++ = (achar)cch;
-    CopyPb(prgch, qch, cch * size(achar));
-    _bstMac += (cch + 1) * size(achar);
+    CopyPb(prgch, qch, cch * SIZEOF(achar));
+    _bstMac += (cch + 1) * SIZEOF(achar);
 }
 
 /***************************************************************************
@@ -507,7 +507,7 @@ void GSTB::_RemoveSt(long bst)
     byte *qb;
 
     qb = _Qb1(bst);
-    cb = CchTotSt((PST)qb) * size(achar);
+    cb = CchTotSt((PST)qb) * SIZEOF(achar);
     AssertIn(bst + cb, 0, _bstMac + 1);
     if (bst + cb < _bstMac)
     {
@@ -532,7 +532,7 @@ void GSTB::_RemoveSt(long bst)
 ***************************************************************************/
 void GSTB::_SwapBytesRgbst(void)
 {
-    if (size(long) == _cbEntry)
+    if (SIZEOF(long) == _cbEntry)
         SwapBytesRglw(_Qb2(0), _ivMac);
     else
     {
@@ -564,7 +564,7 @@ void GSTB::_TranslateGrst(short osk, bool fToCur)
     for (bst = 0; bst < _bstMac;)
     {
         TranslateSt((achar *)(qb + bst), osk, fToCur);
-        bst += CchTotSt((PST)(qb + bst)) * size(achar);
+        bst += CchTotSt((PST)(qb + bst)) * SIZEOF(achar);
     }
 }
 
@@ -588,7 +588,7 @@ bool GSTB::_FTranslateGrst(short osk)
         return fTrue;
     }
 
-    if (cbChar != size(schar) && cbChar != size(wchar))
+    if (cbChar != SIZEOF(schar) && cbChar != SIZEOF(wchar))
     {
         Bug("unknown osk");
         return fFalse;
@@ -612,7 +612,7 @@ bool GSTB::_FTranslateGrst(short osk)
         if (bstOld + cbChar > cbSrc)
             goto LFail;
 
-        if (cbChar == size(schar))
+        if (cbChar == SIZEOF(schar))
         {
             schar chs = *(schar *)PvAddBv(pvSrc, bstOld);
             cch = (long)(byte)chs;
@@ -620,7 +620,7 @@ bool GSTB::_FTranslateGrst(short osk)
         else
         {
             wchar chw;
-            CopyPb(PvAddBv(pvSrc, bstOld), &chw, size(wchar));
+            CopyPb(PvAddBv(pvSrc, bstOld), &chw, SIZEOF(wchar));
             if (osk == MacWin(koskUniWin, koskUniMac))
                 SwapBytesRgsw(&chw, 1);
             cch = (long)(ushort)chw;
@@ -631,7 +631,7 @@ bool GSTB::_FTranslateGrst(short osk)
 
         cch = CchTranslateRgb(PvAddBv(pvSrc, bstOld + cbChar), cch * cbChar, osk, rgch, kcchMaxSt);
 
-        if (!_FEnsureSizes(_bstMac + (cch + 1) * size(achar), LwMul(_ivMac, _cbEntry), fgrpNil))
+        if (!_FEnsureSizes(_bstMac + (cch + 1) * SIZEOF(achar), LwMul(_ivMac, _cbEntry), fgrpNil))
         {
             goto LFail;
         }
@@ -673,8 +673,8 @@ void GSTB::AssertValid(ulong grfobj)
     long bst;
 
     GSTB_PAR::AssertValid(grfobj);
-    AssertIn(_cbEntry, size(long), kcbMax);
-    Assert(_cbEntry % size(long) == 0, "_cbEntry bad");
+    AssertIn(_cbEntry, SIZEOF(long), kcbMax);
+    Assert(_cbEntry % SIZEOF(long) == 0, "_cbEntry bad");
     AssertIn(_ivMac, 0, kcbMax);
     Assert(_Cb1() >= _bstMac, "grst area too small");
     Assert(_Cb2() >= LwMul(_ivMac, _cbEntry), "rgbst area too small");
@@ -698,7 +698,7 @@ void GSTB::AssertValid(ulong grfobj)
             AssertSt((achar *)_Qb1(bst));
             cchTot += CchTotSt((PST)_Qb1(bst));
         }
-        Assert(cchTot * size(achar) == _bstMac, "grst wrong size");
+        Assert(cchTot * SIZEOF(achar) == _bstMac, "grst wrong size");
         Assert(cbstFree == _cbstFree || _cbstFree == cvNil && cbstFree == 0, "bad _cbstFree");
     }
 }
@@ -711,7 +711,7 @@ void GSTB::AssertValid(ulong grfobj)
 PGST GST::PgstNew(long cbExtra, long cstnInit, long cchInit)
 {
     AssertIn(cbExtra, 0, kcbMax);
-    Assert(cbExtra % size(long) == 0, "cbExtra not multiple of size(long)");
+    Assert(cbExtra % SIZEOF(long) == 0, "cbExtra not multiple of SIZEOF(long)");
     AssertIn(cstnInit, 0, kcbMax);
     AssertIn(cchInit, 0, kcbMax);
     PGST pgst;
@@ -769,7 +769,7 @@ PGST GST::PgstDup(void)
     AssertThis(0);
     PGST pgst;
 
-    if (pvNil == (pgst = PgstNew(_cbEntry - size(long))))
+    if (pvNil == (pgst = PgstNew(_cbEntry - SIZEOF(long))))
         return pvNil;
 
     if (!_FDup(pgst))
@@ -786,8 +786,8 @@ bool GST::FAddRgch(const achar *prgch, long cch, const void *pvExtra, long *pist
 {
     AssertThis(0);
     AssertIn(cch, 0, kcchMaxGst + 1);
-    AssertPvCb(prgch, cch * size(achar));
-    AssertNilOrPvCb(pvExtra, _cbEntry - size(long));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
+    AssertNilOrPvCb(pvExtra, _cbEntry - SIZEOF(long));
     AssertNilOrVarMem(pistn);
 
     if (pistn != pvNil)
@@ -810,7 +810,7 @@ bool GST::FFindRgch(const achar *prgch, long cch, long *pistn, ulong grfgst)
 {
     AssertThis(0);
     AssertIn(cch, 0, kcchMaxGst);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
     AssertVarMem(pistn);
 
     if (!(grfgst & (fgstSorted | fgstUserSorted)))
@@ -854,12 +854,12 @@ bool GST::FInsertRgch(long istn, const achar *prgch, long cch, const void *pvExt
     AssertThis(fobjAssertFull);
     AssertIn(istn, 0, _ivMac + 1);
     AssertIn(cch, 0, kcchMaxGst + 1);
-    AssertPvCb(prgch, cch * size(achar));
-    AssertNilOrPvCb(pvExtra, _cbEntry - size(long));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
+    AssertNilOrPvCb(pvExtra, _cbEntry - SIZEOF(long));
 
     byte *qb;
 
-    if (!_FEnsureSizes(_bstMac + (cch + 1) * size(achar), LwMul(_ivMac + 1, _cbEntry), fgrpNil))
+    if (!_FEnsureSizes(_bstMac + (cch + 1) * SIZEOF(achar), LwMul(_ivMac + 1, _cbEntry), fgrpNil))
     {
         return fFalse;
     }
@@ -869,13 +869,13 @@ bool GST::FInsertRgch(long istn, const achar *prgch, long cch, const void *pvExt
     if (istn < _ivMac)
         BltPb(qb, qb + _cbEntry, LwMul(_ivMac - istn, _cbEntry));
     *(long *)qb = _bstMac;
-    if (size(long) < _cbEntry)
+    if (SIZEOF(long) < _cbEntry)
     {
-        qb += size(long);
+        qb += SIZEOF(long);
         if (pvExtra != pvNil)
-            CopyPb(pvExtra, qb, _cbEntry - size(long));
+            CopyPb(pvExtra, qb, _cbEntry - SIZEOF(long));
         else
-            TrashPvCb(qb, _cbEntry - size(long));
+            TrashPvCb(qb, _cbEntry - SIZEOF(long));
     }
     else
         Assert(pvNil == pvExtra, "cbExtra is zero");
@@ -896,7 +896,7 @@ bool GST::FInsertStn(long istn, PSTN pstn, const void *pvExtra)
     AssertThis(0);
     AssertIn(istn, 0, _ivMac + 1);
     AssertPo(pstn, 0);
-    AssertNilOrPvCb(pvExtra, _cbEntry - size(long));
+    AssertNilOrPvCb(pvExtra, _cbEntry - SIZEOF(long));
 
     return FInsertRgch(istn, pstn->Prgch(), pstn->Cch(), pvExtra);
 }
@@ -957,7 +957,7 @@ void GST::AssertValid(ulong grfobj)
 PAST AST::PastNew(long cbExtra, long cstnInit, long cchInit)
 {
     AssertIn(cbExtra, 0, kcbMax);
-    Assert(cbExtra % size(long) == 0, "cbExtra not multiple of size(long)");
+    Assert(cbExtra % SIZEOF(long) == 0, "cbExtra not multiple of SIZEOF(long)");
     AssertIn(cstnInit, 0, kcbMax);
     AssertIn(cchInit, 0, kcbMax);
     PAST past;
@@ -1015,7 +1015,7 @@ PAST AST::PastDup(void)
     AssertThis(0);
     PAST past;
 
-    if (pvNil == (past = PastNew(_cbEntry - size(long))))
+    if (pvNil == (past = PastNew(_cbEntry - SIZEOF(long))))
         return pvNil;
 
     if (!_FDup(past))
@@ -1032,8 +1032,8 @@ bool AST::FAddRgch(const achar *prgch, long cch, const void *pvExtra, long *pist
 {
     AssertThis(fobjAssertFull);
     AssertIn(cch, 0, kcchMaxGst + 1);
-    AssertPvCb(prgch, cch * size(achar));
-    AssertNilOrPvCb(pvExtra, _cbEntry - size(long));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
+    AssertNilOrPvCb(pvExtra, _cbEntry - SIZEOF(long));
     AssertNilOrVarMem(pistn);
 
     long ibst;
@@ -1054,7 +1054,7 @@ bool AST::FAddRgch(const achar *prgch, long cch, const void *pvExtra, long *pist
     else
         ibst = _ivMac++;
 
-    if (!_FEnsureSizes(_bstMac + (cch + 1) * size(achar), LwMul(_ivMac, _cbEntry), fgrpNil))
+    if (!_FEnsureSizes(_bstMac + (cch + 1) * SIZEOF(achar), LwMul(_ivMac, _cbEntry), fgrpNil))
     {
         if (ibst == _ivMac - 1)
             _ivMac--;
@@ -1067,13 +1067,13 @@ bool AST::FAddRgch(const achar *prgch, long cch, const void *pvExtra, long *pist
     // fill in the bst and extra data
     qb = (byte *)_Qbst(ibst);
     *(long *)qb = _bstMac;
-    if (size(long) < _cbEntry)
+    if (SIZEOF(long) < _cbEntry)
     {
-        qb += size(long);
+        qb += SIZEOF(long);
         if (pvExtra != pvNil)
-            CopyPb(pvExtra, qb, _cbEntry - size(long));
+            CopyPb(pvExtra, qb, _cbEntry - SIZEOF(long));
         else
-            TrashPvCb(qb, _cbEntry - size(long));
+            TrashPvCb(qb, _cbEntry - SIZEOF(long));
     }
     else
         Assert(pvNil == pvExtra, "cbExtra is zero");
@@ -1112,7 +1112,7 @@ void AST::Delete(long istn)
     else
     {
         *(long *)qb = bvNil;
-        TrashPvCb(qb + size(long), _cbEntry - size(long));
+        TrashPvCb(qb + SIZEOF(long), _cbEntry - SIZEOF(long));
         _cbstFree++;
     }
     _RemoveSt(bst);

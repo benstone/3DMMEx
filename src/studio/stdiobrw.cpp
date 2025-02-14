@@ -96,7 +96,7 @@ bool STDIO::FCmdBrowserReady(PCMD pcmd)
     // Optionally Save/Retrieve Browser Context
     if (_pglpbrcn == pvNil)
     {
-        if (pvNil == (_pglpbrcn = GL::PglNew(size(PBRCN), kglpbrcnGrow)))
+        if (pvNil == (_pglpbrcn = GL::PglNew(SIZEOF(PBRCN), kglpbrcnGrow)))
             goto LFail;
     }
 
@@ -284,7 +284,7 @@ bool STDIO::FCmdBrowserReady(PCMD pcmd)
         // Create the cno map from tmpl-->gokd
         if (_pglcmg == pvNil)
         {
-            if (pvNil == (_pglcmg = GL::PglNew(size(CMG), kglcmgGrow)))
+            if (pvNil == (_pglcmg = GL::PglNew(SIZEOF(CMG), kglcmgGrow)))
                 goto LFail;
             _pglcmg->SetMinGrow(kglcmgGrow);
         }
@@ -303,7 +303,7 @@ bool STDIO::FCmdBrowserReady(PCMD pcmd)
         // Create the cno map from tmpl-->gokd
         if (_pglcmg == pvNil)
         {
-            if (pvNil == (_pglcmg = GL::PglNew(size(CMG), kglcmgGrow)))
+            if (pvNil == (_pglcmg = GL::PglNew(SIZEOF(CMG), kglcmgGrow)))
                 goto LFail;
             _pglcmg->SetMinGrow(kglcmgGrow);
         }
@@ -429,10 +429,10 @@ void BRWB::_ApplySelection(long thumSelect, long sid)
     tag.ctg = kctgBkgd;
     tag.cno = (CNO)thumSelect;
 
-    ClearPb(&cmd, size(cmd));
+    ClearPb(&cmd, SIZEOF(cmd));
     cmd.cid = cidNewScene;
     cmd.pcmh = _pstdio;
-    Assert(size(TAG) <= size(cmd.rglw), "Insufficient space in rglw");
+    Assert(SIZEOF(TAG) <= SIZEOF(cmd.rglw), "Insufficient space in rglw");
     *((PTAG)&cmd.rglw) = tag;
 
     vpcex->EnqueueCmd(&cmd);

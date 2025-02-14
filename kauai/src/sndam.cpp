@@ -206,7 +206,7 @@ PSTBL STBL::PstblNew(FLO *pflo, bool fPacked)
             // cache to the hard drive or memory, depending on the size
             BLCK blck(pflo);
 
-            if (!pblck->FSetTemp(pflo->cb, blck.Cb() + size(STBL) > SDAM::vcbMaxMemWave) || !blck.FWriteToBlck(pblck))
+            if (!pblck->FSetTemp(pflo->cb, blck.Cb() + SIZEOF(STBL) > SDAM::vcbMaxMemWave) || !blck.FWriteToBlck(pblck))
             {
                 delete pstbl;
                 return pvNil;
@@ -273,7 +273,7 @@ bool CAMS::FReadCams(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
     PCAMS pcams = pvNil;
     PSTBL pstbl = pvNil;
 
-    *pcb = size(CAMS) + size(STBL);
+    *pcb = SIZEOF(CAMS) + SIZEOF(STBL);
     if (pvNil == ppbaco)
         return fTrue;
 
@@ -285,7 +285,7 @@ bool CAMS::FReadCams(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
     if (pvNil == (pstbl = STBL::PstblNew(&flo, fPacked)))
         return fFalse;
 
-    *pcb = size(CAMS) + pstbl->CbMem();
+    *pcb = SIZEOF(CAMS) + pstbl->CbMem();
     if (pvNil == (pcams = NewObj CAMS) || FAILED(AllocSoundFromStream(&pcams->psnd, pstbl, fTrue, pvNil)))
     {
         ReleasePpo(&pcams);
@@ -590,7 +590,7 @@ void AMQUE::_Queue(long isndinMin)
             else
             {
                 CacheConfig cc;
-                cc.dwSize = size(cc);
+                cc.dwSize = SIZEOF(cc);
                 cc.fSrcFormat = fTrue;
                 cc.lpFormat = pvNil;
                 cc.dwFormat = _luFormat;
@@ -814,12 +814,12 @@ bool SDAM::_FInit(long wav)
         _fAudioManInited = fTrue;
 
         // REVIEW shonk: what values should we use?
-        mixc.dwSize = size(mixc);
+        mixc.dwSize = SIZEOF(mixc);
         mixc.lpFormat = pvNil;
         if (!FIn(wav, 0, kwavLim))
             wav = kwav22M16;
         mixc.dwFormat = _mpwavfmt[wav];
-        amxc.dwSize = size(amxc);
+        amxc.dwSize = SIZEOF(amxc);
         amxc.uVoices = 12;
         amxc.fRemixEnabled = fTrue;
         amxc.uBufferTime = 600;

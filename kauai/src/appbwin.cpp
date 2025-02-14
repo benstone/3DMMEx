@@ -240,7 +240,7 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
 
     EVT evt;
 
-    ClearPb(pcmd, size(*pcmd));
+    ClearPb(pcmd, SIZEOF(*pcmd));
     pcmd->cid = cidKey;
 
     if (pevt->message == WM_KEYDOWN)

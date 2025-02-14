@@ -248,7 +248,7 @@ RTCLASS(TUNC)
 PTBXB TBXB::PtbxbNew(PTBOX ptbox, PGCB pgcb)
 {
     AssertPo(ptbox, 0);
-    AssertPvCb(pgcb, size(GCB));
+    AssertPvCb(pgcb, SIZEOF(GCB));
 
     PTBXB ptbxb;
     PTBXG ptbxg;
@@ -297,7 +297,7 @@ void TBXB::Draw(PGNV pgnv, RC *prcClip)
 {
     AssertThis(0);
     AssertPo(pgnv, 0);
-    AssertPvCb(prcClip, size(RC));
+    AssertPvCb(prcClip, SIZEOF(RC));
 
     RC rc;
     RC rcClip;
@@ -991,7 +991,7 @@ TBXG::~TBXG()
 PTBXG TBXG::PtbxgNew(PTBOX ptbox, PGCB pgcb)
 {
     AssertPo(ptbox, 0);
-    AssertPvCb(pgcb, size(GCB));
+    AssertPvCb(pgcb, SIZEOF(GCB));
 
     PTBXG ptbxg;
 
@@ -1026,7 +1026,7 @@ void TBXG::Draw(PGNV pgnv, RC *prcClip)
 {
     AssertThis(0);
     AssertPo(pgnv, 0);
-    AssertPvCb(prcClip, size(RC));
+    AssertPvCb(prcClip, SIZEOF(RC));
 
     RC rc;
 
@@ -1539,7 +1539,7 @@ bool TBXG::_FDoClip(long tool)
 
         if (FTextSelected())
         {
-            ClearPb(&cmd, size(CMD));
+            ClearPb(&cmd, SIZEOF(CMD));
             cmd.cid = (tool == toolCutText) ? cidCut : cidCopy;
             ptbox->Pscen()->Pmvie()->Pmcc()->PlayUISound(tool);
             if (!TBXG_PAR::FCmdClip(&cmd))
@@ -1554,7 +1554,7 @@ bool TBXG::_FDoClip(long tool)
 
         if (!vpclip->FGetFormat(kclsACLP) && !vpclip->FGetFormat(kclsTCLP))
         {
-            ClearPb(&cmd, size(CMD));
+            ClearPb(&cmd, SIZEOF(CMD));
             cmd.cid = cidPaste;
             ptbox->Pscen()->Pmvie()->Pmcc()->PlayUISound(tool);
             return (TBXG_PAR::FCmdClip(&cmd));
@@ -1813,7 +1813,7 @@ struct TBOXH
 PTBOX TBOX::PtboxNew(PSCEN pscen, RC *prcRel, bool fStory)
 {
     AssertNilOrPo(pscen, 0);
-    AssertPvCb(prcRel, size(RC));
+    AssertPvCb(prcRel, SIZEOF(RC));
 
     PTBOX ptbox;
 
@@ -1892,8 +1892,8 @@ PTBOX TBOX::PtboxRead(PCRF pcrf, CNO cno, PSCEN pscen)
     //
     // Find the chunk and read in the header.
     //
-    if (!pcfl->FFind(kctgTbox, cno, &blck) || !blck.FUnpackData() || (blck.Cb() != size(TBOXH)) ||
-        !blck.FReadRgb(&tboxh, size(TBOXH), 0))
+    if (!pcfl->FFind(kctgTbox, cno, &blck) || !blck.FUnpackData() || (blck.Cb() != SIZEOF(TBOXH)) ||
+        !blck.FReadRgb(&tboxh, SIZEOF(TBOXH), 0))
     {
         PushErc(ercSocBadFile);
         return (pvNil);
@@ -1983,7 +1983,7 @@ bool TBOX::FWrite(PCFL pcfl, CNO cno)
         return (fFalse);
     }
 
-    if (!pcfl->FPutPv((void *)&tboxh, size(TBOXH), kctgTbox, cno))
+    if (!pcfl->FPutPv((void *)&tboxh, SIZEOF(TBOXH), kctgTbox, cno))
     {
         pcfl->DeleteChild(kctgTbox, cno, cki.ctg, cki.cno, 0);
         return (fFalse);
@@ -2130,7 +2130,7 @@ bool TBOX::FSetType(bool fStory)
 void TBOX::SetRc(RC *prc)
 {
     AssertThis(0);
-    AssertPvCb(prc, size(RC));
+    AssertPvCb(prc, SIZEOF(RC));
 
     if (_rc != *prc)
     {

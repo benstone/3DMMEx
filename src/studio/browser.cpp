@@ -1055,7 +1055,7 @@ bool BRWL::_FCreateBuildThd(CKI ckiRoot, CTG ctgContent, bool fBuildGl)
         //
         // Create the gl's
         //
-        if (pvNil == (_pglthd = GL::PglNew(size(THD), kglthdGrow)))
+        if (pvNil == (_pglthd = GL::PglNew(SIZEOF(THD), kglthdGrow)))
             return fFalse;
         _pglthd->SetMinGrow(kglthdGrow);
     }
@@ -1232,13 +1232,13 @@ void BRWL::_SortThd(void)
     switch (_bws)
     {
     case kbwsChid:
-        Assert(size(thdj.chidThum) == size(long), "Bad pointer cast");
+        Assert(SIZEOF(thdj.chidThum) == SIZEOF(long), "Bad pointer cast");
         plwJ = (long *)&thdj.chidThum;
         plwI = (long *)&thdi.chidThum;
         fSortBySid = fFalse;
         break;
     case kbwsCnoRoot:
-        Assert(size(thdj.tag.cno) == size(long), "Bad pointer cast");
+        Assert(SIZEOF(thdj.tag.cno) == SIZEOF(long), "Bad pointer cast");
         plwJ = (long *)&thdj.tag.cno;
         plwI = (long *)&thdi.tag.cno;
         fSortBySid = fTrue;
@@ -1326,12 +1326,12 @@ long BRWL::_IthumFromThum(long thumSelect, long sidSelect)
         return thumSelect;
 
     case kbwsChid:
-        Assert(size(thd.chid) == size(long), "Bad pointer cast");
+        Assert(SIZEOF(thd.chid) == SIZEOF(long), "Bad pointer cast");
         plw = (long *)&thd.chid;
         break;
 
     case kbwsCnoRoot:
-        Assert(size(thd.tag.cno) == size(long), "Bad pointer cast");
+        Assert(SIZEOF(thd.tag.cno) == SIZEOF(long), "Bad pointer cast");
         plw = (long *)&thd.tag.cno;
         break;
 
@@ -1451,7 +1451,7 @@ bool BCL::_FInit(PCRM pcrm, CKI *pckiRoot, CTG ctgContent, PGL pglthd)
 
     if (pglthd == pvNil)
     {
-        if ((pglthd = GL::PglNew(size(THD))) == pvNil)
+        if ((pglthd = GL::PglNew(SIZEOF(THD))) == pvNil)
             goto LFail;
     }
     else
@@ -1661,9 +1661,9 @@ bool BCL::_FAddGokdToThd(PCFL pcfl, long sid, KID *pkid)
     {
         goto LFail;
     }
-    if (blck.Cb() != size(TFC))
+    if (blck.Cb() != SIZEOF(TFC))
         goto LFail;
-    if (!blck.FReadRgb(&tfc, size(TFC), 0))
+    if (!blck.FReadRgb(&tfc, SIZEOF(TFC), 0))
         goto LFail;
     if (kboCur != tfc.bo)
         SwapBytesBom(&tfc, kbomTfc);
@@ -2756,7 +2756,7 @@ bool BRWI::FInit(PCMD pcmd, CKI ckiRoot, PSTDIO pstdio)
     //
     // Create the gl's
     //
-    if (pvNil == (_pglthd = GL::PglNew(size(THD), kglthdGrow)))
+    if (pvNil == (_pglthd = GL::PglNew(SIZEOF(THD), kglthdGrow)))
         return fFalse;
     _pglthd->SetMinGrow(kglthdGrow);
 
@@ -3049,9 +3049,9 @@ bool BRWR::FInit(PCMD pcmd, CTG ctgTmplThum, long ithumDisplay, PSTDIO pstdio)
             {
                 goto LFail;
             }
-            if (blck.Cb() != size(TFC))
+            if (blck.Cb() != SIZEOF(TFC))
                 goto LFail;
-            if (!blck.FReadRgb(&tfc, size(TFC), 0))
+            if (!blck.FReadRgb(&tfc, SIZEOF(TFC), 0))
                 goto LFail;
             if (kboCur != tfc.bo)
                 SwapBytesBom(&tfc, kbomTfc);

@@ -126,7 +126,7 @@ struct SSE
   protected:
     static long _Cb(long ctagc)
     {
-        return size(SSE) + LwMul(ctagc, size(TAGC));
+        return SIZEOF(SSE) + LwMul(ctagc, SIZEOF(TAGC));
     }
     SSE(void){};
 
@@ -137,17 +137,17 @@ struct SSE
 
     PTAG Ptag(long itagc)
     {
-        PTAGC prgtagc = (PTAGC)PvAddBv(this, size(SSE));
+        PTAGC prgtagc = (PTAGC)PvAddBv(this, SIZEOF(SSE));
         return &(prgtagc[itagc].tag);
     }
     PTAGC Ptagc(long itagc)
     {
-        PTAGC prgtagc = (PTAGC)PvAddBv(this, size(SSE));
+        PTAGC prgtagc = (PTAGC)PvAddBv(this, SIZEOF(SSE));
         return &(prgtagc[itagc]);
     }
     CHID *Pchid(long itagc)
     {
-        PTAGC prgtagc = (PTAGC)PvAddBv(this, size(SSE));
+        PTAGC prgtagc = (PTAGC)PvAddBv(this, SIZEOF(SSE));
         return &(prgtagc[itagc].chid);
     }
     PSSE PsseAddTagChid(PTAG ptag, long chid);
@@ -166,7 +166,7 @@ struct SSE
     }
     long Cb(void)
     {
-        return size(SSE) + LwMul(ctagc, size(TAGC));
+        return SIZEOF(SSE) + LwMul(ctagc, SIZEOF(TAGC));
     }
 };
 void ReleasePpsse(PSSE *ppsse);
@@ -514,26 +514,26 @@ PSCEN SCEN::PscenNew(PMVIE pmvie)
     //
     // Initialize event list
     //
-    pscen->_pggsevFrm = GG::PggNew(size(SEV));
+    pscen->_pggsevFrm = GG::PggNew(SIZEOF(SEV));
     if (pscen->_pggsevFrm == pvNil)
     {
         goto LFail;
     }
     pscen->_isevFrmLim = 0;
 
-    pscen->_pggsevStart = GG::PggNew(size(SEV));
+    pscen->_pggsevStart = GG::PggNew(SIZEOF(SEV));
     if (pscen->_pggsevStart == pvNil)
     {
         goto LFail;
     }
 
-    pscen->_pglpactr = GL::PglNew(size(PACTR), 0);
+    pscen->_pglpactr = GL::PglNew(SIZEOF(PACTR), 0);
     if (pscen->_pglpactr == pvNil)
     {
         goto LFail;
     }
 
-    pscen->_pglptbox = GL::PglNew(size(PTBOX), 0);
+    pscen->_pglptbox = GL::PglNew(SIZEOF(PTBOX), 0);
     if (pscen->_pglptbox == pvNil)
     {
         goto LFail;
@@ -1660,7 +1660,7 @@ void SCEN::_MoveBackFirstFrame(long nfrm)
 bool SCEN::FAddSndCore(bool fLoop, bool fQueue, long vlm, long sty, long ctag, PTAG prgtag)
 {
     AssertThis(0);
-    AssertPvCb(prgtag, LwMul(ctag, size(TAG)));
+    AssertPvCb(prgtag, LwMul(ctag, SIZEOF(TAG)));
     Assert(!fQueue || (ctag == 1), "if fQueue'ing, you should only be adding one sound");
     Assert(!fQueue || !fLoop, "can't both queue and loop");
     AssertIn(sty, 0, styLim);
@@ -1708,7 +1708,7 @@ bool SCEN::FAddSndCore(bool fLoop, bool fQueue, long vlm, long sty, long ctag, P
         PTAGC prgtagc;
         long itagc;
 
-        if (!FAllocPv((void **)&prgtagc, LwMul(size(TAGC), ctag), fmemClear, mprNormal))
+        if (!FAllocPv((void **)&prgtagc, LwMul(SIZEOF(TAGC), ctag), fmemClear, mprNormal))
             return fFalse;
         for (itagc = 0; itagc < ctag; itagc++)
         {
@@ -1845,7 +1845,7 @@ bool SCEN::FAddSndCore(bool fLoop, bool fQueue, long vlm, long sty, long ctag, P
 bool SCEN::FAddSndCoreTagc(bool fLoop, bool fQueue, long vlm, long sty, long ctagc, PTAGC prgtagc)
 {
     AssertThis(0);
-    AssertPvCb(prgtagc, LwMul(ctagc, size(TAGC)));
+    AssertPvCb(prgtagc, LwMul(ctagc, SIZEOF(TAGC)));
     Assert(!fQueue || (ctagc == 1), "if fQueue'ing, you should only be adding one sound");
     Assert(!fQueue || !fLoop, "can't both queue and loop");
     AssertIn(sty, 0, styLim);
@@ -2249,7 +2249,7 @@ bool SCEN::FQuerySnd(long sty, PGL *ppgltagSnd, long *pvlm, bool *pfLoop)
     {
         return fTrue; // no sounds (*ppglTagSnd is nil)
     }
-    *ppgltagSnd = GL::PglNew(size(TAG), psse->ctagc);
+    *ppgltagSnd = GL::PglNew(SIZEOF(TAG), psse->ctagc);
     if (pvNil == *ppgltagSnd)
     {
         ReleasePpsse(&psse);
@@ -2594,7 +2594,7 @@ bool SCEN::FAddActrCore(ACTR *pactr)
     // Add actor to inital list of events to do.
     //
     sev.sevt = sevtAddActr;
-    fRetValue = _pggsevStart->FInsert(0, size(PACTR), &pactr, &sev);
+    fRetValue = _pggsevStart->FInsert(0, SIZEOF(PACTR), &pactr, &sev);
 
     if (fRetValue)
     {
@@ -2908,7 +2908,7 @@ bool SCEN::FAddTboxCore(PTBOX ptbox)
     //
     sev.sevt = sevtAddTbox;
     ptbox->SetScen(this);
-    fRetValue = _pggsevStart->FInsert(_pggsevStart->IvMac(), size(PTBOX), &ptbox, &sev);
+    fRetValue = _pggsevStart->FInsert(_pggsevStart->IvMac(), SIZEOF(PTBOX), &ptbox, &sev);
 
     if (fRetValue)
     {
@@ -3245,7 +3245,7 @@ bool SCEN::FPauseCore(WIT *pwit, long *pdts)
     sev.sevt = sevtPause;
     sevp.wit = *pwit;
     sevp.dts = *pdts;
-    if (!_FAddSev(&sev, size(long) * 2, &sevp))
+    if (!_FAddSev(&sev, SIZEOF(long) * 2, &sevp))
     {
         return (fFalse);
     }
@@ -3340,7 +3340,7 @@ bool SCEN::FSetBkgdCore(PTAG ptag, PTAG ptagOld)
             if (sev.sevt == sevtSetBkgd)
             {
                 _pggsevStart->Get(isev, ptagOld);
-                if (!_pggsevStart->FPut(isev, size(TAG), ptag))
+                if (!_pggsevStart->FPut(isev, SIZEOF(TAG), ptag))
                 {
                     return (fFalse);
                 }
@@ -3351,7 +3351,7 @@ bool SCEN::FSetBkgdCore(PTAG ptag, PTAG ptagOld)
                 _MarkMovieDirty();
                 if (!_FPlaySev(&sev, ptag, _grfscen))
                 {
-                    _pggsevStart->FPut(isev, size(TAG), ptagOld);
+                    _pggsevStart->FPut(isev, SIZEOF(TAG), ptagOld);
                     _FPlaySev(&sev, ptagOld, _grfscen);
                     return (fFalse);
                 }
@@ -3373,7 +3373,7 @@ bool SCEN::FSetBkgdCore(PTAG ptag, PTAG ptagOld)
     //
     sev.sevt = sevtSetBkgd;
 
-    if (!_pggsevStart->FInsert(0, size(TAG), ptag, &sev))
+    if (!_pggsevStart->FInsert(0, SIZEOF(TAG), ptag, &sev))
     {
         return (fFalse);
     }
@@ -3642,7 +3642,7 @@ bool SCEN::FChangeCamCore(long icam, long *picamOld)
     sev.nfrm = _nfrmCur;
     sev.sevt = sevtChngCamera;
 
-    if (_FAddSev(&sev, size(long), &icam))
+    if (_FAddSev(&sev, SIZEOF(long), &icam))
     {
         if (_FPlaySev(&sev, &icam, _grfscen))
         {
@@ -3781,8 +3781,8 @@ SCEN *SCEN::PscenRead(PMVIE pmvie, PCRF pcrf, CNO cno)
     //
     // Find the chunk and read in the header.
     //
-    if (!pcfl->FFind(kctgScen, cno, &blck) || !blck.FUnpackData() || (blck.Cb() != size(SCENH)) ||
-        !blck.FReadRgb(&scenh, size(SCENH), 0))
+    if (!pcfl->FFind(kctgScen, cno, &blck) || !blck.FUnpackData() || (blck.Cb() != SIZEOF(SCENH)) ||
+        !blck.FReadRgb(&scenh, SIZEOF(SCENH), 0))
     {
         goto LFail0;
     }
@@ -3814,7 +3814,7 @@ SCEN *SCEN::PscenRead(PMVIE pmvie, PCRF pcrf, CNO cno)
     //
     // Initialize roll call	for actors
     //
-    pscen->_pglpactr = GL::PglNew(size(PACTR), 0);
+    pscen->_pglpactr = GL::PglNew(SIZEOF(PACTR), 0);
     if (pscen->_pglpactr == pvNil)
     {
         goto LFail0;
@@ -3823,7 +3823,7 @@ SCEN *SCEN::PscenRead(PMVIE pmvie, PCRF pcrf, CNO cno)
     //
     // Initialize roll call	for text boxes
     //
-    pscen->_pglptbox = GL::PglNew(size(PTBOX), 0);
+    pscen->_pglptbox = GL::PglNew(SIZEOF(PTBOX), 0);
     if (pscen->_pglptbox == pvNil)
     {
         goto LFail0;
@@ -3859,7 +3859,7 @@ SCEN *SCEN::PscenRead(PMVIE pmvie, PCRF pcrf, CNO cno)
         goto LFail0;
     }
 
-    Assert(pscen->_pggsevFrm->CbFixed() == size(SEV), "Bad GG read for event");
+    Assert(pscen->_pggsevFrm->CbFixed() == SIZEOF(SEV), "Bad GG read for event");
 
     //
     // Convert all open tags to pointers.
@@ -3940,7 +3940,7 @@ SCEN *SCEN::PscenRead(PMVIE pmvie, PCRF pcrf, CNO cno)
         goto LFail1;
     }
 
-    Assert(pscen->_pggsevStart->CbFixed() == size(SEV), "Bad GG read for event");
+    Assert(pscen->_pggsevStart->CbFixed() == SIZEOF(SEV), "Bad GG read for event");
 
     //
     // Convert all open tags to pointers.
@@ -4214,7 +4214,7 @@ bool SCEN::FWrite(PCRF pcrf, CNO *pcno)
     //
     // Copy frame event GG to temporary GG
     //
-    pggFrmTemp = GG::PggNew(size(SEV));
+    pggFrmTemp = GG::PggNew(SIZEOF(SEV));
 
     if (pggFrmTemp == pvNil)
     {
@@ -4278,14 +4278,14 @@ bool SCEN::FWrite(PCRF pcrf, CNO *pcno)
         }
 
         case sevtChngCamera:
-            if (!pggFrmTemp->FInsert(isevFrm, size(long), _pggsevFrm->QvGet(isevFrm), &sev))
+            if (!pggFrmTemp->FInsert(isevFrm, SIZEOF(long), _pggsevFrm->QvGet(isevFrm), &sev))
             {
                 goto LFail;
             }
             break;
 
         case sevtPause:
-            if (!pggFrmTemp->FInsert(isevFrm, size(SEVP), _pggsevFrm->QvGet(isevFrm), &sev))
+            if (!pggFrmTemp->FInsert(isevFrm, SIZEOF(SEVP), _pggsevFrm->QvGet(isevFrm), &sev))
             {
                 goto LFail;
             }
@@ -4303,7 +4303,7 @@ bool SCEN::FWrite(PCRF pcrf, CNO *pcno)
     //
     // Copy start event GG to temporary GG
     //
-    pggStartTemp = GG::PggNew(size(SEV));
+    pggStartTemp = GG::PggNew(SIZEOF(SEV));
 
     if (pggStartTemp == pvNil)
     {
@@ -4330,7 +4330,7 @@ bool SCEN::FWrite(PCRF pcrf, CNO *pcno)
                 goto LFail;
             }
 
-            if (!pggStartTemp->FInsert(isevStart, size(CHID), &chidActr, &sev))
+            if (!pggStartTemp->FInsert(isevStart, SIZEOF(CHID), &chidActr, &sev))
             {
                 goto LFail;
             }
@@ -4344,14 +4344,14 @@ bool SCEN::FWrite(PCRF pcrf, CNO *pcno)
                 goto LFail;
             }
 
-            if (!pggStartTemp->FInsert(isevStart, size(TAG), _pggsevStart->QvGet(isevStart), &sev))
+            if (!pggStartTemp->FInsert(isevStart, SIZEOF(TAG), _pggsevStart->QvGet(isevStart), &sev))
             {
                 goto LFail;
             }
             break;
 
         case sevtChngCamera:
-            if (!pggStartTemp->FInsert(isevStart, size(long), _pggsevStart->QvGet(isevStart), &sev))
+            if (!pggStartTemp->FInsert(isevStart, SIZEOF(long), _pggsevStart->QvGet(isevStart), &sev))
             {
                 goto LFail;
             }
@@ -4368,7 +4368,7 @@ bool SCEN::FWrite(PCRF pcrf, CNO *pcno)
                 goto LFail;
             }
 
-            if (!pggStartTemp->FInsert(isevStart, size(CHID), &chidTbox, &sev))
+            if (!pggStartTemp->FInsert(isevStart, SIZEOF(CHID), &chidTbox, &sev))
             {
                 goto LFail;
             }
@@ -4469,7 +4469,7 @@ bool SCEN::FWrite(PCRF pcrf, CNO *pcno)
         goto LFail;
     }
 
-    if (!pcfl->FPutPv((void *)&scenh, size(SCENH), kctgScen, *pcno))
+    if (!pcfl->FPutPv((void *)&scenh, SIZEOF(SCENH), kctgScen, *pcno))
     {
         goto LFail;
     }
@@ -5098,7 +5098,7 @@ bool SCEN::FAddTagsToTagl(PCFL pcfl, CNO cno, PTAGL ptagl)
         return fFalse;
     }
 
-    Assert(pggsev->CbFixed() == size(SEV), "Bad GG read for event");
+    Assert(pggsev->CbFixed() == SIZEOF(SEV), "Bad GG read for event");
 
     //
     // Find all tags in starting events
@@ -5214,7 +5214,7 @@ bool SCEN::FAddTagsToTagl(PCFL pcfl, CNO cno, PTAGL ptagl)
         return fFalse;
     }
 
-    Assert(pggsev->CbFixed() == size(SEV), "Bad GG read for event");
+    Assert(pggsev->CbFixed() == SIZEOF(SEV), "Bad GG read for event");
 
     //
     // Look in all events for tags
@@ -5777,9 +5777,9 @@ bool SCEN::FTransOnFile(PCRF pcrf, CNO cno, TRANS *ptrans)
 
     if (!pcfl->FFind(kctgScen, cno, &blck))
         goto LFail;
-    if (!blck.FUnpackData() || blck.Cb() != size(SCENH))
+    if (!blck.FUnpackData() || blck.Cb() != SIZEOF(SCENH))
         goto LFail;
-    if (!blck.FReadRgb(&scenh, size(SCENH), 0))
+    if (!blck.FReadRgb(&scenh, SIZEOF(SCENH), 0))
         goto LFail;
 
     *ptrans = scenh.trans;
@@ -5810,14 +5810,14 @@ bool SCEN::FSetTransOnFile(PCRF pcrf, CNO cno, TRANS trans)
 
     if (!pcfl->FFind(kctgScen, cno, &blck))
         goto LFail;
-    if (!blck.FUnpackData() || blck.Cb() != size(SCENH))
+    if (!blck.FUnpackData() || blck.Cb() != SIZEOF(SCENH))
         goto LFail;
-    if (!blck.FReadRgb(&scenh, size(SCENH), 0))
+    if (!blck.FReadRgb(&scenh, SIZEOF(SCENH), 0))
         goto LFail;
     if (scenh.trans != trans)
     {
         scenh.trans = trans;
-        if (!pcfl->FPutPv(&scenh, size(SCENH), kctgScen, cno))
+        if (!pcfl->FPutPv(&scenh, SIZEOF(SCENH), kctgScen, cno))
             goto LFail;
     }
 
@@ -6108,7 +6108,7 @@ void SUNS::AssertValid(ulong grf)
     SUNS_PAR::AssertValid(grf);
     if (_psse != pvNil)
     {
-        AssertPvCb(_psse, size(SSE));
+        AssertPvCb(_psse, SIZEOF(SSE));
         AssertPvCb(_psse, _psse->Cb());
         Assert(_sty == _psse->sty, "sty's don't match");
     }
@@ -7164,7 +7164,7 @@ PSSE SSE::PsseNew(long ctag)
 PSSE SSE::PsseNew(long vlm, long sty, bool fLoop, long ctagc, TAGC *prgtagc)
 {
     Assert(ctagc > 0, 0);
-    AssertPvCb(prgtagc, LwMul(ctagc, size(TAGC)));
+    AssertPvCb(prgtagc, LwMul(ctagc, SIZEOF(TAGC)));
     PSSE psse;
     long itagc;
 
@@ -7217,7 +7217,7 @@ PSSE SSE::PsseDupFromGg(PGG pgg, long iv, bool fDupTags)
 {
     AssertPo(pgg, 0);
     AssertIn(iv, 0, pgg->IvMac());
-    Assert(pgg->Cb(iv) >= size(SSE), "variable part too small");
+    Assert(pgg->Cb(iv) >= SIZEOF(SSE), "variable part too small");
 
     long ctagc;
     PSSE psse;
@@ -7280,11 +7280,11 @@ PSSE SSE::PsseDup(void)
     PSSE psse;
     long itagc;
 
-    if (!FAllocPv((void **)&psse, size(SSE) + LwMul(ctagc, size(TAGC)), fmemNil, mprNormal))
+    if (!FAllocPv((void **)&psse, SIZEOF(SSE) + LwMul(ctagc, SIZEOF(TAGC)), fmemNil, mprNormal))
     {
         return pvNil;
     }
-    CopyPb(this, psse, size(SSE) + LwMul(ctagc, size(TAGC)));
+    CopyPb(this, psse, SIZEOF(SSE) + LwMul(ctagc, SIZEOF(TAGC)));
     for (itagc = 0; itagc < psse->ctagc; itagc++)
         TAGM::DupTag(psse->Ptag(itagc));
     return psse;

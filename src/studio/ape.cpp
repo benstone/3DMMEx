@@ -103,7 +103,7 @@ bool APE::_FInit(PTMPL ptmpl, PCOST pcost, long anid, bool fCycleCels, PRCA prca
         }
     }
 
-    _pglgms = GL::PglNew(size(GMS), cbset);
+    _pglgms = GL::PglNew(SIZEOF(GMS), cbset);
     if (pvNil == _pglgms)
         return fFalse;
     AssertDo(_pglgms->FSetIvMac(cbset), "PglNew should have ensured space");

@@ -51,7 +51,7 @@ PTMAP TMAP::PtmapRead(PCFL pcfl, CTG ctg, CNO cno)
 
     if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData())
         goto LFail;
-    if (!blck.FReadRgb(&tmapf, size(TMAPF), 0))
+    if (!blck.FReadRgb(&tmapf, SIZEOF(TMAPF), 0))
         goto LFail;
 
     if (kboCur != tmapf.bo)
@@ -74,7 +74,7 @@ PTMAP TMAP::PtmapRead(PCFL pcfl, CTG ctg, CNO cno)
     ptmap->_bpmp.origin_x = tmapf.xpOrigin;
     ptmap->_bpmp.origin_y = tmapf.ypOrigin;
 
-    if (!blck.FReadRgb(ptmap->_bpmp.pixels, LwMul(tmapf.cbRow, tmapf.dyp), size(TMAPF)))
+    if (!blck.FReadRgb(ptmap->_bpmp.pixels, LwMul(tmapf.cbRow, tmapf.dyp), SIZEOF(TMAPF)))
     {
         goto LFail;
     }
@@ -123,7 +123,7 @@ bool TMAP::FWrite(PCFL pcfl, CTG ctg, CNO *pcno)
     AssertThis(0);
     BLCK blck;
 
-    if (!pcfl->FAdd(size(TMAPF) + LwMul(_bpmp.row_bytes, _bpmp.height), ctg, pcno, &blck))
+    if (!pcfl->FAdd(SIZEOF(TMAPF) + LwMul(_bpmp.row_bytes, _bpmp.height), ctg, pcno, &blck))
     {
         return fFalse;
     }
@@ -149,9 +149,9 @@ bool TMAP::FWrite(PBLCK pblck)
     tmapf.dyp = _bpmp.height;
     tmapf.xpOrigin = _bpmp.origin_x;
     tmapf.ypOrigin = _bpmp.origin_y;
-    if (!pblck->FWriteRgb(&tmapf, size(TMAPF), 0))
+    if (!pblck->FWriteRgb(&tmapf, SIZEOF(TMAPF), 0))
         return fFalse;
-    if (!pblck->FWriteRgb(_bpmp.pixels, LwMul(tmapf.cbRow, tmapf.dyp), size(TMAPF)))
+    if (!pblck->FWriteRgb(_bpmp.pixels, LwMul(tmapf.cbRow, tmapf.dyp), SIZEOF(TMAPF)))
     {
         return fFalse;
     }
@@ -202,7 +202,7 @@ PTMAP TMAP::PtmapReadNative(FNI *pfni, PGL pglclr)
             // Do a closest color match
             //
 
-            pglCache = GL::PglNew(size(long), pglclrSrc->IvMac());
+            pglCache = GL::PglNew(SIZEOF(long), pglclrSrc->IvMac());
 
             if (pglCache != pvNil)
             {
@@ -344,7 +344,7 @@ bool TMAP::FWriteTmapChkFile(PFNI pfniDst, bool fCompress, PMSNK pmsnkErr)
         pszErr = PszLit("Couldn't create destination file\n");
         goto LFail;
     }
-    flo.fp = size(long);
+    flo.fp = SIZEOF(long);
     flo.cb = CbOnFile();
 
     if (fCompress)
@@ -363,7 +363,7 @@ bool TMAP::FWriteTmapChkFile(PFNI pfniDst, bool fCompress, PMSNK pmsnkErr)
             lwSig = klwSigPackedFile;
             flo.cb = blck.Cb(fTrue);
         }
-        if (!flo.pfil->FWriteRgb(&lwSig, size(long), 0) || !blck.FWriteToFlo(&flo, fTrue))
+        if (!flo.pfil->FWriteRgb(&lwSig, SIZEOF(long), 0) || !blck.FWriteToFlo(&flo, fTrue))
         {
             pszErr = PszLit("writing to destination file failed\n");
             goto LFail;
@@ -372,7 +372,7 @@ bool TMAP::FWriteTmapChkFile(PFNI pfniDst, bool fCompress, PMSNK pmsnkErr)
     else
     {
         lwSig = klwSigUnpackedFile;
-        if (!flo.pfil->FWriteRgb(&lwSig, size(long), 0) || !FWriteFlo(&flo))
+        if (!flo.pfil->FWriteRgb(&lwSig, SIZEOF(long), 0) || !FWriteFlo(&flo))
         {
             pszErr = PszLit("writing to destination file failed\n");
             goto LFail;

@@ -265,7 +265,7 @@ class GGB : public GGB_PAR
     void _AdjustLocs(long bvMin, long bvLim, long dcb);
     LOC *_Qloc(long iloc)
     {
-        return (LOC *)_Qb2(LwMul(iloc, size(LOC)));
+        return (LOC *)_Qb2(LwMul(iloc, SIZEOF(LOC)));
     }
     bool _FRead(PBLCK pblck, short *pbo, short *posk);
 
@@ -439,7 +439,7 @@ class GSTB : public GSTB_PAR
     }
     long CbExtra(void)
     {
-        return _cbEntry - size(long);
+        return _cbEntry - SIZEOF(long);
     }
 
     bool FAddStn(PSTN pstn, void *pvExtra = pvNil, long *pistn = pvNil);

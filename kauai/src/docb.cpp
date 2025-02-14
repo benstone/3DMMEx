@@ -384,7 +384,7 @@ bool DOCB::FAddDdg(PDDG pddg)
     AssertPo(pddg, 0);
     bool fT;
 
-    if (pvNil == _pglpddg && pvNil == (_pglpddg = GL::PglNew(size(PDDG), 1)))
+    if (pvNil == _pglpddg && pvNil == (_pglpddg = GL::PglNew(SIZEOF(PDDG), 1)))
     {
         return fFalse;
     }
@@ -639,7 +639,7 @@ bool DOCB::FAddUndo(PUNDB pundb)
     if (_cundbMax == 0)
         return fTrue;
 
-    if (pvNil == _pglpundb && pvNil == (_pglpundb = GL::PglNew(size(PUNDB), 1)))
+    if (pvNil == _pglpundb && pvNil == (_pglpundb = GL::PglNew(SIZEOF(PUNDB), 1)))
     {
         return fFalse;
     }
@@ -1523,7 +1523,7 @@ bool DMW::FAddDsg(PDSG pdsg, PDSG pdsgSplit, ulong grfdsg, long rel)
     DSED *qdsed;
     long idsedSplit, idsedPar, idsedEdge, idsedNew;
 
-    ClearPb(&dsed, size(dsed));
+    ClearPb(&dsed, SIZEOF(dsed));
     dsed.idsedLeft = ivNil;
     dsed.idsedRight = ivNil;
     dsed.idsedPar = ivNil;
@@ -1531,7 +1531,7 @@ bool DMW::FAddDsg(PDSG pdsg, PDSG pdsgSplit, ulong grfdsg, long rel)
     {
         // this is the first one
         Assert(pvNil == pdsgSplit, "no DSGs yet, so can't split one");
-        if (pvNil == _paldsed && pvNil == (_paldsed = AL::PalNew(size(DSED), 1)))
+        if (pvNil == _paldsed && pvNil == (_paldsed = AL::PalNew(SIZEOF(DSED), 1)))
             return fFalse;
         dsed.pdsg = pdsg;
         if (!_paldsed->FAdd(&dsed, &_idsedRoot))

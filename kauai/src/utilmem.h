@@ -215,12 +215,12 @@ void FreePpv(void **ppv);
 
 #define TrashVar(pfoo)                                                                                                 \
     if (pvNil != (pfoo))                                                                                               \
-        FillPb(pfoo, size(*(pfoo)), kbGarbage);                                                                        \
+        FillPb(pfoo, SIZEOF(*(pfoo)), kbGarbage);                                                                      \
     else                                                                                                               \
         (void)0
 #define TrashVarIf(f, pfoo)                                                                                            \
     if ((f) && pvNil != (pfoo))                                                                                        \
-        FillPb(pfoo, size(*(pfoo)), kbGarbage);                                                                        \
+        FillPb(pfoo, SIZEOF(*(pfoo)), kbGarbage);                                                                      \
     else                                                                                                               \
         (void)0
 #define TrashPvCb(pv, cb)                                                                                              \

@@ -37,13 +37,13 @@ bool GKDS::FReadGkds(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
         return fFalse;
     *pcb = pblck->Cb();
 
-    if (*pcb < size(GOKDF) + size(LOP) || CbRoundToLong(*pcb) != *pcb)
+    if (*pcb < SIZEOF(GOKDF) + SIZEOF(LOP) || CbRoundToLong(*pcb) != *pcb)
     {
         Bug("Bad GOKD");
         return fFalse;
     }
 
-    if (!pblck->FReadRgb(&gokdf, size(GOKDF), 0))
+    if (!pblck->FReadRgb(&gokdf, SIZEOF(GOKDF), 0))
         return fFalse;
     if (gokdf.bo == kboOther)
         SwapBytesBom(&gokdf, kbomGokdf);
@@ -53,7 +53,7 @@ bool GKDS::FReadGkds(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
         return fFalse;
     }
 
-    if (!pblck->FMoveMin(size(gokdf)))
+    if (!pblck->FMoveMin(SIZEOF(gokdf)))
         return fFalse;
     hq = pblck->HqFree();
     if (hqNil == hq)
@@ -68,29 +68,29 @@ bool GKDS::FReadGkds(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
     pgkds->_hqData = hq;
     pgkds->_gokk = gokdf.gokk;
     if (gokdf.bo == kboOther)
-        SwapBytesRglw(QvFromHq(hq), cb / size(long));
+        SwapBytesRglw(QvFromHq(hq), cb / SIZEOF(long));
 
     qlop = (LOP *)QvFromHq(hq);
     for (pgkds->_clop = 0;; qlop++)
     {
-        if (cb < size(LOP))
+        if (cb < SIZEOF(LOP))
         {
             Bug("Bad LOP list in GOKD");
             ReleasePpo(&pgkds);
             return fFalse;
         }
         pgkds->_clop++;
-        cb -= size(LOP);
+        cb -= SIZEOF(LOP);
         if (hidNil == qlop->hidPar)
             break;
     }
-    if ((cb % size(CUME)) != 0)
+    if ((cb % SIZEOF(CUME)) != 0)
     {
         Bug("Bad CUME list in GOKD");
         ReleasePpo(&pgkds);
         return fFalse;
     }
-    pgkds->_ccume = cb / size(CUME);
+    pgkds->_ccume = cb / SIZEOF(CUME);
     *ppbaco = pgkds;
     return fTrue;
 }
@@ -115,7 +115,7 @@ void GKDS::AssertValid(ulong grf)
     AssertHq(_hqData);
     AssertIn(_clop, 0, kcbMax);
     AssertIn(_ccume, 0, kcbMax);
-    Assert(LwMul(_clop, size(LOP)) + LwMul(_ccume, size(CUME)) == CbOfHq(_hqData), "GKDS _hqData wrong size");
+    Assert(LwMul(_clop, SIZEOF(LOP)) + LwMul(_ccume, SIZEOF(CUME)) == CbOfHq(_hqData), "GKDS _hqData wrong size");
     qrglop = (LOP *)QvFromHq(_hqData);
     Assert(qrglop[_clop - 1].hidPar == hidNil, "bad rglop in GKDS");
 }
@@ -154,7 +154,7 @@ bool GKDS::FGetCume(ulong grfcust, long sno, CUME *pcume)
     if (0 == _ccume)
         return fFalse;
 
-    qcume = (CUME *)PvAddBv(QvFromHq(_hqData), LwMul(_clop, size(LOP)));
+    qcume = (CUME *)PvAddBv(QvFromHq(_hqData), LwMul(_clop, SIZEOF(LOP)));
     for (ccume = _ccume; ccume > 0; ccume--, qcume++)
     {
         if ((qcume->grfbitSno & fbitSno) && (qcume->grfcustMask & grfcust) == qcume->grfcust)

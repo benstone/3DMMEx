@@ -85,11 +85,11 @@ PTAGM TAGM::PtagmNew(PFNI pfniHDRoot, PFNINSCD pfninscd, long cbCache)
     ptagm->_cbCache = cbCache;
     ptagm->_pfninscd = pfninscd;
 
-    ptagm->_pglsfs = GL::PglNew(size(SFS));
+    ptagm->_pglsfs = GL::PglNew(SIZEOF(SFS));
     if (pvNil == ptagm->_pglsfs)
         goto LFail;
 
-    ptagm->_pgstSource = GST::PgstNew(size(long)); // extra data is sid
+    ptagm->_pgstSource = GST::PgstNew(SIZEOF(long)); // extra data is sid
     if (pvNil == ptagm->_pgstSource)
         goto LFail;
 
@@ -192,7 +192,7 @@ bool TAGM::FMergeGstSource(PGST pgst, short bo, short osk)
 {
     AssertThis(0);
     AssertPo(pgst, 0);
-    Assert(size(long) == pgst->CbExtra(), "bad pgstSource");
+    Assert(SIZEOF(long) == pgst->CbExtra(), "bad pgstSource");
 
     long istn;
     STN stn;

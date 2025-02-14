@@ -78,7 +78,7 @@ class MBMP : public MBMP_PAR
 
     short *_Qrgcb(void)
     {
-        return (short *)PvAddBv(QvFromHq(_hqrgb), size(MBMPH));
+        return (short *)PvAddBv(QvFromHq(_hqrgb), SIZEOF(MBMPH));
     }
     MBMPH *_Qmbmph(void)
     {

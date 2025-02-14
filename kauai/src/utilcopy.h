@@ -32,12 +32,12 @@ ulong FcmpCompareRgb(const void *pv1, const void *pv2, long cb);
 
 #ifdef DEBUG
 #define SwapVars(pv1, pv2)                                                                                             \
-    if (size(*pv1) != size(*pv2))                                                                                      \
+    if (SIZEOF(*pv1) != SIZEOF(*pv2))                                                                                  \
         Bug("sizes don't match");                                                                                      \
     else                                                                                                               \
-        SwapPb(pv1, pv2, size(*pv1))
+        SwapPb(pv1, pv2, SIZEOF(*pv1))
 #else //! DEBUG
-#define SwapVars(pv1, pv2) SwapPb(pv1, pv2, size(*pv1))
+#define SwapVars(pv1, pv2) SwapPb(pv1, pv2, SIZEOF(*pv1))
 #endif //! DEBUG
 
 #endif // UTILCOPY_H

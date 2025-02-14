@@ -99,7 +99,7 @@ bool ACTR::FWrite(PCFL pcfl, CNO cnoActr, CNO cnoScene)
     actf.nfrmFirst = _nfrmFirst;
     actf.nfrmLast = _nfrmLast;
     actf.tagTmpl = _tagTmpl;
-    if (!pcfl->FPutPv(&actf, size(ACTF), kctgActr, cnoActr))
+    if (!pcfl->FPutPv(&actf, SIZEOF(ACTF), kctgActr, cnoActr))
         return fFalse;
 
     // Now write the PATH chunk:
@@ -177,7 +177,7 @@ PACTR ACTR::PactrRead(PCRF pcrf, CNO cnoActr)
         goto LFail;
     if (!pactr->_FOpenTags(pcrf))
         goto LFail;
-    if (pvNil == (pactr->_pglsmm = GL::PglNew(size(SMM), kcsmmGrow)))
+    if (pvNil == (pactr->_pglsmm = GL::PglNew(SIZEOF(SMM), kcsmmGrow)))
         goto LFail;
     pactr->_pglsmm->SetMinGrow(kcsmmGrow);
 
@@ -215,9 +215,9 @@ bool _FReadActf(PBLCK pblck, ACTF *pactf)
     if (!pblck->FUnpackData())
         return fFalse;
 
-    if (pblck->Cb() != size(ACTF))
+    if (pblck->Cb() != SIZEOF(ACTF))
     {
-        if (pblck->Cb() != size(ACTF) - size(long))
+        if (pblck->Cb() != SIZEOF(ACTF) - SIZEOF(long))
             return fFalse;
         fOldActf = fTrue;
     }
@@ -227,7 +227,7 @@ bool _FReadActf(PBLCK pblck, ACTF *pactf)
 
     if (fOldActf)
     {
-        BltPb(&pactf->nfrmLast, &pactf->nfrmLast + 1, size(ACTF) - offset(ACTF, nfrmLast) - size(long));
+        BltPb(&pactf->nfrmLast, &pactf->nfrmLast + 1, SIZEOF(ACTF) - offset(ACTF, nfrmLast) - SIZEOF(long));
     }
 
     if (kboOther == pactf->bo)
@@ -308,7 +308,7 @@ bool ACTR::FAdjustAridOnFile(PCFL pcfl, CNO cno, long darid)
 
     Assert(kboCur == actf.bo, "bad ACTF");
     actf.arid += darid;
-    return pcfl->FPutPv(&actf, size(ACTF), kctgActr, cno);
+    return pcfl->FPutPv(&actf, SIZEOF(ACTF), kctgActr, cno);
 }
 
 /***************************************************************************
@@ -327,10 +327,10 @@ bool ACTR::_FReadRoute(PCFL pcfl, CNO cno)
     _pglrpt = GL::PglRead(&blck, &bo);
     if (pvNil == _pglrpt)
         return fFalse;
-    AssertBomRglw(kbomRpt, size(RPT));
+    AssertBomRglw(kbomRpt, SIZEOF(RPT));
     if (kboOther == bo)
     {
-        SwapBytesRglw(_pglrpt->QvGet(0), LwMul(_pglrpt->IvMac(), size(RPT) / size(long)));
+        SwapBytesRglw(_pglrpt->QvGet(0), LwMul(_pglrpt->IvMac(), SIZEOF(RPT) / SIZEOF(long)));
     }
     return fTrue;
 }
@@ -492,7 +492,7 @@ PGL ACTR::PgltagFetch(PCFL pcfl, CNO cno, bool *pfError)
     long iaev;
     KID kid;
 
-    pgltag = GL::PglNew(size(TAG), 0);
+    pgltag = GL::PglNew(SIZEOF(TAG), 0);
     if (pvNil == pgltag)
         goto LFail;
 

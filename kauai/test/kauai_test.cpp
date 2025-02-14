@@ -118,7 +118,7 @@ TEST(KauaiTests, TestMem)
     HQ hqT, hq;
     long cb, ihq;
 
-    FillPb(rghq, size(rghq), 0);
+    FillPb(rghq, SIZEOF(rghq), 0);
 
     for (ihq = 0; ihq < kchq; ihq++)
     {
@@ -194,7 +194,7 @@ TEST(KauaiTests, TestGl)
     short *qsw;
     PGL pglsw;
 
-    pglsw = GL::PglNew(size(short));
+    pglsw = GL::PglNew(SIZEOF(short));
     if (pvNil == pglsw)
     {
         Bug("PglNew failed");
@@ -297,7 +297,7 @@ TEST(KauaiTests, TestFil)
     AssertPo(pfil, 0);
     EXPECT_TRUE(pfil->FSetFpMac(100));
     EXPECT_EQ(pfil->FpMac(), 100);
-    EXPECT_TRUE(pfil->FWriteRgb(&fni, size(fni), 0));
+    EXPECT_TRUE(pfil->FWriteRgb(&fni, SIZEOF(fni), 0));
     pfil->SetTemp(fTrue);
     pfil->Mark();
     ReleasePpo(&pfil);
@@ -453,7 +453,7 @@ TEST(KauaiTests, TestCfl)
         EXPECT_TRUE(FEqualRgb(stn.Prgch(), perel->psz, stn.Cch()));
         EXPECT_TRUE(pcfl->FFind(perel->ctg, perel->cno, &blck));
         EXPECT_TRUE(blck.FRead(rgch));
-        EXPECT_TRUE(FEqualRgb(rgch, perel->psz, CchSz(perel->psz) * size(achar)));
+        EXPECT_TRUE(FEqualRgb(rgch, perel->psz, CchSz(perel->psz) * SIZEOF(achar)));
     }
 
     // copy all the chunks - they should already be there, but this
@@ -493,8 +493,8 @@ TEST(KauaiTests, TestCfl)
         EXPECT_TRUE(pcfl->FGetName(cki.ctg, cki.cno, &stn));
         EXPECT_TRUE(pcfl->FFind(cki.ctg, cki.cno, &blck));
         EXPECT_TRUE(blck.FRead(rgch));
-        EXPECT_TRUE(FEqualRgb(rgch, stn.Prgch(), stn.Cch() * size(achar)));
-        EXPECT_EQ(stn.Cch() * size(achar), blck.Cb());
+        EXPECT_TRUE(FEqualRgb(rgch, stn.Prgch(), stn.Cch() * SIZEOF(achar)));
+        EXPECT_EQ(stn.Cch() * SIZEOF(achar), blck.Cb());
     }
 
     // copy all the chunks back

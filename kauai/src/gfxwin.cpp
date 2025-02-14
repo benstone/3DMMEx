@@ -117,8 +117,8 @@ static PALETTEENTRY _rgpe[20] = {
 void GPT::SetActiveColors(PGL pglclr, ulong grfpal)
 {
     AssertNilOrPo(pglclr, 0);
-    Assert(pvNil == pglclr || pglclr->CbEntry() == size(CLR), "wrong CbEntry");
-    byte rgb[size(LOGPALETTE) + 256 * size(PALETTEENTRY)];
+    Assert(pvNil == pglclr || pglclr->CbEntry() == SIZEOF(CLR), "wrong CbEntry");
+    byte rgb[SIZEOF(LOGPALETTE) + 256 * SIZEOF(PALETTEENTRY)];
     LOGPALETTE *ppal = (LOGPALETTE *)rgb;
     PALETTEENTRY pe;
     long ipe, ipeLim;
@@ -133,7 +133,7 @@ void GPT::SetActiveColors(PGL pglclr, ulong grfpal)
             Bug("Setting palette before vwig.hdcApp is set");
             return;
         }
-        if (!FAllocPv((void **)&_prgclr, LwMul(256, size(CLR)), fmemNil, mprNormal))
+        if (!FAllocPv((void **)&_prgclr, LwMul(256, SIZEOF(CLR)), fmemNil, mprNormal))
         {
             PushErc(ercGfxCantSetPalette);
             return;
@@ -198,7 +198,7 @@ void GPT::SetActiveColors(PGL pglclr, ulong grfpal)
         return;
     }
 
-    ClearPb(rgbT, size(rgbT));
+    ClearPb(rgbT, SIZEOF(rgbT));
     if (grfpal & fpalIdentity)
     {
         // get the first 10 and last 10 system palette entries
@@ -212,9 +212,9 @@ void GPT::SetActiveColors(PGL pglclr, ulong grfpal)
         else
         {
             // the screen is non-palettized - get the standard colors.
-            Assert(size(_rgpe[0]) == size(ppal->palPalEntry[0]), 0);
-            CopyPb(_rgpe, ppal->palPalEntry, 10 * size(_rgpe[0]));
-            CopyPb(_rgpe + 10, ppal->palPalEntry + 246, 10 * size(_rgpe[0]));
+            Assert(SIZEOF(_rgpe[0]) == SIZEOF(ppal->palPalEntry[0]), 0);
+            CopyPb(_rgpe, ppal->palPalEntry, 10 * SIZEOF(_rgpe[0]));
+            CopyPb(_rgpe + 10, ppal->palPalEntry + 246, 10 * SIZEOF(_rgpe[0]));
         }
 
         clr.bZero = 0;
@@ -285,11 +285,11 @@ PGL GPT::PglclrGetPalette(void)
 {
     PGL pglclr;
 
-    if (pvNil == (pglclr = GL::PglNew(size(CLR), _cclrPal)))
+    if (pvNil == (pglclr = GL::PglNew(SIZEOF(CLR), _cclrPal)))
         return pvNil;
 
     AssertDo(pglclr->FSetIvMac(_cclrPal), 0);
-    CopyPb(_prgclr, pglclr->QvGet(0), LwMul(size(CLR), _cclrPal));
+    CopyPb(_prgclr, pglclr->QvGet(0), LwMul(SIZEOF(CLR), _cclrPal));
     return pglclr;
 }
 
@@ -505,19 +505,19 @@ PGPT GPT::PgptNewOffscreen(RC *prc, long cbitPixel)
 
     // the three longs are for 16 and 32 bit dibs.
     if (!FAllocPv((void **)&pbmi,
-                  size(BITMAPINFO) + LwMul(cclr, LwMax(size(short), size(RGBQUAD))) + LwMul(3, size(long)), fmemClear,
-                  mprNormal))
+                  SIZEOF(BITMAPINFO) + LwMul(cclr, LwMax(SIZEOF(short), SIZEOF(RGBQUAD))) + LwMul(3, SIZEOF(long)),
+                  fmemClear, mprNormal))
     {
         goto LFail;
     }
 
-    pbmi->bmiHeader.biSize = size(BITMAPINFOHEADER);
+    pbmi->bmiHeader.biSize = SIZEOF(BITMAPINFOHEADER);
     pbmi->bmiHeader.biWidth = prc->Dxp();
     pbmi->bmiHeader.biHeight = -prc->Dyp();
     pbmi->bmiHeader.biPlanes = 1;
     pbmi->bmiHeader.biBitCount = (short)cbitPixel;
     pbmi->bmiHeader.biCompression = (cbitPixel == 16 || cbitPixel == 32) ? BI_BITFIELDS : BI_RGB;
-    cbRow = LwRoundAway(LwMulDivAway(prc->Dxp(), cbitPixel, 8), size(long));
+    cbRow = LwRoundAway(LwMulDivAway(prc->Dxp(), cbitPixel, 8), SIZEOF(long));
     pbmi->bmiHeader.biSizeImage = LwMul(prc->Dyp(), cbRow);
     pbmi->bmiHeader.biXPelsPerMeter = 0;
     pbmi->bmiHeader.biYPelsPerMeter = 0;
@@ -557,7 +557,7 @@ PGPT GPT::PgptNewOffscreen(RC *prc, long cbitPixel)
             PALETTEENTRY pe;
             long ipe;
 
-            if (!FAllocPv((void **)&ppal, size(LOGPALETTE) + 256 * size(PALETTEENTRY), fmemNil, mprNormal))
+            if (!FAllocPv((void **)&ppal, SIZEOF(LOGPALETTE) + 256 * SIZEOF(PALETTEENTRY), fmemNil, mprNormal))
             {
                 FreePpv((void **)&pbmi);
                 goto LFail;
@@ -582,7 +582,7 @@ PGPT GPT::PgptNewOffscreen(RC *prc, long cbitPixel)
         }
         if (_prgclr != pvNil)
         {
-            CopyPb(_prgclr, pbmi->bmiColors, LwMul(LwMin(cclr, _cclrPal), size(RGBQUAD)));
+            CopyPb(_prgclr, pbmi->bmiColors, LwMul(LwMin(cclr, _cclrPal), SIZEOF(RGBQUAD)));
         }
         else
         {
@@ -927,7 +927,7 @@ void GPT::DrawLine(PTS *ppts1, PTS *ppts2, GDD *pgdd)
     // create an OLY to fill
     long dxp, dyp, dypPen;
     PTS *pptsDst;
-    byte rgbOly[kcbOlyBase + 6 * size(PTS)];
+    byte rgbOly[kcbOlyBase + 6 * SIZEOF(PTS)];
     OLY *poly = (OLY *)rgbOly;
 
     poly->cpts = 6;
@@ -1802,7 +1802,7 @@ bool NTL::FInit(void)
     // Make sure to explicitly add the system font since EnumFonts() won't.
     // System font always has font number 0.
     AssertDo(hNil != (hfnt = (HFONT)GetStockObject(SYSTEM_FONT)), "Can't get system font");
-    AssertDo(GetObject(hfnt, size(lgf), &lgf) != 0, "Can't get logical font");
+    AssertDo(GetObject(hfnt, SIZEOF(lgf), &lgf) != 0, "Can't get logical font");
     if (!_pgst->FAddRgch(lgf.lfFaceName, CchSz(lgf.lfFaceName), &lgf) ||
         !EnumFonts(vwig.hdcApp, pvNil, _FEnumFont, (LPARAM)_pgst))
     {
@@ -1848,7 +1848,7 @@ HFONT NTL::HfntCreate(DSF *pdsf)
     long cch;
 
     _pgst->GetExtra(pdsf->onn, &lgf);
-    _pgst->GetRgch(pdsf->onn, lgf.lfFaceName, size(lgf.lfFaceName) - 1, &cch);
+    _pgst->GetRgch(pdsf->onn, lgf.lfFaceName, SIZEOF(lgf.lfFaceName) - 1, &cch);
     lgf.lfFaceName[cch] = 0;
     lgf.lfItalic = FPure(pdsf->grfont & fontItalic);
     lgf.lfWeight = (pdsf->grfont & fontBold) ? FW_BOLD : FW_NORMAL;
@@ -1882,7 +1882,7 @@ bool FCreateRgn(HRGN *phrgn, RC *prc)
     RCS rcs;
 
     if (pvNil == prc)
-        ClearPb(&rcs, size(rcs));
+        ClearPb(&rcs, SIZEOF(rcs));
     else
         rcs = *prc;
 

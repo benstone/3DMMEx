@@ -244,11 +244,11 @@ void CHSE::_DumpBsf(long cactTab)
         for (cact = cactTab; cact-- > 0;)
             stn1.FAppendCh(kchTab);
 
-        cb = LwMin(ibMac - ib, size(rgb));
+        cb = LwMin(ibMac - ib, SIZEOF(rgb));
         _bsf.FetchRgb(ib, cb, rgb);
 
         // append the hex
-        for (ibT = 0; ibT < size(rgb); ibT++)
+        for (ibT = 0; ibT < SIZEOF(rgb); ibT++)
         {
             if (ibT >= cb)
                 stn1.FAppendSz(PszLit("     "));

@@ -24,7 +24,7 @@ STN::STN(STN &stnSrc)
 {
     AssertPo(&stnSrc, 0);
 
-    CopyPb(stnSrc._rgch, _rgch, (stnSrc.Cch() + 2) * size(achar));
+    CopyPb(stnSrc._rgch, _rgch, (stnSrc.Cch() + 2) * SIZEOF(achar));
     AssertThis(0);
 }
 
@@ -36,7 +36,7 @@ STN::STN(const PSZ pszSrc)
     long cch = LwBound(CchSz(pszSrc), 0, kcchMaxStn + 1);
 
     AssertIn(cch, 0, kcchMaxStn + 1);
-    CopyPb(pszSrc, _rgch + 1, cch * size(achar));
+    CopyPb(pszSrc, _rgch + 1, cch * SIZEOF(achar));
     _rgch[0] = (achar)cch;
     _rgch[cch + 1] = 0;
     AssertThis(0);
@@ -50,7 +50,7 @@ STN &STN::operator=(STN &stnSrc)
     AssertThis(0);
     AssertPo(&stnSrc, 0);
 
-    CopyPb(stnSrc._rgch, _rgch, (stnSrc.Cch() + 2) * size(achar));
+    CopyPb(stnSrc._rgch, _rgch, (stnSrc.Cch() + 2) * SIZEOF(achar));
     AssertThis(0);
     return *this;
 }
@@ -62,13 +62,13 @@ void STN::SetRgch(const achar *prgchSrc, long cch)
 {
     AssertThis(0);
     AssertIn(cch, 0, kcbMax);
-    AssertPvCb(prgchSrc, cch * size(achar));
+    AssertPvCb(prgchSrc, cch * SIZEOF(achar));
 
     if (cch > kcchMaxStn)
         cch = kcchMaxStn;
 
     if (cch > 0)
-        CopyPb(prgchSrc, _rgch + 1, cch * size(achar));
+        CopyPb(prgchSrc, _rgch + 1, cch * SIZEOF(achar));
     else
         cch = 0; // for safety
 
@@ -125,7 +125,7 @@ void STN::Delete(long ich, long cch)
     }
     else
     {
-        BltPb(_rgch + ich + cch + 1, _rgch + ich + 1, (cchCur - ich - cch) * size(achar));
+        BltPb(_rgch + ich + cch + 1, _rgch + ich + 1, (cchCur - ich - cch) * SIZEOF(achar));
         _rgch[0] = (achar)(cchCur - cch);
         _rgch[cchCur - cch + 1] = 0;
     }
@@ -139,7 +139,7 @@ bool STN::FAppendRgch(const achar *prgchSrc, long cch)
 {
     AssertThis(0);
     AssertIn(cch, 0, kcbMax);
-    AssertPvCb(prgchSrc, cch * size(achar));
+    AssertPvCb(prgchSrc, cch * SIZEOF(achar));
     bool fRet = fTrue;
     long cchCur = Cch();
 
@@ -151,7 +151,7 @@ bool STN::FAppendRgch(const achar *prgchSrc, long cch)
 
     if (cch > 0)
     {
-        CopyPb(prgchSrc, _rgch + cchCur + 1, cch * size(achar));
+        CopyPb(prgchSrc, _rgch + cchCur + 1, cch * SIZEOF(achar));
         _rgch[0] = (achar)(cchCur + cch);
         _rgch[cchCur + cch + 1] = 0;
     }
@@ -167,7 +167,7 @@ bool STN::FInsertRgch(long ich, const achar *prgchSrc, long cch)
 {
     AssertThis(0);
     AssertIn(cch, 0, kcbMax);
-    AssertPvCb(prgchSrc, cch * size(achar));
+    AssertPvCb(prgchSrc, cch * SIZEOF(achar));
     bool fRet = fTrue;
     long cchCur = Cch();
 
@@ -189,9 +189,9 @@ bool STN::FInsertRgch(long ich, const achar *prgchSrc, long cch)
     {
         if (cchCur > ich)
         {
-            BltPb(_rgch + ich + 1, _rgch + ich + cch + 1, (cchCur - ich) * size(achar));
+            BltPb(_rgch + ich + 1, _rgch + ich + cch + 1, (cchCur - ich) * SIZEOF(achar));
         }
-        CopyPb(prgchSrc, _rgch + ich + 1, cch * size(achar));
+        CopyPb(prgchSrc, _rgch + ich + 1, cch * SIZEOF(achar));
         _rgch[0] = (achar)(cchCur + cch);
         _rgch[cchCur + cch + 1] = 0;
     }
@@ -208,9 +208,9 @@ bool STN::FEqualRgch(const achar *prgch, long cch)
 {
     AssertThis(0);
     AssertIn(cch, 0, kcbMax);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
 
-    return cch == Cch() && FEqualRgb(_rgch + 1, prgch, cch * size(achar));
+    return cch == Cch() && FEqualRgb(_rgch + 1, prgch, cch * SIZEOF(achar));
 }
 
 /***************************************************************************
@@ -220,7 +220,7 @@ bool STN::FEqualUserRgch(const achar *prgch, long cch, ulong grfstn)
 {
     AssertThis(0);
     AssertIn(cch, 0, kcbMax);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
 
     return ::FEqualUserRgch(Prgch(), Cch(), prgch, cch, grfstn);
 }
@@ -233,7 +233,7 @@ long STN::CbData(void)
 {
     AssertThis(0);
 
-    return size(short) + (Cch() + 2) * size(achar);
+    return SIZEOF(short) + (Cch() + 2) * SIZEOF(achar);
 }
 
 /***************************************************************************
@@ -246,8 +246,8 @@ void STN::GetData(void *pv)
     AssertPvCb(pv, CbData());
     short osk = koskCur;
 
-    CopyPb(&osk, pv, size(short));
-    CopyPb(_rgch, PvAddBv(pv, size(short)), (Cch() + 2) * size(achar));
+    CopyPb(&osk, pv, SIZEOF(short));
+    CopyPb(_rgch, PvAddBv(pv, SIZEOF(short)), (Cch() + 2) * SIZEOF(achar));
 }
 
 /***************************************************************************
@@ -267,9 +267,9 @@ bool STN::FWrite(PBLCK pblck, long ib)
         return fFalse;
     }
 
-    if (!pblck->FWriteRgb(&osk, size(osk), ib))
+    if (!pblck->FWriteRgb(&osk, SIZEOF(osk), ib))
         return fFalse;
-    if (!pblck->FWriteRgb(_rgch, cbWrite - size(short), ib + size(short)))
+    if (!pblck->FWriteRgb(_rgch, cbWrite - SIZEOF(short), ib + SIZEOF(short)))
         return fFalse;
 
     return fTrue;
@@ -289,24 +289,24 @@ bool STN::FSetData(void *pv, long cbMax, long *pcbRead)
     short osk;
 
     ibT = 0;
-    if (cbMax < size(short) + ibT)
+    if (cbMax < SIZEOF(short) + ibT)
         goto LFail;
-    CopyPb(pv, &osk, size(short));
-    ibT += size(short);
+    CopyPb(pv, &osk, SIZEOF(short));
+    ibT += SIZEOF(short);
 
     if (osk == koskCur)
     {
         // no translation needed - read the length prefix
-        if (cbMax < ibT + size(achar))
+        if (cbMax < ibT + SIZEOF(achar))
             goto LFail;
-        CopyPb(PvAddBv(pv, ibT), &_rgch[0], size(achar));
-        ibT += size(achar);
+        CopyPb(PvAddBv(pv, ibT), &_rgch[0], SIZEOF(achar));
+        ibT += SIZEOF(achar);
         cch = (long)(uchar)_rgch[0];
         if (!FIn(cch, 0, kcchMaxStn + 1))
             goto LFail;
 
         // read the rest of the string
-        cbT = size(achar) * (cch + 1);
+        cbT = SIZEOF(achar) * (cch + 1);
         if (cbMax < ibT + cbT)
             goto LFail;
         CopyPb(PvAddBv(pv, ibT), _rgch + 1, cbT);
@@ -321,7 +321,7 @@ bool STN::FSetData(void *pv, long cbMax, long *pcbRead)
 
     switch (CbCharOsk(osk))
     {
-    case size(schar):
+    case SIZEOF(schar):
         if (ibT + 2 > cbMax)
             goto LFail;
 
@@ -337,23 +337,23 @@ bool STN::FSetData(void *pv, long cbMax, long *pcbRead)
         _rgch[cch + 1] = 0;
         goto LCheck;
 
-    case size(wchar):
-        if (ibT + 2 * size(wchar) > cbMax)
+    case SIZEOF(wchar):
+        if (ibT + 2 * SIZEOF(wchar) > cbMax)
             goto LFail;
-        CopyPb(PvAddBv(pv, ibT), &chw, size(wchar));
-        ibT += size(wchar);
+        CopyPb(PvAddBv(pv, ibT), &chw, SIZEOF(wchar));
+        ibT += SIZEOF(wchar);
 
         if (osk == MacWin(koskUniWin, koskUniMac))
             SwapBytesRgsw(&chw, 1);
         cch = (long)(ushort)chw;
 
-        if (cch > kcchMaxStn || ibT + (cch + 1) * size(wchar) > cbMax)
+        if (cch > kcchMaxStn || ibT + (cch + 1) * SIZEOF(wchar) > cbMax)
             goto LFail;
-        CopyPb(PvAddBv(pv, ibT + cch * size(wchar)), &chw, size(wchar));
+        CopyPb(PvAddBv(pv, ibT + cch * SIZEOF(wchar)), &chw, SIZEOF(wchar));
         if (chw != 0)
             goto LFail;
-        _rgch[0] = (achar)CchTranslateRgb(PvAddBv(pv, ibT), cch * size(wchar), osk, _rgch + 1, kcchMaxStn);
-        ibT += (cch + 1) * size(wchar);
+        _rgch[0] = (achar)CchTranslateRgb(PvAddBv(pv, ibT), cch * SIZEOF(wchar), osk, _rgch + 1, kcchMaxStn);
+        ibT += (cch + 1) * SIZEOF(wchar);
 
         cch = (long)(uchar)_rgch[0];
         _rgch[cch + 1] = 0;
@@ -402,24 +402,24 @@ bool STN::FRead(PBLCK pblck, long ib, long *pcbRead)
     cbMax = pblck->Cb();
 
     ibT = ib;
-    if (cbMax < size(short) + ibT || !pblck->FReadRgb(&osk, size(short), ibT))
+    if (cbMax < SIZEOF(short) + ibT || !pblck->FReadRgb(&osk, SIZEOF(short), ibT))
         goto LFail;
-    ibT += size(short);
+    ibT += SIZEOF(short);
 
     if (osk == koskCur)
     {
         // no translation needed - read the length prefix
-        if (cbMax < ibT + size(achar) || !pblck->FReadRgb(&_rgch[0], size(achar), ibT))
+        if (cbMax < ibT + SIZEOF(achar) || !pblck->FReadRgb(&_rgch[0], SIZEOF(achar), ibT))
         {
             goto LFail;
         }
-        ibT += size(achar);
+        ibT += SIZEOF(achar);
         cch = (long)(uchar)_rgch[0];
         if (!FIn(cch, 0, kcchMaxStn + 1))
             goto LFail;
 
         // read the rest of the string
-        cbT = size(achar) * (cch + 1);
+        cbT = SIZEOF(achar) * (cch + 1);
         if (cbMax < ibT + cbT || !pblck->FReadRgb(_rgch + 1, cbT, ibT))
             goto LFail;
         ibT += cbT;
@@ -433,7 +433,7 @@ bool STN::FRead(PBLCK pblck, long ib, long *pcbRead)
 
     switch (CbCharOsk(osk))
     {
-    case size(schar):
+    case SIZEOF(schar):
         if (ibT + 2 > cbMax || !pblck->FReadRgb(&chs, 1, ibT++))
             goto LFail;
         cch = (long)(byte)chs;
@@ -448,24 +448,24 @@ bool STN::FRead(PBLCK pblck, long ib, long *pcbRead)
         _rgch[cch + 1] = 0;
         goto LCheck;
 
-    case size(wchar):
-        if (ibT + 2 * size(wchar) > cbMax || !pblck->FReadRgb(&chw, size(wchar), ibT))
+    case SIZEOF(wchar):
+        if (ibT + 2 * SIZEOF(wchar) > cbMax || !pblck->FReadRgb(&chw, SIZEOF(wchar), ibT))
         {
             goto LFail;
         }
-        ibT += size(wchar);
+        ibT += SIZEOF(wchar);
 
         if (osk == MacWin(koskUniWin, koskUniMac))
             SwapBytesRgsw(&chw, 1);
         cch = (long)(ushort)chw;
 
-        if (cch > kcchMaxStn || ibT + (cch + 1) * size(wchar) > cbMax ||
-            !pblck->FReadRgb(rgb, (cch + 1) * size(wchar), ibT) || ((wchar *)rgb)[cch] != 0)
+        if (cch > kcchMaxStn || ibT + (cch + 1) * SIZEOF(wchar) > cbMax ||
+            !pblck->FReadRgb(rgb, (cch + 1) * SIZEOF(wchar), ibT) || ((wchar *)rgb)[cch] != 0)
         {
             goto LFail;
         }
-        ibT += (cch + 1) * size(wchar);
-        _rgch[0] = (achar)CchTranslateRgb(rgb, cch * size(wchar), osk, _rgch + 1, kcchMaxStn);
+        ibT += (cch + 1) * SIZEOF(wchar);
+        _rgch[0] = (achar)CchTranslateRgb(rgb, cch * SIZEOF(wchar), osk, _rgch + 1, kcchMaxStn);
 
         cch = (long)(uchar)_rgch[0];
         _rgch[cch + 1] = 0;
@@ -576,7 +576,7 @@ bool STN::FFormatRgch(const achar *prgchFormat, long cchFormat, ulong *prgluData
 {
     AssertThis(0);
     AssertIn(cchFormat, 0, kcchMaxStn + 1);
-    AssertPvCb(prgchFormat, cchFormat * size(achar));
+    AssertPvCb(prgchFormat, cchFormat * SIZEOF(achar));
     AssertVarMem(prgluData);
 
     // Data Write Order - these dwo values are pcode for when to add what
@@ -685,7 +685,7 @@ bool STN::FFormatRgch(const achar *prgchFormat, long cchFormat, ulong *prgluData
 
         // code after the switch assumes that prgchTerm points to the
         // characters to add to the stream and cch is the number of characters
-        AssertPvCb(prgluData, LwMul(ivArg + 1, size(ulong)));
+        AssertPvCb(prgluData, LwMul(ivArg + 1, SIZEOF(ulong)));
         lu = prgluData[ivArg++];
         prgchTerm = rgchT;
         switch (ch)
@@ -780,7 +780,7 @@ bool STN::FFormatRgch(const achar *prgchFormat, long cchFormat, ulong *prgluData
                 break;
 
             case 3: // add the text
-                CopyPb(prgchTerm, pchOut, cch * size(achar));
+                CopyPb(prgchTerm, pchOut, cch * SIZEOF(achar));
                 pchOut += cch;
                 break;
 
@@ -981,7 +981,7 @@ bool FValidSt(PST pst)
     if (!FIn(cch, 0, kcchMaxSt + 1))
         return fFalse;
 
-    AssertPvCb(pst, (cch + kcchExtraSt) * size(achar));
+    AssertPvCb(pst, (cch + kcchExtraSt) * SIZEOF(achar));
     for (pch = PrgchSt(pst); cch > 0 && *pch != 0; cch--, pch++)
         ;
     return (cch == 0);
@@ -1008,7 +1008,7 @@ long CchSz(const PSZ psz)
     for (pch = psz; *pch != 0; pch++)
         ;
     Assert(pch - psz <= kcchMaxSz, "sz too long");
-    AssertPvCb(psz, (pch - psz + 1) * size(achar));
+    AssertPvCb(psz, (pch - psz + 1) * SIZEOF(achar));
     return pch - psz;
 }
 
@@ -1019,11 +1019,11 @@ long CchSz(const PSZ psz)
 bool FEqualRgch(const achar *prgch1, long cch1, const achar *prgch2, long cch2)
 {
     AssertIn(cch1, 0, kcbMax);
-    AssertPvCb(prgch1, cch1 * size(achar));
+    AssertPvCb(prgch1, cch1 * SIZEOF(achar));
     AssertIn(cch2, 0, kcbMax);
-    AssertPvCb(prgch2, cch2 * size(achar));
+    AssertPvCb(prgch2, cch2 * SIZEOF(achar));
 
-    return cch1 == cch2 && FEqualRgb(prgch1, prgch2, cch1 * size(achar));
+    return cch1 == cch2 && FEqualRgb(prgch1, prgch2, cch1 * SIZEOF(achar));
 }
 
 /***************************************************************************
@@ -1034,9 +1034,9 @@ bool FEqualRgch(const achar *prgch1, long cch1, const achar *prgch2, long cch2)
 ulong FcmpCompareRgch(const achar *prgch1, long cch1, const achar *prgch2, long cch2)
 {
     AssertIn(cch1, 0, kcbMax);
-    AssertPvCb(prgch1, cch1 * size(achar));
+    AssertPvCb(prgch1, cch1 * SIZEOF(achar));
     AssertIn(cch2, 0, kcbMax);
-    AssertPvCb(prgch2, cch2 * size(achar));
+    AssertPvCb(prgch2, cch2 * SIZEOF(achar));
     long ich, cbTot, cbMatch;
 
     if (cch1 < cch2)
@@ -1044,13 +1044,13 @@ ulong FcmpCompareRgch(const achar *prgch1, long cch1, const achar *prgch2, long 
     if (cch1 > cch2)
         return fcmpGt;
 
-    cbTot = cch1 * size(achar);
+    cbTot = cch1 * SIZEOF(achar);
     cbMatch = CbEqualRgb(prgch1, prgch2, cbTot);
     AssertIn(cbMatch, 0, cbTot + 1);
     if (cbTot == cbMatch)
         return fcmpEq;
 
-    ich = cbMatch / size(achar);
+    ich = cbMatch / SIZEOF(achar);
     Assert(prgch1[ich] != prgch2[ich], 0);
 
     return prgch1[ich] < prgch2[ich] ? fcmpLt : fcmpGt;
@@ -1062,16 +1062,16 @@ ulong FcmpCompareRgch(const achar *prgch1, long cch1, const achar *prgch2, long 
 bool FEqualUserRgch(const achar *prgch1, long cch1, const achar *prgch2, long cch2, ulong grfstn)
 {
     AssertIn(cch1, 0, kcbMax);
-    AssertPvCb(prgch1, cch1 * size(achar));
+    AssertPvCb(prgch1, cch1 * SIZEOF(achar));
     AssertIn(cch2, 0, kcbMax);
-    AssertPvCb(prgch2, cch2 * size(achar));
+    AssertPvCb(prgch2, cch2 * SIZEOF(achar));
     long cchBuf;
     achar rgch1[kcchMaxStn];
     achar rgch2[kcchMaxStn];
 
     // REVIEW shonk: implement for real
     if (!(grfstn & fstnIgnoreCase))
-        return cch1 == cch2 && FEqualRgb(prgch1, prgch2, cch1 * size(achar));
+        return cch1 == cch2 && FEqualRgb(prgch1, prgch2, cch1 * SIZEOF(achar));
 
     if (cch1 != cch2)
         return fFalse;
@@ -1079,15 +1079,15 @@ bool FEqualUserRgch(const achar *prgch1, long cch1, const achar *prgch2, long cc
     while (cch1 > 0)
     {
         cchBuf = LwMin(kcchMaxStn, cch1);
-        CopyPb(prgch1, rgch1, cchBuf * size(achar));
-        CopyPb(prgch2, rgch2, cchBuf * size(achar));
+        CopyPb(prgch1, rgch1, cchBuf * SIZEOF(achar));
+        CopyPb(prgch2, rgch2, cchBuf * SIZEOF(achar));
 #ifdef WIN
         CharUpperBuff(rgch1, cchBuf);
         CharUpperBuff(rgch2, cchBuf);
 #else  //! WIN
         RawRtn(); // REVIEW shonk: Mac: implement
 #endif //! WIN
-        if (!FEqualRgb(rgch1, rgch2, cchBuf * size(achar)))
+        if (!FEqualRgb(rgch1, rgch2, cchBuf * SIZEOF(achar)))
             return fFalse;
         prgch1 += cchBuf;
         prgch2 += cchBuf;
@@ -1103,9 +1103,9 @@ bool FEqualUserRgch(const achar *prgch1, long cch1, const achar *prgch2, long cc
 ulong FcmpCompareUserRgch(const achar *prgch1, long cch1, const achar *prgch2, long cch2, ulong grfstn)
 {
     AssertIn(cch1, 0, kcbMax);
-    AssertPvCb(prgch1, cch1 * size(achar));
+    AssertPvCb(prgch1, cch1 * SIZEOF(achar));
     AssertIn(cch2, 0, kcbMax);
-    AssertPvCb(prgch2, cch2 * size(achar));
+    AssertPvCb(prgch2, cch2 * SIZEOF(achar));
 
 #ifdef WIN
     long lw;
@@ -1181,7 +1181,7 @@ void LowerRgchs(schar *prgchs, long cchs)
 void UpperRgchw(wchar *prgchw, long cchw)
 {
     AssertIn(cchw, 0, kcbMax);
-    AssertPvCb(prgchw, cchw * size(wchar));
+    AssertPvCb(prgchw, cchw * SIZEOF(wchar));
 
 #if defined(WIN)
 #if defined(UNICODE)
@@ -1200,10 +1200,10 @@ void UpperRgchw(wchar *prgchw, long cchw)
 void LowerRgchw(wchar *prgchw, long cchw)
 {
     AssertIn(cchw, 0, kcbMax);
-    AssertPvCb(prgchw, cchw * size(wchar));
+    AssertPvCb(prgchw, cchw * SIZEOF(wchar));
 
     AssertIn(cchw, 0, kcbMax);
-    AssertPvCb(prgchw, cchw * size(wchar));
+    AssertPvCb(prgchw, cchw * SIZEOF(wchar));
 
 #if defined(WIN)
 #if defined(UNICODE)
@@ -1223,7 +1223,7 @@ long CchTranslateRgb(const void *pvSrc, long cbSrc, short oskSrc, achar *prgchDs
 {
     AssertPvCb(pvSrc, cbSrc);
     AssertOsk(oskSrc);
-    AssertPvCb(prgchDst, cchMaxDst * size(achar));
+    AssertPvCb(prgchDst, cchMaxDst * SIZEOF(achar));
     long cchT;
 
 #ifdef WIN
@@ -1240,16 +1240,16 @@ long CchTranslateRgb(const void *pvSrc, long cbSrc, short oskSrc, achar *prgchDs
                                    prgchDst, cchMaxDst);
 
     case koskUniMac:
-        if (cbSrc % size(wchar) != 0)
+        if (cbSrc % SIZEOF(wchar) != 0)
             return 0;
 
-        cchT = cbSrc / size(wchar);
+        cchT = cbSrc / SIZEOF(wchar);
         if (0 == cchMaxDst)
             return cchT;
         if (cchT > cchMaxDst)
             return 0;
 
-        CopyPb(pvSrc, prgchDst, cchT * size(achar));
+        CopyPb(pvSrc, prgchDst, cchT * SIZEOF(achar));
         SwapBytesRgsw(prgchDst, cchT);
         return cchT;
     }
@@ -1282,18 +1282,18 @@ long CchTranslateRgb(const void *pvSrc, long cbSrc, short oskSrc, achar *prgchDs
 
     case koskUniWin:
     case koskUniMac:
-        if (cbSrc % size(wchar) != 0)
+        if (cbSrc % SIZEOF(wchar) != 0)
             return 0;
 
         // TODO: Refactor to make a copy of the string instead of modifying it in-place
         // swap byte order
         if (oskSrc == koskUniMac)
-            RawRtn(); // SwapBytesRgsw(pvSrc, cbSrc / size(wchar));
+            RawRtn(); // SwapBytesRgsw(pvSrc, cbSrc / SIZEOF(wchar));
 
-        cchT = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)pvSrc, cbSrc / size(wchar), prgchDst, cchMaxDst, pvNil, pvNil);
+        cchT = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)pvSrc, cbSrc / SIZEOF(wchar), prgchDst, cchMaxDst, pvNil, pvNil);
 
         // if (oskSrc == koskUniMac)
-        // SwapBytesRgsw(pvSrc, cbSrc / size(wchar));
+        // SwapBytesRgsw(pvSrc, cbSrc / SIZEOF(wchar));
         return cchT;
     }
 
@@ -1342,16 +1342,16 @@ long CchTranslateRgb(const void *pvSrc, long cbSrc, short oskSrc, achar *prgchDs
         return cbSrc;
 
     case koskUniWin:
-        if (cbSrc % size(wchar) != 0)
+        if (cbSrc % SIZEOF(wchar) != 0)
             return 0;
 
-        cchT = cbSrc / size(wchar);
+        cchT = cbSrc / SIZEOF(wchar);
         if (0 == cchMaxDst)
             return cchT;
         if (cchT > cchMaxDst)
             return 0;
 
-        CopyPb(pvSrc, prgchDst, cchT * size(achar));
+        CopyPb(pvSrc, prgchDst, cchT * SIZEOF(achar));
         SwapBytesRgsw(prgchDst, cchT);
         return cchT;
     }

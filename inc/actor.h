@@ -252,17 +252,17 @@ const BOM kbomAevtweak = kbomXyz;
 const BOM kbomAevrot = kbomBmat34;
 
 // Separate ggaev variable portion sizes
-#define kcbVarAdd (size(AEVADD))
-#define kcbVarActn (size(AEVACTN))
-#define kcbVarCost (size(AEVCOST))
-#define kcbVarRot (size(BMAT34))
-#define kcbVarSize (size(BRS))
-#define kcbVarPull (size(AEVPULL))
-#define kcbVarSnd (size(AEVSND))
-#define kcbVarFreeze (size(long))
-#define kcbVarMove (size(XYZ))
-#define kcbVarTweak (size(XYZ))
-#define kcbVarStep (size(BRS))
+#define kcbVarAdd (SIZEOF(AEVADD))
+#define kcbVarActn (SIZEOF(AEVACTN))
+#define kcbVarCost (SIZEOF(AEVCOST))
+#define kcbVarRot (SIZEOF(BMAT34))
+#define kcbVarSize (SIZEOF(BRS))
+#define kcbVarPull (SIZEOF(AEVPULL))
+#define kcbVarSnd (SIZEOF(AEVSND))
+#define kcbVarFreeze (SIZEOF(long))
+#define kcbVarMove (SIZEOF(XYZ))
+#define kcbVarTweak (SIZEOF(XYZ))
+#define kcbVarStep (SIZEOF(BRS))
 #define kcbVarZero (0)
 
 // Actor Event Flags

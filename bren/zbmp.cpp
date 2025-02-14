@@ -83,7 +83,7 @@ bool ZBMP::FReadZbmp(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
     }
     AssertPo(pzbmp, 0);
     *ppbaco = pzbmp;
-    *pcb = size(ZBMP) + pzbmp->_cb;
+    *pcb = SIZEOF(ZBMP) + pzbmp->_cb;
     return fTrue;
 }
 
@@ -104,17 +104,17 @@ PZBMP ZBMP::PzbmpRead(PBLCK pblck)
     if (pvNil == pzbmp)
         goto LFail;
 
-    if (!pblck->FReadRgb(&zbmpf, size(ZBMPF), 0))
+    if (!pblck->FReadRgb(&zbmpf, SIZEOF(ZBMPF), 0))
         goto LFail;
 
     pzbmp->_rc.Set(zbmpf.xpLeft, zbmpf.ypTop, zbmpf.xpLeft + zbmpf.dxp, zbmpf.ypTop + zbmpf.dyp);
     pzbmp->_cbRow = LwMul(pzbmp->_rc.Dxp(), kcbPixelZbmp);
     pzbmp->_cb = LwMul(pzbmp->_rc.Dyp(), pzbmp->_cbRow);
-    if (pblck->Cb() != size(ZBMPF) + pzbmp->_cb)
+    if (pblck->Cb() != SIZEOF(ZBMPF) + pzbmp->_cb)
         goto LFail;
     if (!FAllocPv((void **)&pzbmp->_prgb, pzbmp->_cb, fmemNil, mprNormal))
         goto LFail;
-    if (!pblck->FReadRgb(pzbmp->_prgb, pzbmp->_cb, size(ZBMPF)))
+    if (!pblck->FReadRgb(pzbmp->_prgb, pzbmp->_cb, SIZEOF(ZBMPF)))
         goto LFail;
     AssertPo(pzbmp, 0);
     return pzbmp;
@@ -276,11 +276,11 @@ bool ZBMP::FWrite(PCFL pcfl, CTG ctg, CNO *pcno)
     zbmpf.dxp = (short)_rc.Dxp();
     zbmpf.dyp = (short)_rc.Dyp();
 
-    if (!pcfl->FAdd(size(ZBMPF) + _cb, ctg, pcno, &blck))
+    if (!pcfl->FAdd(SIZEOF(ZBMPF) + _cb, ctg, pcno, &blck))
         return fFalse;
-    if (!blck.FWriteRgb(&zbmpf, size(ZBMPF), 0))
+    if (!blck.FWriteRgb(&zbmpf, SIZEOF(ZBMPF), 0))
         return fFalse;
-    if (!blck.FWriteRgb(_prgb, _cb, size(ZBMPF)))
+    if (!blck.FWriteRgb(_prgb, _cb, SIZEOF(ZBMPF)))
         return fFalse;
     return fTrue;
 }

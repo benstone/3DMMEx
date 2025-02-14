@@ -72,7 +72,7 @@ bool MBMP::_FInit(byte *prgbPixels, long cbRow, long dyp, RC *prc, long xpRef, l
     RC rc = *prc;
 
     // allocate enough space for the rgcb
-    if (!FAllocHq(&_hqrgb, size(MBMPH) + LwMul(rc.Dyp(), size(short)), fmemNil, mprNormal))
+    if (!FAllocHq(&_hqrgb, SIZEOF(MBMPH) + LwMul(rc.Dyp(), SIZEOF(short)), fmemNil, mprNormal))
     {
         return fFalse;
     }
@@ -155,10 +155,10 @@ bool MBMP::_FInit(byte *prgbPixels, long cbRow, long dyp, RC *prc, long xpRef, l
     }
 
     // reallocate the _hqrgb to the size actually needed
-    AssertIn(LwMul(rc.Dyp(), size(short)), 0, CbOfHq(_hqrgb) - size(MBMPH) + 1);
+    AssertIn(LwMul(rc.Dyp(), SIZEOF(short)), 0, CbOfHq(_hqrgb) - SIZEOF(MBMPH) + 1);
 
-    _cbRgcb = LwMul(rc.Dyp(), size(short));
-    if (!FResizePhq(&_hqrgb, _cbRgcb + size(MBMPH) + cbPixelData, fmemNil, mprNormal))
+    _cbRgcb = LwMul(rc.Dyp(), SIZEOF(short));
+    if (!FResizePhq(&_hqrgb, _cbRgcb + SIZEOF(MBMPH) + cbPixelData, fmemNil, mprNormal))
     {
         return fFalse;
     }
@@ -275,7 +275,7 @@ PMBMP MBMP::PmbmpRead(PBLCK pblck)
         return pvNil;
     cbTot = pblck->Cb();
 
-    if (cbTot < size(MBMPH) || hqNil == (hqrgb = pblck->HqFree()))
+    if (cbTot < SIZEOF(MBMPH) || hqNil == (hqrgb = pblck->HqFree()))
         return pvNil;
 
     qmbmph = (MBMPH *)QvFromHq(hqrgb);
@@ -291,14 +291,14 @@ PMBMP MBMP::PmbmpRead(PBLCK pblck)
     rc = qmbmph->rc;
     if (rc.FEmpty())
     {
-        if (cbTot != size(MBMPH))
+        if (cbTot != SIZEOF(MBMPH))
             goto LFail;
         qmbmph->rc.xpRight = rc.xpLeft;
         qmbmph->rc.ypBottom = rc.ypTop;
     }
 
-    cbRgcb = LwMul(rc.Dyp(), size(short));
-    if (size(MBMPH) + cbRgcb > cbTot)
+    cbRgcb = LwMul(rc.Dyp(), SIZEOF(short));
+    if (SIZEOF(MBMPH) + cbRgcb > cbTot)
         goto LFail;
 
     if (pvNil == (pmbmp = NewObj MBMP))
@@ -325,7 +325,7 @@ PMBMP MBMP::PmbmpRead(PBLCK pblck)
     short *qcb = pmbmp->_Qrgcb();
     byte *qbRow = (byte *)PvAddBv(qcb, cbRgcb);
 
-    cbTot -= size(MBMPH) + cbRgcb;
+    cbTot -= SIZEOF(MBMPH) + cbRgcb;
     for (ccb = rc.Dyp(); ccb-- > 0;)
     {
         cb = *qcb++;
@@ -458,7 +458,7 @@ void MBMP::AssertValid(ulong grf)
 
     rc = _Qmbmph()->rc;
     ccb = rc.Dyp();
-    Assert(_cbRgcb == LwMul(rc.Dyp(), size(short)), "_cbRgcb wrong");
+    Assert(_cbRgcb == LwMul(rc.Dyp(), SIZEOF(short)), "_cbRgcb wrong");
     cbTot = 0;
     qcb = _Qrgcb();
     while (ccb-- > 0)
@@ -466,7 +466,7 @@ void MBMP::AssertValid(ulong grf)
         AssertIn(*qcb, 0, kcbMax);
         cbTot += *qcb++;
     }
-    Assert(cbTot + _cbRgcb + size(MBMPH) == CbOfHq(_hqrgb), "_hqrgb wrong size");
+    Assert(cbTot + _cbRgcb + SIZEOF(MBMPH) == CbOfHq(_hqrgb), "_hqrgb wrong size");
 }
 
 /***************************************************************************
@@ -561,13 +561,13 @@ bool FReadBitmap(FNI *pfni, byte **pprgb, PGL *ppglclr, long *pdxp, long *pdyp, 
     if (pvNil == (pfil = FIL::PfilOpen(pfni)))
         return fFalse;
     fpMac = pfil->FpMac();
-    if (size(BMH) >= fpMac || !pfil->FReadRgbSeq(&bmh, size(BMH), &fpCur))
+    if (SIZEOF(BMH) >= fpMac || !pfil->FReadRgbSeq(&bmh, SIZEOF(BMH), &fpCur))
         goto LFail;
 
     fRle = (bmh.bmih.biCompression == BI_RLE8);
     cbSrc = bmh.bmih.biSizeImage;
-    if (((long)bmh.bmfh.bfSize != fpMac) || bmh.bmfh.bfType != 'MB' || !FIn(bmh.bmfh.bfOffBits, size(BMH), fpMac) ||
-        bmh.bmfh.bfReserved1 != 0 || bmh.bmfh.bfReserved2 != 0 || bmh.bmih.biSize != size(bmh.bmih) ||
+    if (((long)bmh.bmfh.bfSize != fpMac) || bmh.bmfh.bfType != 'MB' || !FIn(bmh.bmfh.bfOffBits, SIZEOF(BMH), fpMac) ||
+        bmh.bmfh.bfReserved1 != 0 || bmh.bmfh.bfReserved2 != 0 || bmh.bmih.biSize != SIZEOF(bmh.bmih) ||
         bmh.bmih.biPlanes != 1)
     {
         Warn("bad bitmap file");
@@ -611,11 +611,11 @@ bool FReadBitmap(FNI *pfni, byte **pprgb, PGL *ppglclr, long *pdxp, long *pdyp, 
             goto LFail;
         }
 
-        if (pvNil == (*ppglclr = GL::PglNew(size(CLR), 256)))
+        if (pvNil == (*ppglclr = GL::PglNew(SIZEOF(CLR), 256)))
             goto LFail;
 
         AssertDo((*ppglclr)->FSetIvMac(256), 0);
-        fRet = pfil->FReadRgbSeq((*ppglclr)->PvLock(0), LwMul(size(CLR), 256), &fpCur);
+        fRet = pfil->FReadRgbSeq((*ppglclr)->PvLock(0), LwMul(SIZEOF(CLR), 256), &fpCur);
         (*ppglclr)->Unlock();
         if (!fRet)
             goto LFail;
@@ -786,7 +786,7 @@ bool FWriteBitmap(FNI *pfni, byte *prgb, PGL pglclr, long dxp, long dyp, bool fU
     Assert(dyp >= 0, "Invalid height");
 
 #ifdef WIN
-    Assert(pglclr->CbEntry() == size(RGBQUAD), "Palette has different format from Windows");
+    Assert(pglclr->CbEntry() == SIZEOF(RGBQUAD), "Palette has different format from Windows");
 
 #pragma pack(2) // the stupid bmfh is an odd number of shorts
     struct BMH
@@ -806,11 +806,11 @@ bool FWriteBitmap(FNI *pfni, byte *prgb, PGL pglclr, long dxp, long dyp, bool fU
 
     /* Fill in the header */
     bmh.bmfh.bfType = 'MB';
-    bmh.bmfh.bfSize = size(bmh) + LwMul(size(RGBQUAD), 256) + cbSrc;
-    bmh.bmfh.bfOffBits = size(bmh) + LwMul(size(RGBQUAD), 256);
+    bmh.bmfh.bfSize = SIZEOF(bmh) + LwMul(SIZEOF(RGBQUAD), 256) + cbSrc;
+    bmh.bmfh.bfOffBits = SIZEOF(bmh) + LwMul(SIZEOF(RGBQUAD), 256);
     bmh.bmfh.bfReserved1 = bmh.bmfh.bfReserved2 = 0;
 
-    bmh.bmih.biSize = size(bmh.bmih);
+    bmh.bmih.biSize = SIZEOF(bmh.bmih);
     bmh.bmih.biWidth = dxp;
     bmh.bmih.biHeight = dyp;
     bmh.bmih.biPlanes = 1;
@@ -825,11 +825,11 @@ bool FWriteBitmap(FNI *pfni, byte *prgb, PGL pglclr, long dxp, long dyp, bool fU
     /* Write the header */
     if (pvNil == (pfil = FIL::PfilCreate(pfni)))
         goto LFail;
-    if (!pfil->FWriteRgbSeq(&bmh, size(BMH), &fpCur))
+    if (!pfil->FWriteRgbSeq(&bmh, SIZEOF(BMH), &fpCur))
         goto LFail;
 
     /* Write the palette */
-    if (!pfil->FWriteRgbSeq(pglclr->PvLock(0), LwMul(size(CLR), 256), &fpCur))
+    if (!pfil->FWriteRgbSeq(pglclr->PvLock(0), LwMul(SIZEOF(CLR), 256), &fpCur))
     {
         pglclr->Unlock();
         goto LFail;

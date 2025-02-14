@@ -404,7 +404,7 @@ void SwapBytesBom(void *pv, BOM bom)
     byte b;
     byte *pb = (byte *)pv;
 
-    Assert(size(short) == 2 && size(long) == 4, "code broken");
+    Assert(SIZEOF(short) == 2 && SIZEOF(long) == 4, "code broken");
     while (bom != 0)
     {
         if (bom & 0x80000000L)
@@ -444,12 +444,12 @@ void SwapBytesBom(void *pv, BOM bom)
 void SwapBytesRgsw(void *psw, long csw)
 {
     AssertIn(csw, 0, kcbMax);
-    AssertPvCb(psw, LwMul(csw, size(short)));
+    AssertPvCb(psw, LwMul(csw, SIZEOF(short)));
 
     byte b;
     byte *pb = (byte *)psw;
 
-    Assert(size(short) == 2, "code broken");
+    Assert(SIZEOF(short) == 2, "code broken");
     for (; csw > 0; csw--, pb += 2)
     {
         b = pb[1];
@@ -464,12 +464,12 @@ void SwapBytesRgsw(void *psw, long csw)
 void SwapBytesRglw(void *plw, long clw)
 {
     AssertIn(clw, 0, kcbMax);
-    AssertPvCb(plw, LwMul(clw, size(long)));
+    AssertPvCb(plw, LwMul(clw, SIZEOF(long)));
 
     byte b;
     byte *pb = (byte *)plw;
 
-    Assert(size(long) == 4, "code broken");
+    Assert(SIZEOF(long) == 4, "code broken");
     for (; clw > 0; clw--, pb += 4)
     {
         b = pb[3];
@@ -483,7 +483,7 @@ void SwapBytesRglw(void *plw, long clw)
 
 #ifdef DEBUG
 /***************************************************************************
-    Asserts that the given BOM indicates a struct having cb/size(long) longs
+    Asserts that the given BOM indicates a struct having cb/SIZEOF(long) longs
     to be swapped (so SwapBytesRglw can legally be used on an array of
     these).
 ***************************************************************************/
@@ -492,15 +492,15 @@ void AssertBomRglw(BOM bom, long cb)
     BOM bomT;
     long clw;
 
-    clw = cb / size(long);
-    Assert(cb == clw * size(long), "cb is not a multiple of size(long)");
+    clw = cb / SIZEOF(long);
+    Assert(cb == clw * SIZEOF(long), "cb is not a multiple of SIZEOF(long)");
     AssertIn(clw, 1, 17);
     bomT = -1L << 2 * (16 - clw);
     Assert(bomT == bom, "wrong bom");
 }
 
 /***************************************************************************
-    Asserts that the given BOM indicates a struct having cb/size(short) shorts
+    Asserts that the given BOM indicates a struct having cb/SIZEOF(short) shorts
     to be swapped (so SwapBytesRgsw can legally be used on an array of
     these).
 ***************************************************************************/
@@ -509,8 +509,8 @@ void AssertBomRgsw(BOM bom, long cb)
     BOM bomT;
     long csw;
 
-    csw = cb / size(short);
-    Assert(cb == csw * size(short), "cb is not a multiple of size(short)");
+    csw = cb / SIZEOF(short);
+    Assert(cb == csw * SIZEOF(short), "cb is not a multiple of SIZEOF(short)");
     AssertIn(csw, 1, 17);
     bomT = 0x55555555 << 2 * (16 - csw);
     Assert(bomT == bom, "wrong bom");

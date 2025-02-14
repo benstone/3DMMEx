@@ -96,7 +96,7 @@ LDone:
 void ReverseRgsw(void *pv, long csw)
 {
     AssertIn(csw, 0, kcbMax);
-    AssertPvCb(pv, csw * size(short));
+    AssertPvCb(pv, csw * SIZEOF(short));
 
 #ifdef IN_80386
 
@@ -149,7 +149,7 @@ LDone:
 void ReverseRglw(void *pv, long clw)
 {
     AssertIn(clw, 0, kcbMax);
-    AssertPvCb(pv, clw * size(long));
+    AssertPvCb(pv, clw * SIZEOF(long));
 
 #ifdef IN_80386
 

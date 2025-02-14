@@ -416,10 +416,10 @@ bool FLO::FCopy(PFLO pfloDst)
         return fFalse;
     }
 
-    if (this->cb <= size(rgb) || !FAllocPv(&pv, cbBlock = this->cb, fmemNil, mprForSpeed))
+    if (this->cb <= SIZEOF(rgb) || !FAllocPv(&pv, cbBlock = this->cb, fmemNil, mprForSpeed))
     {
         pv = (void *)rgb;
-        cbBlock = size(rgb);
+        cbBlock = SIZEOF(rgb);
     }
 
     for (cbT = 0; cbT < this->cb; cbT += cbBlock)
@@ -508,23 +508,23 @@ bool FLO::FTranslate(short osk)
 
     // look for a unicode byte order signature
     oskSig = MacWin(koskSbMac, koskSbWin);
-    if (this->cb >= size(wchar) && this->cb % size(wchar) == 0)
+    if (this->cb >= SIZEOF(wchar) && this->cb % SIZEOF(wchar) == 0)
     {
         wchar chw;
 
-        if (!FReadRgb(&chw, size(wchar), 0))
+        if (!FReadRgb(&chw, SIZEOF(wchar), 0))
             return fFalse;
         if (chw == kchwUnicode)
         {
             oskSig = MacWin(koskUniMac, koskUniWin);
-            this->fp += size(wchar);
-            this->cb -= size(wchar);
+            this->fp += SIZEOF(wchar);
+            this->cb -= SIZEOF(wchar);
         }
         else if (chw == kchwUnicodeSwap)
         {
             oskSig = MacWin(koskUniWin, koskUniMac);
-            this->fp += size(wchar);
-            this->cb -= size(wchar);
+            this->fp += SIZEOF(wchar);
+            this->cb -= SIZEOF(wchar);
         }
     }
 
@@ -537,7 +537,7 @@ bool FLO::FTranslate(short osk)
         {
             long dcb = CbCharOsk(osk) - CbCharOsk(oskSig);
 
-            if (dcb < 0 || dcb == 0 && CbCharOsk(osk) == size(wchar))
+            if (dcb < 0 || dcb == 0 && CbCharOsk(osk) == SIZEOF(wchar))
                 osk = oskSig;
         }
     }
@@ -548,14 +548,14 @@ bool FLO::FTranslate(short osk)
     if (pvNil == (pfilNew = FIL::PfilCreateTemp()))
         return fFalse;
 
-    if (this->cb <= size(rgbSrc) || !FAllocPv(&pvSrc, cbBlock = this->cb, fmemNil, mprForSpeed))
+    if (this->cb <= SIZEOF(rgbSrc) || !FAllocPv(&pvSrc, cbBlock = this->cb, fmemNil, mprForSpeed))
     {
         pvSrc = (void *)rgbSrc;
-        cbBlock = size(rgbDst);
+        cbBlock = SIZEOF(rgbDst);
     }
 
     pvDst = (void *)rgbDst;
-    cchDst = size(rgbDst) / size(achar);
+    cchDst = SIZEOF(rgbDst) / SIZEOF(achar);
     fpSrc = this->fp;
     fpDst = 0;
     for (cbT = 0; cbT < this->cb; cbT += cbBlock)
@@ -577,7 +577,7 @@ bool FLO::FTranslate(short osk)
             if (pvDst != (void *)rgbDst)
                 FreePpv(&pvDst);
             cchDst = cch;
-            if (!FAllocPv(&pvDst, cchDst * size(achar), fmemNil, mprNormal))
+            if (!FAllocPv(&pvDst, cchDst * SIZEOF(achar), fmemNil, mprNormal))
                 goto LFail;
         }
         if (cch != CchTranslateRgb(pvSrc, cbBlock, osk, (achar *)pvDst, cch))
@@ -587,7 +587,7 @@ bool FLO::FTranslate(short osk)
         }
 
         // write to the dest
-        if (!pfilNew->FWriteRgbSeq(pvDst, cch * size(achar), &fpDst))
+        if (!pfilNew->FWriteRgbSeq(pvDst, cch * SIZEOF(achar), &fpDst))
             goto LFail;
     }
     fRet = fTrue;
@@ -1378,7 +1378,7 @@ void MSFIL::SetFile(PFIL pfil)
         _fError |= !_pfil->FSetFpMac(0);
 #ifdef UNICODE
         wchar chw = kchwUnicode;
-        _fError |= !_pfil->FWriteRgbSeq(&chw, size(wchar), &_fpCur);
+        _fError |= !_pfil->FWriteRgbSeq(&chw, SIZEOF(wchar), &_fpCur);
 #endif // UNICODE
     }
 }
@@ -1406,7 +1406,7 @@ void MSFIL::ReportLine(PSZ psz)
     Report(psz);
     if (pvNil != _pfil)
     {
-        _fError |= !_pfil->FWriteRgbSeq(rgch, MacWin(size(achar), 2 * size(achar)), &_fpCur);
+        _fError |= !_pfil->FWriteRgbSeq(rgch, MacWin(SIZEOF(achar), 2 * SIZEOF(achar)), &_fpCur);
     }
 }
 
@@ -1428,7 +1428,7 @@ void MSFIL::Report(PSZ psz)
         }
     }
 
-    _fError |= !_pfil->FWriteRgbSeq(psz, CchSz(psz) * size(achar), &_fpCur);
+    _fError |= !_pfil->FWriteRgbSeq(psz, CchSz(psz) * SIZEOF(achar), &_fpCur);
 }
 
 /***************************************************************************

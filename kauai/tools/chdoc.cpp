@@ -2673,7 +2673,7 @@ void DCD::_ClearSel(void)
     grfsel = _sel.GrfselGetCkiKid(pvNil, pvNil);
     if (!(grfsel & fselCki))
         return;
-    ClearPb(&cmd, size(cmd));
+    ClearPb(&cmd, SIZEOF(cmd));
     cmd.pcmh = this;
     if (grfsel & fselKid)
         cmd.cid = cidUnadoptChunk;
@@ -2757,7 +2757,7 @@ bool DCD::FCmdSetColorTable(PCMD pcmd)
     if (!_pcfl->FFind(cki.ctg, cki.cno, &blck))
         return fFalse;
 
-    if (pvNil != (pglclr = GL::PglRead(&blck)) && pglclr->CbEntry() == size(CLR))
+    if (pvNil != (pglclr = GL::PglRead(&blck)) && pglclr->CbEntry() == SIZEOF(CLR))
         GPT::SetActiveColors(pglclr, fpalIdentity);
 
     ReleasePpo(&pglclr);
@@ -2929,7 +2929,7 @@ bool FGetCtgFromStn(CTG *pctg, PSTN pstn)
         return fFalse;
     }
     rgch[0] = rgch[1] = rgch[2] = rgch[3] = kchSpace;
-    CopyPb(pstn->Psz(), rgch, pstn->Cch() * size(achar));
+    CopyPb(pstn->Psz(), rgch, pstn->Cch() * SIZEOF(achar));
 
     // first character becomes the high byte
     *pctg = LwFromBytes((byte)rgch[0], (byte)rgch[1], (byte)rgch[2], (byte)rgch[3]);
@@ -3003,7 +3003,7 @@ SEL &SEL::operator=(SEL &selT)
     PGL pglctgOld = _pglctg;
 
     SEL_PAR::operator=(selT);
-    CopyPb(PvAddBv(&selT, size(SEL_PAR)), PvAddBv(this, size(SEL_PAR)), size(SEL) - size(SEL_PAR));
+    CopyPb(PvAddBv(&selT, SIZEOF(SEL_PAR)), PvAddBv(this, SIZEOF(SEL_PAR)), SIZEOF(SEL) - SIZEOF(SEL_PAR));
     if (pvNil != _pglctg)
         _pglctg->AddRef();
     ReleasePpo(&pglctgOld);
@@ -3346,7 +3346,7 @@ bool SEL::FAddCtgFilter(CTG ctg)
 {
     AssertThis(0);
 
-    if (pvNil == _pglctg && pvNil == (_pglctg = GL::PglNew(size(CTG), 1)))
+    if (pvNil == _pglctg && pvNil == (_pglctg = GL::PglNew(SIZEOF(CTG), 1)))
         return fFalse;
     if (!_pglctg->FAdd(&ctg))
         return fFalse;

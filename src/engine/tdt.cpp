@@ -97,7 +97,7 @@ PGL TDT::PgltagFetch(PCFL pcfl, CTG ctg, CNO cno, bool *pfError)
     TDTF tdtf;
 
     *pfError = fFalse;
-    pgltag = GL::PglNew(size(TAG));
+    pgltag = GL::PglNew(SIZEOF(TAG));
     if (pvNil == pgltag)
         goto LFail;
     if (!pcfl->FGetKidChidCtg(ctg, cno, kchidTdt, kctgTdt, &kid))
@@ -106,9 +106,9 @@ PGL TDT::PgltagFetch(PCFL pcfl, CTG ctg, CNO cno, bool *pfError)
         goto LFail;
     if (!blck.FUnpackData())
         goto LFail;
-    if (blck.Cb() < size(TDTF))
+    if (blck.Cb() < SIZEOF(TDTF))
         goto LFail;
-    if (!blck.FReadRgb(&tdtf, size(TDTF), 0))
+    if (!blck.FReadRgb(&tdtf, SIZEOF(TDTF), 0))
         goto LFail;
     if (kboCur != tdtf.bo)
         SwapBytesBom(&tdtf, kbomTdtf);
@@ -181,9 +181,9 @@ bool TDT::_FInit(PCFL pcfl, CTG ctgTmpl, CNO cnoTmpl)
         return fFalse;
     if (!blck.FUnpackData())
         return fFalse;
-    if (blck.Cb() < size(TDTF))
+    if (blck.Cb() < SIZEOF(TDTF))
         return fFalse;
-    if (!blck.FReadRgb(&tdtf, size(TDTF), 0))
+    if (!blck.FReadRgb(&tdtf, SIZEOF(TDTF), 0))
         return fFalse;
     if (kboCur != tdtf.bo)
         SwapBytesBom(&tdtf, kbomTdtf);
@@ -374,7 +374,7 @@ PGL TDT::_PglibactParBuild(void)
     short ibactPar = ivNil;
     PGL pglibactPar;
 
-    pglibactPar = GL::PglNew(size(short), cch); // ibacts are shorts
+    pglibactPar = GL::PglNew(SIZEOF(short), cch); // ibacts are shorts
     if (pvNil == pglibactPar)
         return pvNil;
     AssertDo(pglibactPar->FSetIvMac(cch), "PglNew should have ensured space!");
@@ -396,7 +396,7 @@ PGL TDT::_PglibsetBuild(void)
     short ibset = 0;
     PGL pglibset;
 
-    pglibset = GL::PglNew(size(short), cch);
+    pglibset = GL::PglNew(SIZEOF(short), cch);
     if (pvNil == pglibset)
         return pvNil;
     AssertDo(pglibset->FSetIvMac(cch), "PglNew should have ensured space!");
@@ -418,10 +418,10 @@ PGG TDT::_PggcmidBuild(void)
     PGG pggcmid;
     long cmid = 0;
 
-    pggcmid = GG::PggNew(size(long), 1, size(long));
+    pggcmid = GG::PggNew(SIZEOF(long), 1, SIZEOF(long));
     if (pvNil == pggcmid)
         return pvNil;
-    if (!pggcmid->FAdd(size(long), pvNil, &cmid, &lwOne))
+    if (!pggcmid->FAdd(SIZEOF(long), pvNil, &cmid, &lwOne))
     {
         ReleasePpo(&pggcmid);
         return pvNil;
@@ -461,7 +461,7 @@ PGL TDT::_Pglbmat34Build(long tda)
 
     ccel = _CcelOfTda(tda);
 
-    pglbmat34 = GL::PglNew(size(BMAT34), LwMul(ccel, cch));
+    pglbmat34 = GL::PglNew(SIZEOF(BMAT34), LwMul(ccel, cch));
     if (pvNil == pglbmat34)
         goto LFail;
     AssertDo(pglbmat34->FSetIvMac(LwMul(ccel, cch)), "PglNew should have ensured space!");
@@ -554,10 +554,10 @@ PGG TDT::_PggcelBuild(long tda)
 
     ccel = _CcelOfTda(tda);
 
-    pggcel = GG::PggNew(size(CEL));
+    pggcel = GG::PggNew(SIZEOF(CEL));
     if (pvNil == pggcel)
         goto LFail;
-    if (!FAllocPv((void **)&prgcps, LwMul(cch, size(CPS)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&prgcps, LwMul(cch, SIZEOF(CPS)), fmemClear, mprNormal))
     {
         goto LFail;
     }
@@ -570,7 +570,7 @@ PGG TDT::_PggcelBuild(long tda)
             prgcps[ich].chidModl = (short)ich;
             prgcps[ich].imat34 = (short)(LwMul(icel, cch) + ich);
         }
-        if (!pggcel->FAdd(LwMul(cch, size(CPS)), &iv, prgcps, &cel))
+        if (!pggcel->FAdd(LwMul(cch, SIZEOF(CPS)), &iv, prgcps, &cel))
             goto LFail;
     }
     FreePpv((void **)&prgcps);
@@ -732,7 +732,7 @@ bool TDT::FWrite(PCFL pcfl, CTG ctg, CNO *pcno)
     tdtf.tdts = _tdts;
     tdtf.tagTdf = _tagTdf;
 
-    if (!pcfl->FAddChild(ctg, *pcno, kchidTdt, size(TDTF), kctgTdt, &cnoTdt, &blck))
+    if (!pcfl->FAddChild(ctg, *pcno, kchidTdt, SIZEOF(TDTF), kctgTdt, &cnoTdt, &blck))
     {
         return fFalse;
     }

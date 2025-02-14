@@ -51,16 +51,16 @@ void TXTB::AssertValid(ulong grfobj)
     TXTB_PAR::AssertValid(grfobj);
     AssertPo(_pbsf, 0);
     ibMac = _pbsf->IbMac();
-    cpMac = ibMac / size(achar);
-    Assert(ibMac % size(achar) == 0, "ibMac not divisible by size(achar)");
-    AssertIn(ibMac, size(achar), kcbMax);
+    cpMac = ibMac / SIZEOF(achar);
+    Assert(ibMac % SIZEOF(achar) == 0, "ibMac not divisible by SIZEOF(achar)");
+    AssertIn(ibMac, SIZEOF(achar), kcbMax);
     AssertIn(_cpMinCache, 0, cpMac + 1);
     AssertIn(_cpLimCache, 0, cpMac + 1);
-    AssertIn(_cpLimCache, _cpMinCache, _cpMinCache + size(_rgchCache) + 1);
+    AssertIn(_cpLimCache, _cpMinCache, _cpMinCache + SIZEOF(_rgchCache) + 1);
     AssertNilOrPo(_pfil, 0);
     if (grfobj & fobjAssertFull)
     {
-        _pbsf->FetchRgb(ibMac - size(achar), size(achar), &ch);
+        _pbsf->FetchRgb(ibMac - SIZEOF(achar), SIZEOF(achar), &ch);
         Assert(ch == kchReturn, "stream doesn't end with a carriage return");
     }
 }
@@ -113,7 +113,7 @@ bool TXTB::_FInit(PFNI pfni, PBSF pbsf, short osk)
             Bug("Can't translate a BSF");
             return fFalse;
         }
-        if (pbsf->IbMac() % size(achar) != 0)
+        if (pbsf->IbMac() % SIZEOF(achar) != 0)
         {
             Bug("BSF has a partial character");
             return fFalse;
@@ -128,7 +128,7 @@ bool TXTB::_FInit(PFNI pfni, PBSF pbsf, short osk)
 
     // append a return character
     ch = kchReturn;
-    if (!_pbsf->FReplace(&ch, size(achar), _pbsf->IbMac(), 0))
+    if (!_pbsf->FReplace(&ch, SIZEOF(achar), _pbsf->IbMac(), 0))
         return fFalse;
 
     AssertThis(fobjAssertFull);
@@ -166,9 +166,9 @@ long TXTB::CpMac(void)
     // Note: we don't do an AssertThis(0) here for debug performance
     AssertThisMem();
     AssertVarMem(_pbsf);
-    Assert(_pbsf->IbMac() % size(achar) == 0, "IbMac() not divisible by size(achar)");
+    Assert(_pbsf->IbMac() % SIZEOF(achar) == 0, "IbMac() not divisible by SIZEOF(achar)");
 
-    return _pbsf->IbMac() / size(achar);
+    return _pbsf->IbMac() / SIZEOF(achar);
 }
 
 /***************************************************************************
@@ -242,7 +242,7 @@ bool TXTB::FFind(const achar *prgch, long cch, long cpMin, long *pcpMin, long *p
 {
     AssertThis(fobjAssertFull);
     AssertIn(cch, 1, kcbMax);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
     AssertIn(cpMin, 0, CpMac() + 1);
     AssertVarMem(pcpMin);
     AssertVarMem(pcpLim);
@@ -265,7 +265,7 @@ bool TXTB::FFind(const achar *prgch, long cch, long cpMin, long *pcpMin, long *p
 
     // calculate the grfbitUsed bit field - indicating, which characters
     // appear in the search string.
-    ClearPb(grfbitUsed, size(grfbitUsed));
+    ClearPb(grfbitUsed, SIZEOF(grfbitUsed));
     for (pch = prgch; pch <= pchLast; pch++)
     {
         ibit = (long)(byte)*pch;
@@ -386,8 +386,8 @@ void TXTB::_CacheRange(long cpMin, long cpLim)
         // keep front end of old stuff
         cpT = LwMax(0, LwMin(cpMin, _cpLimCache - kcchMaxTxtbCache));
         _cpLimCache = LwMin(cpT + kcchMaxTxtbCache, _cpLimCache);
-        BltPb(_rgchCache, _rgchCache + (_cpMinCache - cpT), (_cpLimCache - _cpMinCache) * size(achar));
-        _pbsf->FetchRgb(cpT * size(achar), (_cpMinCache - cpT) * size(achar), _rgchCache);
+        BltPb(_rgchCache, _rgchCache + (_cpMinCache - cpT), (_cpLimCache - _cpMinCache) * SIZEOF(achar));
+        _pbsf->FetchRgb(cpT * SIZEOF(achar), (_cpMinCache - cpT) * SIZEOF(achar), _rgchCache);
         _cpMinCache = cpT;
     }
     else
@@ -399,7 +399,7 @@ void TXTB::_CacheRange(long cpMin, long cpLim)
             // just cache around [cpMin, cpLim)
             _cpMinCache = LwMax(0, LwMin((cpMin + cpLim - kcchMaxTxtbCache) / 2, cpMac - kcchMaxTxtbCache));
             _cpLimCache = LwMin(_cpMinCache + kcchMaxTxtbCache, cpMac);
-            _pbsf->FetchRgb(_cpMinCache * size(achar), (_cpLimCache - _cpMinCache) * size(achar), _rgchCache);
+            _pbsf->FetchRgb(_cpMinCache * SIZEOF(achar), (_cpLimCache - _cpMinCache) * SIZEOF(achar), _rgchCache);
         }
         else
         {
@@ -410,9 +410,9 @@ void TXTB::_CacheRange(long cpMin, long cpLim)
             cpMinCache = LwMax(cpLimCache - kcchMaxTxtbCache, _cpMinCache);
             if (cpMinCache != _cpMinCache)
             {
-                BltPb(_rgchCache + (cpMinCache - _cpMinCache), _rgchCache, (_cpLimCache - cpMinCache) * size(achar));
+                BltPb(_rgchCache + (cpMinCache - _cpMinCache), _rgchCache, (_cpLimCache - cpMinCache) * SIZEOF(achar));
             }
-            _pbsf->FetchRgb(_cpLimCache * size(achar), (cpLimCache - _cpLimCache) * size(achar),
+            _pbsf->FetchRgb(_cpLimCache * SIZEOF(achar), (cpLimCache - _cpLimCache) * SIZEOF(achar),
                             _rgchCache + _cpLimCache - cpMinCache);
             _cpMinCache = cpMinCache;
             _cpLimCache = cpLimCache;
@@ -453,7 +453,7 @@ void TXTB::_InvalCache(long cp, long ccpIns, long ccpDel)
     else
     {
         // keep the tail end of the cache
-        BltPb(_rgchCache + cp + ccpDel - _cpMinCache, _rgchCache, dcpBack * size(achar));
+        BltPb(_rgchCache + cp + ccpDel - _cpMinCache, _rgchCache, dcpBack * SIZEOF(achar));
         _cpMinCache = cp + ccpIns;
         _cpLimCache = _cpMinCache + dcpBack;
     }
@@ -484,14 +484,14 @@ void TXTB::FetchRgch(long cp, long ccp, achar *prgch)
     AssertThis(0);
     AssertIn(cp, 0, CpMac() + 1);
     AssertIn(ccp, 0, CpMac() - cp + 1);
-    AssertPvCb(prgch, ccp * size(achar));
+    AssertPvCb(prgch, ccp * SIZEOF(achar));
     long ccpT;
 
     while (ccp > 0)
     {
         ccpT = LwMin(ccp, kcchMaxTxtbCache);
         _CacheRange(cp, cp + ccpT);
-        CopyPb(_rgchCache + cp - _cpMinCache, prgch, ccpT * size(achar));
+        CopyPb(_rgchCache + cp - _cpMinCache, prgch, ccpT * SIZEOF(achar));
         prgch += ccpT;
         cp += ccpT;
         ccp -= ccpT;
@@ -741,11 +741,11 @@ bool TXTB::FReplaceRgch(const void *prgch, long ccpIns, long cp, long ccpDel, ul
 {
     AssertThis(fobjAssertFull);
     AssertIn(ccpIns, 0, kcbMax);
-    AssertPvCb(prgch, ccpIns * size(achar));
+    AssertPvCb(prgch, ccpIns * SIZEOF(achar));
     AssertIn(cp, 0, CpMac());
     AssertIn(ccpDel, 0, CpMac() - cp);
 
-    if (!_pbsf->FReplace(prgch, ccpIns * size(achar), cp * size(achar), ccpDel * size(achar)))
+    if (!_pbsf->FReplace(prgch, ccpIns * SIZEOF(achar), cp * SIZEOF(achar), ccpDel * SIZEOF(achar)))
     {
         return fFalse;
     }
@@ -769,11 +769,11 @@ bool TXTB::FReplaceFlo(PFLO pflo, bool fCopy, long cp, long ccpDel, short osk, u
 
     flo.pfil->AddRef();
     if (flo.FTranslate(osk) &&
-        _pbsf->FReplaceFlo(&flo, fCopy && flo.pfil == pflo->pfil, cp * size(achar), ccpDel * size(achar)))
+        _pbsf->FReplaceFlo(&flo, fCopy && flo.pfil == pflo->pfil, cp * SIZEOF(achar), ccpDel * SIZEOF(achar)))
     {
-        _InvalCache(cp, flo.cb / size(achar), ccpDel);
+        _InvalCache(cp, flo.cb / SIZEOF(achar), ccpDel);
         AssertThis(fobjAssertFull);
-        InvalAllDdg(cp, flo.cb / size(achar), ccpDel, grfdoc);
+        InvalAllDdg(cp, flo.cb / SIZEOF(achar), ccpDel, grfdoc);
         fRet = fTrue;
     }
 
@@ -789,13 +789,13 @@ bool TXTB::FReplaceBsf(PBSF pbsfSrc, long cpSrc, long ccpSrc, long cpDst, long c
 {
     AssertThis(fobjAssertFull);
     AssertPo(pbsfSrc, 0);
-    AssertIn(cpSrc, 0, pbsfSrc->IbMac() / size(achar) + 1);
-    AssertIn(ccpSrc, 0, pbsfSrc->IbMac() / size(achar) + 1 - cpSrc);
+    AssertIn(cpSrc, 0, pbsfSrc->IbMac() / SIZEOF(achar) + 1);
+    AssertIn(ccpSrc, 0, pbsfSrc->IbMac() / SIZEOF(achar) + 1 - cpSrc);
     AssertIn(cpDst, 0, CpMac());
     AssertIn(ccpDel, 0, CpMac() - cpDst);
 
-    if (!_pbsf->FReplaceBsf(pbsfSrc, cpSrc * size(achar), ccpSrc * size(achar), cpDst * size(achar),
-                            ccpDel * size(achar)))
+    if (!_pbsf->FReplaceBsf(pbsfSrc, cpSrc * SIZEOF(achar), ccpSrc * SIZEOF(achar), cpDst * SIZEOF(achar),
+                            ccpDel * SIZEOF(achar)))
     {
         return fFalse;
     }
@@ -882,8 +882,8 @@ void TXTB::ExportFormats(PCLIP pclip)
     if (!pclip->FInitExport())
         return;
 
-    if (pvNil != (pv = pclip->PvExport(ccp * size(achar), kclfmText)))
-        _pbsf->FetchRgb(0, ccp * size(achar), pv);
+    if (pvNil != (pv = pclip->PvExport(ccp * SIZEOF(achar), kclfmText)))
+        _pbsf->FetchRgb(0, ccp * SIZEOF(achar), pv);
 
     pclip->EndExport();
 }
@@ -954,16 +954,16 @@ bool TXPD::FSaveToFni(FNI *pfni, bool fSetFni)
         goto LFail;
 
     flo.fp = 0;
-    flo.cb = _pbsf->IbMac() - size(achar);
+    flo.cb = _pbsf->IbMac() - SIZEOF(achar);
 #ifdef UNICODE
-    flo.cb += size(achar);
+    flo.cb += SIZEOF(achar);
     achar ch;
 
     ch = kchwUnicode;
-    if (!flo.FWriteRgb(&ch, size(achar), 0))
+    if (!flo.FWriteRgb(&ch, SIZEOF(achar), 0))
         goto LFail;
-    flo.fp += size(achar);
-    flo.cb -= size(achar);
+    flo.fp += SIZEOF(achar);
+    flo.cb -= SIZEOF(achar);
 #endif // UNICODE
 
     if (!_pbsf->FWriteRgb(&flo))
@@ -1020,7 +1020,7 @@ void TXRD::AssertValid(ulong grfobj)
     AssertPo(_pglmpe, 0);
     AssertNilOrPo(_pagcact, 0);
     AssertIn(_dypFontDef, 1, kswMax);
-    AssertIn(_pbsf->IbMac() / size(achar), 1, kcpMaxTxrd);
+    AssertIn(_pbsf->IbMac() / SIZEOF(achar), 1, kcpMaxTxrd);
 
     if (grfobj & fobjAssertFull)
     {
@@ -1094,7 +1094,7 @@ bool TXRD::_FInit(PFNI pfni, CTG ctg)
 
     if (!TXRD_PAR::_FInit())
         return fFalse;
-    if (pvNil == (_pglmpe = GL::PglNew(size(MPE))))
+    if (pvNil == (_pglmpe = GL::PglNew(SIZEOF(MPE))))
         return fFalse;
     _pglmpe->SetMinGrow(10);
     _onnDef = vpappb->OnnDefVariable();
@@ -1143,8 +1143,8 @@ bool TXRD::_FReadChunk(PCFL pcfl, CTG ctg, CNO cno, bool fCopyText)
     if (!TXRD_PAR::_FInit())
         return fFalse;
 
-    if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData() || blck.Cb() < size(RDOP) ||
-        !blck.FReadRgb(&rdop, size(RDOP), 0))
+    if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData() || blck.Cb() < SIZEOF(RDOP) ||
+        !blck.FReadRgb(&rdop, SIZEOF(RDOP), 0))
     {
         return fFalse;
     }
@@ -1164,7 +1164,7 @@ bool TXRD::_FReadChunk(PCFL pcfl, CTG ctg, CNO cno, bool fCopyText)
     _dypFontDef = rdop.dypFont;
     _acrBack.SetFromLw(rdop.lwAcrBack);
 
-    if (_stnFontDef.FRead(&blck, size(rdop)) && _stnFontDef.Cch() > 0)
+    if (_stnFontDef.FRead(&blck, SIZEOF(rdop)) && _stnFontDef.Cch() > 0)
         _oskFont = rdop.oskFont;
     else
     {
@@ -1175,12 +1175,12 @@ bool TXRD::_FReadChunk(PCFL pcfl, CTG ctg, CNO cno, bool fCopyText)
 
     // get the text
     if (!pcfl->FGetKidChidCtg(ctg, cno, 0, kctgText, &kid) || !pcfl->FFindFlo(kid.cki.ctg, kid.cki.cno, &floText) ||
-        floText.cb < size(short) || !floText.FReadRgb(&osk, size(short), 0))
+        floText.cb < SIZEOF(short) || !floText.FReadRgb(&osk, SIZEOF(short), 0))
     {
         return fFalse;
     }
-    floText.fp += size(short);
-    floText.cb -= size(short);
+    floText.fp += SIZEOF(short);
+    floText.cb -= SIZEOF(short);
     floText.pfil->AddRef();
     pfilT = floText.pfil;
     if (!floText.FTranslate(osk) || !_pbsf->FReplaceFlo(&floText, fCopyText && pfilT == floText.pfil, 0, CpMac() - 1))
@@ -1192,20 +1192,20 @@ bool TXRD::_FReadChunk(PCFL pcfl, CTG ctg, CNO cno, bool fCopyText)
 
     // get the text properties
     if (!pcfl->FGetKidChidCtg(ctg, cno, 0, kctgTxtProps, &kid) || !pcfl->FFind(kid.cki.ctg, kid.cki.cno, &blck) ||
-        pvNil == (_pglmpe = GL::PglRead(&blck, &bo)) || size(MPE) != _pglmpe->CbEntry())
+        pvNil == (_pglmpe = GL::PglRead(&blck, &bo)) || SIZEOF(MPE) != _pglmpe->CbEntry())
     {
         return fFalse;
     }
     if (bo == kboOther)
     {
-        SwapBytesRglw(_pglmpe->QvGet(0), LwMul(_pglmpe->IvMac(), size(MPE)) / size(long));
+        SwapBytesRglw(_pglmpe->QvGet(0), LwMul(_pglmpe->IvMac(), SIZEOF(MPE)) / SIZEOF(long));
     }
 
     // get the text property arguments
     if (pcfl->FGetKidChidCtg(ctg, cno, 0, kctgTxtPropArgs, &kid))
     {
         if (!pcfl->FFind(kid.cki.ctg, kid.cki.cno, &blck) || pvNil == (_pagcact = AG::PagRead(&blck, &bo, &osk)) ||
-            size(long) != _pagcact->CbFixed())
+            SIZEOF(long) != _pagcact->CbFixed())
         {
             return fFalse;
         }
@@ -1243,14 +1243,14 @@ bool TXRD::_FOpenArg(long icact, byte sprm, short bo, short osk)
     switch (sprm)
     {
     case sprmFont:
-        cb -= size(long) + size(short); // onn, osk
+        cb -= SIZEOF(long) + SIZEOF(short); // onn, osk
         if (cb < 0)
         {
             Bug("bad font entry");
             return fFalse;
         }
-        _pagcact->GetRgb(icact, size(long), size(short), &osk);
-        prgb = (byte *)PvAddBv(_pagcact->PvLock(icact), size(long) + size(short));
+        _pagcact->GetRgb(icact, SIZEOF(long), SIZEOF(short), &osk);
+        prgb = (byte *)PvAddBv(_pagcact->PvLock(icact), SIZEOF(long) + SIZEOF(short));
         if (!stn.FSetData(prgb, cb))
         {
             Bug("bad font entry");
@@ -1260,7 +1260,7 @@ bool TXRD::_FOpenArg(long icact, byte sprm, short bo, short osk)
         _pagcact->Unlock();
 
         onn = vntl.OnnMapStn(&stn, osk);
-        _pagcact->PutRgb(icact, 0, size(long), &onn);
+        _pagcact->PutRgb(icact, 0, SIZEOF(long), &onn);
         break;
 
     default:
@@ -1375,24 +1375,24 @@ bool TXRD::FSaveToChunk(PCFL pcfl, CKI *pcki, bool fRedirectText)
     rdop.dypFont = _dypFontDef;
     rdop.lwAcrBack = _acrBack.LwGet();
     cb = _stnFontDef.CbData();
-    if (!pcfl->FAdd(size(RDOP) + cb, pcki->ctg, &pcki->cno, &blck))
+    if (!pcfl->FAdd(SIZEOF(RDOP) + cb, pcki->ctg, &pcki->cno, &blck))
     {
         PushErc(ercRtxdSaveFailed);
         return fFalse;
     }
-    if (!blck.FWriteRgb(&rdop, size(RDOP), 0) || !_stnFontDef.FWrite(&blck, size(RDOP)))
+    if (!blck.FWriteRgb(&rdop, SIZEOF(RDOP), 0) || !_stnFontDef.FWrite(&blck, SIZEOF(RDOP)))
     {
         goto LFail;
     }
 
     // add the text chunk and write it
-    if (!pcfl->FAddChild(pcki->ctg, pcki->cno, 0, _pbsf->IbMac() - size(achar) + size(short), kctgText, &cnoText,
+    if (!pcfl->FAddChild(pcki->ctg, pcki->cno, 0, _pbsf->IbMac() - SIZEOF(achar) + SIZEOF(short), kctgText, &cnoText,
                          &blckText) ||
-        !blckText.FWriteRgb(&osk, size(short), 0))
+        !blckText.FWriteRgb(&osk, SIZEOF(short), 0))
     {
         goto LFail;
     }
-    AssertDo(blckText.FMoveMin(size(short)), 0);
+    AssertDo(blckText.FMoveMin(SIZEOF(short)), 0);
     if (!_pbsf->FWriteRgb(&blckText))
         goto LFail;
 
@@ -1415,7 +1415,7 @@ bool TXRD::FSaveToChunk(PCFL pcfl, CKI *pcki, bool fRedirectText)
     {
         FLO flo;
         AssertDo(blckText.FGetFlo(&flo), 0);
-        _pbsf->FReplaceFlo(&flo, fFalse, 0, _pbsf->IbMac() - size(achar));
+        _pbsf->FReplaceFlo(&flo, fFalse, 0, _pbsf->IbMac() - SIZEOF(achar));
         ReleasePpo(&flo.pfil);
     }
     return fTrue;
@@ -1661,7 +1661,7 @@ bool TXRD::_FEnsureInAg(byte sprm, void *pv, long cb, long *pjv)
     long cact, iv, cbT;
     void *qv;
 
-    if (pvNil == _pagcact && pvNil == (_pagcact = AG::PagNew(size(long), 1, cb)))
+    if (pvNil == _pagcact && pvNil == (_pagcact = AG::PagNew(SIZEOF(long), 1, cb)))
     {
         TrashVar(pjv);
         return fFalse;
@@ -1791,7 +1791,7 @@ bool TXRD::_FGetRgspvmFromChp(PCHP pchp, PCHP pchpDiff, SPVM *prgspvm, long *pcs
 {
     AssertVarMem(pchp);
     AssertNilOrVarMem(pchpDiff);
-    AssertPvCb(prgspvm, LwMul(size(SPVM), sprmLimChp - sprmMinChp));
+    AssertPvCb(prgspvm, LwMul(SIZEOF(SPVM), sprmLimChp - sprmMinChp));
     AssertVarMem(pcspvm);
     byte sprm;
     long ispvm;
@@ -1827,7 +1827,7 @@ bool TXRD::_FGetRgspvmFromPap(PPAP ppap, PPAP ppapDiff, SPVM *prgspvm, long *pcs
 {
     AssertVarMem(ppap);
     AssertNilOrVarMem(ppapDiff);
-    AssertPvCb(prgspvm, LwMul(size(SPVM), sprmLimPap - sprmMinPap));
+    AssertPvCb(prgspvm, LwMul(SIZEOF(SPVM), sprmLimPap - sprmMinPap));
     AssertVarMem(pcspvm);
     byte sprm;
     long ispvm;
@@ -1860,7 +1860,7 @@ bool TXRD::_FGetRgspvmFromPap(PPAP ppap, PPAP ppapDiff, SPVM *prgspvm, long *pcs
 void TXRD::_ReleaseRgspvm(SPVM *prgspvm, long cspvm)
 {
     AssertIn(cspvm, 0, kcbMax);
-    AssertPvCb(prgspvm, LwMul(size(SPVM), cspvm));
+    AssertPvCb(prgspvm, LwMul(SIZEOF(SPVM), cspvm));
     long ispvm;
 
     for (ispvm = 0; ispvm < cspvm; ispvm++)
@@ -2035,12 +2035,12 @@ tribool TXRD::_TGetLwFromChp(byte sprm, PCHP pchpNew, PCHP pchpOld, long *plw, l
             STN stn;
             long cb;
             short osk = koskCur;
-            byte rgb[kcbMaxDataStn + size(long) + size(short)];
+            byte rgb[kcbMaxDataStn + SIZEOF(long) + SIZEOF(short)];
 
-            CopyPb(&pchpNew->onn, rgb, size(long));
-            CopyPb(&osk, rgb + size(long), size(short));
+            CopyPb(&pchpNew->onn, rgb, SIZEOF(long));
+            CopyPb(&osk, rgb + SIZEOF(long), SIZEOF(short));
             vntl.GetStn(pchpNew->onn, &stn);
-            cb = size(long) + size(short);
+            cb = SIZEOF(long) + SIZEOF(short);
             stn.GetData(rgb + cb);
             cb += stn.CbData();
             if (!_FEnsureInAg(sprm, rgb, cb, plw))
@@ -2127,13 +2127,13 @@ void TXRD::FetchChp(long cp, PCHP pchp, long *pcpMin, long *pcpLim)
                 byte *qrgb;
 
                 qrgb = (byte *)_pagcact->QvGet(mpe.lw - 1, &cb);
-                cb -= size(long) + size(short); // onn, osk
+                cb -= SIZEOF(long) + SIZEOF(short); // onn, osk
                 if (!FIn(cb, 0, kcbMaxDataStn + 1))
                 {
                     Warn("bad group element");
                     break;
                 }
-                CopyPb(qrgb, &_chp.onn, size(long));
+                CopyPb(qrgb, &_chp.onn, SIZEOF(long));
                 Assert(vntl.FValidOnn(_chp.onn), "invalid onn");
             }
             break;
@@ -2314,7 +2314,7 @@ void TXRD::FetchPap(long cp, PPAP ppap, long *pcpMin, long *pcpLim)
     if (FIn(cp, _cpMinPap, _cpLimPap))
         goto LDone;
 
-    ClearPb(&_pap, size(PAP));
+    ClearPb(&_pap, SIZEOF(PAP));
     _pap.dxpTab = kdxpTabDef;
     _pap.numLine = kdenLine;
     _pap.numAfter = kdenAfter;
@@ -2486,7 +2486,7 @@ bool TXRD::FReplaceRgch(void *prgch, long ccpIns, long cp, long ccpDel, ulong gr
 {
     AssertThis(fobjAssertFull);
     AssertIn(ccpIns, 0, kcbMax);
-    AssertPvCb(prgch, ccpIns * size(achar));
+    AssertPvCb(prgch, ccpIns * SIZEOF(achar));
     AssertIn(cp, 0, CpMac());
     AssertIn(ccpDel, 0, CpMac() - cp);
 
@@ -2520,7 +2520,7 @@ bool TXRD::FReplaceRgch(void *prgch, long ccpIns, long cp, long ccpDel, PCHP pch
 {
     AssertThis(0);
     AssertIn(ccpIns, 0, kcbMax);
-    AssertPvCb(prgch, ccpIns * size(achar));
+    AssertPvCb(prgch, ccpIns * SIZEOF(achar));
     AssertIn(cp, 0, CpMac());
     AssertIn(ccpDel, 0, CpMac() - cp);
     AssertNilOrVarMem(pchp);
@@ -2539,7 +2539,7 @@ bool TXRD::_FReplaceCore(void *prgch, PFLO pflo, bool fCopy, PBSF pbsf, long cpS
 {
     AssertThis(fobjAssertFull);
     AssertIn(ccpIns, 0, kcbMax);
-    AssertNilOrPvCb(prgch, ccpIns * size(achar));
+    AssertNilOrPvCb(prgch, ccpIns * SIZEOF(achar));
     AssertNilOrPo(pflo, 0);
     AssertNilOrPo(pbsf, 0);
     AssertIn(cp, 0, CpMac());
@@ -2586,7 +2586,7 @@ bool TXRD::_FReplaceCore(void *prgch, PFLO pflo, bool fCopy, PBSF pbsf, long cpS
 
     if (pvNil != pflo)
     {
-        Assert(cpSrc == 0 && ccpIns * size(achar) == pflo->cb, "bad flo");
+        Assert(cpSrc == 0 && ccpIns * SIZEOF(achar) == pflo->cb, "bad flo");
         if (!FReplaceFlo(pflo, fCopy, cp, ccpDel, koskCur, fdocNil))
             goto LCancel;
     }
@@ -2598,7 +2598,7 @@ bool TXRD::_FReplaceCore(void *prgch, PFLO pflo, bool fCopy, PBSF pbsf, long cpS
     else
     {
         Assert(cpSrc == 0, "bad cpSrc");
-        AssertPvCb(prgch, ccpIns * size(achar));
+        AssertPvCb(prgch, ccpIns * SIZEOF(achar));
         if (!FReplaceRgch(prgch, ccpIns, cp, ccpDel, fdocNil))
         {
         LCancel:
@@ -2644,7 +2644,7 @@ bool TXRD::FReplaceFlo(PFLO pflo, bool fCopy, long cp, long ccpDel, short osk, u
     if (!flo.FTranslate(osk))
         goto LFail;
 
-    ccpIns = flo.cb / size(achar);
+    ccpIns = flo.cb / SIZEOF(achar);
     if (CpMac() + ccpIns >= kcpMaxTxrd)
     {
         PushErc(ercRtxdTooMuchText);
@@ -2700,8 +2700,8 @@ bool TXRD::FReplaceBsf(PBSF pbsfSrc, long cpSrc, long ccpSrc, long cpDst, long c
 {
     AssertThis(fobjAssertFull);
     AssertPo(pbsfSrc, 0);
-    AssertIn(cpSrc, 0, pbsfSrc->IbMac() / size(achar) + 1);
-    AssertIn(ccpSrc, 0, pbsfSrc->IbMac() / size(achar) + 1 - cpSrc);
+    AssertIn(cpSrc, 0, pbsfSrc->IbMac() / SIZEOF(achar) + 1);
+    AssertIn(ccpSrc, 0, pbsfSrc->IbMac() / SIZEOF(achar) + 1 - cpSrc);
     AssertIn(cpDst, 0, CpMac());
     AssertIn(ccpDel, 0, CpMac() - cpDst);
 

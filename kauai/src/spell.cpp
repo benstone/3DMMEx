@@ -76,7 +76,7 @@ bool SPLC::_FInit(SC_LID sclid, PSTN pstnCustom)
     if (!_FEnsureDll(sclid))
         return fFalse;
 
-    ClearPb(&wsc, size(wsc));
+    ClearPb(&wsc, SIZEOF(wsc));
     wsc.bHyphenHard = '-';
     wsc.bEmDash = 151;
     wsc.bEnDash = 150;
@@ -117,7 +117,7 @@ bool SPLC::_FEnsureDll(SC_LID sclid)
     }
 
     if (ERROR_SUCCESS != RegQueryValueEx(hkey, PszLit("Engine"), pvNil, (ulong *)&lwType, pvNil, (ulong *)&cb) ||
-        lwType != REG_SZ || cb >= size(sz) ||
+        lwType != REG_SZ || cb >= SIZEOF(sz) ||
         ERROR_SUCCESS != RegQueryValueEx(hkey, PszLit("Engine"), pvNil, (ulong *)&lwType, (byte *)sz, (ulong *)&cb))
     {
         RegCloseKey(hkey);
@@ -177,7 +177,7 @@ bool SPLC::_FEnsureMainDict(SC_LID sclid, PFNI pfni)
     }
 
     if (ERROR_SUCCESS != RegQueryValueEx(hkey, PszLit("Dictionary"), pvNil, (ulong *)&lwType, pvNil, (ulong *)&cb) ||
-        lwType != REG_SZ || cb >= size(sz) ||
+        lwType != REG_SZ || cb >= SIZEOF(sz) ||
         ERROR_SUCCESS != RegQueryValueEx(hkey, PszLit("Dictionary"), pvNil, (ulong *)&lwType, (byte *)sz, (ulong *)&cb))
     {
         RegCloseKey(hkey);
@@ -233,7 +233,7 @@ bool SPLC::_FEnsureUserDict(PSTN pstnCustom, PFNI pfniDef)
     }
 
     if (ERROR_SUCCESS != RegQueryValueEx(hkey, PszLit("PROOF"), pvNil, (ulong *)&lwType, pvNil, (ulong *)&cb) ||
-        lwType != REG_SZ || cb >= size(sz) ||
+        lwType != REG_SZ || cb >= SIZEOF(sz) ||
         ERROR_SUCCESS != RegQueryValueEx(hkey, PszLit("PROOF"), pvNil, (ulong *)&lwType, (byte *)sz, (ulong *)&cb))
     {
         RegCloseKey(hkey);
@@ -344,7 +344,7 @@ bool SPLC::FCheck(achar *prgch, long cch, long *pichMinBad, long *pichLimBad, PS
 {
     AssertThis(0);
     AssertIn(cch, 0, ksuMax);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
     AssertVarMem(pichMinBad);
     AssertVarMem(pichLimBad);
     AssertPo(pstnReplace, 0);
@@ -364,7 +364,7 @@ bool SPLC::FCheck(achar *prgch, long cch, long *pichMinBad, long *pichLimBad, PS
         return fFalse;
     }
 
-    ClearPb(&sib, size(sib));
+    ClearPb(&sib, SIZEOF(sib));
     sib.cch = (ushort)cch;
     sib.lrgch = prgch;
     sib.cMdr = 1;
@@ -375,9 +375,9 @@ bool SPLC::FCheck(achar *prgch, long cch, long *pichMinBad, long *pichLimBad, PS
         sib.lrgUdr = &_udr;
     }
 
-    ClearPb(&srb, size(srb));
+    ClearPb(&srb, SIZEOF(srb));
     srb.lrgsz = sz;
-    srb.cch = size(sz) / size(achar);
+    srb.cch = SIZEOF(sz) / SIZEOF(achar);
     srb.lrgbRating = &bRate;
     srb.cbRate = 1;
 
@@ -410,7 +410,7 @@ bool SPLC::FSuggest(achar *prgch, long cch, bool fFirst, PSTN pstn)
 {
     AssertThis(0);
     AssertIn(cch, 1, ksuMax);
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
     AssertPo(pstn, 0);
 
     SC_SIB sib;
@@ -433,7 +433,7 @@ bool SPLC::FSuggest(achar *prgch, long cch, bool fFirst, PSTN pstn)
         return fTrue;
     }
 
-    ClearPb(&sib, size(sib));
+    ClearPb(&sib, SIZEOF(sib));
     sib.cch = (ushort)cch;
     sib.lrgch = prgch;
     sib.cMdr = 1;
@@ -444,7 +444,7 @@ bool SPLC::FSuggest(achar *prgch, long cch, bool fFirst, PSTN pstn)
         sib.lrgUdr = &_udr;
     }
 
-    ClearPb(&srb, size(srb));
+    ClearPb(&srb, SIZEOF(srb));
     srb.lrgsz = _rgchSuggest;
     srb.cch = CvFromRgv(_rgchSuggest);
 
@@ -452,7 +452,7 @@ bool SPLC::FSuggest(achar *prgch, long cch, bool fFirst, PSTN pstn)
     sccc = fFirst ? sccSuggest : sccSuggestMore;
     for (;; sccc = sccSuggestMore)
     {
-        ClearPb(_rgchSuggest, size(_rgchSuggest));
+        ClearPb(_rgchSuggest, SIZEOF(_rgchSuggest));
 
         sec = SpellCheck(_splid, sccc, &sib, &srb);
         if (sec != secNOERRORS)

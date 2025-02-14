@@ -71,7 +71,7 @@ PPIC PIC::PpicRead(PBLCK pblck)
         return pvNil;
 
     cb = pblck->Cb();
-    if (cb <= size(PICH))
+    if (cb <= SIZEOF(PICH))
         return pvNil;
 
     if (hqNil == (hq = pblck->HqFree()))
@@ -82,7 +82,7 @@ PPIC PIC::PpicRead(PBLCK pblck)
     if (rc.FEmpty() || ppich->cb != cb)
         hpic = hNil;
     else
-        hpic = SetEnhMetaFileBits(cb - size(PICH), (byte *)(ppich + 1));
+        hpic = SetEnhMetaFileBits(cb - SIZEOF(PICH), (byte *)(ppich + 1));
     UnlockHq(hq);
     FreePhq(&hq);
     if (hNil == hpic)
@@ -106,7 +106,7 @@ PPIC PIC::PpicRead(PBLCK pblck)
 long PIC::CbOnFile(void)
 {
     AssertThis(0);
-    return GetEnhMetaFileBits(_hpic, 0, pvNil) + size(PICH);
+    return GetEnhMetaFileBits(_hpic, 0, pvNil) + SIZEOF(PICH);
 }
 
 /***************************************************************************
@@ -121,7 +121,7 @@ bool PIC::FWrite(PBLCK pblck)
     PICH *ppich;
 
     cb = GetEnhMetaFileBits(_hpic, 0, pvNil);
-    if (cb == 0 || (cbTot = cb + size(PICH)) != pblck->Cb())
+    if (cb == 0 || (cbTot = cb + SIZEOF(PICH)) != pblck->Cb())
         return fFalse;
 
     if (!FAllocPv((void **)&ppich, cbTot, fmemNil, mprNormal))
@@ -169,7 +169,7 @@ PPIC PIC::PpicReadNative(FNI *pfni)
         return pvNil;
     }
 
-    GetEnhMetaFileHeader(hpic, size(emh), &emh);
+    GetEnhMetaFileHeader(hpic, SIZEOF(emh), &emh);
     rc.Set(LwMulDiv(emh.rclFrame.left, 72, 2540), LwMulDiv(emh.rclFrame.top, 72, 2540),
            LwMulDiv(emh.rclFrame.right, 72, 2540), LwMulDiv(emh.rclFrame.bottom, 72, 2540));
 
@@ -218,16 +218,16 @@ HPIC PIC::_HpicReadWmf(FNI *pfni)
         return hNil;
 
     // check for type of meta file
-    if (!pfil->FReadRgb(&lw, size(long), 0))
+    if (!pfil->FReadRgb(&lw, SIZEOF(long), 0))
         goto LFail;
 
-    // read placeable meta file header - NOTE: we can't just use size(MEFH) for
+    // read placeable meta file header - NOTE: we can't just use SIZEOF(MEFH) for
     // the cb because the MEFH is padded to a long boundary by the compiler
     fp = 0;
     if (lw == lwMEFH && !pfil->FReadRgbSeq(&mefh, kcbMefh, &fp))
         goto LFail;
 
-    // read METAHEADER structure - NOTE: we can't just use size(METAHEADER) for
+    // read METAHEADER structure - NOTE: we can't just use SIZEOF(METAHEADER) for
     // the cb because the METAHEADER is padded to a long boundary by the
     // compiler
     if (!pfil->FReadRgbSeq(&mh, kcbMetaHeader, &fp) || mh.mtVersion < 0x0300 || 2 * mh.mtHeaderSize != kcbMetaHeader ||

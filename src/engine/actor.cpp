@@ -247,14 +247,14 @@ bool ACTR::_FCreateGroups(void)
 {
     AssertBaseThis(0);
 
-    if (pvNil == (_pggaev = GG::PggNew(size(AEV), kcaevInit, kcbVarAdd)))
+    if (pvNil == (_pggaev = GG::PggNew(SIZEOF(AEV), kcaevInit, kcbVarAdd)))
         return fFalse;
 
-    if (pvNil == (_pglrpt = GL::PglNew(size(RPT), kcrptGrow)))
+    if (pvNil == (_pglrpt = GL::PglNew(SIZEOF(RPT), kcrptGrow)))
         return fFalse;
     _pglrpt->SetMinGrow(kcrptGrow);
 
-    if (pvNil == (_pglsmm = GL::PglNew(size(SMM), kcsmmGrow)))
+    if (pvNil == (_pglsmm = GL::PglNew(SIZEOF(SMM), kcsmmGrow)))
         return fFalse;
     _pglsmm->SetMinGrow(kcsmmGrow);
 
@@ -902,7 +902,7 @@ bool ACTR::_FIsAddNow(long iaev)
             return fFalse;
     }
 
-    Assert(_pggaev->Cb(iaev) == size(AEVADD), "Corrupt event list");
+    Assert(_pggaev->Cb(iaev) == SIZEOF(AEVADD), "Corrupt event list");
     paev = (AEV *)_pggaev->QvFixedGet(iaev);
 
     if (paev->nfrm <= _nfrmCur)
@@ -3102,7 +3102,7 @@ bool ACTR::_FInsertAev(long iaev, long cbNew, void *pvVar, void *paev, bool fUpd
     AssertIn(cbNew, 0, 100); // approximate bound
     if (pvNil != pvVar)
         AssertPvCb(pvVar, cbNew);
-    AssertPvCb(paev, size(AEV));
+    AssertPvCb(paev, SIZEOF(AEV));
 
     PTAG ptag;
 
@@ -5514,7 +5514,7 @@ void ACTR::AssertValid(ulong grfobj)
         bool mpaetfSeen[aetLim];
         RTEL rtel;
 
-        ClearPb(mpaetfSeen, size(mpaetfSeen));
+        ClearPb(mpaetfSeen, SIZEOF(mpaetfSeen));
 
         rtel.irpt = -1;
         rtel.dwrOffset = rZero;
@@ -5555,7 +5555,7 @@ void ACTR::AssertValid(ulong grfobj)
 
             if (fNewFrame)
             {
-                ClearPb(mpaetfSeen, size(mpaetfSeen));
+                ClearPb(mpaetfSeen, SIZEOF(mpaetfSeen));
             }
 
             mpaetfSeen[aev.aet] = fTrue;

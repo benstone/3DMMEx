@@ -176,7 +176,7 @@ struct CRPBG
 
     long BvRgch(void)
     {
-        return LwMul(ckid, size(KID));
+        return LwMul(ckid, SIZEOF(KID));
     }
     long CbRgch(long cbVar)
     {
@@ -227,7 +227,7 @@ struct CRPSM
 
     long BvRgch(void)
     {
-        return LwMul(ckid, size(KID));
+        return LwMul(ckid, SIZEOF(KID));
     }
     long CbRgch(long cbVar)
     {
@@ -282,7 +282,7 @@ const BOM kbomCrp = kbomCrpsm;
 
 #endif //! CHUNK_BIG_INDEX
 
-#define _BvKid(ikid) LwMul(ikid, size(KID))
+#define _BvKid(ikid) LwMul(ikid, SIZEOF(KID))
 
 const long rtiNil = 0; // no rti assigned
 long CFL::_rtiLast = rtiNil;
@@ -315,11 +315,11 @@ void CFL::DumpStn(PSTN pstn, PFIL pfil)
         pfil->GetFni(&fni);
         fni.GetStnPath(&stn);
         stn.FAppendSz(PszLit(": "));
-        _pfilStats->FWriteRgbSeq(stn.Prgch(), LwMul(stn.Cch(), size(achar)), &_fpStats);
+        _pfilStats->FWriteRgbSeq(stn.Prgch(), LwMul(stn.Cch(), SIZEOF(achar)), &_fpStats);
     }
 
-    _pfilStats->FWriteRgbSeq(pstn->Prgch(), LwMul(pstn->Cch(), size(achar)), &_fpStats);
-    _pfilStats->FWriteRgbSeq(PszLit("\xD\xA"), MacWin(size(achar), 2 * size(achar)), &_fpStats);
+    _pfilStats->FWriteRgbSeq(pstn->Prgch(), LwMul(pstn->Cch(), SIZEOF(achar)), &_fpStats);
+    _pfilStats->FWriteRgbSeq(PszLit("\xD\xA"), MacWin(SIZEOF(achar), 2 * SIZEOF(achar)), &_fpStats);
 }
 #endif // CHUNK_STATS
 
@@ -424,12 +424,12 @@ bool CFL::FReopen(void)
     _fFreeMapNotRead = fFalse;
 
     csto = _csto;
-    ClearPb(&_csto, size(csto));
+    ClearPb(&_csto, SIZEOF(csto));
     _csto.pfil = csto.pfil;
     _csto.pfil->AddRef();
 
     cstoExtra = _cstoExtra;
-    ClearPb(&_cstoExtra, size(cstoExtra));
+    ClearPb(&_cstoExtra, SIZEOF(cstoExtra));
 
     fRet = _FReadIndex() && tYes == _TValidIndex();
     if (!fRet)
@@ -493,15 +493,15 @@ PCFL CFL::PcflCreate(FNI *pfni, ulong grfcfl)
     if ((pcfl = NewObj CFL()) == pvNil)
         goto LFail;
 
-    if ((pcfl->_pggcrp = GG::PggNew(size(CRP))) == pvNil ||
-        (pcfl->_csto.pfil = FIL::PfilCreate(pfni, grffil)) == pvNil || !pcfl->_csto.pfil->FSetFpMac(size(CFP)))
+    if ((pcfl->_pggcrp = GG::PggNew(SIZEOF(CRP))) == pvNil ||
+        (pcfl->_csto.pfil = FIL::PfilCreate(pfni, grffil)) == pvNil || !pcfl->_csto.pfil->FSetFpMac(SIZEOF(CFP)))
     {
         ReleasePpo(&pcfl);
     LFail:
         PushErc(ercCflCreate);
         return pvNil;
     }
-    pcfl->_csto.fpMac = size(CFP);
+    pcfl->_csto.fpMac = SIZEOF(CFP);
     AssertDo(pcfl->FSetGrfcfl(grfcfl), 0);
 
     AssertPo(pcfl, fcflFull | fcflGraph);
@@ -616,7 +616,7 @@ bool CFL::FWriteChunkTree(CTG ctg, CNO cno, PFIL pfilDst, FP fpDst, long *pcb)
 
         AssertDo(FFindFlo(kid.cki.ctg, kid.cki.cno, &floSrc), 0);
         if (pvNil != pcb)
-            *pcb += size(ECDF) + floSrc.cb;
+            *pcb += SIZEOF(ECDF) + floSrc.cb;
 
         if (pvNil != pfilDst)
         {
@@ -633,7 +633,7 @@ bool CFL::FWriteChunkTree(CTG ctg, CNO cno, PFIL pfilDst, FP fpDst, long *pcb)
             if (FForest(kid.cki.ctg, kid.cki.cno))
                 ecdf.grfcrp |= fcrpForest;
 
-            if (!pfilDst->FWriteRgbSeq(&ecdf, size(ecdf), &fpDst))
+            if (!pfilDst->FWriteRgbSeq(&ecdf, SIZEOF(ecdf), &fpDst))
                 goto LFail;
 
             floDst.pfil = pfilDst;
@@ -677,22 +677,22 @@ PCFL CFL::PcflReadForestFromFlo(PFLO pflo, bool fCopyData)
     FP fpSrc, fpLimSrc;
     PGL pglecsd = pvNil;
 
-    if (pvNil == (pglecsd = GL::PglNew(size(ECSD))))
+    if (pvNil == (pglecsd = GL::PglNew(SIZEOF(ECSD))))
         goto LFail;
 
     if ((pcfl = NewObj CFL()) == pvNil)
         goto LFail;
 
-    if (pvNil == (pcfl->_pggcrp = GG::PggNew(size(CRP))))
+    if (pvNil == (pcfl->_pggcrp = GG::PggNew(SIZEOF(CRP))))
         goto LFail;
 
     if (fCopyData)
     {
-        if (pvNil == (pcfl->_csto.pfil = FIL::PfilCreateTemp()) || !pcfl->_csto.pfil->FSetFpMac(size(CFP)))
+        if (pvNil == (pcfl->_csto.pfil = FIL::PfilCreateTemp()) || !pcfl->_csto.pfil->FSetFpMac(SIZEOF(CFP)))
         {
             goto LFail;
         }
-        pcfl->_csto.fpMac = size(CFP);
+        pcfl->_csto.fpMac = SIZEOF(CFP);
     }
     else
     {
@@ -705,7 +705,7 @@ PCFL CFL::PcflReadForestFromFlo(PFLO pflo, bool fCopyData)
 
     AssertPo(pcfl, fcflFull | fcflGraph);
 
-    ClearPb(&ecsdCur, size(ecsdCur));
+    ClearPb(&ecsdCur, SIZEOF(ecsdCur));
 
     fpSrc = pflo->fp;
     fpLimSrc = pflo->fp + pflo->cb;
@@ -714,7 +714,7 @@ PCFL CFL::PcflReadForestFromFlo(PFLO pflo, bool fCopyData)
         if (fpSrc >= fpLimSrc)
             break;
 
-        if (fpSrc > fpLimSrc + size(ecdf) || !pflo->pfil->FReadRgbSeq(&ecdf, size(ecdf), &fpSrc))
+        if (fpSrc > fpLimSrc + SIZEOF(ecdf) || !pflo->pfil->FReadRgbSeq(&ecdf, SIZEOF(ecdf), &fpSrc))
         {
             goto LFail;
         }
@@ -1004,7 +1004,7 @@ void CFL::AssertValid(ulong grfcfl)
     long cbVar, cbRgch;
     CRP crp;
     long ikid;
-    FP fpBase = _fInvalidMainFile ? 0 : size(CFP);
+    FP fpBase = _fInvalidMainFile ? 0 : SIZEOF(CFP);
 
     Assert(!_fInvalidMainFile || _fAddToExtra, 0);
 
@@ -1086,7 +1086,7 @@ void CFL::AssertValid(ulong grfcfl)
         fFirstKid = fTrue;
         for (ikid = 0; ikid < crp.ckid; ikid++)
         {
-            _pggcrp->GetRgb(icrp, _BvKid(ikid), size(KID), &kid);
+            _pggcrp->GetRgb(icrp, _BvKid(ikid), SIZEOF(KID), &kid);
             AssertVar(_FFindCtgCno(kid.cki.ctg, kid.cki.cno, &icrpT), "child doesn't exist", &kid.cki);
             Assert(kid.cki.ctg != ckiOld.ctg || kid.cki.cno != ckiOld.cno, "chunk is child of itself!");
 
@@ -1202,7 +1202,7 @@ tribool CFL::_TValidIndex(void)
     for (icrp = _pggcrp->IvMac(); icrp-- != 0;)
     {
         qcrp = (CRP *)_pggcrp->QvFixedGet(icrp, &cbVar);
-        if (!FIn(qcrp->ckid, 0, cbVar / size(KID) + 1))
+        if (!FIn(qcrp->ckid, 0, cbVar / SIZEOF(KID) + 1))
             return tNo;
         if (!FIn(qcrp->ccrpRef, 0, kckidMax + 1))
             return tNo;
@@ -1351,10 +1351,10 @@ bool CFL::_FReadIndex(void)
            "cfl has wrong non-nil entries");
 
     // verify that this is a chunky file
-    if ((fpMac = _csto.pfil->FpMac()) < size(CFP))
+    if ((fpMac = _csto.pfil->FpMac()) < SIZEOF(CFP))
         return fFalse;
 
-    if (!_csto.pfil->FReadRgb(&cfp, size(cfp), 0))
+    if (!_csto.pfil->FReadRgb(&cfp, SIZEOF(cfp), 0))
         return fFalse;
 
     // check the magic number and byte order indicator
@@ -1378,7 +1378,7 @@ bool CFL::_FReadIndex(void)
 
     // verify the fp's and cb's
     // the index and map should be last
-    if (!FIn(cfp.fpMac, size(cfp), fpMac + 1) || !FIn(cfp.fpIndex, size(cfp), cfp.fpMac + 1) ||
+    if (!FIn(cfp.fpMac, SIZEOF(cfp), fpMac + 1) || !FIn(cfp.fpIndex, SIZEOF(cfp), cfp.fpMac + 1) ||
         !FIn(cfp.cbIndex, 1, cfp.fpMac - cfp.fpIndex + 1) || cfp.fpMap != cfp.fpIndex + cfp.cbIndex ||
         cfp.fpMap + cfp.cbMap != cfp.fpMac)
     {
@@ -1392,14 +1392,14 @@ bool CFL::_FReadIndex(void)
     }
 
     cbFixed = _pggcrp->CbFixed();
-    if (cbFixed != size(CRPBG) && (fOldIndex || cbFixed != size(CRPSM)))
+    if (cbFixed != SIZEOF(CRPBG) && (fOldIndex || cbFixed != SIZEOF(CRPSM)))
         return fFalse;
 
     // Clean the index
-    AssertBomRglw(kbomKid, size(KID));
+    AssertBomRglw(kbomKid, SIZEOF(KID));
     _pggcrp->Lock();
 
-    if (cbFixed == size(CRPBG))
+    if (cbFixed == SIZEOF(CRPBG))
     {
         // Big index
         CRPBG *pcrpbg;
@@ -1420,13 +1420,13 @@ bool CFL::_FReadIndex(void)
                 goto LBadFile;
             if (bomNil != bom)
                 SwapBytesBom(pcrpbg, bom);
-            if (!FIn(pcrpbg->ckid, 0, cbVar / size(KID) + 1) || (cbRgch = pcrpbg->CbRgch(cbVar)) > kcbMaxDataStn)
+            if (!FIn(pcrpbg->ckid, 0, cbVar / SIZEOF(KID) + 1) || (cbRgch = pcrpbg->CbRgch(cbVar)) > kcbMaxDataStn)
             {
                 goto LBadFile;
             }
             if (bomNil != bom && pcrpbg->ckid > 0)
             {
-                SwapBytesRglw(_pggcrp->QvGet(icrp), pcrpbg->ckid * (size(KID) / size(long)));
+                SwapBytesRglw(_pggcrp->QvGet(icrp), pcrpbg->ckid * (SIZEOF(KID) / SIZEOF(long)));
             }
             pcrpbg->rti = rtiNil;
 
@@ -1453,7 +1453,7 @@ bool CFL::_FReadIndex(void)
                 // translate the name
                 long bvRgch = pcrpbg->BvRgch();
 
-                if (cbRgch < size(szsName))
+                if (cbRgch < SIZEOF(szsName))
                 {
                     long cbNew;
 
@@ -1491,7 +1491,7 @@ bool CFL::_FReadIndex(void)
     else
     {
         // Small index
-        Assert(size(CRPSM) == cbFixed, 0);
+        Assert(SIZEOF(CRPSM) == cbFixed, 0);
         CRPSM *pcrpsm;
 
         bom = (bo != kboCur) ? kbomCrpsm : bomNil;
@@ -1502,13 +1502,13 @@ bool CFL::_FReadIndex(void)
                 goto LBadFile;
             if (bomNil != bom)
                 SwapBytesBom(pcrpsm, bom);
-            if (!FIn(pcrpsm->ckid, 0, cbVar / size(KID) + 1) || (cbRgch = pcrpsm->CbRgch(cbVar)) > kcbMaxDataStn)
+            if (!FIn(pcrpsm->ckid, 0, cbVar / SIZEOF(KID) + 1) || (cbRgch = pcrpsm->CbRgch(cbVar)) > kcbMaxDataStn)
             {
                 goto LBadFile;
             }
             if (pcrpsm->ckid > 0 && bomNil != bom)
             {
-                SwapBytesRglw(_pggcrp->QvGet(icrp), pcrpsm->ckid * (size(KID) / size(long)));
+                SwapBytesRglw(_pggcrp->QvGet(icrp), pcrpsm->ckid * (SIZEOF(KID) / SIZEOF(long)));
             }
 
             pcrpsm->ClearGrfcrp(fcrpOnExtra);
@@ -1523,14 +1523,14 @@ bool CFL::_FReadIndex(void)
         }
     }
 
-    if (size(CRP) != cbFixed)
+    if (SIZEOF(CRP) != cbFixed)
     {
         // need to convert the index (from big to small or small to big)
         PGG pggcrp;
         CRPOTH *pcrpOld;
         CRP crp;
 
-        if (pvNil == (pggcrp = GG::PggNew(size(CRP), _pggcrp->IvMac())))
+        if (pvNil == (pggcrp = GG::PggNew(SIZEOF(CRP), _pggcrp->IvMac())))
             goto LFail;
 
         for (ccrp = _pggcrp->IvMac(), icrp = 0; icrp < ccrp; icrp++)
@@ -1599,17 +1599,17 @@ void CFL::_ReadFreeMap(void)
     if (_cbFreeMap > 0)
     {
         if ((_csto.pglfsm = GL::PglRead(_csto.pfil, _fpFreeMap, _cbFreeMap, &bo, &osk)) == pvNil ||
-            _csto.pglfsm->CbEntry() != size(FSM))
+            _csto.pglfsm->CbEntry() != SIZEOF(FSM))
         {
             // it failed, but so what
             ReleasePpo(&_csto.pglfsm);
             return;
         }
         // swap bytes
-        AssertBomRglw(kbomFsm, size(FSM));
+        AssertBomRglw(kbomFsm, SIZEOF(FSM));
         if (bo != kboCur && (cfsm = _csto.pglfsm->IvMac()) > 0)
         {
-            SwapBytesRglw(_csto.pglfsm->QvGet(0), cfsm * (size(FSM) / size(long)));
+            SwapBytesRglw(_csto.pglfsm->QvGet(0), cfsm * (SIZEOF(FSM) / SIZEOF(long)));
         }
     }
 }
@@ -1663,10 +1663,10 @@ bool CFL::FSave(CTG ctgCreator, FNI *pfni)
     // get a temp name in the same directory as the target
     if ((floDst.pfil = FIL::PfilCreateTemp(&fni)) == pvNil)
         goto LError;
-    if (!floDst.pfil->FSetFpMac(size(CFP)))
+    if (!floDst.pfil->FSetFpMac(SIZEOF(CFP)))
         goto LFail;
 
-    floDst.fp = size(CFP);
+    floDst.fp = SIZEOF(CFP);
     ccrp = _pggcrp->IvMac();
     for (icrp = 0; icrp < ccrp; icrp++)
     {
@@ -1686,7 +1686,7 @@ bool CFL::FSave(CTG ctgCreator, FNI *pfni)
     }
 
     // All the data has been copied.  Update the index to point to the new file.
-    floSrc.fp = size(CFP);
+    floSrc.fp = SIZEOF(CFP);
     for (icrp = 0; icrp < ccrp; icrp++)
     {
         qcrp = (CRP *)_pggcrp->QvFixedGet(icrp);
@@ -1737,7 +1737,7 @@ bool CFL::FSave(CTG ctgCreator, FNI *pfni)
         {
             // restore the original csto and make floDst.pfil the extra file
             _csto.pfil = pfilOld;
-            _csto.fpMac = size(CFP);
+            _csto.fpMac = SIZEOF(CFP);
             for (icrp = 0; icrp < ccrp; icrp++)
             {
                 qcrp = (CRP *)_pggcrp->QvFixedGet(icrp);
@@ -1775,7 +1775,7 @@ bool CFL::_FWriteIndex(CTG ctgCreator)
     CFP cfp;
     BLCK blck;
 
-    ClearPb(&cfp, size(cfp));
+    ClearPb(&cfp, SIZEOF(cfp));
     cfp.lwMagic = klwMagicChunky;
     cfp.ctgCreator = ctgCreator;
     cfp.dver.Set(kcvnCur, kcvnBack);
@@ -1797,7 +1797,7 @@ bool CFL::_FWriteIndex(CTG ctgCreator)
         cfp.cbMap = 0;
 
     cfp.fpMac = cfp.fpMap + cfp.cbMap;
-    return _csto.pfil->FWriteRgb(&cfp, size(cfp), 0);
+    return _csto.pfil->FWriteRgb(&cfp, SIZEOF(cfp), 0);
 }
 
 /***************************************************************************
@@ -1819,7 +1819,7 @@ bool CFL::FSaveACopy(CTG ctgCreator, FNI *pfni)
 
     // initialize the destination FLO.
     floDst.pfil = pcflDst->_csto.pfil;
-    floDst.fp = size(CFP);
+    floDst.fp = SIZEOF(CFP);
 
     // need to lock the _pggcrp for the FInsert operations below
     ccrp = _pggcrp->IvMac();
@@ -2515,7 +2515,7 @@ bool CFL::_FAdd(long cb, CTG ctg, CNO cno, long icrp, PBLCK pblck)
     Assert(flo.pfil == _csto.pfil || flo.pfil == _cstoExtra.pfil, 0);
 
     qcrp = (CRP *)_pggcrp->QvFixedGet(icrp);
-    ClearPb(qcrp, size(CRP));
+    ClearPb(qcrp, SIZEOF(CRP));
     qcrp->cki.ctg = ctg;
     qcrp->cki.cno = cno;
     qcrp->fp = flo.fp;
@@ -2740,13 +2740,13 @@ void CFL::SwapChildren(CTG ctg1, CNO cno1, CTG ctg2, CNO cno2)
     // Swap the child lists.
     qcrp1 = (CRP *)_pggcrp->QvFixedGet(icrp1);
     qcrp2 = (CRP *)_pggcrp->QvFixedGet(icrp2);
-    cb1 = LwMul(qcrp1->ckid, size(KID));
-    cb2 = LwMul(qcrp2->ckid, size(KID));
+    cb1 = LwMul(qcrp1->ckid, SIZEOF(KID));
+    cb2 = LwMul(qcrp2->ckid, SIZEOF(KID));
     SwapVars(&qcrp1->ckid, &qcrp2->ckid);
 
     // These FMoveRgb calls won't fail, because no padding is necessary for
     // child entries. (FMoveRgb can fail only if the number of bytes being
-    // moved is not a multiple of size(long)).
+    // moved is not a multiple of SIZEOF(long)).
     if (0 < cb1)
         AssertDo(_pggcrp->FMoveRgb(icrp1, 0, icrp2, cb2, cb1), 0);
     if (0 < cb2)
@@ -2818,7 +2818,7 @@ void CFL::Move(CTG ctg, CNO cno, CTG ctgNew, CNO cnoNew)
                 qkid->cki.ctg = ctgNew;
                 qkid->cki.cno = cnoNew;
 
-                MoveElement(qrgkid, size(KID), ikid, ikidNew);
+                MoveElement(qrgkid, SIZEOF(KID), ikid, ikidNew);
                 ccrpRef--;
             }
         }
@@ -2887,7 +2887,7 @@ void CFL::Delete(CTG ctg, CNO cno)
                 qcrp = (CRP *)_pggcrp->QvFixedGet(icrp);
                 for (ikid = qcrp->ckid; ikid-- != 0;)
                 {
-                    _pggcrp->GetRgb(icrp, _BvKid(ikid), size(kid), &kid);
+                    _pggcrp->GetRgb(icrp, _BvKid(ikid), SIZEOF(kid), &kid);
                     if (!_FFindCtgCno(kid.cki.ctg, kid.cki.cno, &icrpChild))
                     {
                         Bug("child not there");
@@ -3011,7 +3011,7 @@ void CFL::DeleteChild(CTG ctgPar, CNO cnoPar, CTG ctgChild, CNO cnoChild, CHID c
     // remove the reference
     qcrp = (CRP *)_pggcrp->QvFixedGet(icrpPar);
     qcrp->ckid--;
-    _pggcrp->DeleteRgb(icrpPar, _BvKid(ikid), size(KID));
+    _pggcrp->DeleteRgb(icrpPar, _BvKid(ikid), SIZEOF(KID));
 
     // now decrement the ref count and nuke it if the ref count is zero
     if (_FDecRefCount(icrpChild))
@@ -3063,7 +3063,7 @@ void CFL::_FreeFpCb(bool fOnExtra, FP fp, long cb)
 {
     AssertBaseThis(0);
     Assert(cb > 0 || cb == 0 && fp == 0, "bad cb");
-    Assert(fp >= 0 && (fOnExtra || fp >= size(CFP) || cb == 0 || _fInvalidMainFile), "bad fp");
+    Assert(fp >= 0 && (fOnExtra || fp >= SIZEOF(CFP) || cb == 0 || _fInvalidMainFile), "bad fp");
 
     PGL pglfsm;
     long ifsm, ifsmMin, ifsmLim;
@@ -3105,7 +3105,7 @@ void CFL::_FreeFpCb(bool fOnExtra, FP fp, long cb)
 
     // Chunk is not at the end of the file.  We need to add it
     // to the free map.
-    if (pglfsm == pvNil && (pglfsm = pcsto->pglfsm = GL::PglNew(size(FSM), 1)) == pvNil)
+    if (pglfsm == pvNil && (pglfsm = pcsto->pglfsm = GL::PglNew(SIZEOF(FSM), 1)) == pvNil)
     {
         // can't create the free map, just drop the space
         return;
@@ -3340,7 +3340,7 @@ bool CFL::_FAdoptChild(long icrpPar, long ikid, CTG ctgChild, CNO cnoChild, CHID
     kid.cki.ctg = ctgChild;
     kid.cki.cno = cnoChild;
     kid.chid = chid;
-    if (!_pggcrp->FInsertRgb(icrpPar, _BvKid(ikid), size(KID), &kid))
+    if (!_pggcrp->FInsertRgb(icrpPar, _BvKid(ikid), SIZEOF(KID), &kid))
     {
         AssertThis(0);
         return fFalse;
@@ -3356,7 +3356,7 @@ bool CFL::_FAdoptChild(long icrpPar, long ikid, CTG ctgChild, CNO cnoChild, CHID
         qcrp = (CRP *)_pggcrp->QvFixedGet(icrpPar);
         qcrp->ckid--;
     LOverFlow:
-        _pggcrp->DeleteRgb(icrpPar, _BvKid(ikid), size(KID));
+        _pggcrp->DeleteRgb(icrpPar, _BvKid(ikid), SIZEOF(KID));
         AssertThis(0);
         return fFalse;
     }
@@ -3397,7 +3397,7 @@ void CFL::ChangeChid(CTG ctgPar, CNO cnoPar, CTG ctgChild, CNO cnoChild, CHID ch
     qkid = (qrgkid = (KID *)_pggcrp->QvGet(icrp)) + ikidOld;
     qkid->chid = chidNew;
 
-    MoveElement(qrgkid, size(KID), ikidOld, ikidNew);
+    MoveElement(qrgkid, SIZEOF(KID), ikidOld, ikidNew);
 
     AssertThis(0);
 }
@@ -3565,7 +3565,7 @@ bool CFL::FGetKid(CTG ctg, CNO cno, long ikid, KID *pkid)
         TrashVar(pkid);
         return fFalse;
     }
-    _pggcrp->GetRgb(icrp, _BvKid(ikid), size(KID), pkid);
+    _pggcrp->GetRgb(icrp, _BvKid(ikid), SIZEOF(KID), pkid);
     Assert(_FFindCtgCno(pkid->cki.ctg, pkid->cki.cno, &icrp), "child not there");
     Assert(pkid->cki.ctg != ctg || pkid->cki.cno != cno, "chunk is child of itself!");
     return fTrue;
@@ -3801,7 +3801,7 @@ bool _FAddCnom(PGL *ppglcnom, CNOM *pcnom)
     AssertVarMem(pcnom);
     long icnom;
 
-    if (pvNil == *ppglcnom && pvNil == (*ppglcnom = GL::PglNew(size(CNOM))))
+    if (pvNil == *ppglcnom && pvNil == (*ppglcnom = GL::PglNew(SIZEOF(CNOM))))
         return fFalse;
 
     AssertDo(!_FFindCnom(*ppglcnom, pcnom->ctg, pcnom->cnoSrc, pvNil, &icnom), "why is this cnom already in the gl?");
@@ -4207,7 +4207,7 @@ bool CFL::_FSetRti(CTG ctg, CNO cno, long rti)
     rtie.ctg = ctg;
     rtie.cno = cno;
     rtie.rti = rti;
-    if (pvNil == _pglrtie && pvNil == (_pglrtie = GL::PglNew(size(RTIE), 1)))
+    if (pvNil == _pglrtie && pvNil == (_pglrtie = GL::PglNew(SIZEOF(RTIE), 1)))
         return fFalse;
 
     return _pglrtie->FInsert(irtie, &rtie);
@@ -4410,7 +4410,7 @@ bool CGE::FNextKid(KID *pkid, CKI *pckiPar, ulong *pgrfcgeOut, ulong grfcgeIn)
         if (_pcfl->Ckid(pkid->cki.ctg, pkid->cki.cno) > 0)
         {
             // child has children, need to push the dps
-            if (_pgldps == pvNil && (_pgldps = GL::PglNew(size(DPS), 10)) == pvNil || !_pgldps->FPush(&_dps))
+            if (_pgldps == pvNil && (_pgldps = GL::PglNew(SIZEOF(DPS), 10)) == pvNil || !_pgldps->FPush(&_dps))
             {
                 // mem failure, pretend it has no children
                 *pgrfcgeOut |= fcgeError;

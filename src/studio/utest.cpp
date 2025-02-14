@@ -105,7 +105,7 @@ void APP::Run(ulong grfapp, ulong grfgob, long ginDef)
 
     // Get stereo sound preference from registry
     long lwValue = fFalse;
-    (void)FGetSetRegKey(kszStereoSound, &lwValue, size(lwValue), fregNil);
+    (void)FGetSetRegKey(kszStereoSound, &lwValue, SIZEOF(lwValue), fregNil);
     if (FPure(lwValue))
     {
         grfapp |= fappStereoSound;
@@ -184,7 +184,7 @@ bool APP::_FInit(ulong grfapp, ulong grfgob, long ginDef)
 
     // Load startup preferences
     long fStartupSound = kfStartupSoundDefault;
-    (void)FGetSetRegKey(kszStartupSoundValue, &fStartupSound, size(fStartupSound), fregNil);
+    (void)FGetSetRegKey(kszStartupSoundValue, &fStartupSound, SIZEOF(fStartupSound), fregNil);
 
     // Only allow one copy of 3DMM to run at a time:
     if (_FAppAlreadyRunning())
@@ -198,7 +198,7 @@ bool APP::_FInit(ulong grfapp, ulong grfgob, long ginDef)
         DBINFO dbinfo;
 
         dbinfo.cactAV = vcactAV;
-        if (FGetSetRegKey(PszLit("DebugSettings"), &dbinfo, size(DBINFO), fregSetDefault | fregBinary))
+        if (FGetSetRegKey(PszLit("DebugSettings"), &dbinfo, SIZEOF(DBINFO), fregSetDefault | fregBinary))
         {
             vcactAV = dbinfo.cactAV;
         }
@@ -600,7 +600,7 @@ bool APP::_FEnsureAudio(void)
     if (cwod <= 0)
     {
         fShowMessage = fTrue;
-        if (!FGetSetRegKey(kszWaveOutMsgValue, &fShowMessage, size(fShowMessage), fregSetDefault | fregMachine))
+        if (!FGetSetRegKey(kszWaveOutMsgValue, &fShowMessage, SIZEOF(fShowMessage), fregSetDefault | fregMachine))
         {
             Warn("Registry query failed");
         }
@@ -616,7 +616,7 @@ bool APP::_FEnsureAudio(void)
             if (!fShowMessage)
             {
                 // ignore failure
-                FGetSetRegKey(kszWaveOutMsgValue, &fShowMessage, size(fShowMessage), fregSetKey | fregMachine);
+                FGetSetRegKey(kszWaveOutMsgValue, &fShowMessage, SIZEOF(fShowMessage), fregSetKey | fregMachine);
             }
         }
     }
@@ -643,7 +643,7 @@ bool APP::_FEnsureAudio(void)
     if (cmod <= 0)
     {
         fShowMessage = fTrue;
-        if (!FGetSetRegKey(kszMidiOutMsgValue, &fShowMessage, size(fShowMessage), fregSetDefault | fregMachine))
+        if (!FGetSetRegKey(kszMidiOutMsgValue, &fShowMessage, SIZEOF(fShowMessage), fregSetDefault | fregMachine))
         {
             Warn("Registry query failed");
         }
@@ -659,7 +659,7 @@ bool APP::_FEnsureAudio(void)
             if (!fShowMessage)
             {
                 // ignore failure
-                FGetSetRegKey(kszMidiOutMsgValue, &fShowMessage, size(fShowMessage), fregSetKey | fregMachine);
+                FGetSetRegKey(kszMidiOutMsgValue, &fShowMessage, SIZEOF(fShowMessage), fregSetKey | fregMachine);
             }
         }
     }
@@ -734,7 +734,7 @@ bool APP::_FEnsureColorDepth(void)
         // warn user
         fShowMessage = fTrue;
         if (!FGetSetRegKey(kszGreaterThan8bppMsgValue, &fShowMessage,
-                size(fShowMessage), fregSetDefault))
+                SIZEOF(fShowMessage), fregSetDefault))
             {
             Warn("Registry query failed");
             }
@@ -751,7 +751,7 @@ bool APP::_FEnsureColorDepth(void)
                 {
                 fShowMessage = fFalse;
                 FGetSetRegKey(kszGreaterThan8bppMsgValue, &fShowMessage,
-                    size(fShowMessage), fregSetKey); // ignore failure
+                    SIZEOF(fShowMessage), fregSetKey); // ignore failure
                 }
             }
         }
@@ -772,7 +772,7 @@ bool _FDlgResSwitch(PDLG pdlg, long *pidit, void *pv)
 {
     AssertPo(pdlg, 0);
     AssertVarMem(pidit);
-    AssertPvCb(pv, size(long));
+    AssertPvCb(pv, SIZEOF(long));
 
     long tsResize = *(long *)pv;
     long tsCur;
@@ -825,7 +825,7 @@ bool APP::_FEnsureDisplayResolution(void)
     }
 
     // See if there's a res switch preference in the registry
-    if (!FGetSetRegKey(kszSwitchResolutionValue, &fSwitchRes, size(fSwitchRes), fregNil, &fNoValue))
+    if (!FGetSetRegKey(kszSwitchResolutionValue, &fSwitchRes, SIZEOF(fSwitchRes), fregNil, &fNoValue))
     {
         // Registry error...just run in a window
         _fRunInWindow = fTrue;
@@ -916,7 +916,7 @@ LSwitchFailed:
     // try to set pref to fFalse
     fSwitchRes = fFalse;
 LWriteReg:
-    FGetSetRegKey(kszSwitchResolutionValue, &fSwitchRes, size(fSwitchRes), fregSetKey);
+    FGetSetRegKey(kszSwitchResolutionValue, &fSwitchRes, SIZEOF(fSwitchRes), fregSetKey);
     return fTrue;
 }
 
@@ -1218,7 +1218,7 @@ bool APP::_FGetUserDirectories(void)
 
     fFirstTimeUser = fFalse;
     szDir[0] = chNil;
-    if (!FGetSetRegKey(kszHomeDirValue, szDir, size(szDir), fregSetDefault | fregString))
+    if (!FGetSetRegKey(kszHomeDirValue, szDir, SIZEOF(szDir), fregSetDefault | fregString))
     {
         return fFalse;
     }
@@ -1272,7 +1272,7 @@ bool APP::_FGetUserName(void)
 
 #ifdef WIN
     bool fRet = fTrue;
-    DWORD dwCbUser = size(SZ);
+    DWORD dwCbUser = SIZEOF(SZ);
     SZ szT;
 
     switch (WNetGetUser(NULL, szT, &dwCbUser))
@@ -1282,7 +1282,7 @@ bool APP::_FGetUserName(void)
         SZ szProvider;
         STN stnMessage;
 
-        if (WNetGetLastError(&dwError, szT, size(SZ), szProvider, size(SZ)) == NO_ERROR)
+        if (WNetGetLastError(&dwError, szT, SIZEOF(SZ), szProvider, SIZEOF(SZ)) == NO_ERROR)
         {
             STN stnFormat;
 
@@ -1341,9 +1341,9 @@ bool APP::_FReadUserData(void)
     long iprid;
     long fEnableFeature;
 
-    ClearPb(&udat, size(UDAT));
+    ClearPb(&udat, SIZEOF(UDAT));
 
-    if (!FGetSetRegKey(kszUserDataValue, &udat, size(UDAT), fregSetDefault | fregBinary))
+    if (!FGetSetRegKey(kszUserDataValue, &udat, SIZEOF(UDAT), fregSetDefault | fregBinary))
     {
         return fFalse;
     }
@@ -1355,11 +1355,11 @@ bool APP::_FReadUserData(void)
 
     // Read feature flags
     fEnableFeature = kszHighQualitySoundImportDefault;
-    (void)FGetSetRegKey(kszHighQualitySoundImport, &fEnableFeature, size(fEnableFeature), fregNil);
+    (void)FGetSetRegKey(kszHighQualitySoundImport, &fEnableFeature, SIZEOF(fEnableFeature), fregNil);
     FSetProp(kpridHighQualitySoundImport, fEnableFeature);
 
     fEnableFeature = kszStereoSoundDefault;
-    (void)FGetSetRegKey(kszStereoSound, &fEnableFeature, size(fEnableFeature), fregNil);
+    (void)FGetSetRegKey(kszStereoSound, &fEnableFeature, SIZEOF(fEnableFeature), fregNil);
     FSetProp(kpridStereoSoundPlayback, fEnableFeature);
 
     return fTrue;
@@ -1380,7 +1380,7 @@ bool APP::_FWriteUserData(void)
         if (!FGetProp(kpridUserDataBase + iprid, &udat.rglw[iprid]))
             return fFalse;
     }
-    if (!FGetSetRegKey(kszUserDataValue, &udat, size(UDAT), fregSetKey | fregBinary))
+    if (!FGetSetRegKey(kszUserDataValue, &udat, SIZEOF(UDAT), fregSetKey | fregBinary))
     {
         return fFalse;
     }
@@ -1459,7 +1459,7 @@ bool APP::FGetSetRegKey(PSZ pszValueName, void *pvData, long cbData, ulong grfre
         }
         else
         {
-            Assert(cbData == size(DWORD), "Unknown reg key type");
+            Assert(cbData == SIZEOF(DWORD), "Unknown reg key type");
             dwType = REG_DWORD;
         }
 
@@ -1606,7 +1606,7 @@ bool APP::_FReadTitlesFromReg(PGST *ppgst)
     PGST pgst;
     long sid;
 
-    if ((pgst = GST::PgstNew(size(long))) == pvNil)
+    if ((pgst = GST::PgstNew(SIZEOF(long))) == pvNil)
         goto LFail;
 
     if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, kszProductsKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &hkey,
@@ -1672,7 +1672,7 @@ bool APP::_FInitTdt(void)
     pgst = _PgstRead(kcnoGstAction);
     if (pvNil == pgst)
         return fFalse;
-    Assert(pgst->CbExtra() == size(long), "bad Action string table");
+    Assert(pgst->CbExtra() == SIZEOF(long), "bad Action string table");
     if (!TDT::FSetActionNames(pgst))
     {
         ReleasePpo(&pgst);
@@ -1703,7 +1703,7 @@ PGST APP::_PgstRead(CNO cno)
     pgst = GST::PgstRead(&blck, &bo, &osk);
     if (pvNil == pgst)
         return pvNil;
-    Assert(pgst->CbExtra() == 0 || pgst->CbExtra() == size(long), "unexpected extra size");
+    Assert(pgst->CbExtra() == 0 || pgst->CbExtra() == SIZEOF(long), "unexpected extra size");
     if (kboCur != bo && 0 != pgst->CbExtra())
     {
         for (istn = 0; istn < pgst->IvMac(); istn++)
@@ -1823,11 +1823,11 @@ bool APP::_FInitCrm(void)
     if (pvNil == _pcrmAll)
         goto LFail;
 
-    _pglicrfBuilding = GL::PglNew(size(long), _pgstBuildingFiles->IvMac());
+    _pglicrfBuilding = GL::PglNew(SIZEOF(long), _pgstBuildingFiles->IvMac());
     if (pvNil == _pglicrfBuilding)
         goto LFail;
 
-    _pglicrfStudio = GL::PglNew(size(long), _pgstStudioFiles->IvMac());
+    _pglicrfStudio = GL::PglNew(SIZEOF(long), _pgstStudioFiles->IvMac());
     if (pvNil == _pglicrfStudio)
         goto LFail;
 
@@ -2054,7 +2054,7 @@ bool APP::_FDetermineIfSlowCPU(void)
     long fSlowCPU;
 
     // If user has a saved preference, read and use that
-    if (FGetSetRegKey(kszBetterSpeedValue, &fSlowCPU, size(fSlowCPU), fregNil))
+    if (FGetSetRegKey(kszBetterSpeedValue, &fSlowCPU, SIZEOF(fSlowCPU), fregNil))
     {
         _fSlowCPU = (bool)fSlowCPU;
         return fTrue;
@@ -2330,7 +2330,7 @@ bool APP::_FFindMsKidsDir(void)
     STN stnUsers;
 
     szMsKidsDir[0] = chNil;
-    if (!FGetSetRegKey(kszInstallDirValue, szMsKidsDir, size(SZ), fregMachine | fregString))
+    if (!FGetSetRegKey(kszInstallDirValue, szMsKidsDir, SIZEOF(SZ), fregMachine | fregString))
     {
         Warn("Missing InstallDirectory registry entry or registry error");
     }
@@ -2621,7 +2621,7 @@ bool APP::FCmdDeactivate(PCMD pcmd)
         //
         TrackMouse(pgob, &pt);
 
-        ClearPb(&cmd, size(CMD_MOUSE));
+        ClearPb(&cmd, SIZEOF(CMD_MOUSE));
 
         cmd.pcmh = pgob;
         cmd.cid = cidTrackMouse;
@@ -3122,7 +3122,7 @@ void APP::MemStat(long *pdwTotalPhys, long *pdwAvailPhys)
 {
 #ifdef WIN
     MEMORYSTATUS ms;
-    ms.dwLength = size(MEMORYSTATUS);
+    ms.dwLength = SIZEOF(MEMORYSTATUS);
     GlobalMemoryStatus(&ms);
     if (pvNil != pdwTotalPhys)
         *pdwTotalPhys = ms.dwTotalPhys;
@@ -3342,7 +3342,7 @@ bool APP::FCmdInfo(PCMD pcmd)
 
     // Get startup sound option
     lwValue = kfStartupSoundDefault;
-    (void)FGetSetRegKey(kszStartupSoundValue, &lwValue, size(lwValue), fregNil);
+    (void)FGetSetRegKey(kszStartupSoundValue, &lwValue, SIZEOF(lwValue), fregNil);
     pdlg->PutCheck(iditStartupSound, FPure(lwValue));
 
     // Get sound options
@@ -3377,7 +3377,7 @@ bool APP::FCmdInfo(PCMD pcmd)
     if (fSaveChanges)
     {
         long fSlowCPU = _fSlowCPU;
-        FGetSetRegKey(kszBetterSpeedValue, &fSlowCPU, size(fSlowCPU), fregSetKey);
+        FGetSetRegKey(kszBetterSpeedValue, &fSlowCPU, SIZEOF(fSlowCPU), fregSetKey);
     }
 
     fRunInWindowNew = pdlg->LwGetRadio(iditWindowModeInfo);
@@ -3422,7 +3422,7 @@ bool APP::FCmdInfo(PCMD pcmd)
     {
         long fSwitchRes = !_fRunInWindow;
 
-        FGetSetRegKey(kszSwitchResolutionValue, &fSwitchRes, size(fSwitchRes), fregSetKey);
+        FGetSetRegKey(kszSwitchResolutionValue, &fSwitchRes, SIZEOF(fSwitchRes), fregSetKey);
     }
 
 #ifdef DEBUG
@@ -3444,7 +3444,7 @@ bool APP::FCmdInfo(PCMD pcmd)
                     DBINFO dbinfo;
 
                     dbinfo.cactAV = vcactAV;
-                    AssertDo(FGetSetRegKey(PszLit("DebugSettings"), &dbinfo, size(DBINFO), fregSetKey | fregBinary),
+                    AssertDo(FGetSetRegKey(PszLit("DebugSettings"), &dbinfo, SIZEOF(DBINFO), fregSetKey | fregBinary),
                              "Couldn't save current debug settings in registry");
                 }
             }
@@ -3456,7 +3456,7 @@ bool APP::FCmdInfo(PCMD pcmd)
     if (fSaveChanges)
     {
         long lwValue = pdlg->FGetCheck(iditStartupSound);
-        AssertDo(FGetSetRegKey(kszStartupSoundValue, &lwValue, size(lwValue), fregSetKey),
+        AssertDo(FGetSetRegKey(kszStartupSoundValue, &lwValue, SIZEOF(lwValue), fregSetKey),
                  "can't save startup sound to registry");
     }
 
@@ -3473,11 +3473,11 @@ bool APP::FCmdInfo(PCMD pcmd)
     if (fSaveChanges)
     {
         AssertDo(FGetProp(kpridHighQualitySoundImport, &lwValue), "can't get sound import property");
-        AssertDo(FGetSetRegKey(kszHighQualitySoundImport, &lwValue, size(lwValue), fregSetKey),
+        AssertDo(FGetSetRegKey(kszHighQualitySoundImport, &lwValue, SIZEOF(lwValue), fregSetKey),
                  "can't save sound import preference to registry");
 
         AssertDo(FGetProp(kpridStereoSoundPlayback, &lwValue), "can't get stereo sound property");
-        AssertDo(FGetSetRegKey(kszStereoSound, &lwValue, size(lwValue), fregSetKey),
+        AssertDo(FGetSetRegKey(kszStereoSound, &lwValue, SIZEOF(lwValue), fregSetKey),
                  "can't save stereo sound preference to registry");
 
         // TODO: Save "flush mouse" property to the registry
@@ -3606,7 +3606,7 @@ bool APP::_FSwitch640480(bool fTo640480)
 
         if (fSetMode && _FDisplayIs640480())
 #else  // BUG1920
-        devmode.dmSize = size(DEVMODE);
+        devmode.dmSize = SIZEOF(DEVMODE);
         devmode.dmBitsPerPel = 8;
         devmode.dmPelsWidth = 640;
         devmode.dmPelsHeight = 480;

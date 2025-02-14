@@ -121,7 +121,7 @@ bool TXHD::_FReadChunk(PCFL pcfl, CTG ctg, CNO cno, PSTRG pstrg, ulong grftxhd)
     htopf.htop.ckiSnd.ctg = ctgNil;
     htopf.htop.ckiSnd.cno = cnoNil;
     if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData() ||
-        size(HTOPF) != blck.Cb() && offset(HTOPF, htop.ckiSnd) != blck.Cb() || !blck.FRead(&htopf))
+        SIZEOF(HTOPF) != blck.Cb() && offset(HTOPF, htop.ckiSnd) != blck.Cb() || !blck.FRead(&htopf))
     {
         goto LFail;
     }
@@ -195,26 +195,26 @@ bool TXHD::_FOpenArg(long icact, byte sprm, short bo, short osk)
     switch (sprm)
     {
     case sprmGroup:
-        if (cb < size(byte) + size(CNO))
+        if (cb < SIZEOF(byte) + SIZEOF(CNO))
             return fFalse;
         if (bo == kboOther)
         {
-            _pagcact->GetRgb(icact, size(byte), size(CNO), &cno);
+            _pagcact->GetRgb(icact, SIZEOF(byte), SIZEOF(CNO), &cno);
             SwapBytesRglw(&cno, 1);
-            _pagcact->PutRgb(icact, size(byte), size(CNO), &cno);
+            _pagcact->PutRgb(icact, SIZEOF(byte), SIZEOF(CNO), &cno);
         }
         break;
 
     case sprmObject:
-        if (cb < size(CTG))
+        if (cb < SIZEOF(CTG))
             return fFalse;
-        _pagcact->GetRgb(icact, 0, size(CTG), &ctg);
+        _pagcact->GetRgb(icact, 0, SIZEOF(CTG), &ctg);
         if (bo == kboOther)
         {
             SwapBytesRglw(&ctg, 1);
-            _pagcact->PutRgb(icact, 0, size(CTG), &ctg);
+            _pagcact->PutRgb(icact, 0, SIZEOF(CTG), &ctg);
         }
-        cb -= size(CTG);
+        cb -= SIZEOF(CTG);
 
         switch (ctg)
         {
@@ -227,14 +227,14 @@ bool TXHD::_FOpenArg(long icact, byte sprm, short bo, short osk)
             clw = 2;
         LSwapBytes:
             AssertIn(clw, 1, CvFromRgv(rglw) + 1);
-            if (cb < clw * size(long))
+            if (cb < clw * SIZEOF(long))
                 return fFalse;
 
             if (bo == kboOther)
             {
-                _pagcact->GetRgb(icact, size(CTG), clw * size(long), rglw);
+                _pagcact->GetRgb(icact, SIZEOF(CTG), clw * SIZEOF(long), rglw);
                 SwapBytesRglw(rglw, clw);
-                _pagcact->PutRgb(icact, size(CTG), clw * size(long), rglw);
+                _pagcact->PutRgb(icact, SIZEOF(CTG), clw * SIZEOF(long), rglw);
             }
             break;
 
@@ -267,7 +267,7 @@ bool TXHD::FSaveToChunk(PCFL pcfl, CKI *pcki, bool fRedirectText)
     htopf.bo = kboCur;
     htopf.osk = koskCur;
     htopf.htop = _htop;
-    if (!pcfl->FAdd(size(HTOPF), pcki->ctg, &pcki->cno, &blck))
+    if (!pcfl->FAdd(SIZEOF(HTOPF), pcki->ctg, &pcki->cno, &blck))
     {
         PushErc(ercHelpSaveFailed);
         return fFalse;
@@ -311,11 +311,11 @@ bool TXHD::_FGetObjectRc(long icact, byte sprm, PGNV pgnv, PCHP pchp, RC *prc)
     if (sprmObject != sprm)
         return fFalse;
 
-    Assert(size(CTG) == size(long), 0);
+    Assert(SIZEOF(CTG) == SIZEOF(long), 0);
     cb = _pagcact->Cb(icact);
-    if (cb < size(rglw))
+    if (cb < SIZEOF(rglw))
         return fFalse;
-    _pagcact->GetRgb(icact, 0, size(rglw), rglw);
+    _pagcact->GetRgb(icact, 0, SIZEOF(rglw), rglw);
     switch ((CTG)rglw[0])
     {
     case kctgMbmp:
@@ -376,9 +376,9 @@ bool TXHD::_FDrawObject(long icact, byte sprm, PGNV pgnv, long *pxp, long yp, PC
         return fFalse;
 
     cb = _pagcact->Cb(icact);
-    if (cb < size(rglw))
+    if (cb < SIZEOF(rglw))
         return fFalse;
-    _pagcact->GetRgb(icact, 0, size(rglw), rglw);
+    _pagcact->GetRgb(icact, 0, SIZEOF(rglw), rglw);
     switch ((CTG)rglw[0])
     {
     case kctgMbmp:
@@ -450,13 +450,13 @@ bool TXHD::FInsertPicture(CNO cno, void *pvExtra, long cbExtra, long cp, long cc
     cki.cno = cno;
     if (cbExtra > 0)
     {
-        if (!FAllocPv(&pv, size(CKI) + cbExtra, fmemNil, mprNormal))
+        if (!FAllocPv(&pv, SIZEOF(CKI) + cbExtra, fmemNil, mprNormal))
             return fFalse;
-        CopyPb(&cki, pv, size(CKI));
-        CopyPb(pvExtra, PvAddBv(pv, size(CKI)), cbExtra);
+        CopyPb(&cki, pv, SIZEOF(CKI));
+        CopyPb(pvExtra, PvAddBv(pv, SIZEOF(CKI)), cbExtra);
     }
 
-    fRet = FInsertObject(pv, size(CKI) + cbExtra, cp, ccpDel, pchp, grfdoc);
+    fRet = FInsertObject(pv, SIZEOF(CKI) + cbExtra, cp, ccpDel, pchp, grfdoc);
 
     if (pv != &cki)
         FreePpv(&pv);
@@ -474,7 +474,7 @@ bool TXHD::FInsertButton(CNO cno, CNO cnoTopic, void *pvExtra, long cbExtra, lon
     AssertIn(cp, 0, CpMac());
     AssertIn(ccpDel, 0, CpMac() - cp);
     AssertNilOrVarMem(pchp);
-    byte rgb[size(CKI) + size(long)];
+    byte rgb[SIZEOF(CKI) + SIZEOF(long)];
     CKI *pcki = (CKI *)rgb;
     CNO *pcnoTopic = (CNO *)(pcki + 1);
     ;
@@ -486,13 +486,13 @@ bool TXHD::FInsertButton(CNO cno, CNO cnoTopic, void *pvExtra, long cbExtra, lon
     *pcnoTopic = cnoTopic;
     if (cbExtra > 0)
     {
-        if (!FAllocPv(&pv, size(rgb) + cbExtra, fmemNil, mprNormal))
+        if (!FAllocPv(&pv, SIZEOF(rgb) + cbExtra, fmemNil, mprNormal))
             return fFalse;
-        CopyPb(rgb, pv, size(rgb));
-        CopyPb(pvExtra, PvAddBv(pv, size(rgb)), cbExtra);
+        CopyPb(rgb, pv, SIZEOF(rgb));
+        CopyPb(pvExtra, PvAddBv(pv, SIZEOF(rgb)), cbExtra);
     }
 
-    fRet = FInsertObject(pv, size(rgb) + cbExtra, cp, ccpDel, pchp, grfdoc);
+    fRet = FInsertObject(pv, SIZEOF(rgb) + cbExtra, cp, ccpDel, pchp, grfdoc);
 
     if (pv != rgb)
         FreePpv(&pv);
@@ -528,11 +528,11 @@ bool TXHD::FGroupText(long cp1, long cp2, byte bGroup, CNO cnoTopic, PSTN pstnTo
     }
     else
     {
-        byte rgb[size(byte) + size(CNO) + kcbMaxDataStn];
-        long cb = size(byte) + size(CNO);
+        byte rgb[SIZEOF(byte) + SIZEOF(CNO) + kcbMaxDataStn];
+        long cb = SIZEOF(byte) + SIZEOF(CNO);
 
         rgb[0] = bGroup;
-        CopyPb(&cnoTopic, rgb + size(byte), size(CNO));
+        CopyPb(&cnoTopic, rgb + SIZEOF(byte), SIZEOF(CNO));
         if (pvNil != pstnTopic && pstnTopic->Cch() > 0)
         {
             pstnTopic->GetData(rgb + cb);
@@ -588,7 +588,7 @@ bool TXHD::FGrouped(long cp, long *pcpMin, long *pcpLim, byte *pbGroup, CNO *pcn
         long cb;
 
         prgb = (byte *)_pagcact->PvLock(mpe.lw - 1, &cb);
-        cb -= size(byte) + size(CNO); // group number, cnoTopic
+        cb -= SIZEOF(byte) + SIZEOF(CNO); // group number, cnoTopic
         if (cb < 0)
             goto LFail;
 
@@ -602,11 +602,11 @@ bool TXHD::FGrouped(long cp, long *pcpMin, long *pcpLim, byte *pbGroup, CNO *pcn
         }
 
         if (pvNil != pcnoTopic)
-            CopyPb(prgb + size(byte), pcnoTopic, size(CNO));
+            CopyPb(prgb + SIZEOF(byte), pcnoTopic, SIZEOF(CNO));
         if (pvNil != pstnTopic)
         {
             if (cb > 0)
-                pstnTopic->FSetData(prgb + size(byte) + size(CNO), cb);
+                pstnTopic->FSetData(prgb + SIZEOF(byte) + SIZEOF(CNO), cb);
             else
                 pstnTopic->SetNil();
         }
@@ -732,13 +732,13 @@ bool TXHG::_FInit(void)
         if (pvNil == pv)
             continue;
 
-        if (cb < size(CTG))
+        if (cb < SIZEOF(CTG))
             goto LContinue;
 
         switch (*(CTG *)pv)
         {
         case kctgEditControl:
-            if (cb < size(ECOS))
+            if (cb < SIZEOF(ECOS))
                 goto LContinue;
             dxp = ((ECOS *)pv)->dxp;
             FreePpv(&pv);
@@ -766,7 +766,7 @@ bool TXHG::_FInit(void)
             break;
 
         case kctgGokd:
-            if (cb < size(CKI) + size(CNO))
+            if (cb < SIZEOF(CKI) + SIZEOF(CNO))
                 goto LContinue;
             pcki = (CKI *)pv;
             cno = pcki->cno;

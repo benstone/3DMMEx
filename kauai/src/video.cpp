@@ -110,7 +110,7 @@ bool GVDS::_FInit(PFNI pfni, PGOB pgobBase)
     if (pvNil == (_pavig = AVIStreamGetFrameOpen(_pavis, pvNil)))
         goto LFail;
 
-    if (0 != AVIFileInfo(_pavif, &afi, size(afi)))
+    if (0 != AVIFileInfo(_pavif, &afi, SIZEOF(afi)))
         goto LFail;
 
     _dxp = afi.dwWidth;
@@ -400,7 +400,7 @@ bool GVDW::_FInit(PFNI pfni, PGOB pgobBase)
 
     pfni->GetStnPath(&stn);
 
-    ClearPb(&mciOpen, size(mciOpen));
+    ClearPb(&mciOpen, SIZEOF(mciOpen));
     mciOpen.lpstrDeviceType = PszLit("avivideo");
     mciOpen.lpstrElementName = stn.Psz();
     mciOpen.dwStyle = WS_CHILD | WS_CLIPSIBLINGS | WS_DISABLED;
@@ -418,7 +418,7 @@ bool GVDW::_FInit(PFNI pfni, PGOB pgobBase)
     }
 
     // get the hwnd
-    ClearPb(&mciStatus, size(mciStatus));
+    ClearPb(&mciStatus, SIZEOF(mciStatus));
     // REVIEW shonk: mmsystem.h defines MCI_ANIM_STATUS_HWND as 0x00004003,
     // which doesn't give us the hwnd. 4001 does!
     mciStatus.dwItem = 0x00004001;
@@ -429,7 +429,7 @@ bool GVDW::_FInit(PFNI pfni, PGOB pgobBase)
     _hwndMovie = (HWND)mciStatus.dwReturn;
 
     // get the length
-    ClearPb(&mciStatus, size(mciStatus));
+    ClearPb(&mciStatus, SIZEOF(mciStatus));
     mciStatus.dwItem = MCI_STATUS_LENGTH;
     mciStatus.dwTrack = 1;
     if (0 != mciSendCommand(_lwDevice, MCI_STATUS, MCI_STATUS_ITEM, (long)&mciStatus))
@@ -484,7 +484,7 @@ long GVDW::NfrCur(void)
     MCI_STATUS_PARMS mciStatus;
 
     // get the position
-    ClearPb(&mciStatus, size(mciStatus));
+    ClearPb(&mciStatus, SIZEOF(mciStatus));
     mciStatus.dwItem = MCI_STATUS_POSITION;
     mciStatus.dwTrack = 1;
     if (0 != mciSendCommand(_lwDevice, MCI_STATUS, MCI_STATUS_ITEM, (long)&mciStatus))
@@ -513,7 +513,7 @@ void GVDW::GotoNfr(long nfr)
 #ifdef WIN
     MCI_SEEK_PARMS mciSeek;
 
-    ClearPb(&mciSeek, size(mciSeek));
+    ClearPb(&mciSeek, SIZEOF(mciSeek));
     mciSeek.dwTo = nfr;
     if (0 != mciSendCommand(_lwDevice, MCI_SEEK, MCI_TO, (long)&mciSeek))
     {
@@ -540,7 +540,7 @@ bool GVDW::FPlaying(void)
     MCI_STATUS_PARMS mciStatus;
 
     // get the mode
-    ClearPb(&mciStatus, size(mciStatus));
+    ClearPb(&mciStatus, SIZEOF(mciStatus));
     mciStatus.dwItem = MCI_STATUS_MODE;
     mciStatus.dwTrack = 1;
     if (0 == mciSendCommand(_lwDevice, MCI_STATUS, MCI_STATUS_ITEM, (long)&mciStatus) &&
@@ -579,7 +579,7 @@ bool GVDW::FPlay(RC *prc)
     _SetRc();
 
     // start the movie playing
-    ClearPb(&mciPlay, size(mciPlay));
+    ClearPb(&mciPlay, SIZEOF(mciPlay));
     if (0 != mciSendCommand(_lwDevice, MCI_PLAY, MCI_MCIAVI_PLAY_WINDOW, (long)&mciPlay))
     {
         return fFalse;
@@ -622,7 +622,7 @@ void GVDW::Stop(void)
 #ifdef WIN
     MCI_GENERIC_PARMS mciPause;
 
-    ClearPb(&mciPause, size(mciPause));
+    ClearPb(&mciPause, SIZEOF(mciPause));
     mciSendCommand(_lwDevice, MCI_PAUSE, 0, (long)&mciPause);
 #endif // WIN
 
@@ -664,7 +664,7 @@ void GVDW::_SetRc(void)
             MCI_ANIM_WINDOW_PARMS mciWindow;
 
             // show the playback window
-            ClearPb(&mciWindow, size(mciWindow));
+            ClearPb(&mciWindow, SIZEOF(mciWindow));
             mciWindow.nCmdShow = SW_SHOW;
             mciSendCommand(_lwDevice, MCI_WINDOW, MCI_ANIM_WINDOW_STATE, (long)&mciWindow);
             _fVisible = fTrue;

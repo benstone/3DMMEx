@@ -23,7 +23,7 @@ typedef OPENFILENAME OFN;
 
 // maximal number of short characters in an extension is 4 (so it fits in
 // a long).
-const long kcchsMaxExt = size(long);
+const long kcchsMaxExt = SIZEOF(long);
 
 priv void _CleanFtg(FTG *pftg, PSTN pstnExt = pvNil);
 FNI _fniTemp;
@@ -60,11 +60,11 @@ bool FNI::FGetOpen(achar *prgchFilter, HWND hwndOwner)
     OFN ofn;
     SZ sz;
 
-    ClearPb(&ofn, size(OFN));
+    ClearPb(&ofn, SIZEOF(OFN));
     SetNil();
 
     sz[0] = 0;
-    ofn.lStructSize = size(OFN);
+    ofn.lStructSize = SIZEOF(OFN);
     ofn.hwndOwner = hwndOwner;
     ofn.hInstance = NULL;
     ofn.lpstrFilter = prgchFilter;
@@ -97,11 +97,11 @@ bool FNI::FGetSave(achar *prgchFilter, HWND hwndOwner)
     OFN ofn;
     SZ sz;
 
-    ClearPb(&ofn, size(OFN));
+    ClearPb(&ofn, SIZEOF(OFN));
     SetNil();
 
     sz[0] = 0;
-    ofn.lStructSize = size(OFN);
+    ofn.lStructSize = SIZEOF(OFN);
     ofn.hwndOwner = hwndOwner;
     ofn.hInstance = NULL;
     ofn.lpstrFilter = prgchFilter;
@@ -851,7 +851,7 @@ bool FNE::FInit(FNI *pfniDir, FTG *prgftg, long cftg, ulong grffne)
     AssertThis(0);
     AssertNilOrVarMem(pfniDir);
     AssertIn(cftg, 0, kcbMax);
-    AssertPvCb(prgftg, LwMul(cftg, size(FTG)));
+    AssertPvCb(prgftg, LwMul(cftg, SIZEOF(FTG)));
     FTG *pftg;
 
     // free the old stuff
@@ -861,7 +861,7 @@ bool FNE::FInit(FNI *pfniDir, FTG *prgftg, long cftg, ulong grffne)
         _cftg = 0;
     else
     {
-        long cb = LwMul(cftg, size(FTG));
+        long cb = LwMul(cftg, SIZEOF(FTG));
 
         if (cftg > kcftgFneBase && !FAllocPv((void **)&_prgftg, cb, fmemNil, mprNormal))
         {
@@ -1025,7 +1025,7 @@ LGotOne:
 
     if (_fRecurse && pfni->_ftg == kftgDir)
     {
-        if ((pvNil != _pglfes || pvNil != (_pglfes = GL::PglNew(size(FES), 5))) && _pglfes->FPush(&_fesCur))
+        if ((pvNil != _pglfes || pvNil != (_pglfes = GL::PglNew(SIZEOF(FES), 5))) && _pglfes->FPush(&_fesCur))
         {
             // set up the new fes
             _fesCur.fni = *pfni;
@@ -1075,7 +1075,7 @@ void FNE::AssertValid(ulong grf)
     {
         AssertNilOrPo(_pglfes, 0);
         AssertIn(_cftg, 0, kcbMax);
-        AssertPvCb(_prgftg, LwMul(size(FTG), _cftg));
+        AssertPvCb(_prgftg, LwMul(SIZEOF(FTG), _cftg));
         Assert((_cftg <= kcftgFneBase) == (_prgftg == _rgftg), "wrong _prgftg");
     }
     else

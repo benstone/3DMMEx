@@ -301,7 +301,7 @@ bool BSF::_FEnsureSplit(long ib, long *piflo)
 
     if (pvNil == _pggflo)
     {
-        if (pvNil == (_pggflo = GG::PggNew(size(FLO))))
+        if (pvNil == (_pggflo = GG::PggNew(SIZEOF(FLO))))
             return fFalse;
         // REVIEW shonk: what values should we use for SetMinGrow?
         //_pggflo->SetMinGrow(2, 100);

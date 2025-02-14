@@ -267,7 +267,7 @@ class MVU : public MVU_PAR
     void MouseToWorld(BRS dxrMouse, BRS dyrMouse, BRS dzrMouse, BRS *pdxrWld, BRS *pdyrWld, BRS *pdzrWld, bool fRecord);
     void SetAxis(BRS rgrAxis[3][3])
     {
-        BltPb(rgrAxis, _rgrAxis, size(BRS) * 9);
+        BltPb(rgrAxis, _rgrAxis, SIZEOF(BRS) * 9);
     }
     void SetFRecordDefault(bool f)
     {

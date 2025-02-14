@@ -57,7 +57,7 @@ void ERS::Push(long erc)
     if (_cerd == kcerdMax)
     {
         Warn("Warning: error code stack has filled");
-        BltPb(_rgerd + 1, _rgerd, LwMul(size(_rgerd[0]), kcerdMax - 1));
+        BltPb(_rgerd + 1, _rgerd, LwMul(SIZEOF(_rgerd[0]), kcerdMax - 1));
         _cerd--;
     }
 #ifdef DEBUG

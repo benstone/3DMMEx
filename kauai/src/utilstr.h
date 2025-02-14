@@ -60,11 +60,11 @@ inline long CbCharOsk(short osk)
     {
     case koskSbMac:
     case koskSbWin:
-        return size(schar);
+        return SIZEOF(schar);
 
     case koskUniMac:
     case koskUniWin:
-        return size(wchar);
+        return SIZEOF(wchar);
 
     default:
         return 0;
@@ -93,7 +93,7 @@ const long kcchTotSt = kcchMaxSt + kcchExtraSt;
 const long kcchTotStz = kcchMaxStz + kcchExtraStz;
 
 const long kcchMaxStn = 255;
-const long kcbMaxDataStn = kcchTotStz * size(wchar) + size(short);
+const long kcbMaxDataStn = kcchTotStz * SIZEOF(wchar) + SIZEOF(short);
 
 enum
 {
@@ -397,22 +397,22 @@ class STN
     void GetRgch(achar *prgchDst)
     {
         AssertThis(0);
-        CopyPb(Prgch(), prgchDst, Cch() * size(achar));
+        CopyPb(Prgch(), prgchDst, Cch() * SIZEOF(achar));
     }
     void GetSz(PSZ pszDst)
     {
         AssertThis(0);
-        CopyPb(Psz(), pszDst, (Cch() + kcchExtraSz) * size(achar));
+        CopyPb(Psz(), pszDst, (Cch() + kcchExtraSz) * SIZEOF(achar));
     }
     void GetSt(PST pstDst)
     {
         AssertThis(0);
-        CopyPb(Pst(), pstDst, (Cch() + kcchExtraSt) * size(achar));
+        CopyPb(Pst(), pstDst, (Cch() + kcchExtraSt) * SIZEOF(achar));
     }
     void GetStz(PSTZ pstzDst)
     {
         AssertThis(0);
-        CopyPb(Pstz(), pstzDst, (Cch() + kcchExtraStz) * size(achar));
+        CopyPb(Pstz(), pstzDst, (Cch() + kcchExtraStz) * SIZEOF(achar));
     }
     void GetSzs(PSZS pszs);
 

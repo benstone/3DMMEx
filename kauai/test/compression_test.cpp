@@ -19,9 +19,9 @@ TEST(KauaiCodecTests, DecodeKCDC)
     CODM codm(&kcdc, kcfmtKauai2);
 
     uint8_t rgbDecoded[128];
-    long cbDecoded = size(rgbDecoded);
+    long cbDecoded = SIZEOF(rgbDecoded);
 
-    ASSERT_TRUE(codm.FDecompress(rgbEncoded, size(rgbEncoded), rgbDecoded, cbDecoded, &cbDecoded));
+    ASSERT_TRUE(codm.FDecompress(rgbEncoded, SIZEOF(rgbEncoded), rgbDecoded, cbDecoded, &cbDecoded));
     ASSERT_EQ(cbDecoded, 36);
     ASSERT_TRUE(FcmpCompareRgb(rgbDecoded, szExpected, cbDecoded)) << "Decoded data does not match expected value";
 }
@@ -38,9 +38,9 @@ TEST(KauaiCodecTests, DecodeKCD2)
     CODM codm(&kcdc, kcfmtKauai2);
 
     uint8_t rgbDecoded[128];
-    long cbDecoded = size(rgbDecoded);
+    long cbDecoded = SIZEOF(rgbDecoded);
 
-    ASSERT_TRUE(codm.FDecompress(rgbEncoded, size(rgbEncoded), rgbDecoded, cbDecoded, &cbDecoded));
+    ASSERT_TRUE(codm.FDecompress(rgbEncoded, SIZEOF(rgbEncoded), rgbDecoded, cbDecoded, &cbDecoded));
     ASSERT_EQ(cbDecoded, 36);
     ASSERT_TRUE(FcmpCompareRgb(rgbDecoded, szExpected, cbDecoded)) << "Decoded data does not match expected value";
 }

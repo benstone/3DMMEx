@@ -65,7 +65,7 @@ PMTRL MTRL::PmtrlNew(long iclrBase, long cclr)
         ReleasePpo(&pmtrl);
         return pvNil;
     }
-    CopyPb(&pmtrl, pmtrl->_pbmtl->identifier, size(long));
+    CopyPb(&pmtrl, pmtrl->_pbmtl->identifier, SIZEOF(long));
 
     pmtrl->_pbmtl->ka = kbrufKaDefault;
     pmtrl->_pbmtl->kd = kbrufKdDefault;
@@ -98,7 +98,7 @@ bool MTRL::FReadMtrl(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
 
     PMTRL pmtrl;
 
-    *pcb = size(MTRL);
+    *pcb = SIZEOF(MTRL);
     if (pvNil == ppbaco)
         return fTrue;
     pmtrl = NewObj MTRL;
@@ -132,9 +132,9 @@ bool MTRL::_FInit(PCRF pcrf, CTG ctg, CNO cno)
     if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData())
         return fFalse;
 
-    if (blck.Cb() < size(MTRLF))
+    if (blck.Cb() < SIZEOF(MTRLF))
         return fFalse;
-    if (!blck.FReadRgb(&mtrlf, size(MTRLF), 0))
+    if (!blck.FReadRgb(&mtrlf, SIZEOF(MTRLF), 0))
         return fFalse;
     if (kboOther == mtrlf.bo)
         SwapBytesBom(&mtrlf, kbomMtrlf);
@@ -146,7 +146,7 @@ bool MTRL::_FInit(PCRF pcrf, CTG ctg, CNO cno)
     _pbmtl = BrMaterialAllocate("1234");
     if (pvNil == _pbmtl)
         return fFalse;
-    CopyPb(&pmtrlThis, _pbmtl->identifier, size(long));
+    CopyPb(&pmtrlThis, _pbmtl->identifier, SIZEOF(long));
     _pbmtl->colour = mtrlf.brc;
     _pbmtl->ka = mtrlf.brufKa;
     _pbmtl->kd = mtrlf.brufKd;
@@ -182,9 +182,9 @@ bool MTRL::_FInit(PCRF pcrf, CTG ctg, CNO cno)
 
             if (!pcfl->FFind(kid.cki.ctg, kid.cki.cno, &blck) || !blck.FUnpackData())
                 goto LFail;
-            if (blck.Cb() < size(TXXFF))
+            if (blck.Cb() < SIZEOF(TXXFF))
                 goto LFail;
-            if (!blck.FReadRgb(&txxff, size(TXXFF), 0))
+            if (!blck.FReadRgb(&txxff, SIZEOF(TXXFF), 0))
                 goto LFail;
             if (kboCur != txxff.bo)
                 SwapBytesBom(&txxff, kbomTxxff);
@@ -231,7 +231,7 @@ PMTRL MTRL::PmtrlNewFromPix(PFNI pfni)
     if (pvNil == pmtrl->_pbmtl)
         goto LFail;
     pbmtl = pmtrl->_pbmtl;
-    CopyPb(&pmtrl, pbmtl->identifier, size(long));
+    CopyPb(&pmtrl, pbmtl->identifier, SIZEOF(long));
     pbmtl->colour = 0; // this field is ignored
     pbmtl->ka = kbrufKaDefault;
     pbmtl->kd = kbrufKdDefault;
@@ -351,7 +351,7 @@ bool MTRL::FWrite(PCFL pcfl, CTG ctg, CNO *pcno)
     mtrlf.cIndexRange = _pbmtl->index_range;
     mtrlf.rPower = _pbmtl->power;
 
-    if (!pcfl->FAddPv(&mtrlf, size(MTRLF), ctg, pcno))
+    if (!pcfl->FAddPv(&mtrlf, SIZEOF(MTRLF), ctg, pcno))
         return fFalse;
     ptmap = Ptmap();
     if (pvNil != ptmap)
@@ -479,7 +479,7 @@ bool CMTL::FEqualModels(PCFL pcfl, CNO cno1, CNO cno2)
 ***************************************************************************/
 PCMTL CMTL::PcmtlNew(long ibset, long cbprt, PMTRL *prgpmtrl)
 {
-    AssertPvCb(prgpmtrl, LwMul(cbprt, size(PMTRL)));
+    AssertPvCb(prgpmtrl, LwMul(cbprt, SIZEOF(PMTRL)));
     PCMTL pcmtl;
     long imtrl;
 
@@ -489,12 +489,12 @@ PCMTL CMTL::PcmtlNew(long ibset, long cbprt, PMTRL *prgpmtrl)
 
     pcmtl->_ibset = ibset;
     pcmtl->_cbprt = cbprt;
-    if (!FAllocPv((void **)&pcmtl->_prgpmtrl, LwMul(pcmtl->_cbprt, size(PMTRL)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&pcmtl->_prgpmtrl, LwMul(pcmtl->_cbprt, SIZEOF(PMTRL)), fmemClear, mprNormal))
     {
         ReleasePpo(&pcmtl);
         return pvNil;
     }
-    if (!FAllocPv((void **)&pcmtl->_prgpmodl, LwMul(pcmtl->_cbprt, size(PMODL)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&pcmtl->_prgpmodl, LwMul(pcmtl->_cbprt, SIZEOF(PMODL)), fmemClear, mprNormal))
     {
         ReleasePpo(&pcmtl);
         return pvNil;
@@ -521,7 +521,7 @@ bool CMTL::FReadCmtl(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
 
     PCMTL pcmtl;
 
-    *pcb = size(CMTL);
+    *pcb = SIZEOF(CMTL);
     if (pvNil == ppbaco)
         return fTrue;
     pcmtl = NewObj CMTL;
@@ -534,7 +534,7 @@ bool CMTL::FReadCmtl(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
     }
     AssertPo(pcmtl, 0);
     *ppbaco = pcmtl;
-    *pcb += LwMul(size(PMTRL) + size(PMODL), pcmtl->_cbprt);
+    *pcb += LwMul(SIZEOF(PMTRL) + SIZEOF(PMODL), pcmtl->_cbprt);
     return fTrue;
 }
 
@@ -556,12 +556,12 @@ bool CMTL::_FInit(PCRF pcrf, CTG ctg, CNO cno)
     if (!pcfl->FFind(ctg, cno, &blck) || !blck.FUnpackData())
         return fFalse;
 
-    if (blck.Cb() != size(CMTLF))
+    if (blck.Cb() != SIZEOF(CMTLF))
     {
         Bug("bad CMTLF...you may need to update tmpls.chk");
         return fFalse;
     }
-    if (!blck.FReadRgb(&cmtlf, size(CMTLF), 0))
+    if (!blck.FReadRgb(&cmtlf, SIZEOF(CMTLF), 0))
         return fFalse;
     if (kboOther == cmtlf.bo)
         SwapBytesBom(&cmtlf, kbomCmtlf);
@@ -576,11 +576,11 @@ bool CMTL::_FInit(PCRF pcrf, CTG ctg, CNO cno)
         if ((long)kid.chid > (_cbprt - 1))
             _cbprt = kid.chid + 1;
     }
-    if (!FAllocPv((void **)&_prgpmtrl, LwMul(_cbprt, size(PMTRL)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&_prgpmtrl, LwMul(_cbprt, SIZEOF(PMTRL)), fmemClear, mprNormal))
     {
         return fFalse;
     }
-    if (!FAllocPv((void **)&_prgpmodl, LwMul(_cbprt, size(PMODL)), fmemClear, mprNormal))
+    if (!FAllocPv((void **)&_prgpmodl, LwMul(_cbprt, SIZEOF(PMODL)), fmemClear, mprNormal))
     {
         return fFalse;
     }
@@ -676,8 +676,8 @@ void CMTL::AssertValid(ulong grf)
     long imtrl;
 
     MTRL_PAR::AssertValid(fobjAllocated);
-    AssertPvCb(_prgpmtrl, LwMul(_cbprt, size(MTRL *)));
-    AssertPvCb(_prgpmodl, LwMul(_cbprt, size(MODL *)));
+    AssertPvCb(_prgpmtrl, LwMul(_cbprt, SIZEOF(MTRL *)));
+    AssertPvCb(_prgpmodl, LwMul(_cbprt, SIZEOF(MODL *)));
 
     for (imtrl = 0; imtrl < _cbprt; imtrl++)
     {

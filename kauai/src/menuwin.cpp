@@ -179,7 +179,7 @@ bool MUB::FAddListCid(long cid, long lw0, PSTN pstn)
 
         if (pvNil == mlst.pgllw)
         {
-            if (pvNil == (mlst.pgllw = GL::PglNew(size(long))))
+            if (pvNil == (mlst.pgllw = GL::PglNew(SIZEOF(long))))
             {
                 fRet = fFalse;
                 goto LAdjustSeparator;
@@ -490,7 +490,7 @@ bool MUB::_FGetCmdForWcid(long wcid, PCMD pcmd)
     AssertVarMem(pcmd);
     MLST mlst;
 
-    ClearPb(pcmd, size(*pcmd));
+    ClearPb(pcmd, SIZEOF(*pcmd));
     if (wcid >= wcidListBase && _FFindMlst(wcid, &mlst))
     {
         long lw, cch;
@@ -599,7 +599,7 @@ bool MUB::_FInitLists(void)
                 mlst.wcidList = wcidList;
                 wcidList += dwcidList;
                 mlst.cid = cid;
-                if (pvNil == (mlst.pgllw = GL::PglNew(size(long), vntl.OnnMac())))
+                if (pvNil == (mlst.pgllw = GL::PglNew(SIZEOF(long), vntl.OnnMac())))
                     return fFalse;
 
                 for (onn = 0; onn < vntl.OnnMac(); onn++)
@@ -628,7 +628,7 @@ bool MUB::_FInitLists(void)
                 imni--;
                 cmni--;
             LInsertMlst:
-                if (pvNil == _pglmlst && pvNil == (_pglmlst = GL::PglNew(size(MLST), 1)) || !_pglmlst->FPush(&mlst))
+                if (pvNil == _pglmlst && pvNil == (_pglmlst = GL::PglNew(SIZEOF(MLST), 1)) || !_pglmlst->FPush(&mlst))
                 {
                     ReleasePpo(&mlst.pgllw);
                     return fFalse;

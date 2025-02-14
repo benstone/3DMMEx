@@ -655,11 +655,11 @@ HQ GNV::_HqolyCreate(POGN pogn, ulong grfogn)
     if ((cpt = pogn->IvMac()) < 2)
         return hqNil;
 
-    cb = kcbOlyBase + LwMul(cpt, size(PTS));
+    cb = kcbOlyBase + LwMul(cpt, SIZEOF(PTS));
     if (cpt < 3)
         grfogn &= ~fognAutoClose;
     else if (grfogn & fognAutoClose)
-        cb += size(PTS);
+        cb += SIZEOF(PTS);
 
     if (!FAllocHq(&hqoly, cb, fmemNil, mprNormal))
         return hqNil;
@@ -1168,7 +1168,7 @@ bool GNV::_FInitPaletteTrans(PGL pglclr, PGL *ppglclrOld, PGL *ppglclrTrans, lon
 
     // get the current palette and set up the temporary transitionary palette
     if (0 != cbitPixel && _pgpt->CbitPixel() != cbitPixel || pvNil == (*ppglclrOld = GPT::PglclrGetPalette()) ||
-        0 == (cclr = LwMin((*ppglclrOld)->IvMac(), cclr)) || pvNil == (*ppglclrTrans = GL::PglNew(size(CLR), cclr)))
+        0 == (cclr = LwMin((*ppglclrOld)->IvMac(), cclr)) || pvNil == (*ppglclrTrans = GL::PglNew(SIZEOF(CLR), cclr)))
     {
         ReleasePpo(ppglclrOld);
         if (pvNil != pglclr)
@@ -1206,7 +1206,7 @@ void GNV::_PaletteTrans(PGL pglclrOld, PGL pglclrNew, long lwNum, long lwDen, PG
     if (pvNil != pclrSub)
         clrSub = *pclrSub;
     else
-        ClearPb(&clrSub, size(clrSub));
+        ClearPb(&clrSub, SIZEOF(clrSub));
 
     while (iclr-- > 0)
     {
@@ -2115,7 +2115,7 @@ void GPT::MarkMem(void)
 void OLY::AssertValid(ulong grf)
 {
     AssertThisMem();
-    AssertPvCb(rgpts, LwMul(Cpts(), size(PTS)));
+    AssertPvCb(rgpts, LwMul(Cpts(), SIZEOF(PTS)));
 }
 
 /******************************************************************************
@@ -2254,7 +2254,7 @@ POGN OGN::PognTraceRgpt(PT *prgpt, long cpt, ulong grfogn)
 {
     AssertThis(0);
     AssertIn(cpt, 2, kcbMax);
-    AssertPvCb(prgpt, LwMul(cpt, size(PT)));
+    AssertPvCb(prgpt, LwMul(cpt, SIZEOF(PT)));
 
     PT *prgptThis;
     AEI aei;
@@ -2328,7 +2328,7 @@ bool OGN::_FAddEdge(AEI *paei)
 {
     AssertVarMem(paei);
     AssertIn(paei->cpt, 1, kcbMax);
-    AssertPvCb(paei->prgpt, LwMul(paei->cpt, size(PT)));
+    AssertPvCb(paei->prgpt, LwMul(paei->cpt, SIZEOF(PT)));
     AssertPo(paei->pogn, 0);
     AssertIn(paei->dipt, LwMin(IvMac() - 1, 1), LwMax(IvMac(), 2));
     AssertIn(paei->ipt, 0, IvMac());
@@ -2367,7 +2367,7 @@ bool OGN::_FAddEdge(AEI *paei)
 ***************************************************************************/
 long IptFindLeftmost(PT *prgpt, long cpt, long dxp, long dyp)
 {
-    AssertPvCb(prgpt, LwMul(cpt, size(PT)));
+    AssertPvCb(prgpt, LwMul(cpt, SIZEOF(PT)));
     AssertIn(cpt, 2, kcbMax);
 
     long ipt, iptLeftmost;
@@ -2415,7 +2415,7 @@ POGN OGN::PognNew(long cptInit)
 /***************************************************************************
     Constructor for OGN.
 ***************************************************************************/
-OGN::OGN(void) : GL(size(PT))
+OGN::OGN(void) : GL(SIZEOF(PT))
 {
     AssertThis(0);
 }

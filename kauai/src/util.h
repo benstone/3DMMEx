@@ -60,9 +60,9 @@ typedef HCURSOR HCRS;
 
 #endif // WIN
 
-#define size(foo) ((long)sizeof(foo))
+#define SIZEOF(foo) ((long)sizeof(foo))
 #define offset(FOO, field) ((int)&((FOO *)0)->field)
-#define CvFromRgv(rgv) (size(rgv) / size(rgv[0]))
+#define CvFromRgv(rgv) (SIZEOF(rgv) / SIZEOF(rgv[0]))
 #define BLOCK
 
 #ifdef DEBUG

@@ -37,7 +37,7 @@ void WarnProc(schar *pszsFile, long lwLine, schar *pszsMsg);
 #define Warn(szs) WarnProc(__szsFile, __LINE__, (schar *)szs)
 #define Bug(szs) AssertCore(fFalse, szs, 0, 0)
 #define Assert(f, szs) AssertCore(f, szs, 0, 0)
-#define AssertVar(f, szs, pvar) AssertCore(f, szs, pvar, size(*(pvar)))
+#define AssertVar(f, szs, pvar) AssertCore(f, szs, pvar, SIZEOF(*(pvar)))
 #define BugVar(szs, pvar) AssertVar(fFalse, szs, pvar)
 #define AssertDo(f, szs) Assert(f, szs)
 #define AssertDoVar(f, szs, pvar) AssertVar(f, szs, pvar)

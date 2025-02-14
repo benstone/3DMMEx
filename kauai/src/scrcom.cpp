@@ -359,8 +359,8 @@ bool SCCB::_FInit(PLEXB plexb, bool fInFix, PMSNK pmsnk)
     {
         // in-fix compilation requires an expression stack, expression parse
         // tree and a control structure stack
-        if (pvNil == (_pgletnTree = GL::PglNew(size(ETN))) || pvNil == (_pgletnStack = GL::PglNew(size(ETN))) ||
-            pvNil == (_pglcstd = GL::PglNew(size(CSTD))))
+        if (pvNil == (_pgletnTree = GL::PglNew(SIZEOF(ETN))) || pvNil == (_pgletnStack = GL::PglNew(SIZEOF(ETN))) ||
+            pvNil == (_pglcstd = GL::PglNew(SIZEOF(CSTD))))
         {
             _Free();
             return fFalse;
@@ -369,7 +369,7 @@ bool SCCB::_FInit(PLEXB plexb, bool fInFix, PMSNK pmsnk)
         _pgletnStack->SetMinGrow(100);
     }
 
-    if (pvNil == (_pscpt = NewObj SCPT) || pvNil == (_pscpt->_pgllw = GL::PglNew(size(long))))
+    if (pvNil == (_pscpt = NewObj SCPT) || pvNil == (_pscpt->_pgllw = GL::PglNew(SIZEOF(long))))
     {
         ReleasePpo(&_pscpt);
     }
@@ -713,7 +713,7 @@ void SCCB::_AddLabel(PSTN pstn)
     long lw;
     long istn;
 
-    if (pvNil == _pgstLabel && pvNil == (_pgstLabel = GST::PgstNew(size(long), 5, 100)))
+    if (pvNil == _pgstLabel && pvNil == (_pgstLabel = GST::PgstNew(SIZEOF(long), 5, 100)))
     {
         _ReportError(_pszOom);
         return;
@@ -752,7 +752,7 @@ void SCCB::_PushLabelRequest(PSTN pstn)
     if (_fError)
         return;
 
-    if (pvNil == _pgstReq && pvNil == (_pgstReq = GST::PgstNew(size(long), 10, 200)))
+    if (pvNil == _pgstReq && pvNil == (_pgstReq = GST::PgstNew(SIZEOF(long), 10, 200)))
     {
         _ReportError(_pszOom);
         return;
@@ -1890,7 +1890,7 @@ void SCCB::_BeginCst(long cst, long ietn)
     CSTD cstdPrev;
     long cetn;
 
-    ClearPb(&cstd, size(cstd));
+    ClearPb(&cstd, SIZEOF(cstd));
     cstd.cst = cst;
     cstd.lwLabel1 = ++_lwLastLabel;
     switch (cst)
@@ -1912,13 +1912,13 @@ void SCCB::_BeginCst(long cst, long ietn)
         {
             // copy the etn tree
             cetn = _pgletnTree->IvMac();
-            if (pvNil == (cstd.pgletnTree = GL::PglNew(size(ETN), cetn)))
+            if (pvNil == (cstd.pgletnTree = GL::PglNew(SIZEOF(ETN), cetn)))
             {
                 _ReportError(_pszOom);
                 return;
             }
             AssertDo(cstd.pgletnTree->FSetIvMac(cetn), 0);
-            CopyPb(_pgletnTree->QvGet(0), cstd.pgletnTree->QvGet(0), LwMul(cetn, size(ETN)));
+            CopyPb(_pgletnTree->QvGet(0), cstd.pgletnTree->QvGet(0), LwMul(cetn, SIZEOF(ETN)));
 
             // jump to where the condition will be
             _PushLabelRequestLw(cstd.lwLabel1);
@@ -1950,7 +1950,7 @@ void SCCB::_BeginCst(long cst, long ietn)
         {
         LError:
             _ReportError(PszLit("unexpected Elif"));
-            ClearPb(&cstdPrev, size(cstdPrev));
+            ClearPb(&cstdPrev, SIZEOF(cstdPrev));
             cstdPrev.cst = cstIf;
             cstdPrev.lwLabel1 = ++_lwLastLabel;
         }
@@ -2431,7 +2431,7 @@ void SCCB::_CompileIn(void)
     bool fDone;
 
     // push the new record
-    ClearPb(&etn, size(etn));
+    ClearPb(&etn, SIZEOF(etn));
     etn.tt = ttNil;
     etn.grfop = fopOp;
     if (!_pgletnStack->FPush(&etn))
@@ -2481,7 +2481,7 @@ void SCCB::_CompileIn(void)
             goto LNextLine;
         }
 
-        ClearPb(&etn, size(etn));
+        ClearPb(&etn, SIZEOF(etn));
         etn.tt = (short)tok.tt;
         etn.lwValue = tok.lw;
         etn.op = ptome->op;
@@ -2569,7 +2569,7 @@ bool SCCB::FDisassemble(PSCPT pscpt, PMSNK pmsnk, PMSNK pmsnkError)
     PGL pgllw = pscpt->_pgllw;
     PSZ pszError = pvNil;
     AssertPo(pgllw, 0);
-    Assert(pgllw->CbEntry() == size(long), "bad script");
+    Assert(pgllw->CbEntry() == SIZEOF(long), "bad script");
 
     ilwMac = pgllw->IvMac();
     if (ilwMac < 1)

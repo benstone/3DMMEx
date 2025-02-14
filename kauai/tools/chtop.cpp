@@ -1196,8 +1196,8 @@ bool HEDG::FCmdPrint(PCMD pcmd)
     PHEDO phedo = Phedo();
 
     // set up the print dialog structure
-    ClearPb(&pd, size(pd));
-    pd.lStructSize = size(pd);
+    ClearPb(&pd, SIZEOF(pd));
+    pd.lStructSize = SIZEOF(pd);
     pd.Flags = PD_RETURNDC | PD_HIDEPRINTTOFILE | PD_NOPAGENUMS | PD_NOSELECTION | PD_USEDEVMODECOPIES;
     pd.hwndOwner = vwig.hwndApp;
 
@@ -1223,7 +1223,7 @@ bool HEDG::FCmdPrint(PCMD pcmd)
     pgnv->SetRcSrc(&rcSrc);
 
     phedo->GetName(&stnDoc);
-    di.cbSize = size(di);
+    di.cbSize = SIZEOF(di);
     di.lpszDocName = stnDoc.Psz();
     di.lpszOutput = pvNil;
 
@@ -1551,7 +1551,7 @@ bool HEDG::FCmdDump(PCMD pcmd)
 
 #ifdef UNICODE
     rgch[0] = kchwUnicode;
-    pfil->FWriteRgbSeq(rgch, size(achar), &fpCur);
+    pfil->FWriteRgbSeq(rgch, SIZEOF(achar), &fpCur);
 #endif // UNICODE
 
     // dump the topics
@@ -1589,7 +1589,7 @@ bool HEDG::FCmdDump(PCMD pcmd)
         if (!fFirst)
         {
             pfil->FWriteRgbSeq(rgchEop, kcchEop, &fpCur);
-            pfil->FWriteRgbSeq(PszLit("------------------------------"), 30 * size(achar), &fpCur);
+            pfil->FWriteRgbSeq(PszLit("------------------------------"), 30 * SIZEOF(achar), &fpCur);
             pfil->FWriteRgbSeq(rgchEop, kcchEop, &fpCur);
             pfil->FWriteRgbSeq(rgchEop, kcchEop, &fpCur);
         }
@@ -1601,7 +1601,7 @@ bool HEDG::FCmdDump(PCMD pcmd)
         {
             cch = LwMin(cpMac - cp, kcchMax);
             phetd->FetchRgch(cp, cch, rgch);
-            pfil->FWriteRgbSeq(rgch, cch * size(achar), &fpCur);
+            pfil->FWriteRgbSeq(rgch, cch * SIZEOF(achar), &fpCur);
         }
 
         pfil->FWriteRgbSeq(rgchEop, kcchEop, &fpCur);
@@ -2456,7 +2456,7 @@ bool HETG::FCmdInsertEdit(PCMD pcmd)
         goto LFail;
     ReleasePpo(&pdlg);
 
-    if (Phetd()->FInsertObject(&ecos, size(ecos), cpMin, cpLim - cpMin, _fValidChp ? &_chpIns : pvNil))
+    if (Phetd()->FInsertObject(&ecos, SIZEOF(ecos), cpMin, cpLim - cpMin, _fValidChp ? &_chpIns : pvNil))
     {
         cpMin++;
         SetSel(cpMin, cpMin);
@@ -2721,7 +2721,7 @@ bool HETG::FEnableHetgCmd(PCMD pcmd, ulong *pgrfeds)
         cp = LwMin(_cpAnchor, _cpOther);
         if (!Phetd()->FFetchObject(cp, &cpT, &pv, &cb))
             break;
-        if (cp == cpT && cb >= size(CKI))
+        if (cp == cpT && cb >= SIZEOF(CKI))
         {
             switch (*(CTG *)pv)
             {
@@ -2763,7 +2763,7 @@ bool HETG::FCmdFormatPicture(PCMD pcmd)
     void *pv;
     PDLG pdlg;
     long cp, cpT, cb;
-    byte rgb[size(CKI) + kcbMaxDataStn];
+    byte rgb[SIZEOF(CKI) + kcbMaxDataStn];
     STN stn;
     CKI *pcki = (CKI *)rgb;
 
@@ -2774,7 +2774,7 @@ bool HETG::FCmdFormatPicture(PCMD pcmd)
     if (!Phetd()->FFetchObject(cp, &cpT, &pv, &cb))
         return fTrue;
 
-    if (cp != cpT || !FIn(cb, size(CKI), size(rgb) + 1) || ((CKI *)pv)->ctg != kctgMbmp)
+    if (cp != cpT || !FIn(cb, SIZEOF(CKI), SIZEOF(rgb) + 1) || ((CKI *)pv)->ctg != kctgMbmp)
     {
         FreePpv(&pv);
         return fFalse;
@@ -2787,7 +2787,7 @@ bool HETG::FCmdFormatPicture(PCMD pcmd)
     if (pvNil == pdlg)
         return fFalse;
 
-    if (cb > size(CKI) && stn.FSetData(rgb + size(CKI), cb - size(CKI)))
+    if (cb > SIZEOF(CKI) && stn.FSetData(rgb + SIZEOF(CKI), cb - SIZEOF(CKI)))
     {
         _TokenizeStn(&stn);
         pdlg->FPutStn(kiditNamePicture, &stn);
@@ -2802,8 +2802,8 @@ bool HETG::FCmdFormatPicture(PCMD pcmd)
 
     pdlg->GetStn(kiditNamePicture, &stn);
     _TokenizeStn(&stn);
-    cb = stn.CbData() + size(CKI);
-    stn.GetData(rgb + size(CKI));
+    cb = stn.CbData() + SIZEOF(CKI);
+    stn.GetData(rgb + SIZEOF(CKI));
     ReleasePpo(&pdlg);
 
     if (Phetd()->FApplyObjectProps(rgb, cb, cp))
@@ -2829,7 +2829,7 @@ bool HETG::FCmdFormatButton(PCMD pcmd)
     PDLG pdlg;
     long cp, cpT, cb, ib, cbRead;
     STN stn;
-    byte rgb[size(CKI) + size(long) + 2 * kcbMaxDataStn];
+    byte rgb[SIZEOF(CKI) + SIZEOF(long) + 2 * kcbMaxDataStn];
     CKI *pcki = (CKI *)rgb;
     long *plw = (long *)(pcki + 1);
 
@@ -2840,7 +2840,7 @@ bool HETG::FCmdFormatButton(PCMD pcmd)
     if (!Phetd()->FFetchObject(cp, &cpT, &pv, &cb))
         return fTrue;
 
-    if (cp != cpT || !FIn(cb, size(CKI) + size(long), size(rgb) + 1) || ((CKI *)pv)->ctg != kctgGokd)
+    if (cp != cpT || !FIn(cb, SIZEOF(CKI) + SIZEOF(long), SIZEOF(rgb) + 1) || ((CKI *)pv)->ctg != kctgGokd)
     {
         FreePpv(&pv);
         return fFalse;
@@ -2853,7 +2853,7 @@ bool HETG::FCmdFormatButton(PCMD pcmd)
     if (pvNil == pdlg)
         return fFalse;
 
-    ib = size(CKI) + size(long);
+    ib = SIZEOF(CKI) + SIZEOF(long);
     if (cb > ib && stn.FSetData(rgb + ib, cb - ib, &cbRead))
     {
         _TokenizeStn(&stn);
@@ -2875,7 +2875,7 @@ bool HETG::FCmdFormatButton(PCMD pcmd)
 
     pdlg->GetStn(kiditNameButton, &stn);
     _TokenizeStn(&stn);
-    ib = size(CKI) + size(long);
+    ib = SIZEOF(CKI) + SIZEOF(long);
     stn.GetData(rgb + ib);
     ib += stn.CbData();
     pdlg->GetStn(kiditTopicNameButton, &stn);
@@ -2915,13 +2915,13 @@ bool HETG::FCmdFormatEdit(PCMD pcmd)
     if (!Phetd()->FFetchObject(cp, &cpT, &pv, &cb))
         return fTrue;
 
-    if (cp != cpT || cb != size(ecos) || *(CTG *)pv != kctgEditControl)
+    if (cp != cpT || cb != SIZEOF(ecos) || *(CTG *)pv != kctgEditControl)
     {
         FreePpv(&pv);
         return fFalse;
     }
 
-    CopyPb(pv, &ecos, size(ecos));
+    CopyPb(pv, &ecos, SIZEOF(ecos));
     FreePpv(&pv);
 
     pdlg = DLG::PdlgNew(dlidFormatEdit, _FDlgFormatEdit);
@@ -2938,7 +2938,7 @@ bool HETG::FCmdFormatEdit(PCMD pcmd)
     }
     ReleasePpo(&pdlg);
 
-    if (Phetd()->FApplyObjectProps(&ecos, size(ecos), cp))
+    if (Phetd()->FApplyObjectProps(&ecos, SIZEOF(ecos), cp))
         SetSel(cp, cp + 1);
     else
     {
@@ -3080,8 +3080,8 @@ bool HETG::FCmdPrint(PCMD pcmd)
     RC rc;
 
     // set up the print dialog structure
-    ClearPb(&pd, size(pd));
-    pd.lStructSize = size(pd);
+    ClearPb(&pd, SIZEOF(pd));
+    pd.lStructSize = SIZEOF(pd);
     pd.Flags = PD_RETURNDC | PD_HIDEPRINTTOFILE | PD_NOPAGENUMS | PD_NOSELECTION | PD_USEDEVMODECOPIES;
     pd.hwndOwner = vwig.hwndApp;
 
@@ -3106,7 +3106,7 @@ bool HETG::FCmdPrint(PCMD pcmd)
     pgnv->SetRcSrc(&rc);
 
     Phetd()->GetName(&stn);
-    di.cbSize = size(di);
+    di.cbSize = SIZEOF(di);
     di.lpszDocName = stn.Psz();
     di.lpszOutput = pvNil;
 
@@ -3309,7 +3309,7 @@ bool HETG::FCheckSpelling(long *pcactChanges)
         case kiditIgnoreSpell:
         LIgnore:
             if (cchBuf > ichLim)
-                BltPb(rgch + ichLim, rgch, (cchBuf - ichLim) * size(achar));
+                BltPb(rgch + ichLim, rgch, (cchBuf - ichLim) * SIZEOF(achar));
             cchBuf -= ichLim;
             cpMin += ichLim;
             break;
@@ -3334,7 +3334,7 @@ bool HETG::FCheckSpelling(long *pcactChanges)
             }
 
             if (cchBuf > ichLim)
-                BltPb(rgch + ichLim, rgch, (cchBuf - ichLim) * size(achar));
+                BltPb(rgch + ichLim, rgch, (cchBuf - ichLim) * SIZEOF(achar));
             cchBuf -= ichLim;
             cpMac += stnDst.Cch() + ichMin - ichLim;
             cpMin += stnDst.Cch() + ichMin;

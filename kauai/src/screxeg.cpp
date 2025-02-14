@@ -307,7 +307,7 @@ bool SCEG::_FExecOp(long op)
         {
             if (pvNil == _QlwGet(clw))
                 break;
-            if (!FAllocPv(&pv, LwMul(size(long), clw), fmemNil, mprNormal))
+            if (!FAllocPv(&pv, LwMul(SIZEOF(long), clw), fmemNil, mprNormal))
             {
                 Debug(_WarnSz(PszLit("OOM attempting to run script")));
                 _PopList(clw);
@@ -316,7 +316,7 @@ bool SCEG::_FExecOp(long op)
             }
             else
             {
-                CopyPb(_QlwGet(clw), pv, LwMul(size(long), clw));
+                CopyPb(_QlwGet(clw), pv, LwMul(SIZEOF(long), clw));
                 ReverseRglw(pv, clw);
                 _PopList(clw);
             }
@@ -1226,7 +1226,7 @@ bool FReadColorTable(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
         goto LFail;
     *pcb = pblck->Cb();
 
-    if (pvNil == (pglclr = GL::PglRead(pblck)) || pglclr->CbEntry() != size(CLR))
+    if (pvNil == (pglclr = GL::PglRead(pblck)) || pglclr->CbEntry() != SIZEOF(CLR))
         goto LFail;
 
     if (pvNil == (pcabo = NewObj CABO(pglclr)))
@@ -1268,8 +1268,8 @@ bool SCEG::_FLaunch(long stid)
     STARTUPINFO sui;
     PROCESS_INFORMATION pi;
 
-    ClearPb(&sui, size(sui));
-    sui.cb = size(sui);
+    ClearPb(&sui, SIZEOF(sui));
+    sui.cb = SIZEOF(sui);
 
     return CreateProcess(pvNil, stn.Psz(), pvNil, pvNil, fFalse, DETACHED_PROCESS, pvNil, pvNil, &sui, &pi);
 #else  //! WIN

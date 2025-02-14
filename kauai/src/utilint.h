@@ -62,9 +62,9 @@ inline void AssertNilOrPvCb(const void *pv, long cb)
 #define AssertNilOrPvCb(pv, cb)
 #endif //! DEBUG
 
-#define AssertThisMem() AssertPvCb(this, size(*this))
-#define AssertVarMem(pvar) AssertPvCb(pvar, size(*(pvar)))
-#define AssertNilOrVarMem(pvar) AssertNilOrPvCb(pvar, size(*(pvar)))
+#define AssertThisMem() AssertPvCb(this, SIZEOF(*this))
+#define AssertVarMem(pvar) AssertPvCb(pvar, SIZEOF(*(pvar)))
+#define AssertNilOrVarMem(pvar) AssertNilOrPvCb(pvar, SIZEOF(*(pvar)))
 
 /****************************************
     Scalar APIs
@@ -271,11 +271,11 @@ long LwRoundClosest(long lwSrc, long lwBase);
 
 inline long CbRoundToLong(long cb)
 {
-    return (cb + size(long) - 1) & ~(long)(size(long) - 1);
+    return (cb + SIZEOF(long) - 1) & ~(long)(SIZEOF(long) - 1);
 }
 inline long CbRoundToShort(long cb)
 {
-    return (cb + size(short) - 1) & ~(long)(size(short) - 1);
+    return (cb + SIZEOF(short) - 1) & ~(long)(SIZEOF(short) - 1);
 }
 inline long CbFromCbit(long cbit)
 {

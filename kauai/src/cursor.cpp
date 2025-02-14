@@ -41,7 +41,7 @@ bool CURS::FReadCurs(PCRF pcrf, CTG ctg, CNO cno, PBLCK pblck, PBACO *ppbaco, lo
     byte *prgb, *qrgb;
     PCURS pcurs = pvNil;
 
-    *pcb = size(CURS);
+    *pcb = SIZEOF(CURS);
     if (pvNil == ppbaco)
         return fTrue;
 

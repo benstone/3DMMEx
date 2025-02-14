@@ -960,7 +960,7 @@ long EDPL::_XpFromIch(long ich)
     ichMin = _IchMinLn(ln);
     if (!_FLockLn(ln, &prgch, &cch))
         return xp;
-    AssertPvCb(prgch, cch * size(achar));
+    AssertPvCb(prgch, cch * SIZEOF(achar));
     AssertIn(ich, ichMin, ichMin + cch + 1);
 
     _pgnv->SetFont(_onn, _grfont, _dypFont, _tah);
@@ -1031,7 +1031,7 @@ void EDPL::_DrawLine(PGNV pgnv, long ln)
     ypTop = _YpFromLn(ln);
     if (_FLockLn(ln, &prgch, &cch))
     {
-        AssertPvCb(prgch, cch * size(achar));
+        AssertPvCb(prgch, cch * SIZEOF(achar));
         long xp = _XpOrigin();
 
         pgnv->SetFont(_onn, _grfont, _dypFont, _tah);
@@ -1187,7 +1187,7 @@ bool EDSL::FReplace(const achar *prgch, long cchIns, long ich1, long ich2, long 
 {
     AssertThis(0);
     AssertIn(cchIns, 0, kcbMax);
-    AssertPvCb(prgch, cchIns * size(achar));
+    AssertPvCb(prgch, cchIns * SIZEOF(achar));
     AssertIn(ich1, 0, IchMac() + 1);
     AssertIn(ich2, 0, IchMac() + 1);
 
@@ -1263,7 +1263,7 @@ long EDSL::CchFetch(achar *prgch, long ich, long cchWant)
     AssertThis(0);
     AssertIn(cchWant, 0, kcbMax);
     AssertIn(ich, 0, IchMac() + 1);
-    AssertPvCb(prgch, cchWant * size(achar));
+    AssertPvCb(prgch, cchWant * SIZEOF(achar));
 
     if (0 < (cchWant = LwBound(cchWant, 0, IchMac() + 1 - ich)))
         CopyPb(_rgch + ich, prgch, cchWant);
@@ -1327,7 +1327,7 @@ bool EDML::_FInit(void)
 {
     long ich;
 
-    if (pvNil == (_pglich = GL::PglNew(size(long))))
+    if (pvNil == (_pglich = GL::PglNew(SIZEOF(long))))
         return fFalse;
     _pglich->SetMinGrow(20);
     ich = 0;
@@ -1368,7 +1368,7 @@ bool EDML::_FLockLn(long ln, achar **pprgch, long *pcch)
         }
         *pcch -= ich;
     }
-    *pprgch = (achar *)_bsm.PvLock(ich * size(achar));
+    *pprgch = (achar *)_bsm.PvLock(ich * SIZEOF(achar));
     return fTrue;
 }
 
@@ -1432,8 +1432,8 @@ long EDML::_IchMinLn(long ln)
 long EDML::IchMac(void)
 {
     AssertBaseThis(0);
-    Assert(_bsm.IbMac() % size(achar) == 0, "ibMac not divisible by size(achar)");
-    return _bsm.IbMac() / size(achar);
+    Assert(_bsm.IbMac() % SIZEOF(achar) == 0, "ibMac not divisible by SIZEOF(achar)");
+    return _bsm.IbMac() / SIZEOF(achar);
 }
 
 /***************************************************************************
@@ -1453,7 +1453,7 @@ bool EDML::FReplace(const achar *prgch, long cchIns, long ich1, long ich2, long 
 {
     AssertThis(fobjAssertFull);
     AssertIn(cchIns, 0, kcbMax);
-    AssertPvCb(prgch, cchIns * size(achar));
+    AssertPvCb(prgch, cchIns * SIZEOF(achar));
     AssertIn(ich1, 0, IchMac() + 1);
     AssertIn(ich2, 0, IchMac() + 1);
     long lnMin, clnDel, clnDel2, clnIns, ln;
@@ -1582,7 +1582,7 @@ long EDML::CchFetch(achar *prgch, long ich, long cchWant)
     AssertThis(0);
     AssertIn(cchWant, 0, kcbMax);
     AssertIn(ich, 0, IchMac() + 1);
-    AssertPvCb(prgch, cchWant * size(achar));
+    AssertPvCb(prgch, cchWant * SIZEOF(achar));
 
     if (0 < (cchWant = LwBound(cchWant, 0, IchMac() + 1 - ich)))
         _bsm.FetchRgb(ich, cchWant, prgch);
@@ -1601,9 +1601,9 @@ void EDML::AssertValid(ulong grf)
     AssertIn(_pglich->IvMac(), 1, kcbMax);
 
     long ibMac = _bsm.IbMac();
-    long ichMac = ibMac / size(achar);
+    long ichMac = ibMac / SIZEOF(achar);
 
-    Assert(ibMac % size(achar) == 0, "ibMac not a divisible by size(achar)");
+    Assert(ibMac % SIZEOF(achar) == 0, "ibMac not a divisible by SIZEOF(achar)");
     AssertIn(_ichAnchor, 0, ichMac + 1);
     AssertIn(_ichOther, 0, ichMac + 1);
 
@@ -1830,8 +1830,8 @@ LDone:
 long EDMW::_CichGetBreakables(achar *prgch, long ich, long *prgich, long cichMax)
 {
     AssertIn(ich, 0, IchMac() + 1);
-    AssertPvCb(prgch, IchMac() * size(achar));
-    AssertPvCb(prgich, LwMul(cichMax, size(long)));
+    AssertPvCb(prgch, IchMac() * SIZEOF(achar));
+    AssertPvCb(prgich, LwMul(cichMax, SIZEOF(long)));
     long cich;
     ulong grfch;
 

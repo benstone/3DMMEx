@@ -127,8 +127,8 @@ bool FPortGetFniOpen(FNI *pfni, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle, FNI *pf
     AssertPo(pfni, 0);
     AssertNilOrPo(pfniInitialDir, 0);
 
-    ClearPb(&ofn, size(OPENFILENAME));
-    ClearPb(&diPortfolio, size(DLGINFO));
+    ClearPb(&ofn, SIZEOF(OPENFILENAME));
+    ClearPb(&diPortfolio, SIZEOF(DLGINFO));
 
     szFile[0] = 0;
     ofn.lStructSize = OPENFILENAME_SIZE_VERSION_400;
@@ -249,8 +249,8 @@ bool FPortGetFniSave(FNI *pfni, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle, LPCTSTR
     AssertPo(pfni, 0);
     AssertNilOrPo(pstnDefFileName, 0);
 
-    ClearPb(&ofn, size(OPENFILENAME));
-    ClearPb(&diPortfolio, size(DLGINFO));
+    ClearPb(&ofn, SIZEOF(OPENFILENAME));
+    ClearPb(&diPortfolio, SIZEOF(DLGINFO));
 
     szFileTitle[0] = chNil;
 

@@ -178,25 +178,25 @@ void CHCM::_Error(long ert, const PSZ pszMessage)
 void CHCM::_GetRgbFromLw(long lw, byte *prgb)
 {
     AssertThis(0);
-    AssertPvCb(prgb, size(long));
+    AssertPvCb(prgb, SIZEOF(long));
 
     switch (_cbNum)
     {
-    case size(byte):
+    case SIZEOF(byte):
         if (lw < -128 || lw > kbMax)
             _Error(ertRangeByte);
         prgb[0] = B0Lw(lw);
         break;
 
-    case size(short):
+    case SIZEOF(short):
         if ((lw < kswMin) || (lw > ksuMax))
             _Error(ertRangeShort);
         *(short *)prgb = SwLow(lw);
         break;
 
     default:
-        Assert(_cbNum == size(long), "invalid numerical mode");
-        _cbNum = size(long);
+        Assert(_cbNum == SIZEOF(long), "invalid numerical mode");
+        _cbNum = SIZEOF(long);
         *(long *)prgb = lw;
         break;
     }
@@ -272,13 +272,13 @@ bool CHCM::_FGetCleanTok(TOK *ptok, bool fEofOk)
             _sm = smSt;
             break;
         case ttModeByte:
-            _cbNum = size(byte);
+            _cbNum = SIZEOF(byte);
             break;
         case ttModeShort:
-            _cbNum = size(short);
+            _cbNum = SIZEOF(short);
             break;
         case ttModeLong:
-            _cbNum = size(long);
+            _cbNum = SIZEOF(long);
             break;
         case ttMacBo:
             _bo = MacWin(kboCur, kboOther);
@@ -315,7 +315,7 @@ bool CHCM::_FParseParenHeader(PHP *prgphp, long cphpMax, long *pcphp)
 {
     AssertThis(0);
     AssertIn(cphpMax, 1, kcbMax);
-    AssertPvCb(prgphp, LwMul(cphpMax, size(PHP)));
+    AssertPvCb(prgphp, LwMul(cphpMax, SIZEOF(PHP)));
     AssertVarMem(pcphp);
 
     TOK tok;
@@ -419,7 +419,7 @@ void CHCM::_ParseChunkHeader(CTG *pctg, CNO *pcno)
     PHP rgphp[3];
     long cphp;
 
-    ClearPb(rgphp, size(rgphp));
+    ClearPb(rgphp, SIZEOF(rgphp));
     rgphp[2].pstn = &stnChunkName;
     if (!_FParseParenHeader(rgphp, 3, &cphp) || cphp < 2)
     {
@@ -474,15 +474,15 @@ void CHCM::_AppendString(PSTN pstnValue)
         break;
     case smStz:
         pv = pstnValue->Pstz();
-        cb = CchTotStz((PSTZ)pv) * size(achar);
+        cb = CchTotStz((PSTZ)pv) * SIZEOF(achar);
         break;
     case smSz:
         pv = pstnValue->Psz();
-        cb = CchTotSz((PSZ)pv) * size(achar);
+        cb = CchTotSz((PSZ)pv) * SIZEOF(achar);
         break;
     case smSt:
         pv = pstnValue->Pst();
-        cb = CchTotSt((PST)pv) * size(achar);
+        cb = CchTotSt((PST)pv) * SIZEOF(achar);
         break;
     }
 
@@ -496,7 +496,7 @@ void CHCM::_AppendString(PSTN pstnValue)
 void CHCM::_AppendNumber(long lwValue)
 {
     AssertThis(0);
-    byte rgb[size(long)];
+    byte rgb[SIZEOF(long)];
 
     _GetRgbFromLw(lwValue, rgb);
     if (!FError() && !_bsf.FReplace(rgb, _cbNum, _bsf.IbMac(), 0))
@@ -515,7 +515,7 @@ void CHCM::_ParseBodyChild(CTG ctg, CNO cno)
     PHP rgphp[3];
     long cphp;
 
-    ClearPb(rgphp, size(rgphp));
+    ClearPb(rgphp, SIZEOF(rgphp));
     if (!_FParseParenHeader(rgphp, 3, &cphp) || cphp < 2)
     {
         _Error(ertBodyChildHead);
@@ -559,7 +559,7 @@ void CHCM::_ParseBodyParent(CTG ctg, CNO cno)
     PHP rgphp[3];
     long cphp;
 
-    ClearPb(rgphp, size(rgphp));
+    ClearPb(rgphp, SIZEOF(rgphp));
     if (!_FParseParenHeader(rgphp, 3, &cphp) || cphp < 2)
     {
         _Error(ertBodyParentHead);
@@ -628,7 +628,7 @@ void CHCM::_ParseBodyAlign(void)
         AssertIn(ibMacNew, ibMac, ibMac + tok.lw);
         while ((ibMac = _bsf.IbMac()) < ibMacNew)
         {
-            cb = LwMin(ibMacNew - ibMac, size(rgb));
+            cb = LwMin(ibMacNew - ibMac, SIZEOF(rgb));
             ClearPb(rgb, cb);
             if (!_bsf.FReplace(rgb, cb, ibMac, 0))
             {
@@ -762,7 +762,7 @@ void CHCM::_ParseBodyBitmap(bool fPack, bool fMask, CTG ctg, CNO cno)
     long cphp;
     PMBMP pmbmp = pvNil;
 
-    ClearPb(rgphp, size(rgphp));
+    ClearPb(rgphp, SIZEOF(rgphp));
     if (!_FParseParenHeader(rgphp, 3, &cphp))
     {
         _Error(ertBodyBitmapHead);
@@ -949,15 +949,15 @@ void CHCM::_ParseBodyCursor(bool fPack, CTG ctg, CNO cno)
 
     floSrc.fp = 0;
     floSrc.cb = floSrc.pfil->FpMac();
-    if (floSrc.cb < size(rgsw) + size(CURDIR) + size(CURH) + 128 || !floSrc.FReadRgb(rgsw, size(rgsw), 0) ||
-        rgsw[0] != 0 || rgsw[1] != 2 || !FIn(ccurdir = rgsw[2], 1, (floSrc.cb - size(rgsw)) / size(CURDIR)))
+    if (floSrc.cb < SIZEOF(rgsw) + SIZEOF(CURDIR) + SIZEOF(CURH) + 128 || !floSrc.FReadRgb(rgsw, SIZEOF(rgsw), 0) ||
+        rgsw[0] != 0 || rgsw[1] != 2 || !FIn(ccurdir = rgsw[2], 1, (floSrc.cb - SIZEOF(rgsw)) / SIZEOF(CURDIR)))
     {
         _Error(ertReadCursor);
         goto LFail;
     }
 
-    floSrc.cb -= size(rgsw);
-    floSrc.fp = size(rgsw);
+    floSrc.cb -= SIZEOF(rgsw);
+    floSrc.fp = SIZEOF(rgsw);
     if (!floSrc.FReadHq(&hq))
     {
         _Error(ertOom);
@@ -967,7 +967,7 @@ void CHCM::_ParseBodyCursor(bool fPack, CTG ctg, CNO cno)
 
     prgb = (byte *)PvLockHq(hq);
     pcurdir = (CURDIR *)prgb;
-    if (pvNil == (pggcurf = GG::PggNew(size(CURF), ccurdir)))
+    if (pvNil == (pggcurf = GG::PggNew(SIZEOF(CURF), ccurdir)))
     {
         _Error(ertOom);
         goto LFail;
@@ -976,8 +976,8 @@ void CHCM::_ParseBodyCursor(bool fPack, CTG ctg, CNO cno)
     {
         cbBits = pcurdir->dxp == 32 ? 256 : 128;
         if (pcurdir->dxp != pcurdir->dyp || pcurdir->dxp != 16 && pcurdir->dxp != 32 || pcurdir->bZero1 != 0 ||
-            pcurdir->bZero2 != 0 || pcurdir->cb != size(CURH) + cbBits ||
-            !FIn(pcurdir->bv -= size(rgsw), LwMul(rgsw[2], size(CURDIR)), floSrc.cb - pcurdir->cb + 1) ||
+            pcurdir->bZero2 != 0 || pcurdir->cb != SIZEOF(CURH) + cbBits ||
+            !FIn(pcurdir->bv -= SIZEOF(rgsw), LwMul(rgsw[2], SIZEOF(CURDIR)), floSrc.cb - pcurdir->cb + 1) ||
             CbRoundToLong(pcurdir->bv) != pcurdir->bv)
         {
             _Error(ertReadCursor);
@@ -990,9 +990,9 @@ void CHCM::_ParseBodyCursor(bool fPack, CTG ctg, CNO cno)
         curf.dyp = pcurdir->dyp;
 
         pcurh = (CURH *)PvAddBv(prgb, pcurdir->bv);
-        if (pcurh->cbCurh != size(CURH) - 2 * size(long) || pcurh->dxp != pcurdir->dxp ||
+        if (pcurh->cbCurh != SIZEOF(CURH) - 2 * SIZEOF(long) || pcurh->dxp != pcurdir->dxp ||
             pcurh->dyp != 2 * pcurdir->dyp || pcurh->swOne1 != 1 || pcurh->swOne2 != 1 || pcurh->lwZero1 != 0 ||
-            (pcurh->lwZero2 != 0 && pcurh->lwZero2 != pcurdir->cb - size(CURH)) || pcurh->lwZero3 != 0 ||
+            (pcurh->lwZero2 != 0 && pcurh->lwZero2 != pcurdir->cb - SIZEOF(CURH)) || pcurh->lwZero3 != 0 ||
             pcurh->lwZero4 != 0 || pcurh->lwZero5 != 0 || pcurh->lwZero6 != 0)
         {
             _Error(ertReadCursor);
@@ -1000,8 +1000,8 @@ void CHCM::_ParseBodyCursor(bool fPack, CTG ctg, CNO cno)
         }
 
         // The bits are stored in upside down DIB order!
-        ReversePb(pcurh + 1, pcurdir->cb - size(CURH));
-        SwapBytesRglw(pcurh + 1, (pcurdir->cb - size(CURH)) / size(long));
+        ReversePb(pcurh + 1, pcurdir->cb - SIZEOF(CURH));
+        SwapBytesRglw(pcurh + 1, (pcurdir->cb - SIZEOF(CURH)) / SIZEOF(long));
 
         if (pcurdir->dxp == 16)
         {
@@ -1145,14 +1145,14 @@ bool CHCM::_FParseData(PTOK ptok)
             case ttBo:
                 // insert the current byte order
                 cbNum = _cbNum;
-                _cbNum = size(short);
+                _cbNum = SIZEOF(short);
                 _AppendNumber(kboCur);
                 _cbNum = cbNum;
                 break;
             case ttOsk:
                 // insert the current osk
                 cbNum = _cbNum;
-                _cbNum = size(short);
+                _cbNum = SIZEOF(short);
                 _AppendNumber(_osk);
                 _cbNum = cbNum;
                 break;
@@ -1188,7 +1188,7 @@ void CHCM::_ParseBodyList(bool fPack, bool fAl, CTG ctg, CNO cno)
     PGL pglivFree = pvNil;
 
     // get size of entry data
-    ClearPb(rgphp, size(rgphp));
+    ClearPb(rgphp, SIZEOF(rgphp));
     if (!_FParseParenHeader(rgphp, 1, &cphp) || cphp < 1)
     {
         _Error(ertListHead);
@@ -1228,7 +1228,7 @@ void CHCM::_ParseBodyList(bool fPack, bool fAl, CTG ctg, CNO cno)
             else if (!FError())
             {
                 iv = pglb->IvMac();
-                if (pvNil == pglivFree && pvNil == (pglivFree = GL::PglNew(size(long))) || !pglivFree->FAdd(&iv))
+                if (pvNil == pglivFree && pvNil == (pglivFree = GL::PglNew(SIZEOF(long))) || !pglivFree->FAdd(&iv))
                 {
                     _Error(ertOom);
                 }
@@ -1320,7 +1320,7 @@ void CHCM::_ParseBodyGroup(bool fPack, bool fAg, CTG ctg, CNO cno)
     PGL pglivFree = pvNil;
 
     // get size of fixed data
-    ClearPb(rgphp, size(rgphp));
+    ClearPb(rgphp, SIZEOF(rgphp));
     if (!_FParseParenHeader(rgphp, 1, &cphp) || cphp < 1)
     {
         _Error(ertGroupHead);
@@ -1361,7 +1361,7 @@ void CHCM::_ParseBodyGroup(bool fPack, bool fAg, CTG ctg, CNO cno)
             else if (!FError())
             {
                 iv = pggb->IvMac();
-                if (pvNil == pglivFree && pvNil == (pglivFree = GL::PglNew(size(long))) || !pglivFree->FAdd(&iv))
+                if (pvNil == pglivFree && pvNil == (pglivFree = GL::PglNew(SIZEOF(long))) || !pglivFree->FAdd(&iv))
                 {
                     _Error(ertOom);
                 }
@@ -1478,7 +1478,7 @@ void CHCM::_ParseBodyStringTable(bool fPack, bool fAst, CTG ctg, CNO cno)
     void *pvExtra = pvNil;
 
     // get size of attached data
-    ClearPb(rgphp, size(rgphp));
+    ClearPb(rgphp, SIZEOF(rgphp));
     if (!_FParseParenHeader(rgphp, 1, &cphp) || cphp < 1)
     {
         _Error(ertGstHead);
@@ -1486,7 +1486,7 @@ void CHCM::_ParseBodyStringTable(bool fPack, bool fAst, CTG ctg, CNO cno)
         return;
     }
 
-    if (!FIn(cbExtra = rgphp[0].lw, 0, kcbMax) || cbExtra % size(long) != 0)
+    if (!FIn(cbExtra = rgphp[0].lw, 0, kcbMax) || cbExtra % SIZEOF(long) != 0)
     {
         _Error(ertGstEntrySize);
         _SkipPastTok(ttEndChunk);
@@ -1516,7 +1516,7 @@ void CHCM::_ParseBodyStringTable(bool fPack, bool fAst, CTG ctg, CNO cno)
             else if (!FError())
             {
                 iv = pgstb->IvMac();
-                if (pvNil == pglivFree && pvNil == (pglivFree = GL::PglNew(size(long))) || !pglivFree->FAdd(&iv))
+                if (pvNil == pglivFree && pvNil == (pglivFree = GL::PglNew(SIZEOF(long))) || !pglivFree->FAdd(&iv))
                 {
                     _Error(ertOom);
                 }
@@ -1636,14 +1636,14 @@ void CHCM::_ParseBodyPackedFile(bool *pfPacked)
     TOK tok;
 
     _ParseBodyFile();
-    if (_bsf.IbMac() < size(long))
+    if (_bsf.IbMac() < SIZEOF(long))
     {
         _Error(ertPackedFile, PszLit("bad packed file"));
         _SkipPastTok(ttEndChunk);
         return;
     }
 
-    _bsf.FetchRgb(0, size(long), &lw);
+    _bsf.FetchRgb(0, SIZEOF(long), &lw);
     lwSwapped = lw;
     SwapBytesRglw(&lwSwapped, 1);
     if (lw == klwSigPackedFile || lwSwapped == klwSigPackedFile)
@@ -1657,7 +1657,7 @@ void CHCM::_ParseBodyPackedFile(bool *pfPacked)
         return;
     }
 
-    _bsf.FReplace(pvNil, 0, 0, size(long));
+    _bsf.FReplace(pvNil, 0, 0, SIZEOF(long));
 
     if (!_FGetCleanTok(&tok) || ttEndChunk != tok.tt)
     {
@@ -1674,7 +1674,7 @@ void CHCM::_StartSubFile(bool fPack, CTG ctg, CNO cno)
     AssertThis(0);
     CSFC csfc;
 
-    if (pvNil == _pglcsfc && pvNil == (_pglcsfc = GL::PglNew(size(CSFC))))
+    if (pvNil == _pglcsfc && pvNil == (_pglcsfc = GL::PglNew(SIZEOF(CSFC))))
         goto LFail;
 
     csfc.pcfl = _pcfl;
@@ -1798,7 +1798,7 @@ void CHCM::_ParsePackFmt(void)
     long cfmt;
 
     // get the format
-    ClearPb(rgphp, size(rgphp));
+    ClearPb(rgphp, SIZEOF(rgphp));
     if (!_FParseParenHeader(rgphp, 1, &cphp) || cphp < 1)
     {
         _Error(ertSyntax);
@@ -1861,7 +1861,8 @@ void CHCM::_ParseChunkBody(CTG ctg, CNO cno)
             }
             cki.ctg = ctg;
             cki.cno = cno;
-            if (pvNil == _pglckiLoner && pvNil == (_pglckiLoner = GL::PglNew(size(CKI))) || !_pglckiLoner->FPush(&cki))
+            if (pvNil == _pglckiLoner && pvNil == (_pglckiLoner = GL::PglNew(SIZEOF(CKI))) ||
+                !_pglckiLoner->FPush(&cki))
             {
                 _Error(ertOom);
             }
@@ -1959,7 +1960,7 @@ void CHCM::_ParseAdopt(void)
     PHP rgphp[5];
     long cphp;
 
-    ClearPb(rgphp, size(rgphp));
+    ClearPb(rgphp, SIZEOF(rgphp));
     if (!_FParseParenHeader(rgphp, 5, &cphp) || cphp < 4)
     {
         _Error(ertAdoptHead);
@@ -2057,7 +2058,7 @@ PCFL CHCM::PcflCompile(PBSF pbsfSrc, PSTN pstnFile, PFNI pfniDst, PMSNK pmsnk)
 
     _pmsnkError = pmsnk;
     _sm = smStz;
-    _cbNum = size(long);
+    _cbNum = SIZEOF(long);
     _bo = kboCur;
     _osk = koskCur;
 
@@ -2170,7 +2171,7 @@ static KEYTT _rgkeytt[] = {
     PszLit("SUBFILE"),   ttSubFile,
 };
 
-#define kckeytt (size(_rgkeytt) / size(_rgkeytt[0]))
+#define kckeytt (SIZEOF(_rgkeytt) / SIZEOF(_rgkeytt[0]))
 
 /***************************************************************************
     Constructor for the chunky compiler lexer.
@@ -2326,7 +2327,7 @@ bool CHLX::_FDoSet(PTOK ptok)
 
     lw = 0;
     istn = ivNil;
-    if (pvNil != _pgstVariables || pvNil != (_pgstVariables = GST::PgstNew(size(long))))
+    if (pvNil != _pgstVariables || pvNil != (_pgstVariables = GST::PgstNew(SIZEOF(long))))
     {
         if (_pgstVariables->FFindStn(&ptok->stn, &istn, fgstSorted))
             _pgstVariables->GetExtra(istn, &lw);

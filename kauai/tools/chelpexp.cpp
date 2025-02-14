@@ -81,7 +81,7 @@ bool FExportHelpText(PCFL pcfl, PMSNK pmsnk)
         }
 
         // read the topic
-        if (!pcfl->FFind(cki.ctg, cki.cno, &blck) || !blck.FUnpackData() || blck.Cb() != size(HTOPF) ||
+        if (!pcfl->FFind(cki.ctg, cki.cno, &blck) || !blck.FUnpackData() || blck.Cb() != SIZEOF(HTOPF) ||
             !blck.FRead(&htopf))
         {
             goto LFail;
@@ -262,7 +262,7 @@ bool _FWriteHelpPropAg(PCFL pcfl, PCHSE pchse, KID *pkid, CKI *pckiPar)
 
     pag = pvNil;
     if (!pcfl->FFind(pkid->cki.ctg, pkid->cki.cno, &blck) || pvNil == (pag = AG::PagRead(&blck, &bo, &osk)) ||
-        bo != kboCur || osk != koskCur || size(long) != pag->CbFixed())
+        bo != kboCur || osk != koskCur || SIZEOF(long) != pag->CbFixed())
     {
         ReleasePpo(&pag);
         return fFalse;
@@ -304,16 +304,16 @@ bool _FWriteHelpPropAg(PCFL pcfl, PCHSE pchse, KID *pkid, CKI *pckiPar)
         switch (B3Lw(lw))
         {
         case 64: // sprmGroup
-            if (cb <= size(byte) + size(CNO))
+            if (cb <= SIZEOF(byte) + SIZEOF(CNO))
                 goto LWriteCore;
-            if (cb > size(rgb))
+            if (cb > SIZEOF(rgb))
             {
                 Bug("bad group data");
                 goto LWriteCore;
             }
 
             pag->GetRgb(iv, 0, cb, rgb);
-            ib = size(byte) + size(CNO);
+            ib = SIZEOF(byte) + SIZEOF(CNO);
             if (!stnT.FSetData(rgb + ib, cb - ib) || stnT.Cch() == 0)
             {
                 Bug("bad group data");
@@ -328,18 +328,18 @@ bool _FWriteHelpPropAg(PCFL pcfl, PCHSE pchse, KID *pkid, CKI *pckiPar)
             break;
 
         case 192: // sprmObject
-            if (cb <= size(CKI))
+            if (cb <= SIZEOF(CKI))
                 goto LWriteCore;
 
             // an object
-            pag->GetRgb(iv, 0, size(CKI), &cki);
+            pag->GetRgb(iv, 0, SIZEOF(CKI), &cki);
             switch (cki.ctg)
             {
             default:
                 goto LWriteCore;
 
             case kctgMbmp:
-                ib = size(CKI);
+                ib = SIZEOF(CKI);
                 if (ib >= cb)
                     goto LWriteCore;
                 if ((cb -= ib) > kcbMaxDataStn)
@@ -361,10 +361,10 @@ bool _FWriteHelpPropAg(PCFL pcfl, PCHSE pchse, KID *pkid, CKI *pckiPar)
                 break;
 
             case kctgGokd:
-                ib = size(CKI) + size(long);
+                ib = SIZEOF(CKI) + SIZEOF(long);
                 if (ib >= cb)
                     goto LWriteCore;
-                if ((cb -= ib) > size(rgb))
+                if ((cb -= ib) > SIZEOF(rgb))
                 {
                     Bug("bad button data");
                     goto LWriteCore;
@@ -395,7 +395,7 @@ bool _FWriteHelpPropAg(PCFL pcfl, PCHSE pchse, KID *pkid, CKI *pckiPar)
                 }
                 else
                 {
-                    pag->GetRgb(iv, size(CKI), size(long), &lw);
+                    pag->GetRgb(iv, SIZEOF(CKI), SIZEOF(long), &lw);
                     stnT2.FFormatSz(PszLit("0x%x"), lw);
                     stn.FAppendStn(&stnT2);
                     stnT2.SetNil();

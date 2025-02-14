@@ -91,7 +91,7 @@ bool REGBL::FInit(RC *prcRef, PGL pglxp)
     }
     else
     {
-        if (pvNil == (_pglxp = GL::PglNew(size(long))))
+        if (pvNil == (_pglxp = GL::PglNew(SIZEOF(long))))
             return fFalse;
         _pglxp->SetMinGrow(kcdxpBlock);
         _fResize = fTrue;
@@ -159,7 +159,7 @@ void REGBL::EndRow(void)
 
     // see if this row matches the last one
     if (ivNil != _idypPrev && czp == _idypCur - _idypPrev &&
-        FEqualRgb(&qrgxp[_idypPrev + 1], &qrgxp[_idypCur + 1], (czp - 1) * size(long)))
+        FEqualRgb(&qrgxp[_idypPrev + 1], &qrgxp[_idypCur + 1], (czp - 1) * SIZEOF(long)))
     {
         // this row matches the previous row
         qrgxp[_idypPrev] += qrgxp[_idypCur];
@@ -1116,7 +1116,7 @@ HRGN REGN::HrgnCreate(void)
     long yp, dyp;
 
     crcMac = _pglxp == pvNil ? 1 : _pglxp->IvMac() / 2;
-    if (!FAllocPv((void **)&prd, size(RGNDATAHEADER) + LwMul(crcMac, size(RECT)), fmemNil, mprNormal))
+    if (!FAllocPv((void **)&prd, SIZEOF(RGNDATAHEADER) + LwMul(crcMac, SIZEOF(RECT)), fmemNil, mprNormal))
     {
         return hNil;
     }
@@ -1146,13 +1146,13 @@ HRGN REGN::HrgnCreate(void)
         }
     }
     AssertIn(crc, 0, crcMac + 1);
-    prd->dwSize = size(RGNDATAHEADER);
+    prd->dwSize = SIZEOF(RGNDATAHEADER);
     prd->iType = RDH_RECTANGLES;
     prd->nCount = crc;
     prd->nRgnSize = 0;
     prd->rcBound = (RCS)_rc;
 
-    hrgn = ExtCreateRegion(pvNil, size(RGNDATAHEADER) + LwMul(crc, size(RECT)), (RGNDATA *)prd);
+    hrgn = ExtCreateRegion(pvNil, SIZEOF(RGNDATAHEADER) + LwMul(crc, SIZEOF(RECT)), (RGNDATA *)prd);
     FreePpv((void **)&prd);
     return hrgn;
 #endif // WIN
@@ -1182,9 +1182,9 @@ HRGN REGN::HrgnCreate(void)
     rc = _rc;
     rc.ypTop--;
     regsc2.Init(this, &rc);
-    for (yp = _rc.ypTop, cb = size(Region);;)
+    for (yp = _rc.ypTop, cb = SIZEOF(Region);;)
     {
-        cb += size(short);
+        cb += SIZEOF(short);
         xp1 = regsc1.XpCur();
         xp2 = regsc2.XpCur();
         for (;;)
@@ -1199,23 +1199,23 @@ HRGN REGN::HrgnCreate(void)
             }
             else if (xp1 < xp2)
             {
-                cb += size(short);
+                cb += SIZEOF(short);
                 xp1 = regsc1.XpFetch();
             }
             else
             {
-                cb += size(short);
+                cb += SIZEOF(short);
                 xp2 = regsc2.XpFetch();
             }
         }
-        cb += size(short);
+        cb += SIZEOF(short);
         if (yp >= _rc.ypBottom)
             break;
         yp += regsc1.DypCur();
         regsc1.ScanNext(regsc1.DypCur());
         regsc2.ScanNext(regsc2.DypCur());
     }
-    cb += size(short);
+    cb += SIZEOF(short);
 
     if (hNil == (hrgn = (HRGN)NewHandle(cb)))
         return hNil;
