@@ -166,6 +166,15 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
+        },
+        {
+          "displayName": "SDL MSVC x86 Debug",
+          "name": "sdl",
+          "inherits": "msvc-x86-base",
+          "cacheVariables": {
+            "CMAKE_BUILD_TYPE": "Debug",
+            "3DMM_GUI": "SDL"
+          }
         }
     ]
 }
