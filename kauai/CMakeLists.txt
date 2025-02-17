@@ -316,6 +316,32 @@ target_include_directories(
     "${PROJECT_SOURCE_DIR}/kauai/src"
 )
 
+if (3DMM_GUI STREQUAL "Win32")
+    target_compile_definitions(
+        KauaiGui
+        PUBLIC
+        KAUAI_WIN32
+    )
+    set(ENABLE_KAUAI_TOOLS ON)
+elseif(3DMM_GUI STREQUAL "SDL")
+    target_compile_definitions(
+        KauaiGui
+        PUBLIC
+        KAUAI_SDL
+    )
+
+    target_link_libraries(
+        KauaiGui
+        PUBLIC
+        SDL2::SDL2
+        SDL2_ttf::SDL2_ttf
+    )
+
+    set(ENABLE_KAUAI_TOOLS OFF)
+else()
+    message(FATAL_ERROR "Invalid GUI specified: ${3DMM_GUI}")
+endif()
+
 # Dlg: Dialog support
 add_library(KauaiDlg
     "${PROJECT_SOURCE_DIR}/kauai/src/dlg.cpp"
@@ -402,6 +428,8 @@ target_link_libraries(
 )
 
 # Unit tests
+
+# Kauai unit tests
 add_executable(KauaiTest
     "${PROJECT_SOURCE_DIR}/kauai/test/kauai_test.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/test/compression_test.cpp"
@@ -420,6 +448,25 @@ gtest_discover_tests(KauaiTest)
 
 # Add a meta target to build all Kauai tools
 add_custom_target(tools)
+
+
+# Chomp compiler
+add_executable(chomp)
+target_sources(chomp
+    PRIVATE
+    "${PROJECT_SOURCE_DIR}/kauai/tools/chomp.cpp"
+)
+target_link_libraries(
+    chomp
+    PRIVATE
+    KauaiBase
+    KauaiChcm
+    KauaiSound
+    KauaiPic
+)
+add_dependencies(tools chomp)
+
+if (ENABLE_KAUAI_TOOLS)
 
 # Chelp: Help editor
 add_executable(chelp WIN32 EXCLUDE_FROM_ALL)
@@ -494,21 +541,6 @@ target_link_libraries(
 )
 add_dependencies(tools ut)
 
-# Chomp compiler
-add_executable(chomp)
-target_sources(chomp
-    PRIVATE
-    "${PROJECT_SOURCE_DIR}/kauai/tools/chomp.cpp"
-)
-target_link_libraries(
-    chomp
-    PRIVATE
-    KauaiBase
-    KauaiChcm
-    KauaiSound
-    KauaiPic
-)
-add_dependencies(tools chomp)
 
 # Chunk Editor
 add_executable(ched WIN32 EXCLUDE_FROM_ALL)
@@ -598,3 +630,5 @@ target_link_libraries(chelpdmp
     KauaiChse
 )
 add_dependencies(tools chelpdmp)
+
+endif()
