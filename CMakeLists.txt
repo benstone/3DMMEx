@@ -39,6 +39,35 @@ option(BUILD_PACKAGES "Build packages for 3DMM" ON)
 cmake_dependent_option(3DMM_PACKAGE_WIX "Generate an MSI via WiX" ON "BUILD_PACKAGES AND DEFINED ENV{WIX}" OFF)
 cmake_dependent_option(3DMM_PACKAGE_ZIP "Generate a portable ZIP" ON "BUILD_PACKAGES" OFF)
 
+
+
+# Default to Win32 on Windows, and SDL on other platforms.
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(3DMM_GUI_DEFAULT "Win32")
+else()
+    set(3DMM_GUI_DEFAULT "SDL")
+endif()
+
+# Configure GUI library
+set(3DMM_GUI "${3DMM_GUI_DEFAULT}" CACHE STRING "GUI library to use for graphics")
+set_property(CACHE 3DMM_GUI PROPERTY STRINGS "Win32" "SDL")
+
+if ("${3DMM_GUI}" STREQUAL "Win32")
+
+    if (NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        message(FATAL_ERROR "Win32 GUI only supported when compiling for Windows")
+    endif()
+
+elseif("${3DMM_GUI}" STREQUAL "SDL")
+
+    message(WARNING "SDL support does not work yet!")
+
+    find_package(SDL2 CONFIG REQUIRED)
+    find_package(SDL2_ttf CONFIG REQUIRED)
+
+endif()
+
+
 set(3DMM_AUDIOMAN_LIBRARY "Decompilation" CACHE STRING "AudioMan library to use for mixing wave sounds")
 set_property(CACHE 3DMM_AUDIOMAN_LIBRARY PROPERTY STRINGS "Original" "Decompilation" "Stub")
 
@@ -127,6 +156,9 @@ endif()
 
 add_subdirectory(kauai)
 
+# TODO: Remove if() when SDL port is more stable
+if (3DMM_GUI STREQUAL "Win32")
+
 add_subdirectory(src)
 
 
@@ -166,4 +198,6 @@ if (BUILD_PACKAGES)
     endif()
   endforeach()
   include(CPack)
+endif()
+
 endif()
