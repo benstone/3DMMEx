@@ -488,6 +488,22 @@ target_link_libraries(
 )
 add_dependencies(tools chomp)
 
+
+# Hello World test app
+add_executable(khello WIN32)
+target_sources(khello
+    PRIVATE
+    "${PROJECT_SOURCE_DIR}/kauai/test/khello/khello.cpp"
+    "${PROJECT_SOURCE_DIR}/kauai/test/khello/khello.rc"
+)
+target_link_libraries(
+    khello
+    PRIVATE
+    KauaiGui
+    KauaiDoc # TODO: should this be a dependency of KauaiGui?
+    KauaiRichText
+)
+
 if (ENABLE_KAUAI_TOOLS)
 
 # Chelp: Help editor
