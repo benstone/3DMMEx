@@ -60,7 +60,6 @@ target_sources(studio
     "${PROJECT_SOURCE_DIR}/src/studio/esl.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/mminstal.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/popup.cpp"
-    "${PROJECT_SOURCE_DIR}/src/studio/portf.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/scnsort.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/splot.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/stdiobrw.cpp"
@@ -71,6 +70,9 @@ target_sources(studio
     "${PROJECT_SOURCE_DIR}/src/studio/utest.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/utest.rc"
     "${PROJECT_SOURCE_DIR}/src/studio/utest.rc2"
+
+    # Windows
+    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/src/studio/portfwin.cpp>
 )
 
 target_include_directories(studio

@@ -10,33 +10,38 @@
 
 ***************************************************************************/
 #include "studio.h"
-#include "commctrl.h"
+#include <CommCtrl.h>
 
 ASSERTNAME
 
-/***************************************************************************
+bool FPortGetFniOpen(FNI *pfni, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle, FNI *pfniInitialDir, uint32_t grfPrevType,
+                     CNO cnoWave);
+bool FPortGetFniSave(FNI *pfni, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle, LPCTSTR lpstrDefExt, PSTN pstnDefFileName,
+                     uint32_t grfPrevType, CNO cnoWave);
 
- FPortDisplayWithIds: Display the portfolio to open or save a file. Portfolio
-                    title and filters generated using supplied string ids.
+UINT_PTR CALLBACK OpenHookProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+void OpenPreview(HWND hwnd, PGNV pgnvOff, RCS *prcsPreview);
+void RepaintPortfolio(HWND hwndCustom);
 
- Arguments: fni 			- Output FNI for file selected
-            fOpen			- fTrue if open portfolio, else save portfolio.
-            lFilterLabel	- id of portfolio filter label
-            lFilterExt		- id of portfolio filter extension
-            lTitle			- id of portfolio title
-            lpstrDefExt		- Ptr to string for default file extension for save if required.
-            pstnDefFileName - Ptr to default extension stn if required.
-            pfniInitialDir	- Ptr to initial directory fni if required.
-            grfPrevType		- Bits for types of preview required, (eg movie, sound etc) == 0 if no preview
-            cnoWave         - Wave cno for audio when portfolio is invoked
+static WNDPROC lpBtnProc;
+LRESULT CALLBACK SubClassBtnProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static WNDPROC lpPreviewProc;
+LRESULT CALLBACK SubClassPreviewProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static WNDPROC lpDlgProc;
+LRESULT CALLBACK SubClassDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
- Returns: 	TRUE	- File selected
-            FALSE	- User canceled portfolio.
+typedef struct dlginfo
+{
+    bool fIsOpen;         // fTrue if Open file, (ie not Save file)
+    bool fDrawnBkgnd;     // fTrue if portfolio background bitmap has been displayed.
+    RCS rcsDlg;           // Initial size of the portfolio common dlg window client area.
+    uint32_t grfPrevType; // Bits for types of preview required, (eg movie, sound etc) == 0 if no preview
+    CNO cnoWave;          // Wave file cno for audio when portfolio is invoked.
+} DLGINFO;
+typedef DLGINFO *PDLGINFO;
 
-***************************************************************************/
 bool FPortDisplayWithIds(FNI *pfni, bool fOpen, int32_t lFilterLabel, int32_t lFilterExt, int32_t lTitle,
-                         LPCTSTR lpstrDefExt, PSTN pstnDefFileName, FNI *pfniInitialDir, uint32_t grfPrevType,
-                         CNO cnoWave)
+                         PCSZ lpstrDefExt, PSTN pstnDefFileName, FNI *pfniInitialDir, uint32_t grfPrevType, CNO cnoWave)
 {
     STN stnTitle;
     STN stnFilterLabel;
@@ -99,21 +104,6 @@ bool FPortDisplayWithIds(FNI *pfni, bool fOpen, int32_t lFilterLabel, int32_t lF
     return fRet;
 }
 
-/***************************************************************************
-
- FPortGetFniOpen: Display the portfolio to open a file.
-
- Arguments: pfni 		- Output FNI for file selected
-            lpstrFilter	- String containing files types to filter on
-            lpstrTitle	- String containing title of portfolio
-            pfniInitialDir	- Ptr to initial directory fni if required.
-            grfPrevType	- Bits for types of preview required, (eg movie, sound etc) == 0 if no preview
-            cnoWave     - Wave cno for audio when portfolio is invoked
-
- Returns: 	TRUE	- File selected
-            FALSE	- User canceled portfolio.
-
-***************************************************************************/
 bool FPortGetFniOpen(FNI *pfni, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle, FNI *pfniInitialDir, uint32_t grfPrevType,
                      CNO cnoWave)
 {
