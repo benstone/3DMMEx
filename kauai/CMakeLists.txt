@@ -273,7 +273,7 @@ target_link_libraries(
 
 # Video: video playback
 add_library(KauaiVideo
-    "${PROJECT_SOURCE_DIR}/kauai/src/video.cpp"
+    "${PROJECT_SOURCE_DIR}/kauai/src/videowin.cpp"
 )
 target_link_libraries(
     KauaiVideo
