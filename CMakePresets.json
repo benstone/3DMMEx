@@ -110,7 +110,8 @@
       "inherits": "msvc-x86-base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "3DMM_GUI": "SDL"
+        "3DMM_GUI": "SDL",
+        "VCPKG_MANIFEST_FEATURES": "sdl"
       }
     }
   ]
