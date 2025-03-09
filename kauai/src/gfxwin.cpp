@@ -1738,9 +1738,13 @@ void GPT::DrawDib(HDRAWDIB hdd, BITMAPINFOHEADER *pbi, RCS *prcs, GDD *pgdd)
     SetBkColor(_hdc, kscrBlack);
 
     _SetClip(pgdd->prcsClip);
+#ifdef KAUAI_WIN32
     DrawDibDraw(hdd, _hdc, prcs->left, prcs->top, prcs->right - prcs->left, prcs->bottom - prcs->top, pbi, pvNil, 0, 0,
                 -1, -1, DDF_BACKGROUNDPAL);
     _Flush();
+#else  // !KAUAI_WIN32
+    Bug("DrawDib is only for Win32 video playback");
+#endif // KAUAI_WIN32
 }
 
 #ifdef DEBUG

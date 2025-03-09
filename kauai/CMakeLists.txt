@@ -274,15 +274,29 @@ target_link_libraries(
 )
 
 # Video: video playback
-add_library(KauaiVideo
-    "${PROJECT_SOURCE_DIR}/kauai/src/videowin.cpp"
-)
-target_link_libraries(
-    KauaiVideo
-    PUBLIC
-    KauaiGui
-    $<$<PLATFORM_ID:Windows>:Vfw32>
-)
+if (3DMM_GUI STREQUAL "Win32")
+    add_library(KauaiVideo
+        "${PROJECT_SOURCE_DIR}/kauai/src/videowin.cpp"
+    )
+    target_link_libraries(
+        KauaiVideo
+        PUBLIC
+        KauaiGui
+        $<$<PLATFORM_ID:Windows>:Vfw32>
+    )
+else()
+    message(WARNING "Video playback not implemented on GUI platform: ${3DMM_GUI}")
+
+    # Use stub implementation
+    add_library(KauaiVideo
+        "${PROJECT_SOURCE_DIR}/kauai/src/videostub.cpp"
+    )
+    target_link_libraries(
+        KauaiVideo
+        PUBLIC
+        KauaiGui
+    )
+endif()
 
 # GUI
 add_library(KauaiGui
