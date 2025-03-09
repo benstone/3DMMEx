@@ -24,11 +24,6 @@ END_CMD_MAP(&GVDS::FCmdAll, pvNil, kgrfcmmAll)
 
 const int32_t kcmhlGvds = kswMin; // put videos at the head of the list
 
-/***************************************************************************
-    Create a video - either an HWND based one, or just a video stream,
-    depending on fHwndBased. pgobBase is assumed to be valid for the life
-    of the video.
-***************************************************************************/
 PGVID GVID::PgvidNew(PFNI pfni, PGOB pgobBase, bool fHwndBased, int32_t hid)
 {
     AssertPo(pfni, ffniFile);
@@ -39,17 +34,11 @@ PGVID GVID::PgvidNew(PFNI pfni, PGOB pgobBase, bool fHwndBased, int32_t hid)
     return GVDS::PgvdsNew(pfni, pgobBase, hid);
 }
 
-/***************************************************************************
-    Constructor for a generic video.
-***************************************************************************/
 GVID::GVID(int32_t hid) : GVID_PAR(hid)
 {
     AssertBaseThis(0);
 }
 
-/***************************************************************************
-    Constructor for video stream class.
-***************************************************************************/
 GVDS::GVDS(int32_t hid) : GVDS_PAR(hid)
 {
     AssertBaseThis(0);
@@ -59,9 +48,6 @@ GVDS::GVDS(int32_t hid) : GVDS_PAR(hid)
 #endif // WIN
 }
 
-/***************************************************************************
-    Destructor for video stream class.
-***************************************************************************/
 GVDS::~GVDS(void)
 {
     AssertBaseThis(0);
@@ -80,9 +66,6 @@ GVDS::~GVDS(void)
 #endif // WIN
 }
 
-/***************************************************************************
-    Initialize a video stream object.
-***************************************************************************/
 bool GVDS::_FInit(PFNI pfni, PGOB pgobBase)
 {
     AssertBaseThis(0);
@@ -137,9 +120,6 @@ bool GVDS::_FInit(PFNI pfni, PGOB pgobBase)
 #endif //! WIN
 }
 
-/***************************************************************************
-    Create a new video stream object.
-***************************************************************************/
 PGVDS GVDS::PgvdsNew(PFNI pfni, PGOB pgobBase, int32_t hid)
 {
     AssertPo(pfni, ffniFile);
@@ -160,28 +140,18 @@ PGVDS GVDS::PgvdsNew(PFNI pfni, PGOB pgobBase, int32_t hid)
     return pgvds;
 }
 
-/***************************************************************************
-    Return the number of frames in the video.
-***************************************************************************/
 int32_t GVDS::NfrMac(void)
 {
     AssertThis(0);
     return _nfrMac;
 }
 
-/***************************************************************************
-    Return the current frame of the video.
-***************************************************************************/
 int32_t GVDS::NfrCur(void)
 {
     AssertThis(0);
     return _nfrCur;
 }
 
-/***************************************************************************
-    Advance to a particular frame.  If we are playing, stop playing.  This
-    only changes internal state and doesn't mark anything.
-***************************************************************************/
 void GVDS::GotoNfr(int32_t nfr)
 {
     AssertThis(0);
@@ -191,20 +161,12 @@ void GVDS::GotoNfr(int32_t nfr)
     _nfrCur = nfr;
 }
 
-/***************************************************************************
-    Return whether or not the video is playing.
-***************************************************************************/
 bool GVDS::FPlaying(void)
 {
     AssertThis(0);
     return _fPlaying;
 }
 
-/***************************************************************************
-    Start playing at the current frame.  This assumes the gob is valid
-    until the video is stopped or nuked.  The gob should call this video's
-    Draw method in its Draw method.
-***************************************************************************/
 bool GVDS::FPlay(RC *prc)
 {
     AssertThis(0);
@@ -224,9 +186,6 @@ bool GVDS::FPlay(RC *prc)
     return fTrue;
 }
 
-/***************************************************************************
-    Set the rectangle to play into.
-***************************************************************************/
 void GVDS::SetRcPlay(RC *prc)
 {
     AssertThis(0);
@@ -238,9 +197,6 @@ void GVDS::SetRcPlay(RC *prc)
         _rcPlay = *prc;
 }
 
-/***************************************************************************
-    Stop playing.
-***************************************************************************/
 void GVDS::Stop(void)
 {
     AssertThis(0);
@@ -249,9 +205,6 @@ void GVDS::Stop(void)
     _fPlaying = fFalse;
 }
 
-/***************************************************************************
-    Intercepts all commands, so we get to play our movie no matter what.
-***************************************************************************/
 bool GVDS::FCmdAll(PCMD pcmd)
 {
     AssertThis(0);
@@ -283,9 +236,6 @@ bool GVDS::FCmdAll(PCMD pcmd)
     return fFalse;
 }
 
-/***************************************************************************
-    Call this to draw the current state of the video image.
-***************************************************************************/
 void GVDS::Draw(PGNV pgnv, RC *prc)
 {
     AssertThis(0);
@@ -305,9 +255,6 @@ void GVDS::Draw(PGNV pgnv, RC *prc)
 #endif // WIN
 }
 
-/***************************************************************************
-    Get the normal rectangle for the movie (top-left at (0, 0)).
-***************************************************************************/
 void GVDS::GetRc(RC *prc)
 {
     AssertThis(0);
@@ -317,9 +264,6 @@ void GVDS::GetRc(RC *prc)
 }
 
 #ifdef DEBUG
-/***************************************************************************
-    Assert the validity of a GVDS.
-***************************************************************************/
 void GVDS::AssertValid(uint32_t grf)
 {
     GVDS_PAR::AssertValid(0);
@@ -328,9 +272,6 @@ void GVDS::AssertValid(uint32_t grf)
 }
 #endif // DEBUG
 
-/***************************************************************************
-    Create a new video window.
-***************************************************************************/
 PGVDW GVDW::PgvdwNew(PFNI pfni, PGOB pgobBase, int32_t hid)
 {
     AssertPo(pfni, ffniFile);
@@ -351,17 +292,11 @@ PGVDW GVDW::PgvdwNew(PFNI pfni, PGOB pgobBase, int32_t hid)
     return pgvdw;
 }
 
-/***************************************************************************
-    Constructor for a video window.
-***************************************************************************/
 GVDW::GVDW(int32_t hid) : GVDW_PAR(hid)
 {
     AssertBaseThis(0);
 }
 
-/***************************************************************************
-    Destructor for a video window.
-***************************************************************************/
 GVDW::~GVDW(void)
 {
     AssertBaseThis(0);
@@ -381,9 +316,6 @@ GVDW::~GVDW(void)
 #endif // WIN
 }
 
-/***************************************************************************
-    Initialize the GVDW.
-***************************************************************************/
 bool GVDW::_FInit(PFNI pfni, PGOB pgobBase)
 {
     AssertPo(pfni, ffniFile);
@@ -463,9 +395,6 @@ LFail:
     return fFalse;
 }
 
-/***************************************************************************
-    Return the number of frames in the video.
-***************************************************************************/
 int32_t GVDW::NfrMac(void)
 {
     AssertThis(0);
@@ -473,9 +402,6 @@ int32_t GVDW::NfrMac(void)
     return _nfrMac;
 }
 
-/***************************************************************************
-    Return the current frame of the video.
-***************************************************************************/
 int32_t GVDW::NfrCur(void)
 {
     AssertThis(0);
@@ -501,10 +427,6 @@ int32_t GVDW::NfrCur(void)
 #endif // MAC
 }
 
-/***************************************************************************
-    Advance to a particular frame.  If we are playing, stop playing.  This
-    only changes internal state and doesn't mark anything.
-***************************************************************************/
 void GVDW::GotoNfr(int32_t nfr)
 {
     AssertThis(0);
@@ -526,9 +448,6 @@ void GVDW::GotoNfr(int32_t nfr)
 #endif        // MAC
 }
 
-/***************************************************************************
-    Return whether or not the video is playing.
-***************************************************************************/
 bool GVDW::FPlaying(void)
 {
     AssertThis(0);
@@ -557,11 +476,6 @@ bool GVDW::FPlaying(void)
     return _fPlaying;
 }
 
-/***************************************************************************
-    Start playing at the current frame.  This assumes the gob is valid
-    until the video is stopped or nuked.  The gob should call this video's
-    Draw method in its Draw method.
-***************************************************************************/
 bool GVDW::FPlay(RC *prc)
 {
     AssertThis(0);
@@ -595,9 +509,6 @@ bool GVDW::FPlay(RC *prc)
 #endif // MAC
 }
 
-/***************************************************************************
-    Set the rectangle to play into.
-***************************************************************************/
 void GVDW::SetRcPlay(RC *prc)
 {
     AssertThis(0);
@@ -609,9 +520,6 @@ void GVDW::SetRcPlay(RC *prc)
         _rcPlay = *prc;
 }
 
-/***************************************************************************
-    Stop playing.
-***************************************************************************/
 void GVDW::Stop(void)
 {
     AssertThis(0);
@@ -632,9 +540,6 @@ void GVDW::Stop(void)
     _fPlaying = fFalse;
 }
 
-/***************************************************************************
-    Call this to draw the current state of the video image.
-***************************************************************************/
 void GVDW::Draw(PGNV pgnv, RC *prc)
 {
     AssertThis(0);
@@ -644,9 +549,6 @@ void GVDW::Draw(PGNV pgnv, RC *prc)
     _SetRc();
 }
 
-/***************************************************************************
-    Position the hwnd associated with the video to match the GOB's position.
-***************************************************************************/
 void GVDW::_SetRc(void)
 {
     AssertThis(0);
@@ -689,9 +591,6 @@ void GVDW::_SetRc(void)
     }
 }
 
-/***************************************************************************
-    Get the normal rectangle for the movie (top-left at (0, 0)).
-***************************************************************************/
 void GVDW::GetRc(RC *prc)
 {
     AssertThis(0);
@@ -701,9 +600,6 @@ void GVDW::GetRc(RC *prc)
 }
 
 #ifdef DEBUG
-/***************************************************************************
-    Assert the validity of a GVDW.
-***************************************************************************/
 void GVDW::AssertValid(uint32_t grf)
 {
     GVDW_PAR::AssertValid(0);
