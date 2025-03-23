@@ -90,8 +90,8 @@ PGOB GOB::PgobFromHwnd(HWND hwnd)
 ***************************************************************************/
 HWND GOB::HwndMdiActive(void)
 {
-    if (vwig.hwndClient == hNil)
-        return hNil;
+    if (vwig.hwndClient == kwndNil)
+        return (KWND)kwndNil;
 
     return (HWND)SendMessage(vwig.hwndClient, WM_MDIGETACTIVE, 0, 0);
 }

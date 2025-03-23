@@ -198,7 +198,7 @@ void APPB::_DispatchEvt(PEVT pevt)
 
     CMD cmd;
 
-    if (hNil != vwig.hwndClient && TranslateMDISysAccel(vwig.hwndClient, pevt) ||
+    if (kwndNil != vwig.hwndClient && TranslateMDISysAccel(vwig.hwndClient, pevt) ||
         hNil != vwig.haccel && TranslateAccelerator(vwig.hwndApp, vwig.haccel, pevt))
     {
         return;
@@ -383,7 +383,7 @@ bool APPB::_FFrameWndProc(HWND hwnd, UINT wm, WPARAM wParam, LPARAM lw, int32_t 
     case WM_CHANGECBCHAIN:
         if ((HWND)wParam == vwig.hwndNextViewer)
             vwig.hwndNextViewer = (HWND)lw;
-        else if (hNil != vwig.hwndNextViewer)
+        else if (kwndNil != vwig.hwndNextViewer)
             SendMessage(vwig.hwndNextViewer, wm, wParam, lw);
         return fTrue;
 
