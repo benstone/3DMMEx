@@ -228,7 +228,7 @@ bool SCEG::_FExecOp(int32_t op)
         dxp = _LwPop();
         dyp = _LwPop();
         // REVIEW shonk: should we handle hwnd based gob's?
-        if (!_fError && pvNil != (pgob = _PgobFromHid(hid)) && hNil == pgob->Hwnd())
+        if (!_fError && pvNil != (pgob = _PgobFromHid(hid)) && kwndNil == pgob->Hwnd())
         {
             RC rc;
 
@@ -250,7 +250,7 @@ bool SCEG::_FExecOp(int32_t op)
         dxp = _LwPop();
         dyp = _LwPop();
         // REVIEW shonk: should we handle hwnd based gob's?
-        if (!_fError && pvNil != (pgob = _PgobFromHid(hid)) && hNil == pgob->Hwnd())
+        if (!_fError && pvNil != (pgob = _PgobFromHid(hid)) && kwndNil == pgob->Hwnd())
         {
             RC rc;
 
@@ -271,7 +271,7 @@ bool SCEG::_FExecOp(int32_t op)
         dxp = _LwPop();
         dyp = _LwPop();
         // REVIEW shonk: should we handle hwnd based gob's?
-        if (!_fError && pvNil != (pgob = _PgobFromHid(hid)) && hNil == pgob->Hwnd())
+        if (!_fError && pvNil != (pgob = _PgobFromHid(hid)) && kwndNil == pgob->Hwnd())
         {
             RC rc;
 

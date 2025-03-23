@@ -36,11 +36,11 @@ struct WIG
     LPTSTR pszCmdLine;
     int wShow;
 
-    HWND hwndApp;
+    KWND hwndApp;
     HDC hdcApp;
-    HWND hwndClient;      // MDI client window
+    KWND hwndClient;      // MDI client window
     HACCEL haccel;        // main accelerator table
-    HWND hwndNextViewer;  // next clipboard viewer
+    KWND hwndNextViewer;  // next clipboard viewer
     int32_t lwThreadMain; // main thread
 };
 extern WIG vwig;
@@ -73,7 +73,7 @@ class APPB : public APPB_PAR
     // marked region - for fast updating
     struct MKRGN
     {
-        HWND hwnd;
+        KWND hwnd;
         PREGN pregn;
     };
 
@@ -247,14 +247,14 @@ class APPB : public APPB_PAR
     virtual PCMH PcmhFromHid(int32_t hid);
 
     // drawing
-    virtual void UpdateHwnd(HWND hwnd, RC *prc, uint32_t grfapp = fappNil);
+    virtual void UpdateHwnd(KWND hwnd, RC *prc, uint32_t grfapp = fappNil);
     virtual void MarkRc(RC *prc, PGOB pgobCoo);
     virtual void MarkRegn(PREGN pregn, PGOB pgobCoo);
     virtual void UnmarkRc(RC *prc, PGOB pgobCoo);
     virtual void UnmarkRegn(PREGN pregn, PGOB pgobCoo);
-    virtual bool FGetMarkedRc(HWND hwnd, RC *prc);
+    virtual bool FGetMarkedRc(KWND hwnd, RC *prc);
     virtual void UpdateMarked(void);
-    virtual void InvalMarked(HWND hwnd);
+    virtual void InvalMarked(KWND hwnd);
     virtual void SetGft(int32_t gft, int32_t lwGft, uint32_t dts = kdtsSecond, PGL pglclr = pvNil, ACR acr = kacrClear);
 
     // default fonts

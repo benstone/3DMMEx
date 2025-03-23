@@ -215,7 +215,7 @@ void APP::GetStnAppName(PSTN pstn)
     Update the given window.  *prc is the bounding rectangle of the update
     region.
 ***************************************************************************/
-void APP::UpdateHwnd(HWND hwnd, RC *prc, uint32_t grfapp)
+void APP::UpdateHwnd(KWND hwnd, RC *prc, uint32_t grfapp)
 {
     AssertThis(0);
     PGOB pgob;

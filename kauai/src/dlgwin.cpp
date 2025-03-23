@@ -296,7 +296,7 @@ INT_PTR CALLBACK _FDlgCore(HWND hdlg, UINT msg, WPARAM w, LPARAM lw)
         rcDlg = rcs;
 
         rcDsp.Set(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-        if (hNil != vwig.hwndApp)
+        if (kwndNil != vwig.hwndApp)
         {
             RC rcApp;
 
@@ -352,7 +352,7 @@ INT_PTR CALLBACK _FDlgCore(HWND hdlg, UINT msg, WPARAM w, LPARAM lw)
             {
                 if (idit != ivNil && !pdlg->FGetValues(0, pdlg->IvMac()))
                     idit = ivNil;
-                pdlg->_pgob->FAttachHwnd(hNil);
+                pdlg->_pgob->FAttachHwnd(kwndNil);
                 pdlg->_pgob->Release();
                 pdlg->_pgob = pvNil;
             }

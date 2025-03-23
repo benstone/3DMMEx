@@ -148,6 +148,7 @@ typedef class BLCK *PBLCK;
 #include "utilrnd.h"
 #include "crf.h"
 #include "codec.h"
+#include "kwnd.h"
 
 // optional
 #include "stream.h"

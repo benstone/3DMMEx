@@ -234,7 +234,7 @@ class APP : public APP_PAR
     virtual int32_t DypTextDef(void) override;
     virtual tribool TQuerySaveDoc(PDOCB pdocb, bool fForce) override;
     virtual void Quit(bool fForce) override;
-    virtual void UpdateHwnd(HWND hwnd, RC *prc, uint32_t grfapp = fappNil) override;
+    virtual void UpdateHwnd(KWND hwnd, RC *prc, uint32_t grfapp = fappNil) override;
     virtual void Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef) override;
 #ifdef BUG1085
     virtual void HideCurs(void) override;

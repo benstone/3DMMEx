@@ -55,7 +55,7 @@ class APP : public APP_PAR
 
   public:
     virtual void GetStnAppName(PSTN pstn) override;
-    virtual void UpdateHwnd(HWND hwnd, RC *prc, uint32_t grfapp = fappNil) override;
+    virtual void UpdateHwnd(KWND hwnd, RC *prc, uint32_t grfapp = fappNil) override;
 
     virtual bool FCmdOpen(PCMD pcmd);
     virtual bool FCmdLoadResFile(PCMD pcmd);

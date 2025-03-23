@@ -127,7 +127,7 @@ class GOB : public GOB_PAR
   private:
     static PGOB _pgobScreen;
 
-    HWND _hwnd;   // the OS window (may be nil)
+    KWND _hwnd;   // the OS window (may be nil)
     PGPT _pgpt;   // the graphics port (may be shared with _pgobPar)
     PCURS _pcurs; // the cursor to show over this gob
 
@@ -145,7 +145,7 @@ class GOB : public GOB_PAR
     PGL _pglrtvm;
 
     void _SetRcCur(void);
-    HWND _HwndGetDptFromCoo(PT *pdpt, int32_t coo);
+    KWND _HwndGetDptFromCoo(PT *pdpt, int32_t coo);
 
   protected:
     static int32_t _ginDefGob;
@@ -158,11 +158,11 @@ class GOB : public GOB_PAR
 
     ~GOB(void);
 
-    static HWND _HwndNewMdi(PSTN pstnTitle);
-    static void _DestroyHwnd(HWND hwnd);
+    static KWND _HwndNewMdi(PSTN pstnTitle);
+    static void _DestroyHwnd(KWND hwnd);
 
     void _Init(PGCB pgcb);
-    HWND _HwndGetRc(RC *prc);
+    KWND _HwndGetRc(RC *prc);
     virtual void _NewRc(void)
     {
     }
@@ -177,12 +177,12 @@ class GOB : public GOB_PAR
     {
         return _pgobScreen;
     }
-    static PGOB PgobFromHwnd(HWND hwnd);
+    static PGOB PgobFromHwnd(KWND hwnd);
     static PGOB PgobFromClsScr(int32_t cls);
     static PGOB PgobFromHidScr(int32_t hid);
-    static void MakeHwndActive(HWND hwnd);
-    static void ActivateHwnd(HWND hwnd, bool fActive);
-    static HWND HwndMdiActive(void);
+    static void MakeHwndActive(KWND hwnd);
+    static void ActivateHwnd(KWND hwnd, bool fActive);
+    static KWND HwndMdiActive(void);
     static PGOB PgobMdiActive(void);
     static PGOB PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal = pvNil);
     static int32_t GinDefault(void)
@@ -195,13 +195,13 @@ class GOB : public GOB_PAR
     virtual void Release(void) override;
 
     // hwnd stuff
-    bool FAttachHwnd(HWND hwnd);
+    bool FAttachHwnd(KWND hwnd);
     bool FCreateAndAttachMdi(PSTN pstnTitle);
-    HWND Hwnd(void)
+    KWND Hwnd(void)
     {
         return _hwnd;
     }
-    HWND HwndContainer(void);
+    KWND HwndContainer(void);
     virtual void GetMinMax(RC *prcMinMax);
     void SetHwndName(PSTN pstn);
 

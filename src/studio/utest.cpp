@@ -4250,7 +4250,7 @@ void APP::_FastUpdate(PGOB pgob, PREGN pregnClip, uint32_t grfapp, PGPT pgpt)
 /***************************************************************************
     Override default UpdateHwnd to optionally skip offscreen buffer
 ***************************************************************************/
-void APP::UpdateHwnd(HWND hwnd, RC *prc, uint32_t grfapp)
+void APP::UpdateHwnd(KWND hwnd, RC *prc, uint32_t grfapp)
 {
     AssertBaseThis(0); // APP may not be completely valid
 

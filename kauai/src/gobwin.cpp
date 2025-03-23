@@ -46,15 +46,15 @@ bool GOB::FInitScreen(uint32_t grfgob, int32_t ginDef)
 /***************************************************************************
     Make the GOB a wrapper for the given system window.
 ***************************************************************************/
-bool GOB::FAttachHwnd(HWND hwnd)
+bool GOB::FAttachHwnd(KWND hwnd)
 {
-    if (_hwnd != hNil)
+    if (_hwnd != kwndNil)
     {
         ReleasePpo(&_pgpt);
         // don't destroy the hwnd - the caller must do that
-        _hwnd = hNil;
+        _hwnd = kwndNil;
     }
-    if (hwnd != hNil)
+    if (hwnd != kwndNil)
     {
         if (pvNil == (_pgpt = GPT::PgptNewHwnd(hwnd)))
             return fFalse;
@@ -67,7 +67,7 @@ bool GOB::FAttachHwnd(HWND hwnd)
 /***************************************************************************
     Find the GOB associated with the given hwnd (if there is one).
 ***************************************************************************/
-PGOB GOB::PgobFromHwnd(HWND hwnd)
+PGOB GOB::PgobFromHwnd(KWND hwnd)
 {
     // NOTE: we used to use SetProp and GetProp for this, but profiling
     // indicated that GetProp is very slow.
@@ -88,25 +88,25 @@ PGOB GOB::PgobFromHwnd(HWND hwnd)
 /***************************************************************************
     Return the active MDI window.
 ***************************************************************************/
-HWND GOB::HwndMdiActive(void)
+KWND GOB::HwndMdiActive(void)
 {
     if (vwig.hwndClient == kwndNil)
         return (KWND)kwndNil;
 
-    return (HWND)SendMessage(vwig.hwndClient, WM_MDIGETACTIVE, 0, 0);
+    return (KWND)((HWND)SendMessage(vwig.hwndClient, WM_MDIGETACTIVE, 0, 0));
 }
 
 /***************************************************************************
     Creates a new MDI window and returns it.  This is normally then
     attached to a gob.
 ***************************************************************************/
-HWND GOB::_HwndNewMdi(PSTN pstnTitle)
+KWND GOB::_HwndNewMdi(PSTN pstnTitle)
 {
     AssertPo(pstnTitle, 0);
-    HWND hwnd, hwndT;
+    KWND hwnd, hwndT;
     int32_t lwStyle;
 
-    if (vwig.hwndClient == hNil)
+    if (vwig.hwndClient == kwndNil)
     {
         // create the client first
         CLIENTCREATESTRUCT ccs;
@@ -118,27 +118,27 @@ HWND GOB::_HwndNewMdi(PSTN pstnTitle)
         Assert(rcs.left == 0 && rcs.top == 0, 0);
         vwig.hwndClient = CreateWindow(PszLit("MDICLIENT"), NULL, WS_CHILD | WS_CLIPCHILDREN | WS_VISIBLE, 0, 0,
                                        rcs.right, rcs.bottom, vwig.hwndApp, NULL, vwig.hinst, (LPVOID)&ccs);
-        if (vwig.hwndClient == hNil)
-            return hNil;
+        if (vwig.hwndClient == kwndNil)
+            return kwndNil;
     }
 
     lwStyle = MDIS_ALLCHILDSTYLES | WS_CHILD | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU | WS_CAPTION |
               WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
     hwndT = HwndMdiActive();
-    if (hNil == hwndT || IsZoomed(hwndT))
+    if (kwndNil == hwndT || IsZoomed(hwndT))
         lwStyle |= WS_MAXIMIZE;
 
     hwnd = CreateMDIWindow(PszLit("MDI"), pstnTitle->Psz(), lwStyle, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
                            CW_USEDEFAULT, vwig.hwndClient, vwig.hinst, 0L);
     if (hNil != hwnd && pvNil != vpmubCur)
-        vpmubCur->FAddListCid(cidChooseWnd, (uintptr_t)hwnd, pstnTitle);
+        vpmubCur->FAddListCid(cidChooseWnd, (uintptr_t)(HWND)hwnd, pstnTitle);
     return hwnd;
 }
 
 /***************************************************************************
     Destroy an hwnd.
 ***************************************************************************/
-void GOB::_DestroyHwnd(HWND hwnd)
+void GOB::_DestroyHwnd(KWND hwnd)
 {
     if (hwnd == vwig.hwndApp)
     {
@@ -148,8 +148,8 @@ void GOB::_DestroyHwnd(HWND hwnd)
     if (GetParent(hwnd) == vwig.hwndClient && vwig.hwndClient != hNil)
     {
         if (pvNil != vpmubCur)
-            vpmubCur->FRemoveListCid(cidChooseWnd, (uintptr_t)hwnd);
-        SendMessage(vwig.hwndClient, WM_MDIDESTROY, (WPARAM)hwnd, 0);
+            vpmubCur->FRemoveListCid(cidChooseWnd, (uintptr_t)(HWND)hwnd);
+        SendMessage(vwig.hwndClient, WM_MDIDESTROY, (WPARAM)(HWND)hwnd, 0);
     }
     else
         DestroyWindow(hwnd);
@@ -211,14 +211,14 @@ void GOB::Clean(void)
 ***************************************************************************/
 void GOB::SetHwndName(PSTN pstn)
 {
-    if (hNil == _hwnd)
+    if (kwndNil == _hwnd)
     {
         Bug("GOB doesn't have an hwnd");
         return;
     }
     if (pvNil != vpmubCur)
     {
-        vpmubCur->FChangeListCid(cidChooseWnd, (uintptr_t)_hwnd, pvNil, (uintptr_t)_hwnd, pstn);
+        vpmubCur->FChangeListCid(cidChooseWnd, (uintptr_t)(HWND)_hwnd, pvNil, (uintptr_t)(HWND)_hwnd, pstn);
     }
     SetWindowText(_hwnd, pstn->Psz());
 }
@@ -226,8 +226,8 @@ void GOB::SetHwndName(PSTN pstn)
 /***************************************************************************
     If this is one of our MDI windows, make it the active MDI window.
 ***************************************************************************/
-void GOB::MakeHwndActive(HWND hwnd)
+void GOB::MakeHwndActive(KWND hwnd)
 {
     if (IsWindow(hwnd) && GetParent(hwnd) == vwig.hwndClient && vwig.hwndClient != hNil)
-        SendMessage(vwig.hwndClient, WM_MDIACTIVATE, (WPARAM)hwnd, 0);
+        SendMessage(vwig.hwndClient, WM_MDIACTIVATE, (WPARAM)(HWND)hwnd, 0);
 }

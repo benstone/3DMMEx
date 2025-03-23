@@ -165,7 +165,7 @@ class GVDW : public GVDW_PAR
     ASSERT
 
   protected:
-    HWND _hwndMovie;
+    KWND _hwndMovie;
     int32_t _lwDevice;
     int32_t _dxp;
     int32_t _dyp;

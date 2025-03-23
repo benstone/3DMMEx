@@ -58,7 +58,7 @@ void GOB::ShutDown(void)
 {
     while (pvNil != _pgobScreen)
     {
-        _pgobScreen->FAttachHwnd(hNil);
+        _pgobScreen->FAttachHwnd(kwndNil);
 
         // freeing the _pgobScreen also updates _pgobScreen to its sibling.
         // _pgobScreen is really the root of the forest.
@@ -171,7 +171,7 @@ GOB::~GOB(void)
     // nuke its port and hwnd
     if (pvNil != _pgpt && (pvNil == _pgobPar || _pgpt != _pgobPar->_pgpt))
         ReleasePpo(&_pgpt);
-    if (_hwnd != hNil)
+    if (_hwnd != kwndNil)
         _DestroyHwnd(_hwnd);
     ReleasePpo(&_pglrtvm);
     ReleasePpo(&_pcurs);
@@ -182,7 +182,7 @@ GOB::~GOB(void)
     We inform the entire gob subtree for the hwnd so individual elements
     can do whatever is necessary.  This is a static member function.
 ***************************************************************************/
-void GOB::ActivateHwnd(HWND hwnd, bool fActive)
+void GOB::ActivateHwnd(KWND hwnd, bool fActive)
 {
     PGOB pgob;
 
@@ -293,7 +293,7 @@ void GOB::InvalRc(RC *prc, int32_t gin)
     if (rc.FEmpty())
         return;
 
-    for (pgob = this; pvNil != pgob && pgob->_hwnd == hNil; pgob = pgob->_pgobPar)
+    for (pgob = this; pvNil != pgob && pgob->_hwnd == kwndNil; pgob = pgob->_pgobPar)
     {
         rc.Offset(pgob->_rcCur.xpLeft, pgob->_rcCur.ypTop);
     }
@@ -353,7 +353,7 @@ void GOB::ValidRc(RC *prc, int32_t gin)
     if (rc.FEmpty())
         return;
 
-    for (pgob = this; pvNil != pgob && pgob->_hwnd == hNil; pgob = pgob->_pgobPar)
+    for (pgob = this; pvNil != pgob && pgob->_hwnd == kwndNil; pgob = pgob->_pgobPar)
     {
         rc.Offset(pgob->_rcCur.xpLeft, pgob->_rcCur.ypTop);
     }
@@ -401,7 +401,7 @@ bool GOB::FGetRcInval(RC *prc, int32_t gin)
     if (rc.FEmpty() || ginNil == gin)
         return fFalse;
 
-    for (pgob = this; pvNil != pgob && pgob->_hwnd == hNil; pgob = pgob->_pgobPar)
+    for (pgob = this; pvNil != pgob && pgob->_hwnd == kwndNil; pgob = pgob->_pgobPar)
     {
         dpt.Offset(pgob->_rcCur.xpLeft, pgob->_rcCur.ypTop);
     }
@@ -480,7 +480,7 @@ void GOB::Scroll(RC *prc, int32_t dxp, int32_t dyp, int32_t gin, RC *prcBad1, RC
     if (pvNil != prc && !rc.FIntersect(prc))
         return;
 
-    for (pgob = this; pvNil != pgob && pgob->_hwnd == hNil; pgob = pgob->_pgobPar)
+    for (pgob = this; pvNil != pgob && pgob->_hwnd == kwndNil; pgob = pgob->_pgobPar)
     {
         dpt.Offset(pgob->_rcCur.xpLeft, pgob->_rcCur.ypTop);
     }
@@ -945,7 +945,7 @@ void GOB::GetPos(RC *prcAbs, RC *prcRel)
 void GOB::SetRcFromHwnd(void)
 {
     AssertThis(0);
-    Assert(_hwnd != hNil, "no hwnd");
+    Assert(_hwnd != kwndNil, "no hwnd");
     _SetRcCur();
 }
 
@@ -981,10 +981,10 @@ void GOB::GetRcVis(RC *prc, int32_t coo)
     Get the rectangle for the gob in cooHwnd coordinates and return the
     enclosing hwnd (if there is one).  This is a protected API.
 ***************************************************************************/
-HWND GOB::_HwndGetRc(RC *prc)
+KWND GOB::_HwndGetRc(RC *prc)
 {
     PT dpt;
-    HWND hwnd;
+    KWND hwnd;
 
     *prc = _rcCur;
     hwnd = _HwndGetDptFromCoo(&dpt, cooHwnd);
@@ -995,18 +995,18 @@ HWND GOB::_HwndGetRc(RC *prc)
 /***************************************************************************
     Return the hwnd that contains this GOB.
 ***************************************************************************/
-HWND GOB::HwndContainer(void)
+KWND GOB::HwndContainer(void)
 {
     AssertThis(0);
     PGOB pgob = this;
 
     while (pvNil != pgob)
     {
-        if (hNil != pgob->_hwnd)
+        if (kwndNil != pgob->_hwnd)
             return pgob->_hwnd;
         pgob = pgob->_pgobPar;
     }
-    return hNil;
+    return kwndNil;
 }
 
 /***************************************************************************
@@ -1048,10 +1048,10 @@ void GOB::MapRc(RC *prc, int32_t cooSrc, int32_t cooDst)
     If coo is cooHwnd or cooGlobal, also return the containing hwnd
     (otherwise return hNil).
 ***************************************************************************/
-HWND GOB::_HwndGetDptFromCoo(PT *pdpt, int32_t coo)
+KWND GOB::_HwndGetDptFromCoo(PT *pdpt, int32_t coo)
 {
     PGOB pgob, pgobT;
-    HWND hwnd = hNil;
+    KWND hwnd = kwndNil;
 
     switch (coo)
     {
@@ -1084,7 +1084,7 @@ HWND GOB::_HwndGetDptFromCoo(PT *pdpt, int32_t coo)
         }
         if (pvNil != pgob)
             hwnd = pgob->_hwnd;
-        if (cooGlobal == coo && hNil != hwnd)
+        if (cooGlobal == coo && kwndNil != hwnd)
         {
             // Map from Hwnd to screen
             PTS pts;
@@ -1809,7 +1809,7 @@ int32_t GOB::LwState(void)
 void GOB::AssertValid(uint32_t grf)
 {
     GOB_PAR::AssertValid(0);
-    if (hNil != _hwnd)
+    if (kwndNil != _hwnd)
     {
         Assert(0 == _rcCur.xpLeft && 0 == _rcCur.ypTop, "_hwnd based gob not at (0, 0)");
     }

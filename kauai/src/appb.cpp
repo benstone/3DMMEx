@@ -752,7 +752,7 @@ void APPB::TopOfLoop(void)
         gte.Init(GOB::PgobScreen(), fgteNil);
         while (gte.FNextGob(&pgob, &grfgte, fgteNil))
         {
-            if ((grfgte & fgtePre) && pgob->Hwnd() != hNil)
+            if ((grfgte & fgtePre) && pgob->Hwnd() != kwndNil)
                 pgob->InvalRc(pvNil);
         }
     }
@@ -769,10 +769,10 @@ void APPB::TopOfLoop(void)
     Update the given window.  *prc is the bounding rectangle of the update
     region.
 ***************************************************************************/
-void APPB::UpdateHwnd(HWND hwnd, RC *prc, uint32_t grfapp)
+void APPB::UpdateHwnd(KWND hwnd, RC *prc, uint32_t grfapp)
 {
     AssertThis(0);
-    Assert(hNil != hwnd, "nil hwnd in UpdateHwnd");
+    Assert(kwndNil != hwnd, "nil hwnd in UpdateHwnd");
     AssertVarMem(prc);
 
     PGOB pgob;
@@ -1080,10 +1080,10 @@ void APPB::_UnmarkRegnRc(PREGN pregn, RC *prc, PGOB pgobCoo)
 /***************************************************************************
     Get the bounding rectangle of any marked portion of the given hwnd.
 ***************************************************************************/
-bool APPB::FGetMarkedRc(HWND hwnd, RC *prc)
+bool APPB::FGetMarkedRc(KWND hwnd, RC *prc)
 {
     AssertThis(0);
-    Assert(hNil != hwnd, "bad hwnd");
+    Assert(kwndNil != hwnd, "bad hwnd");
     AssertVarMem(prc);
 
     MKRGN mkrgn;
@@ -1109,10 +1109,10 @@ bool APPB::FGetMarkedRc(HWND hwnd, RC *prc)
     and invalidate it.  This is called when we get a system paint/update
     event.
 ***************************************************************************/
-void APPB::InvalMarked(HWND hwnd)
+void APPB::InvalMarked(KWND hwnd)
 {
     AssertThis(0);
-    Assert(hNil != hwnd, "bad hwnd");
+    Assert(kwndNil != hwnd, "bad hwnd");
 
     int32_t imkrgn;
     MKRGN mkrgn;
@@ -1180,7 +1180,7 @@ void APPB::_FastUpdate(PGOB pgob, PREGN pregnClip, uint32_t grfapp, PGPT pgpt)
         return;
 
     fOffscreen = (FPure(grfapp & fappOffscreen) || (_fOffscreen && !(grfapp & fappOnscreen))) && pvNil == pgpt &&
-                 hNil != pgob->Hwnd() && pvNil != (pgpt = _PgptEnsure(&rc));
+                 kwndNil != pgob->Hwnd() && pvNil != (pgpt = _PgptEnsure(&rc));
 
     pgob->DrawTreeRgn(pgpt, pvNil, pregnClip, fgobUseVis);
 
