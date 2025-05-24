@@ -44,9 +44,9 @@ bool GOB::FInitScreen(uint32_t grfgob, int32_t ginDef)
 ***************************************************************************/
 bool GOB::FAttachHwnd(KWND hwnd)
 {
-    RawRtn();
+    // TODO: implement this
 
-    return fFalse;
+    return fTrue;
 }
 
 /***************************************************************************
@@ -116,7 +116,7 @@ void GOB::GetPtMouse(PT *ppt, bool *pfDown)
 {
     AssertThis(0);
 
-    RawRtn();
+    // TODO: implement this
 }
 
 /***************************************************************************
