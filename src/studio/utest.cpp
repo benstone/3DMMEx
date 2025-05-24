@@ -926,7 +926,18 @@ bool APP::_FInitOS(void)
 {
     AssertBaseThis(0);
 
-#ifdef WIN
+#if defined(KAUAI_SDL)
+
+    if (!(FPure(APP_PAR::_FInitOS())))
+    {
+        return fFalse;
+    }
+
+    // TODO: Emulate the accelerator table used for keyboard shortcuts
+
+    _fMainWindowCreated = fTrue;
+
+#elif defined(KAUAI_WIN32)
     int32_t dxpWindow;
     int32_t dypWindow;
     int32_t xpWindow;
@@ -985,10 +996,9 @@ bool APP::_FInitOS(void)
 
     ShowWindow(vwig.hwndApp, vwig.wShow);
     _fMainWindowCreated = fTrue;
-#endif // WIN
-#ifdef MAC
+#else
     RawRtn();
-#endif // MAC
+#endif
     return fTrue;
 }
 
