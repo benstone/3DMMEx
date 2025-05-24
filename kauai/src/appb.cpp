@@ -715,9 +715,9 @@ void APPB::_CleanUp(void)
 
     GOB::ShutDown();
     FIL::ShutDown();
-#ifdef WIN
+#ifdef KAUAI_WIN32
     _ShutDownViewer();
-#endif // WIN
+#endif // KAUAI_WIN32
 }
 
 /***************************************************************************

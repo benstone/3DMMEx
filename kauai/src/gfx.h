@@ -65,9 +65,9 @@ enum
 ****************************************/
 const int32_t onnNil = -1;
 
-#ifdef WIN
+#ifdef KAUAI_WIN32
 int CALLBACK _FEnumFont(const LOGFONT *plgf, const TEXTMETRIC *ptxm, UINT luType, LPARAM luParam);
-#endif // WIN
+#endif // KAUAI_WIN32
 
 #define NTL_PAR BASE
 #define kclsNTL KLCONST3('N', 'T', 'L')
@@ -79,9 +79,9 @@ class NTL : public NTL_PAR
     NOCOPY(NTL)
 
   private:
-#ifdef WIN
+#ifdef KAUAI_WIN32
     friend int CALLBACK _FEnumFont(const LOGFONT *plgf, const TEXTMETRIC *ptxm, UINT luType, LPARAM luParam);
-#endif // WIN
+#endif // KAUAI_WIN32
     PGST _pgst;
     int32_t _onnSystem;
 
@@ -89,9 +89,9 @@ class NTL : public NTL_PAR
     NTL(void);
     ~NTL(void);
 
-#ifdef WIN
+#ifdef KAUAI_WIN32
     HFONT HfntCreate(DSF *pdsf);
-#endif // WIN
+#endif // KAUAI_WIN32
 #ifdef MAC
     int16_t FtcFromOnn(int32_t onn);
 #endif // MAC
@@ -462,10 +462,10 @@ class GNV : public GNV_PAR
     void Set(void);
     void Restore(void);
 #endif // MAC
-#ifdef WIN
+#ifdef KAUAI_WIN32
     // this gross API is for AVI playback
     void DrawDib(HDRAWDIB hdd, BITMAPINFOHEADER *pbi, RC *prc);
-#endif // WIN
+#endif // KAUAI_WIN32
 
     void SetPenSize(int32_t dxp, int32_t dyp);
 
@@ -586,7 +586,7 @@ class GPT : public GPT_PAR
     RC _rcClip;
     PT _ptBase; // coordinates assigned to top-left of the GPT
 
-#ifdef WIN
+#ifdef KAUAI_WIN32
 #ifdef DEBUG
     static bool _fFlushGdi;
 #endif
@@ -607,7 +607,6 @@ class GPT : public GPT_PAR
     RC _rcOff;         // bounding rectangle for a metafile or dib port
     int32_t _cactPal;  // which palette this port has selected
     int32_t _cactDraw; // last draw - for knowing when to call GdiFlush
-    int32_t _cactLock; // lock count
 
     // selected brush and its related info
     enum // brush kind
@@ -646,7 +645,7 @@ class GPT : public GPT_PAR
     SCR _Scr(ACR acr);
 
     bool _FInit(HDC hdc);
-#endif // WIN
+#endif // KAUAI_WIN32
 
 #ifdef MAC
     static HCLT _hcltDef;
@@ -682,6 +681,15 @@ class GPT : public GPT_PAR
     void _GetRcsFromRgch(RCS *prcs, achar *prgch, int16_t cch, PTS *ppts, DSF *pdsf);
 #endif // MAC
 
+#ifdef KAUAI_SDL
+
+    bool _fNewClip : 1;   //_pregnClip is new
+    bool _fOffscreen : 1; // is offscreen
+
+#endif // KAUAI_SDL
+
+    int32_t _cactLock; // lock count
+
     // low level draw routine
     typedef void (GPT::*PFNDRW)(void *);
     void _Fill(void *pv, GDD *pgdd, PFNDRW pfn);
@@ -692,7 +700,7 @@ class GPT : public GPT_PAR
     ~GPT(void);
 
   public:
-#ifdef WIN
+#ifdef KAUAI_WIN32
     static PGPT PgptNew(HDC hdc);
     static PGPT PgptNewHwnd(HWND hwnd);
 
@@ -700,7 +708,7 @@ class GPT : public GPT_PAR
 
     // this gross API is for AVI playback
     void DrawDib(HDRAWDIB hdd, BITMAPINFOHEADER *pbi, RCS *prcs, GDD *pgdd);
-#endif // WIN
+#endif // KAUAI_WIN32
 #ifdef MAC
     static PGPT PgptNew(PPRT pprt, HGD hgd = hNil);
 

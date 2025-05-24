@@ -190,7 +190,7 @@ class APPB : public APPB_PAR
     void _EnsureToolTip(void);
 
 // window procs
-#ifdef WIN
+#ifdef KAUAI_WIN32
     static LRESULT CALLBACK _LuWndProc(HWND hwnd, UINT wm, WPARAM wParam, LPARAM lParam);
     static LRESULT CALLBACK _LuMdiWndProc(HWND hwnd, UINT wm, WPARAM wParam, LPARAM lParam);
 
@@ -200,7 +200,7 @@ class APPB : public APPB_PAR
 
     // remove ourself from the clipboard viewer chain
     void _ShutDownViewer(void);
-#endif // WIN
+#endif // KAUAI_WIN32
 
     // Activation
     virtual void _Activate(bool fActive);

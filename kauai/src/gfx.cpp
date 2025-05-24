@@ -2157,6 +2157,7 @@ NTL::~NTL(void)
 }
 
 #ifdef DEBUG
+#ifdef KAUAI_WIN32
 /***************************************************************************
     Assert the validity of the font list.
 ***************************************************************************/
@@ -2175,6 +2176,7 @@ void NTL::MarkMem(void)
     NTL_PAR::MarkMem();
     MarkMemObj(_pgst);
 }
+#endif // KAUAI_WIN32
 
 /***************************************************************************
     Return whether the font number is valid.

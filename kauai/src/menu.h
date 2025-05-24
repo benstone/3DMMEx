@@ -74,7 +74,7 @@ class MUB : public MUB_PAR
     bool _FFetchRes(uint32_t ridMenuBar);
 #endif // MAC
 
-#ifdef WIN
+#ifdef KAUAI_WIN32
     // menu list
     struct MLST
     {
@@ -93,7 +93,7 @@ class MUB : public MUB_PAR
     bool _FInitLists(void);
     bool _FFindMlst(int32_t wcid, MLST *pmlst, int32_t *pimlst = pvNil);
     bool _FGetCmdForWcid(int32_t wcid, PCMD pcmd);
-#endif // WIN
+#endif // KAUAI_WIN32
 
   protected:
     MUB(void)
@@ -112,9 +112,9 @@ class MUB : public MUB_PAR
     virtual bool FDoClick(EVT *pevt);
     virtual bool FDoKey(EVT *pevt);
 #endif // MAC
-#ifdef WIN
+#ifdef KAUAI_WIN32
     virtual void EnqueueWcid(int32_t wcid);
-#endif // WIN
+#endif // KAUAI_WIN32
 
     virtual bool FAddListCid(int32_t cid, uintptr_t lw0, PSTN pstn);
     virtual bool FRemoveListCid(int32_t cid, uintptr_t lw0, PSTN pstn = pvNil);
