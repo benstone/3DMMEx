@@ -544,6 +544,19 @@ target_link_libraries(
     KauaiRichText
 )
 
+if (WIN32 AND 3DMM_GUI STREQUAL "SDL")
+    add_custom_command(
+        TARGET khello POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL2::SDL2>" "$<TARGET_FILE_DIR:khello>"
+        VERBATIM
+    )
+    add_custom_command(
+        TARGET khello POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL2_ttf::SDL2_ttf>" "$<TARGET_FILE_DIR:khello>"
+        VERBATIM
+    )
+endif()
+
 if (ENABLE_KAUAI_TOOLS)
 
 # Chelp: Help editor
