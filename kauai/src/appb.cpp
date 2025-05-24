@@ -176,7 +176,7 @@ uint32_t APPB::GrfcustCur(bool fAsync)
 {
     AssertThis(0);
 
-#ifdef WIN
+#ifdef KAUAI_WIN32
 
     auto pfnT = fAsync ? GetAsyncKeyState : GetKeyState;
     _grfcust &= ~kgrfcustUser;
@@ -188,10 +188,37 @@ uint32_t APPB::GrfcustCur(bool fAsync)
         _grfcust |= fcustOption;
     if (pfnT(VK_LBUTTON) < 0)
         _grfcust |= fcustMouse;
-#endif // WIN
+#endif // KAUAI_WIN32
 #ifdef MAC
     Assert(!fAsync, "Unimplemented code"); // REVIEW shonk: Mac: implement
 #endif                                     // MAC
+
+#ifdef KAUAI_SDL
+    uint32_t ret;
+
+    _grfcust &= ~kgrfcustUser;
+
+    ret = SDL_GetMouseState(pvNil, pvNil);
+    if (ret & SDL_BUTTON(1))
+    {
+        _grfcust |= fcustMouse;
+    }
+
+    ret = SDL_GetModState();
+    if (ret & SDL_Keymod::KMOD_CTRL)
+    {
+        _grfcust |= fcustCmd;
+    }
+    if (ret & SDL_Keymod::KMOD_ALT)
+    {
+        _grfcust |= fcustOption;
+    }
+    if (ret & SDL_Keymod::KMOD_SHIFT)
+    {
+        _grfcust |= fcustShift;
+    }
+
+#endif // KAUAI_SDL
 
     return _grfcust;
 }
@@ -1117,6 +1144,9 @@ void APPB::_FastUpdate(PGOB pgob, PREGN pregnClip, uint32_t grfapp, PGPT pgpt)
         pgptDst->ClipToRegn(&pregnClip);
         GPT::Flush();
     }
+
+    // TODO: is this needed?
+    GPT::Flush();
 }
 
 /***************************************************************************
@@ -1159,6 +1189,13 @@ void APPB::_CopyPixels(PGNV pgnvSrc, RC *prcSrc, PGNV pgnvDst, RC *prcDst)
     AssertVarMem(prcSrc);
     AssertPo(pgnvDst, 0);
     AssertVarMem(prcDst);
+
+    // TODO: implement transitions
+    if (_gft != gftNil)
+    {
+        Bug("FIXME: transitions in APPB::_CopyPixels not implemented");
+    }
+    _gft = gftNil;
 
     switch (_gft)
     {

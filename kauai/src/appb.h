@@ -19,9 +19,14 @@
 /***************************************************************************
     Misc types
 ***************************************************************************/
-#ifdef WIN
+#ifdef KAUAI_WIN32
 typedef MSG EVT;
-#endif // WIN
+#endif // KAUAI_WIN32
+
+#ifdef KAUAI_SDL
+typedef SDL_Event EVT;
+#endif // KAUAI_SDL
+
 #ifdef MAC
 typedef EventRecord EVT;
 #endif // WIN
@@ -226,6 +231,13 @@ class APPB : public APPB_PAR
     }
     bool FForeground(void)
     {
+#ifdef KAUAI_SDL
+        // TODO: Set _fForeground properly
+        if (!_fForeground)
+        {
+            _fForeground = fTrue;
+        }
+#endif // KAUAI_SDL
         return _fForeground;
     }
 

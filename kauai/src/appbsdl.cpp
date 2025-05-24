@@ -16,15 +16,35 @@ ASSERTNAME
 
 WIG vwig;
 
+// Number of milliseconds to wait for events before doing idle processing
+const uint32_t kdtsIdleTimer = 1;
+
+// Number of milliseconds for a double click
+// FUTURE: Get this from the system
+const uint32_t kdtsDoubleClick = 500;
+
+// Window size
+const uint32_t kdxpWindow = 640;
+const uint32_t kdypWindow = 480;
+
+static SDL_Cursor *vpsdlcursWait = pvNil;
+static SDL_Cursor *vpsdlcursArrow = pvNil;
+
 /***************************************************************************
     WinMain for any frame work app. Sets up vwig and calls FrameMain.
 ***************************************************************************/
 int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
 {
+    vwig.hinst = hinst;
+    vwig.hinstPrev = hinstPrev;
+    vwig.pszCmdLine = GetCommandLine();
+    vwig.wShow = wShow;
+    vwig.lwThreadMain = LwThreadCur();
 #ifdef DEBUG
     APPB::CreateConsole();
 #endif
     FrameMain();
+    SDL_Quit();
     return 0;
 }
 
@@ -56,8 +76,8 @@ void APPB::CreateConsole()
 ***************************************************************************/
 void APPB::Abort(void)
 {
-    // TODO: SDL
-    // FatalAppExit(0, PszLit("Fatal Error Termination"));
+    // Cleanup SDL
+    SDL_Quit();
     exit(1);
 }
 
@@ -69,12 +89,39 @@ bool APPB::_FInitOS(void)
     AssertThis(0);
     STN stnApp;
     PCSZ pszAppWndCls = PszLit("APP");
+    int ret = 0, sdlerr = 0;
 
     // get the app name
     GetStnAppName(&stnApp);
 
-    // TODO: SDL
-    RawRtn();
+    // Initialize SDL
+    ret = SDL_Init(SDL_INIT_EVERYTHING);
+    Assert(ret >= 0, "SDLInit failed");
+    if (ret < 0)
+    {
+        Warn(SDL_GetError());
+        return fFalse;
+    }
+
+    U8SZ u8szApp;
+    stnApp.GetUtf8Sz(u8szApp);
+    int32_t xpWindow = SDL_WINDOWPOS_UNDEFINED;
+    int32_t ypWindow = SDL_WINDOWPOS_UNDEFINED;
+    SDL_Window *wnd = SDL_CreateWindow(u8szApp, xpWindow, ypWindow, kdxpWindow, kdypWindow, 0);
+    Assert(wnd != pvNil, "no window returned from SDL_CreateWindow");
+    if (wnd == pvNil)
+    {
+        return fFalse;
+    }
+
+    // Create a renderer
+    SDL_Renderer *rdr = SDL_CreateRenderer(wnd, -1, 0);
+    Assert(rdr != pvNil, "no renderer created from SDL_CreateRenderer");
+
+    vwig.hwndApp = wnd;
+
+    // FUTURE: Turn this off when Win32 stuff is removed
+    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
 
     return fTrue;
 }
@@ -88,9 +135,22 @@ bool APPB::_FGetNextEvt(PEVT pevt)
     AssertThis(0);
     AssertVarMem(pevt);
 
-    RawRtn();
+    bool fHasEvt = fFalse;
+    if (SDL_WaitEventTimeout(pevt, kdtsIdleTimer))
+    {
+        // If this is a mouse move event, process it and return fFalse so idle processing is performed.
+        if (pevt->type == SDL_MOUSEMOTION)
+        {
+            _DispatchEvt(pevt);
+        }
+        else
+        {
+            // We have an event to process
+            fHasEvt = fTrue;
+        }
+    }
 
-    return fFalse;
+    return fHasEvt;
 }
 
 /***************************************************************************
@@ -105,7 +165,49 @@ void APPB::TrackMouse(PGOB pgob, PT *ppt)
     AssertPo(pgob, 0);
     AssertVarMem(ppt);
 
-    RawRtn();
+    // TODO: review
+
+    int ret = 0;
+    int xp, yp;
+    int32_t grfcust = 0;
+
+    SDL_Event evt;
+
+    // Check if there are any mouse move events. Other events will be enqueued for processing later.
+    SDL_PumpEvents();
+    ret = SDL_PeepEvents(&evt, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION);
+    if (ret == 1)
+    {
+        // Found a mouse move event
+        xp = evt.motion.x;
+        yp = evt.motion.y;
+        if ((evt.motion.state & SDL_BUTTON_LMASK) != 0)
+        {
+            grfcust |= fcustMouse;
+        }
+    }
+    else if (ret == 0)
+    {
+        // No mouse move events: just get the current position instead
+        int state = SDL_GetMouseState(&xp, &yp);
+        if (state & SDL_BUTTON(1))
+        {
+            grfcust |= fcustMouse;
+        }
+    }
+    else
+    {
+        // SDL_PeepEvents Failed
+        Assert(ret >= 0, "SDL_PeepEvents shouldn't return an error");
+        xp = 0;
+        yp = 0;
+    }
+
+    ppt->xp = xp;
+    ppt->yp = yp;
+    pgob->MapPt(ppt, cooHwnd, cooLocal);
+
+    _grfcust = grfcust;
 }
 
 /***************************************************************************
@@ -116,7 +218,82 @@ void APPB::_DispatchEvt(PEVT pevt)
     AssertThis(0);
     AssertVarMem(pevt);
 
-    RawRtn();
+    CMD cmd;
+    PGOB pgob;
+    int xp, yp;
+    PT pt;
+
+    switch (pevt->type)
+    {
+    case SDL_QUIT:
+        if (pvNil != vpcex)
+            vpcex->EnqueueCid(cidQuit);
+        break;
+    case SDL_KEYDOWN:
+        if (_FTranslateKeyEvt(pevt, (PCMD_KEY)&cmd) && pvNil != vpcex)
+            vpcex->EnqueueCmd(&cmd);
+        ResetToolTip();
+        break;
+    case SDL_SYSWMEVENT:
+        if (pevt->syswm.msg->msg.win.msg == WM_COMMAND)
+        {
+            int32_t lwT = pevt->syswm.msg->msg.win.wParam;
+            if (!FIn(lwT, wcidMinApp, wcidLimApp))
+                break;
+
+            // TODO: menu bar support
+            // if (pvNil != vpmubCur)
+            // vpmubCur->EnqueueWcid(lwT);
+            else if (pvNil != vpcex)
+                vpcex->EnqueueCid(lwT);
+        }
+        break;
+    case SDL_MOUSEBUTTONDOWN:
+        ResetToolTip();
+
+        xp = pevt->button.x;
+        yp = pevt->button.y;
+
+        // Find GOB at this point
+        // TODO: instead of PgobScreen(), find the gob by SDL window
+
+        pgob = GOB::PgobScreen()->PgobFromPt(xp, yp, &pt);
+
+        if (pvNil != pgob)
+        {
+            int32_t ts;
+
+            // compute the multiplicity of the click - don't use Windows'
+            // guess, since it can be wrong for our GOBs. It's even wrong
+            // at the HWND level! (Try double-clicking the maximize button).
+            ts = pevt->common.timestamp;
+            if (_pgobMouse == pgob && FIn(ts - _tsMouse, 0, kdtsDoubleClick))
+            {
+                _cactMouse++;
+            }
+            else
+                _cactMouse = 1;
+            _tsMouse = ts;
+            if (_pgobMouse != pgob && pvNil != _pgobMouse)
+            {
+                AssertPo(_pgobMouse, 0);
+                vpcex->EnqueueCid(cidRollOff, _pgobMouse);
+            }
+            _pgobMouse = pgob;
+            _xpMouse = klwMax;
+
+            // GrfcustCur() may not always have fcustMouse set when the message is processed.
+            int32_t grfcust = GrfcustCur();
+            grfcust |= fcustMouse;
+            pgob->MouseDown(pt.xp, pt.yp, _cactMouse, grfcust);
+        }
+        else
+            _pgobMouse = pvNil;
+        break;
+    default:
+        // ignore event
+        break;
+    }
 }
 
 /***************************************************************************
@@ -129,7 +306,30 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
     AssertVarMem(pevt);
     AssertVarMem(pcmd);
 
-    RawRtn();
+    EVT evt;
+    int32_t grfcust = 0;
+    ClearPb(&evt, SIZEOF(evt));
+    ClearPb(pcmd, SIZEOF(*pcmd));
+    pcmd->cid = cidKey;
+
+    if (pevt->type == SDL_KEYDOWN)
+    {
+        pcmd->vk = pevt->key.keysym.sym;
+
+        // TODO: translate ch
+        pcmd->ch = ChLit(0);
+
+        grfcust &= ~kgrfcustUser;
+        if (pevt->key.keysym.mod & SDL_Keymod::KMOD_CTRL)
+            grfcust |= fcustCmd;
+        if (pevt->key.keysym.mod & SDL_Keymod::KMOD_SHIFT)
+            grfcust |= fcustShift;
+        if (pevt->key.keysym.mod & SDL_Keymod::KMOD_ALT)
+            grfcust |= fcustOption;
+        // TODO: can't map fcustMouse: used in a few places
+        pcmd->grfcust = grfcust;
+        pcmd->cact = pevt->key.repeat; // TODO: number of repeats, not just "repeat"
+    }
 
     return fTrue;
 }
@@ -142,7 +342,8 @@ bool APPB::FGetNextKeyFromOsQueue(PCMD_KEY pcmd)
 {
     AssertThis(0);
     AssertVarMem(pcmd);
-    RawRtn();
+
+    // TODO: implement
 
     return fFalse;
 }
@@ -154,8 +355,26 @@ void APPB::FlushUserEvents(uint32_t grfevt)
 {
     AssertThis(0);
     EVT evt;
+    int ret = 0;
+    SDL_Event sdlevt;
+    ClearPb(&sdlevt, SIZEOF(sdlevt));
 
-    RawRtn();
+    if (grfevt & fevtMouse)
+    {
+        // Flush mouse events
+        while ((ret = SDL_PeepEvents(&sdlevt, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEWHEEL)) > 0)
+        {
+            // do nothing
+        }
+    }
+    if (grfevt & fevtKey)
+    {
+        // Flush keyboard events
+        while ((ret = SDL_PeepEvents(&sdlevt, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_TEXTEDITING_EXT)) > 0)
+        {
+            // do nothing
+        }
+    }
 }
 
 #ifdef DEBUG
@@ -167,9 +386,6 @@ bool APPB::_FInitDebug(void)
     AssertThis(0);
     return fTrue;
 }
-
-// passes the strings to the assert dialog proc
-STN *_rgpstn[3];
 
 MUTX _mutxAssert;
 
@@ -196,10 +412,6 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
     }
 
     _fInAssert = fTrue;
-
-    _rgpstn[0] = &stn0;
-    _rgpstn[1] = &stn1;
-    _rgpstn[2] = &stn2;
 
     // build the main assert message with file name and line number
     if (pszsMsg == pvNil || *pszsMsg == 0)
@@ -307,21 +519,32 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
     }
 #endif // WIN
 
-    // can't use a dialog - it may cause grid - lock
-    int32_t sid;
-    uint32_t grfmb;
-
     stn0.FAppendSz(PszLit("\n"));
     stn0.FAppendStn(&stn1);
     stn0.FAppendSz(PszLit("\n"));
     stn0.FAppendStn(&stn2);
 
-    // TODO: Show an SDL dialog box
-    printf("ASSERTION FAILURE!\n");
-    printf("%s", stn0.Psz());
+    U8SZ u8szMessage;
+    stn0.GetUtf8Sz(u8szMessage);
 
-    // always break into debugger for now
-    tmc = 1;
+    SDL_MessageBoxButtonData rgbutton[3];
+    FillPb(rgbutton, SIZEOF(rgbutton), 0);
+
+    rgbutton[0].buttonid = 0;
+    rgbutton[0].text = "Ignore";
+    rgbutton[1].buttonid = 1;
+    rgbutton[1].text = "Debugger";
+    rgbutton[2].buttonid = 2;
+    rgbutton[2].text = "Abort";
+
+    SDL_MessageBoxData data = {0};
+    data.buttons = rgbutton;
+    data.numbuttons = 3;
+    data.message = u8szMessage;
+    data.flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR;
+    data.title = "Assertion Failure";
+
+    (void)SDL_ShowMessageBox(&data, &tmc);
 
     _fInAssert = fFalse;
     _mutxAssert.Leave();
@@ -356,6 +579,77 @@ tribool APPB::TGiveAlertSz(const PCSZ psz, int32_t bk, int32_t cok)
     AssertThis(0);
     AssertSz(psz);
 
-    RawRtn();
-    return tNo;
+    int32_t ibutton = 0;
+    SDL_MessageBoxButtonData rgbutton[3];
+    ClearPb(rgbutton, SIZEOF(rgbutton));
+
+    // OK/Yes button
+    if (bk == bkYesNo || bk == bkYesNoCancel)
+    {
+        rgbutton[ibutton].text = "Yes";
+    }
+    else
+    {
+        Assert(bk == bkOk || bk == bkOkCancel, "invalid bk");
+        rgbutton[ibutton].text = "OK";
+    }
+    rgbutton[ibutton].buttonid = tYes;
+    ibutton++;
+
+    // No button
+    if (bk == bkYesNo || bk == bkYesNoCancel)
+    {
+        rgbutton[ibutton].text = "No";
+        rgbutton[ibutton].buttonid = tNo;
+        ibutton++;
+    }
+
+    // Cancel button
+    if (bk == bkOkCancel || bk == bkYesNoCancel)
+    {
+        rgbutton[ibutton].text = "Cancel";
+        rgbutton[ibutton].buttonid = tMaybe;
+        ibutton++;
+    }
+
+    uint32_t flags = 0;
+    switch (cok)
+    {
+    case cokInformation:
+        flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_INFORMATION;
+        break;
+    case cokExclamation:
+        flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_WARNING;
+        break;
+    case cokStop:
+        flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR;
+        break;
+    default:
+        flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_INFORMATION;
+        break;
+    }
+
+    // Convert message to UTF-8
+    U8SZ u8szMessage;
+    STN stnMessage;
+    stnMessage.SetSz(psz);
+    stnMessage.GetUtf8Sz(u8szMessage);
+
+    SDL_MessageBoxData data;
+    ClearPb(&data, sizeof(data));
+    data.buttons = rgbutton;
+    data.numbuttons = ibutton;
+    data.message = u8szMessage;
+    data.flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR;
+    data.title = "3D Movie Maker";
+
+    int buttonid = tNo;
+    (void)SDL_ShowMessageBox(&data, &buttonid);
+
+    if (buttonid != tYes && buttonid != tNo && buttonid != tMaybe)
+    {
+        buttonid = tNo;
+    }
+
+    return (tribool)buttonid;
 }
