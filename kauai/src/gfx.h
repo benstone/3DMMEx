@@ -107,6 +107,12 @@ class NTL : public NTL_PAR
     int32_t OnnMac(void);
     bool FFixedPitch(int32_t onn);
 
+#ifdef KAUAI_SDL
+    // Return the TTF_Font for the given font number
+    TTF_Font *TtfFontFromOnn(int32_t onn);
+
+#endif // KAUAI_SDL
+
 #ifdef DEBUG
     bool FValidOnn(int32_t onn);
 #endif // DEBUG
