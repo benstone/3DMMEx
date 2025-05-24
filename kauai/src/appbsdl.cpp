@@ -270,8 +270,10 @@ void APPB::_DispatchEvt(PEVT pevt)
             _pgobMouse = pgob;
             _xpMouse = klwMax;
 
-            // this should be set
-            pgob->MouseDown(pt.xp, pt.yp, _cactMouse, GrfcustCur());
+            // GrfcustCur() may not always have fcustMouse set when the message is processed.
+            int32_t grfcust = GrfcustCur();
+            grfcust |= fcustMouse;
+            pgob->MouseDown(pt.xp, pt.yp, _cactMouse, grfcust);
         }
         else
             _pgobMouse = pvNil;
