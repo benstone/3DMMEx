@@ -229,3 +229,9 @@ install(FILES $<TARGET_PROPERTY:studio,3DMM_SAMPLES>
   DESTINATION "Microsoft Kids/Users/McZee")
 install(DIRECTORY "${PROJECT_SOURCE_DIR}/content-files/"
   DESTINATION "Microsoft Kids/3D Movie Maker")
+
+if (WIN32 AND 3DMM_GUI STREQUAL "SDL")
+    # Install SDL DLLs
+    install(FILES $<TARGET_FILE:SDL2::SDL2> $<TARGET_FILE:SDL2_ttf::SDL2_ttf>
+        DESTINATION .)
+endif()

@@ -604,6 +604,14 @@ target_link_libraries(
 )
 add_dependencies(tools chomp)
 
+if(3DMM_GUI STREQUAL "SDL")
+    add_custom_command(
+        TARGET chomp
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL2::SDL2> $<TARGET_FILE_DIR:chomp>
+    )
+endif()
+
 # Hello World test app
 add_executable(khello WIN32)
 target_sources(khello
@@ -620,6 +628,18 @@ target_link_libraries(
     KauaiRichText
 )
 
+if (WIN32 AND 3DMM_GUI STREQUAL "SDL")
+    add_custom_command(
+        TARGET khello POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL2::SDL2>" "$<TARGET_FILE_DIR:khello>"
+        VERBATIM
+    )
+    add_custom_command(
+        TARGET khello POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL2_ttf::SDL2_ttf>" "$<TARGET_FILE_DIR:khello>"
+        VERBATIM
+    )
+endif()
 
 if (3DMM_GUI STREQUAL "Win32")
     set(BUILD_KAUAI_TOOLS ON)
