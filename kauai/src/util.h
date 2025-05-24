@@ -67,6 +67,7 @@ typedef HCURSOR HCRS;
 #define SDL_MAIN_HANDLED 1
 #include <SDL.h>
 #include <SDL_syswm.h>
+#include <SDL_ttf.h>
 #endif // KAUAI_SDL
 
 #define SIZEOF(foo) ((int32_t)sizeof(foo))

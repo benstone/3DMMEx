@@ -85,6 +85,28 @@ class NTL : public NTL_PAR
     PGST _pgst;
     int32_t _onnSystem;
 
+#ifdef KAUAI_SDL
+
+    bool fInitTtf = fFalse;
+
+    /**
+     * @brief Add a font face to the SDL font list
+     *
+     * @param pcszFontName Font face name
+     * @param ponn Set to the font number
+     * @param pglsdlfont Set to the list of SDLFont objects. Release with ReleasePpo().
+     */
+    bool FAddFontName(PCSZ pcszFontName, int32_t *ponn, PGL *pglsdlfont);
+
+    /**
+     * @brief Find all TrueType font files in a directory and add them to the font list
+     *
+     * @param pfniFontDir Font directory
+     **/
+    bool FAddAllFontsInDir(PFNI pfniFontDir);
+
+#endif // KAUAI_SDL
+
   public:
     NTL(void);
     ~NTL(void);
@@ -106,6 +128,13 @@ class NTL : public NTL_PAR
     int32_t OnnMapStn(PSTN pstn, int16_t osk = koskCur);
     int32_t OnnMac(void);
     bool FFixedPitch(int32_t onn);
+
+#ifdef KAUAI_SDL
+
+    // Get a TTF font from a font description
+    TTF_Font *TtfFontFromDsf(DSF *pdsf);
+
+#endif // KAUAI_SDL
 
 #ifdef DEBUG
     bool FValidOnn(int32_t onn);

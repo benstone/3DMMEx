@@ -2148,6 +2148,7 @@ NTL::NTL(void)
     _pgst = pvNil;
 }
 
+#ifdef KAUAI_WIN32
 /***************************************************************************
     Destroy a font list.
 ***************************************************************************/
@@ -2155,6 +2156,7 @@ NTL::~NTL(void)
 {
     ReleasePpo(&_pgst);
 }
+#endif // KAUAI_WIN32
 
 #ifdef DEBUG
 #ifdef KAUAI_WIN32

@@ -556,6 +556,8 @@ void GPT::_SetTextProps(TTF_Font *ttfFont, DSF *pdsf)
         Bug("not implemented");
     }
     TTF_SetFontStyle(ttfFont, fontStyle);
+
+    TTF_SetFontHinting(ttfFont, TTF_HINTING_MONO);
 }
 
 /***************************************************************************
@@ -592,10 +594,13 @@ void GPT::DrawRgch(const achar *prgch, int32_t cch, PTS pts, GDD *pgdd, DSF *pds
     // Get dimensions of font
     GetRcsFromRgch(&rcs, prgch, cch, pts, pdsf);
 
-    // TODO: error handling
-
     // Find the font
-    ttfFont = vntl.TtfFontFromOnn(pdsf->onn);
+    ttfFont = vntl.TtfFontFromDsf(pdsf);
+    Assert(ttfFont != pvNil, "No font from TtfFontFromDsf");
+    if (ttfFont == pvNil)
+    {
+        return;
+    }
     _SetTextProps(ttfFont, pdsf);
 
     SDL_Rect sdlRect(rcs);
@@ -660,7 +665,7 @@ void GPT::GetRcsFromRgch(RCS *prcs, const achar *prgch, int32_t cch, PTS pts, DS
     }
 
     // Find the font
-    AssertDo(ttfFont = vntl.TtfFontFromOnn(pdsf->onn), "Font number not in font list");
+    AssertDo(ttfFont = vntl.TtfFontFromDsf(pdsf), "Font number not in font list");
     if (ttfFont == pvNil)
     {
         goto LError;
