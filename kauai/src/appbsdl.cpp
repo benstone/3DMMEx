@@ -22,6 +22,11 @@ WIG vwig;
 ***************************************************************************/
 int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
 {
+    vwig.hinst = hinst;
+    vwig.hinstPrev = hinstPrev;
+    vwig.pszCmdLine = GetCommandLine();
+    vwig.wShow = wShow;
+    vwig.lwThreadMain = LwThreadCur();
 #ifdef DEBUG
     APPB::CreateConsole();
 #endif
@@ -67,12 +72,39 @@ bool APPB::_FInitOS(void)
     AssertThis(0);
     STN stnApp;
     PCSZ pszAppWndCls = PszLit("APP");
+    int ret = 0, sdlerr = 0;
 
     // get the app name
     GetStnAppName(&stnApp);
 
-    // TODO: SDL
-    RawRtn();
+    // Initialize SDL
+    ret = SDL_Init(SDL_INIT_EVERYTHING);
+    Assert(ret >= 0, "SDLInit failed");
+    if (ret < 0)
+    {
+        Warn(SDL_GetError());
+        return fFalse;
+    }
+
+    // Create main app window
+    // TODO: replace starting position with SDL_WINDOWPOS_UNDEFINED
+    // TODO: set starting size properly
+
+    SDL_Window *wnd = SDL_CreateWindow(stnApp.Psz(), 64, 64, 640, 480, 0);
+    Assert(wnd != pvNil, "no window returned from SDL_CreateWindow");
+    if (wnd == pvNil)
+    {
+        return fFalse;
+    }
+
+    // Create a renderer
+    SDL_Renderer *rdr = SDL_CreateRenderer(wnd, -1, 0);
+    Assert(rdr != pvNil, "no renderer created from SDL_CreateRenderer");
+
+    vwig.hwndApp = wnd;
+
+    // FUTURE: Turn this off when Win32 stuff is removed
+    SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
 
     return fTrue;
 }
@@ -86,9 +118,31 @@ bool APPB::_FGetNextEvt(PEVT pevt)
     AssertThis(0);
     AssertVarMem(pevt);
 
-    RawRtn();
+    SDL_Event evt = {0};
+    PGOB pgob = pvNil;
+    bool fHasEvt = fTrue;
 
-    return fFalse;
+    *pevt = {0};
+
+    if (SDL_PollEvent(&evt) != 0)
+    {
+        // handle this separately
+        if (evt.type == SDL_QUIT)
+        {
+            if (pvNil != vpcex)
+                vpcex->EnqueueCid(cidQuit);
+        }
+        else
+        {
+            *pevt = evt;
+        }
+    }
+    else
+    {
+        // No events: do idle processing instead
+        fHasEvt = fFalse;
+    }
+    return fHasEvt;
 }
 
 /***************************************************************************
@@ -103,7 +157,49 @@ void APPB::TrackMouse(PGOB pgob, PT *ppt)
     AssertPo(pgob, 0);
     AssertVarMem(ppt);
 
-    RawRtn();
+    // TODO: review
+
+    int ret = 0;
+    int xp, yp;
+    int32_t grfcust = 0;
+
+    SDL_Event evt;
+
+    // Check if there are any mouse move events. Other events will be enqueued for processing later.
+    SDL_PumpEvents();
+    ret = SDL_PeepEvents(&evt, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION);
+    if (ret == 1)
+    {
+        // Found a mouse move event
+        xp = evt.motion.x;
+        yp = evt.motion.y;
+        if ((evt.motion.state & SDL_BUTTON_LMASK) != 0)
+        {
+            grfcust |= fcustMouse;
+        }
+    }
+    else if (ret == 0)
+    {
+        // No mouse move events: just get the current position instead
+        int state = SDL_GetMouseState(&xp, &yp);
+        if (state & SDL_BUTTON(1))
+        {
+            grfcust |= fcustMouse;
+        }
+    }
+    else
+    {
+        // SDL_PeepEvents Failed
+        Assert(ret >= 0, "SDL_PeepEvents shouldn't return an error");
+        xp = 0;
+        yp = 0;
+    }
+
+    ppt->xp = xp;
+    ppt->yp = yp;
+    pgob->MapPt(ppt, cooHwnd, cooLocal);
+
+    _grfcust = grfcust;
 }
 
 /***************************************************************************
@@ -114,7 +210,76 @@ void APPB::_DispatchEvt(PEVT pevt)
     AssertThis(0);
     AssertVarMem(pevt);
 
-    RawRtn();
+    CMD cmd;
+    PGOB pgob;
+    int xp, yp;
+    PT pt;
+
+    switch (pevt->type)
+    {
+    case SDL_KEYDOWN:
+        if (_FTranslateKeyEvt(pevt, (PCMD_KEY)&cmd) && pvNil != vpcex)
+            vpcex->EnqueueCmd(&cmd);
+        ResetToolTip();
+        break;
+    case SDL_SYSWMEVENT:
+        if (pevt->syswm.msg->msg.win.msg == WM_COMMAND)
+        {
+            int32_t lwT = pevt->syswm.msg->msg.win.wParam;
+            if (!FIn(lwT, wcidMinApp, wcidLimApp))
+                break;
+
+            // TODO: menu bar support
+            // if (pvNil != vpmubCur)
+            // vpmubCur->EnqueueWcid(lwT);
+            else if (pvNil != vpcex)
+                vpcex->EnqueueCid(lwT);
+        }
+        break;
+    case SDL_MOUSEBUTTONDOWN:
+        ResetToolTip();
+
+        xp = pevt->button.x;
+        yp = pevt->button.y;
+
+        // Find GOB at this point
+        // TODO: instead of PgobScreen(), find the gob by SDL window
+
+        pgob = GOB::PgobScreen()->PgobFromPt(xp, yp, &pt);
+
+        if (pvNil != pgob)
+        {
+            int32_t ts;
+
+            // compute the multiplicity of the click - don't use Windows'
+            // guess, since it can be wrong for our GOBs. It's even wrong
+            // at the HWND level! (Try double-clicking the maximize button).
+            ts = GetMessageTime();
+            if (_pgobMouse == pgob && FIn(ts - _tsMouse, 0, GetDoubleClickTime()))
+            {
+                _cactMouse++;
+            }
+            else
+                _cactMouse = 1;
+            _tsMouse = ts;
+            if (_pgobMouse != pgob && pvNil != _pgobMouse)
+            {
+                AssertPo(_pgobMouse, 0);
+                vpcex->EnqueueCid(cidRollOff, _pgobMouse);
+            }
+            _pgobMouse = pgob;
+            _xpMouse = klwMax;
+
+            // this should be set
+            pgob->MouseDown(pt.xp, pt.yp, _cactMouse, GrfcustCur());
+        }
+        else
+            _pgobMouse = pvNil;
+        break;
+    default:
+        // ignore event
+        break;
+    }
 }
 
 /***************************************************************************
@@ -127,7 +292,29 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
     AssertVarMem(pevt);
     AssertVarMem(pcmd);
 
-    RawRtn();
+    EVT evt;
+    int32_t grfcust = 0;
+    ClearPb(&evt, SIZEOF(evt));
+    ClearPb(pcmd, SIZEOF(*pcmd));
+    pcmd->cid = cidKey;
+
+    if (pevt->type == SDL_KEYDOWN)
+    {
+        // TODO: translate vk
+        pcmd->vk = vkNil;
+        pcmd->ch = pevt->key.keysym.sym;
+
+        grfcust &= ~kgrfcustUser;
+        if (pevt->key.keysym.mod & SDL_Keymod::KMOD_CTRL)
+            grfcust |= fcustCmd;
+        if (pevt->key.keysym.mod & SDL_Keymod::KMOD_SHIFT)
+            grfcust |= fcustShift;
+        if (pevt->key.keysym.mod & SDL_Keymod::KMOD_ALT)
+            grfcust |= fcustOption;
+        // TODO: can't map fcustMouse: used in a few places
+        pcmd->grfcust = grfcust;
+        pcmd->cact = pevt->key.repeat; // TODO: number of repeats, not just "repeat"
+    }
 
     return fTrue;
 }
@@ -140,7 +327,8 @@ bool APPB::FGetNextKeyFromOsQueue(PCMD_KEY pcmd)
 {
     AssertThis(0);
     AssertVarMem(pcmd);
-    RawRtn();
+
+    // TODO: implement
 
     return fFalse;
 }
@@ -152,8 +340,26 @@ void APPB::FlushUserEvents(uint32_t grfevt)
 {
     AssertThis(0);
     EVT evt;
+    int ret = 0;
+    SDL_Event sdlevt;
+    ClearPb(&sdlevt, SIZEOF(sdlevt));
 
-    RawRtn();
+    if (grfevt & fevtMouse)
+    {
+        // Flush mouse events
+        while ((ret = SDL_PeepEvents(&sdlevt, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEWHEEL)) > 0)
+        {
+            // do nothing
+        }
+    }
+    if (grfevt & fevtKey)
+    {
+        // Flush keyboard events
+        while ((ret = SDL_PeepEvents(&sdlevt, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_TEXTEDITING_EXT)) > 0)
+        {
+            // do nothing
+        }
+    }
 }
 
 #ifdef DEBUG
@@ -165,9 +371,6 @@ bool APPB::_FInitDebug(void)
     AssertThis(0);
     return fTrue;
 }
-
-// passes the strings to the assert dialog proc
-STN *_rgpstn[3];
 
 MUTX _mutxAssert;
 
@@ -194,10 +397,6 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
     }
 
     _fInAssert = fTrue;
-
-    _rgpstn[0] = &stn0;
-    _rgpstn[1] = &stn1;
-    _rgpstn[2] = &stn2;
 
     // build the main assert message with file name and line number
     if (pszsMsg == pvNil || *pszsMsg == 0)
