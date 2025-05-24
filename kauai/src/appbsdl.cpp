@@ -490,21 +490,29 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
         OutputDebugString(PszLit("\n"));
     }
 
-    // can't use a dialog - it may cause grid - lock
-    int32_t sid;
-    uint32_t grfmb;
-
     stn0.FAppendSz(PszLit("\n"));
     stn0.FAppendStn(&stn1);
     stn0.FAppendSz(PszLit("\n"));
     stn0.FAppendStn(&stn2);
 
-    // TODO: Show an SDL dialog box
-    printf("ASSERTION FAILURE!\n");
-    printf("%s", stn0.Psz());
+    SDL_MessageBoxButtonData rgbutton[3];
+    FillPb(rgbutton, SIZEOF(rgbutton), 0);
 
-    // always break into debugger for now
-    tmc = 1;
+    rgbutton[0].buttonid = 0;
+    rgbutton[0].text = PszLit("Ignore");
+    rgbutton[1].buttonid = 1;
+    rgbutton[1].text = PszLit("Debugger");
+    rgbutton[2].buttonid = 2;
+    rgbutton[2].text = PszLit("Abort");
+
+    SDL_MessageBoxData data = {0};
+    data.buttons = rgbutton;
+    data.numbuttons = 3;
+    data.message = stn0.Psz();
+    data.flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR;
+    data.title = PszLit("Assertion Failure");
+
+    (void)SDL_ShowMessageBox(&data, &tmc);
 
     _fInAssert = fFalse;
     _mutxAssert.Leave();
