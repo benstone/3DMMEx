@@ -297,7 +297,7 @@ PGL GPT::PglclrGetPalette(void)
     We've gotten a WM_QUERYNEWPALETTE or WM_PALETTECHANGED message, so
     select and realize our palette.
 ***************************************************************************/
-int32_t GPT::CclrSetPalette(HWND hwnd, bool fInval)
+int32_t GPT::CclrSetPalette(KWND hwnd, bool fInval)
 {
     HDC hdc;
     int32_t lwRet;
@@ -359,7 +359,7 @@ PGPT GPT::PgptNew(HDC hdc)
 /***************************************************************************
     Static method to create a new GPT for a window.
 ***************************************************************************/
-PGPT GPT::PgptNewHwnd(HWND hwnd)
+PGPT GPT::PgptNewHwnd(KWND hwnd)
 {
     Assert(hNil != hwnd, "Null hwnd");
     HDC hdc;
