@@ -63,6 +63,12 @@ typedef HCURSOR HCRS;
 
 #endif // WIN
 
+#ifdef KAUAI_SDL
+#define SDL_MAIN_HANDLED 1
+#include <SDL.h>
+#include <SDL_syswm.h>
+#endif // KAUAI_SDL
+
 #define SIZEOF(foo) ((int32_t)sizeof(foo))
 #define offset(FOO, field) ((ptrdiff_t) & ((FOO *)0)->field)
 #define CvFromRgv(rgv) (SIZEOF(rgv) / SIZEOF(rgv[0]))
