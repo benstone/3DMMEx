@@ -217,10 +217,10 @@ class APP : public APP_PAR
     virtual void _FastUpdate(PGOB pgob, PREGN pregnClip, uint32_t grfapp = fappNil, PGPT pgpt = pvNil) override;
     virtual void _CleanUp(void) override;
     virtual void _Activate(bool fActive) override;
+#ifdef KAUAI_WIN32
     virtual bool _FGetNextEvt(PEVT pevt) override;
-#ifdef WIN
     virtual bool _FFrameWndProc(HWND hwnd, UINT wm, WPARAM wParam, LPARAM lw, int32_t *plwRet) override;
-#endif // WIN
+#endif // KAUAI_WIN32
 
   public:
     APP(void)

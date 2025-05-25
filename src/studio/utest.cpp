@@ -4215,7 +4215,7 @@ LFail:
 }
 #endif // WIN
 
-#ifdef WIN
+#ifdef KAUAI_WIN32
 /***************************************************************************
     Override standard _FGetNextEvt to catch WM_USER event.  Otherwise
     the event will get thrown away, because the event's hwnd is nil.
@@ -4232,7 +4232,7 @@ bool APP::_FGetNextEvt(PEVT pevt)
     _FProcessOpenDocCmd(); // ignore failure
     return fFalse;         // we've handled the WM_USER event
 }
-#endif // WIN
+#endif // KAUAI_WIN32
 
 /***************************************************************************
     Override default _FastUpdate to optionally skip offscreen buffer
@@ -4280,7 +4280,7 @@ void APP::UpdateHwnd(KWND hwnd, RC *prc, uint32_t grfapp)
 }
 #endif // WIN
 
-#ifdef WIN
+#ifdef KAUAI_WIN32
 
 #ifndef WM_DISPLAYCHANGE
 #define WM_DISPLAYCHANGE 0x007E // from winuser.h
