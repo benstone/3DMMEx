@@ -135,7 +135,21 @@ PCSZ mpfcustpsz[] = {
 // Entrypoint
 void FrameMain(void)
 {
-    vapp.Run(fappOffscreen, fgobNil, kginDefault);
+    // TODO: offscreen drawing is broken?
+    bool fOffscreenDrawing = fFalse;
+
+    uint32_t grfApp = fappNil;
+
+    if (fOffscreenDrawing)
+    {
+        grfApp |= fappOffscreen;
+    }
+    else
+    {
+        grfApp |= fappOnscreen;
+    }
+
+    vapp.Run(grfApp, fgobNil, kginDefault);
 }
 
 // Returns the name of the application
