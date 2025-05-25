@@ -41,8 +41,11 @@ class REGN : public REGN_PAR
     RC _rc;       // bounding rectangle
     int32_t _dxp; // additional offset for xp values
     PGL _pglxp;   // region data - see above
-    HRGN _hrgn;   // for HrgnEnsure
     PT _dptRgn;   // offset of _hrgn relative to this region
+
+#ifdef KAUAI_WIN32
+    HRGN _hrgn; // for HrgnEnsure
+#endif
 
     REGN(void)
     {
@@ -70,8 +73,10 @@ class REGN : public REGN_PAR
     bool FDiffRc(RC *prc, PREGN pregn = pvNil);
     bool FDiffFromRc(RC *prc, PREGN pregn = pvNil);
 
+#ifdef KAUAI_WIN32
     HRGN HrgnCreate(void);
     HRGN HrgnEnsure(void);
+#endif // KAUAI_WIN32
 };
 
 /***************************************************************************

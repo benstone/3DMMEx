@@ -438,7 +438,9 @@ PREGN REGN::PregnNew(RC *prc)
 REGN::~REGN(void)
 {
     ReleasePpo(&_pglxp);
+#ifdef KAUAI_WIN32
     FreePhrgn(&_hrgn);
+#endif // KAUAI_WIN32
 }
 
 /***************************************************************************
@@ -454,7 +456,9 @@ void REGN::SetRc(RC *prc)
     else
         _rc = *prc;
     ReleasePpo(&_pglxp);
+#ifdef KAUAI_WIN32
     FreePhrgn(&_hrgn);
+#endif // KAUAI_WIN32
     _dxp = 0;
     AssertThis(0);
 }
@@ -589,7 +593,9 @@ void REGN::Scale(int32_t lwNumX, int32_t lwDenX, int32_t lwNumY, int32_t lwDenY)
     }
 
     ReleasePpo(&_pglxp);
+#ifdef KAUAI_WIN32
     FreePhrgn(&_hrgn);
+#endif // KAUAI_WIN32
 
     // force the region scanner to let go of the pglxp before the
     // region builder tries to resize it.
@@ -751,7 +757,9 @@ bool REGN::_FUnionCore(RC *prc, PREGSC pregsc1, PREGSC pregsc2)
     }
 
     ReleasePpo(&_pglxp);
+#ifdef KAUAI_WIN32
     FreePhrgn(&_hrgn);
+#endif // KAUAI_WIN32
 
     _pglxp = regbl.PglxpFree(&_rc, &_dxp);
     AssertThis(0);
@@ -907,7 +915,9 @@ bool REGN::_FIntersectCore(RC *prc, PREGSC pregsc1, PREGSC pregsc2)
     }
 
     ReleasePpo(&_pglxp);
+#ifdef KAUAI_WIN32
     FreePhrgn(&_hrgn);
+#endif // KAUAI_WIN32
 
     _pglxp = regbl.PglxpFree(&_rc, &_dxp);
     AssertThis(0);
@@ -1095,13 +1105,16 @@ bool REGN::_FDiffCore(RC *prc, PREGSC pregsc1, PREGSC pregsc2)
     }
 
     ReleasePpo(&_pglxp);
+#ifdef KAUAI_WIN32
     FreePhrgn(&_hrgn);
+#endif // KAUAI_WIN32
 
     _pglxp = regbl.PglxpFree(&_rc, &_dxp);
     AssertThis(0);
     return fTrue;
 }
 
+#ifdef KAUAI_WIN32
 /***************************************************************************
     Create a system region that is equivalent to the given region.
 ***************************************************************************/
@@ -1268,6 +1281,9 @@ HRGN REGN::HrgnCreate(void)
 #endif // MAC
 }
 
+#endif // KAUAI_WIN32
+
+#ifdef KAUAI_WIN32
 /***************************************************************************
     If we don't have a cached HRGN equivalent of this region, create one.
     In either case return it.
@@ -1288,6 +1304,7 @@ HRGN REGN::HrgnEnsure(void)
     _hrgn = HrgnCreate();
     return _hrgn;
 }
+#endif // KAUAI_WIN32
 
 #ifdef DEBUG
 /***************************************************************************
