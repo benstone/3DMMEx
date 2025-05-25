@@ -201,9 +201,6 @@ endif()
 
 add_subdirectory(kauai)
 
-# TODO: Remove if() when SDL port is more stable
-if (3DMM_GUI STREQUAL "Win32")
-
 add_subdirectory(src)
 
 
@@ -226,6 +223,4 @@ if (BUILD_PACKAGES)
     endif()
   endforeach()
   include(CPack)
-endif()
-
 endif()
