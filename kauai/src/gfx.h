@@ -168,6 +168,10 @@ class ACR
     void _SetBack(void);
 #endif // MAC
 
+#ifdef KAUAI_SDL
+    SDL_Color _SDLColor(void);
+#endif // KAUAI_SDL
+
   public:
     ACR(void)
     {
@@ -599,7 +603,7 @@ class GPT : public GPT_PAR
     static bool _fPalettized; // whether the screen is palettized
 
     HDC _hdc;
-    HWND _hwnd;
+    KWND _hwnd;
     HBMP _hbmp;           // nil if not an offscreen port
     uint8_t *_prgbPixels; // nil if not a dib section port
     int32_t _cbitPixel;
@@ -686,9 +690,24 @@ class GPT : public GPT_PAR
     bool _fNewClip : 1;   //_pregnClip is new
     bool _fOffscreen : 1; // is offscreen
 
+    // Window to render to
+    SDL_Window *_wnd = pvNil;
+    // Renderer to use when rendering
+    SDL_Renderer *_renderer = pvNil;
+    // Surface to render to
+    SDL_Surface *_surface = pvNil;
+    // Texture used for rendering the image
+    SDL_Texture *_texture = pvNil;
+
+    // Set to True if the surface has changed / the texture needs to be updated
+    bool _fSurfaceDirty = fTrue;
+
+    // Configure an SDL font with the options in a given DSF
+    void _SetTextProps(TTF_Font *ttfFont, DSF *pdsf);
+
 #endif // KAUAI_SDL
 
-    int32_t _cactLock; // lock count
+    int32_t _cactLock = 0; // lock count
 
     // low level draw routine
     typedef void (GPT::*PFNDRW)(void *);
@@ -709,6 +728,24 @@ class GPT : public GPT_PAR
     // this gross API is for AVI playback
     void DrawDib(HDRAWDIB hdd, BITMAPINFOHEADER *pbi, RCS *prcs, GDD *pgdd);
 #endif // KAUAI_WIN32
+#ifdef KAUAI_SDL
+
+    static PGPT PgptNew(HDC hdc);
+    static PGPT PgptNewHwnd(KWND hwnd);
+
+    static PGPT PgptNew(SDL_Window *wnd, int32_t cbitPixel, bool fOffscreen, int32_t dxp, int32_t dyp);
+
+    // Repaint window
+    void Flip();
+
+    // Called when the surface is changed
+    void InvalidateTexture(void);
+    // Copy contents of surface to texture
+    void UpdateTexture(void);
+    // Save contents of this GPT to a bitmap for debugging
+    void DumpBitmap(STN *stnBmp);
+
+#endif // KAUAI_SDL
 #ifdef MAC
     static PGPT PgptNew(PPRT pprt, HGD hgd = hNil);
 

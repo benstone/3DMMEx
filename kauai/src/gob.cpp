@@ -423,6 +423,8 @@ bool GOB::FGetRcInval(RC *prc, int32_t gin)
 
 #if defined(KAUAI_WIN32)
         GetUpdateRect(pgob->_hwnd, &rcs, fFalse);
+#elif defined(KAUAI_SDL)
+        // No system invalidated areas
 #else
 #error not implemented
 #endif
@@ -564,7 +566,7 @@ void GOB::Scroll(RC *prc, int32_t dxp, int32_t dyp, int32_t gin, RC *prcBad1, RC
         break;
     }
 #else
-#error not implemented
+    RawRtn();
 #endif
 }
 
@@ -1023,6 +1025,15 @@ KWND GOB::_HwndGetDptFromCoo(PT *pdpt, int32_t coo)
             pts = POINT(*pdpt);
 #if defined(KAUAI_WIN32)
             ClientToScreen(hwnd, &pts);
+#elif defined(KAUAI_SDL)
+
+            Assert(hwnd == vwig.hwndApp, "We should only have one window");
+
+            int xpWnd, ypWnd;
+            SDL_GetWindowPosition((SDL_Window *)hwnd, &xpWnd, &ypWnd);
+            pts.x += xpWnd;
+            pts.y += ypWnd;
+
 #else
 #error not implemented
 #endif
@@ -1056,9 +1067,9 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
     POINT pts;
     PGOB pgob;
 
-#if defined(KAUAI_WIN32)
     pts.x = xp;
     pts.y = yp;
+#if defined(KAUAI_WIN32)
     if (hNil == (hwnd = WindowFromPoint(pts)) || pvNil == (pgob = PgobFromHwnd(hwnd)))
     {
         if (pvNil != pptLocal)
@@ -1069,10 +1080,24 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
         return pvNil;
     }
     ScreenToClient(hwnd, &pts);
-    return pgob->PgobFromPt(pts.x, pts.y, pptLocal);
+#elif defined(KAUAI_SDL)
+    int xpWnd, ypWnd;
+    SDL_GetWindowPosition((SDL_Window *)vwig.hwndApp, &xpWnd, &ypWnd);
+
+    pts.x -= xpWnd;
+    pts.y -= ypWnd;
+
+    pgob = PgobScreen();
 #else
 #error not implemented
 #endif
+
+    if (pgob == pvNil)
+    {
+        return pvNil;
+    }
+
+    return pgob->PgobFromPt(pts.x, pts.y, pptLocal);
 }
 
 /***************************************************************************

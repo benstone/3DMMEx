@@ -44,8 +44,19 @@ bool GOB::FInitScreen(uint32_t grfgob, int32_t ginDef)
 ***************************************************************************/
 bool GOB::FAttachHwnd(KWND hwnd)
 {
-    // TODO: implement this
-
+    if (_hwnd != kwndNil)
+    {
+        ReleasePpo(&_pgpt);
+        // don't destroy the hwnd - the caller must do that
+        _hwnd = kwndNil;
+    }
+    if (hwnd != kwndNil)
+    {
+        if (pvNil == (_pgpt = GPT::PgptNewHwnd(hwnd)))
+            return fFalse;
+        _hwnd = hwnd;
+        SetRcFromHwnd();
+    }
     return fTrue;
 }
 
@@ -75,7 +86,6 @@ PGOB GOB::PgobFromHwnd(KWND hwnd)
 ***************************************************************************/
 KWND GOB::HwndMdiActive(void)
 {
-    // TODO: we don't have the notion of an "active MDI window"
     RawRtn();
     return kwndNil;
 }
@@ -103,8 +113,7 @@ void GOB::_DestroyHwnd(KWND hwnd)
         return;
     }
 
-    // TODO
-    RawRtn();
+    SDL_DestroyWindow((SDL_Window *)hwnd);
 }
 
 /***************************************************************************
@@ -116,7 +125,24 @@ void GOB::GetPtMouse(PT *ppt, bool *pfDown)
 {
     AssertThis(0);
 
-    // TODO: implement this
+    int xp = 0, yp = 0;
+    int mouseState = SDL_GetMouseState(&xp, &yp);
+
+    if (ppt != pvNil)
+    {
+        PGOB pgob;
+
+        for (pgob = this; pgob != pvNil && pgob->_hwnd == hNil; pgob = pgob->_pgobPar)
+        {
+            xp -= pgob->_rcCur.xpLeft;
+            yp -= pgob->_rcCur.ypTop;
+        }
+
+        ppt->xp = xp;
+        ppt->yp = yp;
+    }
+    if (pfDown != pvNil)
+        *pfDown = mouseState & SDL_BUTTON(SDL_BUTTON_LEFT);
 }
 
 /***************************************************************************
@@ -125,8 +151,7 @@ void GOB::GetPtMouse(PT *ppt, bool *pfDown)
 void GOB::Clean(void)
 {
     AssertThis(0);
-
-    RawRtn();
+    // TODO: update?
 }
 
 /***************************************************************************
@@ -139,8 +164,15 @@ void GOB::SetHwndName(PSTN pstn)
         Bug("GOB doesn't have an hwnd");
         return;
     }
+    if (pvNil != vpmubCur)
+    {
+        // TODO: window chooser: not used in 3DMM
+        RawRtn();
+    }
 
-    RawRtn();
+    U8SZ u8szTitle;
+    pstn->GetUtf8Sz(u8szTitle);
+    SDL_SetWindowTitle((SDL_Window *)_hwnd, u8szTitle);
 }
 
 /***************************************************************************

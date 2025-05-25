@@ -451,6 +451,15 @@ class RC
     }
 #endif // WIN32
 
+#ifdef KAUAI_SDL
+    operator SDL_Rect(void);
+    RC &operator=(SDL_Rect &rect);
+    RC(SDL_Rect &rcs)
+    {
+        *this = rcs;
+    }
+#endif // KAUAI_SDL
+
     void Zero(void)
     {
         AssertThisMem();
