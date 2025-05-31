@@ -1081,7 +1081,7 @@ void RAT::AssertValid(uint32_t grf)
 USAC::USAC(void)
 {
     AssertThisMem();
-    _tsBaseSys = MacWin(TickCount(), timeGetTime());
+    _tsBaseSys = TsCurrentSystem();
     _tsBaseApp = 0;
     _luScale = kluTimeScaleNormal;
 }
