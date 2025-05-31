@@ -62,7 +62,6 @@ void GPT::SetActiveColors(PGL pglclr, uint32_t grfpal)
     int32_t cclr;
 
     AssertNilOrPo(pglclr, 0);
-    Assert((grfpal == fpalNil || grfpal == fpalIdentity), "unsupported grfpal");
 
     // Allocate a palette
     if (_pal == pvNil)
