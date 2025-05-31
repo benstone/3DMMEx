@@ -19,7 +19,7 @@
 /***************************************************************************
     Universal scalable application clock and other time stuff
 ***************************************************************************/
-const uint32_t kdtsSecond = MacWin(60, 1000);
+const uint32_t kdtsSecond = 1000; // milliseconds
 const uint32_t kluTimeScaleNormal = 0x00010000;
 
 typedef class USAC *PUSAC;
