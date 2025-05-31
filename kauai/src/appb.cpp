@@ -1260,13 +1260,6 @@ void APPB::_CopyPixels(PGNV pgnvSrc, RC *prcSrc, PGNV pgnvDst, RC *prcDst)
     AssertPo(pgnvDst, 0);
     AssertVarMem(prcDst);
 
-    // TODO: implement transitions
-    if (_gft != gftNil)
-    {
-        Bug("FIXME: transitions in APPB::_CopyPixels not implemented");
-    }
-    _gft = gftNil;
-
     switch (_gft)
     {
     default:
