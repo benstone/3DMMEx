@@ -302,9 +302,10 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
 
     if (pevt->type == SDL_KEYDOWN)
     {
-        // TODO: translate vk
-        pcmd->vk = vkNil;
-        pcmd->ch = pevt->key.keysym.sym;
+        pcmd->vk = pevt->key.keysym.sym;
+
+        // TODO: translate ch
+        pcmd->ch = ChLit(0);
 
         grfcust &= ~kgrfcustUser;
         if (pevt->key.keysym.mod & SDL_Keymod::KMOD_CTRL)
