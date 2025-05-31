@@ -710,12 +710,6 @@ void APPB::_Loop(void)
             // nothing to do, so enqueue some idle commands
             vpcex->EnqueueCid(cidSelIdle, pvNil, pvNil, _fForeground);
             vpcex->EnqueueCid(cidIdle);
-
-            // TODO: implement frame limiter
-            // HACK: avoid flooding with idle events
-#ifdef WIN32
-            Sleep(0);
-#endif // WIN32
         }
     }
 }
