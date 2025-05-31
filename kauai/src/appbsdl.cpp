@@ -34,6 +34,7 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
     APPB::CreateConsole();
 #endif
     FrameMain();
+    SDL_Quit();
     return 0;
 }
 
@@ -62,8 +63,8 @@ void APPB::CreateConsole()
 ***************************************************************************/
 void APPB::Abort(void)
 {
-    // TODO: SDL
-    // FatalAppExit(0, PszLit("Fatal Error Termination"));
+    // Cleanup SDL
+    SDL_Quit();
     exit(1);
 }
 
