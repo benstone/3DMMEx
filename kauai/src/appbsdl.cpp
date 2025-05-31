@@ -17,6 +17,9 @@ ASSERTNAME
 // TODO: Remove this
 WIG vwig;
 
+// Number of milliseconds to wait for events before doing idle processing
+const uint32_t kdtsIdleTimer = 1;
+
 /***************************************************************************
     WinMain for any frame work app. Sets up vwig and calls FrameMain.
 ***************************************************************************/
@@ -124,7 +127,7 @@ bool APPB::_FGetNextEvt(PEVT pevt)
 
     *pevt = {0};
 
-    if (SDL_PollEvent(&evt) != 0)
+    if (SDL_WaitEventTimeout(&evt, kdtsIdleTimer) != 0)
     {
         // handle this separately
         if (evt.type == SDL_QUIT)
