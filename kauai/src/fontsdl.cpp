@@ -16,6 +16,7 @@ RTCLASS(SDLF)
 
 // TODO: add destructor to NTL to ensure all TTF_Fonts are released
 
+#ifdef DEBUG
 /***************************************************************************
     Assert the validity of the font list.
 ***************************************************************************/
@@ -41,6 +42,8 @@ void NTL::MarkMem(void)
         MarkMemObj(sdlf);
     }
 }
+
+#endif // DEBUG
 
 /***************************************************************************
     Initialize the font table.
