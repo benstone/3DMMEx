@@ -223,14 +223,16 @@ void GPT::UpdateTexture()
 {
     if (_fSurfaceDirty == fTrue)
     {
-        // TODO: Update existing texture rather than creating a new one each time
-        if (_texture != pvNil)
-        {
-            SDL_DestroyTexture(_texture);
-        }
+        // Copy the bitmap from the surface to the texture
+        void *pixels = pvNil;
+        int pitch;
 
-        _texture = SDL_CreateTextureFromSurface(_renderer, _surface);
-        Assert(_texture != pvNil, "creating texture from surface failed");
+        Assert(_texture != pvNil, "no texture");
+        AssertDo(SDL_LockTexture(_texture, NULL, &pixels, &pitch) == 0, "Could not lock texture");
+        AssertDo(SDL_ConvertPixels(_surface->w, _surface->h, _surface->format->format, _surface->pixels,
+                                   _surface->pitch, SDL_PIXELFORMAT_ARGB8888, pixels, pitch) == 0,
+                 "Could not convert pixels");
+        SDL_UnlockTexture(_texture);
 
         _fSurfaceDirty = fFalse;
     }
