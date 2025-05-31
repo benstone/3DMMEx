@@ -121,30 +121,21 @@ bool APPB::_FGetNextEvt(PEVT pevt)
     AssertThis(0);
     AssertVarMem(pevt);
 
-    SDL_Event evt = {0};
-    PGOB pgob = pvNil;
-    bool fHasEvt = fTrue;
-
-    *pevt = {0};
-
-    if (SDL_WaitEventTimeout(&evt, kdtsIdleTimer) != 0)
+    bool fHasEvt = fFalse;
+    if (SDL_WaitEventTimeout(pevt, kdtsIdleTimer))
     {
-        // handle this separately
-        if (evt.type == SDL_QUIT)
+        // If this is a mouse move event, process it and return fFalse so idle processing is performed.
+        if (pevt->type == SDL_MOUSEMOTION)
         {
-            if (pvNil != vpcex)
-                vpcex->EnqueueCid(cidQuit);
+            _DispatchEvt(pevt);
         }
         else
         {
-            *pevt = evt;
+            // We have an event to process
+            fHasEvt = fTrue;
         }
     }
-    else
-    {
-        // No events: do idle processing instead
-        fHasEvt = fFalse;
-    }
+
     return fHasEvt;
 }
 
@@ -220,6 +211,10 @@ void APPB::_DispatchEvt(PEVT pevt)
 
     switch (pevt->type)
     {
+    case SDL_QUIT:
+        if (pvNil != vpcex)
+            vpcex->EnqueueCid(cidQuit);
+        break;
     case SDL_KEYDOWN:
         if (_FTranslateKeyEvt(pevt, (PCMD_KEY)&cmd) && pvNil != vpcex)
             vpcex->EnqueueCmd(&cmd);
