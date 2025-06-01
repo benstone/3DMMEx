@@ -374,7 +374,6 @@ endif()
 add_library(
     KauaiGuiMain
     "${PROJECT_SOURCE_DIR}/kauai/src/appassert.cpp"
-    "${PROJECT_SOURCE_DIR}/kauai/src/appmainwin.cpp"
 )
 target_link_libraries(
     KauaiGuiMain
@@ -386,6 +385,23 @@ target_include_directories(
     PUBLIC
     "${PROJECT_SOURCE_DIR}/kauai/src"
 )
+
+if (3DMM_GUI STREQUAL "Win32")
+    target_sources(
+        KauaiGuiMain
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/appmainwin.cpp"
+    )
+elseif(3DMM_GUI STREQUAL "SDL")
+    target_sources(
+        KauaiGuiMain
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/appmainsdl.cpp"
+    )
+else()
+    message(FATAL_ERROR "Invalid GUI specified: ${3DMM_GUI}")
+endif()
+
 
 # Dlg: Dialog support
 add_library(KauaiDlg
