@@ -20,24 +20,6 @@ WIG vwig;
 // Number of milliseconds to wait for events before doing idle processing
 const uint32_t kdtsIdleTimer = 1;
 
-/***************************************************************************
-    WinMain for any frame work app. Sets up vwig and calls FrameMain.
-***************************************************************************/
-int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
-{
-    vwig.hinst = hinst;
-    vwig.hinstPrev = hinstPrev;
-    vwig.pszCmdLine = GetCommandLine();
-    vwig.wShow = wShow;
-    vwig.lwThreadMain = LwThreadCur();
-#ifdef DEBUG
-    APPB::CreateConsole();
-#endif
-    FrameMain();
-    SDL_Quit();
-    return 0;
-}
-
 /*
  * Create debug console window and wire up std streams
  */
