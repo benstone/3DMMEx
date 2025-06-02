@@ -12,6 +12,8 @@ ASSERTNAME
 // Palette used for drawing 8-bit images
 static SDL_Palette *_pal = pvNil;
 
+#define AssertDoSDL(x) AssertDo(0 == (x), SDL_GetError());
+
 /***************************************************************************
     Static method to flush any pending graphics operations.
 ***************************************************************************/
@@ -98,8 +100,7 @@ void GPT::SetActiveColors(PGL pglclr, uint32_t grfpal)
     }
 
     // Add colours to the palette
-    ret = SDL_SetPaletteColors(_pal, rgsdlc, 0, kcsdlc);
-    Assert(ret == 0, "SDL_SetPaletteColors failed");
+    AssertDoSDL(SDL_SetPaletteColors(_pal, rgsdlc, 0, kcsdlc));
 
     vcactRealize++;
 }
@@ -121,7 +122,7 @@ PGPT GPT::PgptNew(SDL_Window *wnd, int cbitPixel, bool fOffscreen, int dxp, int 
     // get drawable size
     if (!fOffscreen)
     {
-        AssertDo(SDL_GetRendererOutputSize(pgpt->_renderer, &dxp, &dyp) == 0, "GetRendererOutputSize failed");
+        AssertDoSDL(SDL_GetRendererOutputSize(pgpt->_renderer, &dxp, &dyp));
     }
     Assert(dxp != 0, "dxp must be > 0");
     Assert(dyp != 0, "dyp must be > 0");
@@ -139,8 +140,7 @@ PGPT GPT::PgptNew(SDL_Window *wnd, int cbitPixel, bool fOffscreen, int dxp, int 
             _pal = SDL_AllocPalette(256);
         }
 
-        ret = SDL_SetSurfacePalette(pgpt->_surface, _pal);
-        Assert(ret == 0, "SDL_SetSurfacePalette failed");
+        AssertDoSDL(SDL_SetSurfacePalette(pgpt->_surface, _pal));
     }
 
     // Create a texture that is used for rendering
@@ -228,10 +228,9 @@ void GPT::UpdateTexture()
         int pitch;
 
         Assert(_texture != pvNil, "no texture");
-        AssertDo(SDL_LockTexture(_texture, NULL, &pixels, &pitch) == 0, "Could not lock texture");
-        AssertDo(SDL_ConvertPixels(_surface->w, _surface->h, _surface->format->format, _surface->pixels,
-                                   _surface->pitch, SDL_PIXELFORMAT_ARGB8888, pixels, pitch) == 0,
-                 "Could not convert pixels");
+        AssertDoSDL(SDL_LockTexture(_texture, NULL, &pixels, &pitch));
+        AssertDoSDL(SDL_ConvertPixels(_surface->w, _surface->h, _surface->format->format, _surface->pixels,
+                                      _surface->pitch, SDL_PIXELFORMAT_ARGB8888, pixels, pitch));
         SDL_UnlockTexture(_texture);
 
         _fSurfaceDirty = fFalse;
@@ -240,8 +239,7 @@ void GPT::UpdateTexture()
 
 void GPT::DumpBitmap(STN *stnBmp)
 {
-    int ret = SDL_SaveBMP(_surface, stnBmp->Psz());
-    Assert(ret == 0, "SDL_SaveBMP failed");
+    AssertDoSDL(SDL_SaveBMP(_surface, stnBmp->Psz()));
 }
 
 /***************************************************************************
@@ -361,7 +359,7 @@ void GPT::DrawRcs(RCS *prcs, GDD *pgdd)
     else
     {
         // Fill rectangle
-        SDL_FillRect(_surface, &sdlRect, SDL_MapRGB(_surface->format, clrFore.r, clrFore.g, clrFore.b));
+        AssertDoSDL(SDL_FillRect(_surface, &sdlRect, SDL_MapRGB(_surface->format, clrFore.r, clrFore.g, clrFore.b)));
     }
 
     SDL_SetClipRect(_surface, pvNil);
@@ -588,7 +586,7 @@ void GPT::DrawRgch(const achar *prgch, int32_t cch, PTS pts, GDD *pgdd, DSF *pds
     if ((acrBack != kacrClear) && (acrBack != kacrInvert))
     {
         int sdlcolor = SDL_MapRGB(_surface->format, sdlcBack.r, sdlcBack.g, sdlcBack.b);
-        SDL_FillRect(_surface, &sdlRect, sdlcolor);
+        AssertDoSDL(SDL_FillRect(_surface, &sdlRect, sdlcolor));
     }
 
     stnText.SetRgch(prgch, cch);
@@ -599,8 +597,7 @@ void GPT::DrawRgch(const achar *prgch, int32_t cch, PTS pts, GDD *pgdd, DSF *pds
 
     if (surRendered != pvNil)
     {
-        int ret = SDL_BlitSurface(surRendered, pvNil, _surface, &sdlRect);
-        Assert(ret == 0, "BlitSurface failed");
+        AssertDoSDL(SDL_BlitSurface(surRendered, pvNil, _surface, &sdlRect));
         InvalidateTexture();
 
         SDL_FreeSurface(surRendered);
@@ -995,8 +992,8 @@ void GPT::Flip()
     Assert(!_fOffscreen, "drawing an offscreen GPT to the screen?");
 
     // Paint the texture
-    SDL_RenderClear(_renderer);
-    SDL_RenderCopy(_renderer, _texture, NULL, NULL);
+    AssertDoSDL(SDL_RenderClear(_renderer));
+    AssertDoSDL(SDL_RenderCopy(_renderer, _texture, NULL, NULL));
     SDL_RenderPresent(_renderer);
 }
 
