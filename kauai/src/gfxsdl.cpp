@@ -779,88 +779,47 @@ void GPT::CopyPixels(PGPT pgptSrc, RCS *prcsSrc, RCS *prcsDst, GDD *pgdd)
         srectDst.w = prcsDst->right - prcsDst->left;
         srectDst.y = prcsDst->top;
         srectDst.h = prcsDst->bottom - prcsDst->top;
-        SDL_BlitSurface(pgptSrc->_surface, &srectSrc, _surface, &srectDst);
+        AssertDoSDL(SDL_BlitSurface(pgptSrc->_surface, &srectSrc, _surface, &srectDst));
     }
     else
     {
-        // Clipping region is a set of rectangles
-        // We need to break the rectangles up and draw each one
+        // Clipping region is not a rectangle
+        // Use the region scanner to blit the bitmap
 
-        // TODO: REVIEW
-
-        // Source rectangle
-        RC rcClipDest(0, 0, _surface->w, _surface->h);
-
-        // Create a region scanner
         REGSC regsc;
-        int32_t yp, dyp;
-        int cr = 0;
+        RC rcClipDest(*prcsDst);
         regsc.Init(_pregnClip, &rcClipDest);
-        if (!rcClipDest.FEmpty())
+
+        int32_t xpDestStart, xpDestEnd;
+        int32_t ypDest;
+
+        for (ypDest = rcClipDest.ypTop; ypDest < rcClipDest.ypBottom; ypDest++)
         {
-            yp = rcClipDest.ypTop;
-            for (;;)
+            // Find each run on this scan line
+            while (regsc.XpCur() < klwMax)
             {
-                dyp = regsc.DypCur();
-                while (regsc.XpCur() < klwMax)
-                {
-                    // Get destination rectangle
-                    RC rc;
-                    rc.xpLeft = regsc.XpCur() + rcClipDest.xpLeft;
-                    rc.xpRight = regsc.XpFetch() + rcClipDest.xpLeft;
-                    regsc.XpFetch();
-                    rc.ypTop = yp;
-                    rc.ypBottom = yp + dyp;
+                xpDestStart = regsc.XpCur();
+                xpDestEnd = regsc.XpFetch();
 
-                    // Check the destination rectangle is within the caller's src rectangle
-                    RC rcAllSrc = *prcsSrc;
-                    if (!rc.FIntersect(&rcAllSrc))
-                    {
-                        break;
-                    };
+                srectDst.x = rcClipDest.xpLeft + xpDestStart;
+                srectDst.w = xpDestEnd - xpDestStart;
+                srectDst.y = ypDest;
+                srectDst.h = 1;
 
-                    // Check the destination rectangle is within the caller's destination rectangle
-                    RC rcAllDest = *prcsDst;
-                    if (!rc.FIntersect(&rcAllDest))
-                    {
-                        break;
-                    };
+                srectSrc.x = prcsSrc->left + xpDestStart;
+                srectSrc.y = prcsSrc->top + ypDest - rcClipDest.ypTop;
+                srectSrc.w = srectDst.w;
+                srectSrc.h = srectDst.h;
 
-                    // Check the destination rectangle is within the clipping region if provided
-                    if (pgdd->prcsClip != pvNil)
-                    {
-                        RC rcClip = *(pgdd->prcsClip);
-                        if (!rc.FIntersect(&rc))
-                        {
-                            break;
-                        }
-                    }
+                // Blit the line
+                AssertDoSDL(SDL_BlitSurface(pgptSrc->_surface, &srectSrc, _surface, &srectDst));
 
-                    if (!rc.FEmpty())
-                    {
-                        // Convert rectangles to SDL rectangles
-                        srectDst.x = rc.xpLeft;
-                        srectDst.y = rc.ypTop;
-                        srectDst.w = rc.Dxp();
-                        srectDst.h = rc.Dyp();
-
-                        srectSrc = srectDst;
-                        srectSrc.x = srectSrc.x - rcAllDest.xpLeft + rcAllSrc.xpLeft;
-                        srectSrc.y = srectSrc.y - rcAllDest.ypTop + rcAllSrc.ypTop;
-
-                        // Blit
-                        if (SDL_BlitSurface(pgptSrc->_surface, &srectSrc, _surface, &srectDst) != 0)
-                        {
-                            // TODO: error handling
-                            Bug(SDL_GetError());
-                        }
-                    }
-                }
-
-                if ((yp += dyp) >= rcClipDest.ypBottom)
-                    break;
-                regsc.ScanNext(dyp);
+                // Fetch the next run
+                regsc.XpFetch();
             }
+
+            // Move to the next line
+            regsc.ScanNext(1);
         }
     }
 
