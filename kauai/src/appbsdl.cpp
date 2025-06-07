@@ -216,6 +216,37 @@ void APPB::_DispatchEvt(PEVT pevt)
         if (pvNil != vpcex)
             vpcex->EnqueueCid(cidQuit);
         break;
+    case SDL_TEXTINPUT:
+        if (pvNil != vpcex)
+        {
+            Assert(pevt->text.type == SDL_TEXTINPUT, "incorrect message type");
+            int32_t ichLim = SDL_TEXTINPUTEVENT_TEXT_SIZE;
+            for (int32_t ich = 0; ich < ichLim; ich++)
+            {
+                achar ch = pevt->text.text[ich];
+                if (ch == chNil)
+                {
+                    break;
+                }
+
+                if ((ch & 0x80) != 0)
+                {
+                    Bug("UTF-8 not supported yet");
+                    continue;
+                }
+
+                CMD_KEY cmd;
+                ClearPb(&cmd, SIZEOF(cmd));
+
+                cmd.ch = ch;
+                cmd.cact = 1;
+                cmd.cid = cidKey;
+
+                vpcex->EnqueueCmd((PCMD)&cmd);
+            }
+        }
+        ResetToolTip();
+        break;
     case SDL_KEYDOWN:
         if (_FTranslateKeyEvt(pevt, (PCMD_KEY)&cmd) && pvNil != vpcex)
             vpcex->EnqueueCmd(&cmd);
@@ -302,8 +333,6 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
     if (pevt->type == SDL_KEYDOWN)
     {
         pcmd->vk = pevt->key.keysym.sym;
-
-        // TODO: translate ch
         pcmd->ch = ChLit(0);
 
         grfcust &= ~kgrfcustUser;
