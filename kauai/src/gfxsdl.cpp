@@ -329,9 +329,6 @@ void GPT::DrawRcs(RCS *prcs, GDD *pgdd)
         return;
     }
 
-    // Convert color to SDL color
-    SDL_Color clrFore = acrFore._SDLColor();
-
     // Set clipping
     if (pgdd->prcsClip != pvNil)
     {
@@ -341,16 +338,28 @@ void GPT::DrawRcs(RCS *prcs, GDD *pgdd)
 
     SDL_Rect sdlRect(*prcs);
 
-    if ((pgdd->grfgdd & fgddFrame) || (pgdd->grfgdd & fgddPattern))
+    if (acrFore == kacrInvert)
     {
-        // TODO: support fgddPattern
-        // not supported yet
-        // RawRtn();
+        // FIXME: implement inverted rectangles
+        AssertDoSDL(SDL_FillRect(_surface, &sdlRect, SDL_MapRGB(_surface->format, 0, 0, 0)));
     }
     else
     {
-        // Fill rectangle
-        AssertDoSDL(SDL_FillRect(_surface, &sdlRect, SDL_MapRGB(_surface->format, clrFore.r, clrFore.g, clrFore.b)));
+        // Convert color to SDL color
+        SDL_Color clrFore = acrFore._SDLColor();
+
+        if ((pgdd->grfgdd & fgddFrame) || (pgdd->grfgdd & fgddPattern))
+        {
+            // TODO: support fgddPattern
+            // not supported yet
+            // RawRtn();
+        }
+        else
+        {
+            // Fill rectangle
+            AssertDoSDL(
+                SDL_FillRect(_surface, &sdlRect, SDL_MapRGB(_surface->format, clrFore.r, clrFore.g, clrFore.b)));
+        }
     }
 
     SDL_SetClipRect(_surface, pvNil);
@@ -461,7 +470,7 @@ SDL_Color ACR::_SDLColor()
         }
         else if (_lu == kluAcrInvert)
         {
-            Bug("invert not implemented yet");
+            // do nothing
         }
         else
         {
