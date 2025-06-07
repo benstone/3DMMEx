@@ -100,6 +100,12 @@ elseif(3DMM_GUI STREQUAL "SDL")
         PUBLIC
         KAUAI_SDL
     )
+    target_link_libraries(
+        KauaiBase
+        PUBLIC
+        SDL2::SDL2
+        SDL2_ttf::SDL2_ttf
+    )
 else()
     message(FATAL_ERROR "Invalid GUI specified: ${3DMM_GUI}")
 endif()

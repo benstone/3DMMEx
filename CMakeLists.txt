@@ -88,6 +88,13 @@ elseif("${3DMM_GUI}" STREQUAL "SDL")
 
     message(WARNING "SDL support does not work yet!")
 
+    if (WIN32)
+        include(FetchSDL2)
+    endif()
+
+    find_package(SDL2 CONFIG REQUIRED)
+    find_package(SDL2_ttf CONFIG REQUIRED)
+
 endif()
 
 # Optional Tools
