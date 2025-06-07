@@ -686,10 +686,10 @@ void GPT::GetRcsFromRgch(RCS *prcs, const achar *prgch, int32_t cch, PTS pts, DS
         dxp = -dxpText;
         break;
     }
-    prcs->left = pts.x + dxp;
-    prcs->right = pts.x + dxpText + dxp;
-    prcs->top = pts.y + dyp;
-    prcs->bottom = pts.y + tmHeight + dyp;
+    prcs->left = pts.xp + dxp;
+    prcs->right = pts.xp + dxpText + dxp;
+    prcs->top = pts.yp + dyp;
+    prcs->bottom = pts.yp + tmHeight + dyp;
 
     return;
 
