@@ -229,6 +229,42 @@ void APPB::_DispatchEvt(PEVT pevt)
         if (pvNil != vpcex)
             vpcex->EnqueueCid(cidQuit);
         break;
+    case SDL_TEXTINPUT:
+        if (pvNil != vpcex)
+        {
+            Assert(pevt->text.type == SDL_TEXTINPUT, "incorrect message type");
+
+            // Convert text input from UTF-8
+            static_assert((SDL_TEXTINPUTEVENT_TEXT_SIZE + 1) < kcchTotUtf8Sz,
+                          "UTF8 string type not big enough for SDL text input");
+            U8SZ u8szInput;
+            ClearPb(u8szInput, SIZEOF(u8szInput));
+            CopyPb(pevt->text.text, u8szInput, SDL_TEXTINPUTEVENT_TEXT_SIZE);
+
+            STN stnInput;
+            stnInput.SetUtf8Sz(u8szInput);
+
+            // Create cidKey events for each character
+            for (int32_t ich = 0; ich < stnInput.Cch(); ich++)
+            {
+                achar ch = stnInput.Psz()[ich];
+                if (ch == chNil)
+                {
+                    break;
+                }
+
+                CMD_KEY cmd;
+                ClearPb(&cmd, SIZEOF(cmd));
+
+                cmd.ch = ch;
+                cmd.cact = 1;
+                cmd.cid = cidKey;
+
+                vpcex->EnqueueCmd((PCMD)&cmd);
+            }
+        }
+        ResetToolTip();
+        break;
     case SDL_KEYDOWN:
         if (_FTranslateKeyEvt(pevt, (PCMD_KEY)&cmd) && pvNil != vpcex)
             vpcex->EnqueueCmd(&cmd);
@@ -315,8 +351,6 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
     if (pevt->type == SDL_KEYDOWN)
     {
         pcmd->vk = pevt->key.keysym.sym;
-
-        // TODO: translate ch
         pcmd->ch = ChLit(0);
 
         grfcust &= ~kgrfcustUser;
@@ -326,9 +360,8 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
             grfcust |= fcustShift;
         if (pevt->key.keysym.mod & SDL_Keymod::KMOD_ALT)
             grfcust |= fcustOption;
-        // TODO: can't map fcustMouse: used in a few places
         pcmd->grfcust = grfcust;
-        pcmd->cact = pevt->key.repeat; // TODO: number of repeats, not just "repeat"
+        pcmd->cact = 1;
     }
 
     return fTrue;
