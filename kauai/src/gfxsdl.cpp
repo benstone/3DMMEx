@@ -335,20 +335,11 @@ void GPT::DrawRcs(RCS *prcs, GDD *pgdd)
     // Set clipping
     if (pgdd->prcsClip != pvNil)
     {
-        SDL_Rect sdlRectClip;
-        sdlRectClip.x = pgdd->prcsClip->left;
-        sdlRectClip.w = pgdd->prcsClip->right - pgdd->prcsClip->left;
-        sdlRectClip.y = pgdd->prcsClip->top;
-        sdlRectClip.h = pgdd->prcsClip->bottom - pgdd->prcsClip->top;
-
+        SDL_Rect sdlRectClip = *pgdd->prcsClip;
         SDL_SetClipRect(_surface, &sdlRectClip);
     }
 
-    SDL_Rect sdlRect;
-    sdlRect.x = prcs->left;
-    sdlRect.y = prcs->top;
-    sdlRect.w = prcs->right - prcs->left;
-    sdlRect.h = prcs->bottom - prcs->top;
+    SDL_Rect sdlRect(*prcs);
 
     if ((pgdd->grfgdd & fgddFrame) || (pgdd->grfgdd & fgddPattern))
     {
@@ -564,21 +555,12 @@ void GPT::DrawRgch(const achar *prgch, int32_t cch, PTS pts, GDD *pgdd, DSF *pds
     ttfFont = vntl.TtfFontFromOnn(pdsf->onn);
     _SetTextProps(ttfFont, pdsf);
 
-    SDL_Rect sdlRect;
-    sdlRect.x = rcs.left;
-    sdlRect.y = rcs.top;
-    sdlRect.w = rcs.right - rcs.left;
-    sdlRect.h = rcs.bottom - rcs.top;
+    SDL_Rect sdlRect(rcs);
 
     // Set clipping
     if (pgdd->prcsClip != pvNil)
     {
-        SDL_Rect sdlRectClip;
-        sdlRectClip.x = pgdd->prcsClip->left;
-        sdlRectClip.w = pgdd->prcsClip->right - pgdd->prcsClip->left;
-        sdlRectClip.y = pgdd->prcsClip->top;
-        sdlRectClip.h = pgdd->prcsClip->bottom - pgdd->prcsClip->top;
-
+        SDL_Rect sdlRectClip(*pgdd->prcsClip);
         SDL_SetClipRect(_surface, &sdlRectClip);
     }
 
@@ -686,15 +668,15 @@ void GPT::GetRcsFromRgch(RCS *prcs, const achar *prgch, int32_t cch, PTS pts, DS
         dxp = -dxpText;
         break;
     }
-    prcs->left = pts.xp + dxp;
-    prcs->right = pts.xp + dxpText + dxp;
-    prcs->top = pts.yp + dyp;
-    prcs->bottom = pts.yp + tmHeight + dyp;
+    prcs->xpLeft = pts.xp + dxp;
+    prcs->xpRight = pts.xp + dxpText + dxp;
+    prcs->ypTop = pts.yp + dyp;
+    prcs->ypBottom = pts.yp + tmHeight + dyp;
 
     return;
 
 LError:
-    *prcs = {0};
+    prcs->Zero();
     PushErc(ercGfxCantSetFont);
     return;
 }
@@ -759,11 +741,7 @@ void GPT::CopyPixels(PGPT pgptSrc, RCS *prcsSrc, RCS *prcsDst, GDD *pgdd)
     // TODO: refactor: reduce duplication of clipping rect setup
     if (pgdd->prcsClip != pvNil)
     {
-        SDL_Rect sdlRectClip;
-        sdlRectClip.x = pgdd->prcsClip->left;
-        sdlRectClip.w = pgdd->prcsClip->right - pgdd->prcsClip->left;
-        sdlRectClip.y = pgdd->prcsClip->top;
-        sdlRectClip.h = pgdd->prcsClip->bottom - pgdd->prcsClip->top;
+        SDL_Rect sdlRectClip(*pgdd->prcsClip);
         SDL_SetClipRect(_surface, &sdlRectClip);
         fSetClip = fTrue;
     }
@@ -771,14 +749,8 @@ void GPT::CopyPixels(PGPT pgptSrc, RCS *prcsSrc, RCS *prcsDst, GDD *pgdd)
     if (_pregnClip == pvNil || _pregnClip->FIsRc())
     {
         // Clipping region is a rectangle
-        srectSrc.x = prcsSrc->left;
-        srectSrc.w = prcsSrc->right - prcsSrc->left;
-        srectSrc.y = prcsSrc->top;
-        srectSrc.h = prcsSrc->bottom - prcsSrc->top;
-        srectDst.x = prcsDst->left;
-        srectDst.w = prcsDst->right - prcsDst->left;
-        srectDst.y = prcsDst->top;
-        srectDst.h = prcsDst->bottom - prcsDst->top;
+        srectSrc = *prcsSrc;
+        srectDst = *prcsDst;
         AssertDoSDL(SDL_BlitSurface(pgptSrc->_surface, &srectSrc, _surface, &srectDst));
     }
     else
@@ -806,8 +778,8 @@ void GPT::CopyPixels(PGPT pgptSrc, RCS *prcsSrc, RCS *prcsDst, GDD *pgdd)
                 srectDst.y = ypDest;
                 srectDst.h = 1;
 
-                srectSrc.x = prcsSrc->left + xpDestStart;
-                srectSrc.y = prcsSrc->top + ypDest - rcClipDest.ypTop;
+                srectSrc.x = prcsSrc->xpLeft + xpDestStart;
+                srectSrc.y = prcsSrc->ypTop + ypDest - rcClipDest.ypTop;
                 srectSrc.w = srectDst.w;
                 srectSrc.h = srectDst.h;
 
