@@ -134,6 +134,13 @@ bool FPortGetFniOpen(FNI *pfni, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle, FNI *pf
     ofn.lpTemplateName = MAKEINTRESOURCE(dlidPortfolio);
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLEHOOK | OFN_ENABLETEMPLATE;
 
+#ifdef KAUAI_SDL
+    // Dialog customizations are not supported when using SDL
+    ofn.lpfnHook = NULL;
+    ofn.lpTemplateName = 0;
+    ofn.Flags &= ~(OFN_ENABLEHOOK | OFN_ENABLETEMPLATE);
+#endif // KAUAI_SDL
+
     // lpstrDefExt is used for appended to the user typed filename is
     // one is entered without an extension. As the user cannot type
     // anything during a portfolio open, we don't use the lpstrDefExt here.
@@ -265,6 +272,13 @@ bool FPortGetFniSave(FNI *pfni, LPCTSTR lpstrFilter, LPCTSTR lpstrTitle, LPCTSTR
 
     // Do not allow the save portfolio to change the current directory.
     ofn.Flags |= OFN_NOCHANGEDIR;
+
+#ifdef KAUAI_SDL
+    // Dialog customizations are not supported when using SDL
+    ofn.lpfnHook = NULL;
+    ofn.lpTemplateName = 0;
+    ofn.Flags &= ~(OFN_ENABLEHOOK | OFN_ENABLETEMPLATE);
+#endif // KAUAI_SDL
 
     // Let the initial dir be the user's dir.
     vapp.GetFniUser(&fniUserDir);
