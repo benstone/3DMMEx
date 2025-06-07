@@ -772,11 +772,13 @@ void GPT::CopyPixels(PGPT pgptSrc, RCS *prcsSrc, RCS *prcsDst, GDD *pgdd)
         regsc.Init(_pregnClip, &rcClipDest);
 
         int32_t xpDestStart, xpDestEnd;
-        int32_t ypDest;
+        int32_t ypDest, dyp;
 
-        for (ypDest = rcClipDest.ypTop; ypDest < rcClipDest.ypBottom; ypDest++)
+        for (ypDest = rcClipDest.ypTop; ypDest < rcClipDest.ypBottom; ypDest += dyp)
         {
-            // Find each run on this scan line
+            dyp = regsc.DypCur();
+
+            // Find each rectangle at this scan line
             while (regsc.XpCur() < klwMax)
             {
                 xpDestStart = regsc.XpCur();
@@ -785,22 +787,22 @@ void GPT::CopyPixels(PGPT pgptSrc, RCS *prcsSrc, RCS *prcsDst, GDD *pgdd)
                 srectDst.x = rcClipDest.xpLeft + xpDestStart;
                 srectDst.w = xpDestEnd - xpDestStart;
                 srectDst.y = ypDest;
-                srectDst.h = 1;
+                srectDst.h = dyp;
 
                 srectSrc.x = prcsSrc->xpLeft + xpDestStart;
                 srectSrc.y = prcsSrc->ypTop + ypDest - rcClipDest.ypTop;
                 srectSrc.w = srectDst.w;
                 srectSrc.h = srectDst.h;
 
-                // Blit the line
+                // Blit the rectangle
                 AssertDoSDL(SDL_BlitSurface(pgptSrc->_surface, &srectSrc, _surface, &srectDst));
 
                 // Fetch the next run
                 regsc.XpFetch();
             }
 
-            // Move to the next line
-            regsc.ScanNext(1);
+            // Move to the next change in rectangles
+            regsc.ScanNext(dyp);
         }
     }
 
