@@ -1006,6 +1006,35 @@ RC::operator RECT(void)
 
 #endif // WIN32
 
+#ifdef KAUAI_SDL
+
+// Convert from an SDL rectangle
+RC &RC::operator=(SDL_Rect &rcs)
+{
+    AssertThisMem();
+
+    xpLeft = rcs.x;
+    xpRight = rcs.x + rcs.w;
+    ypTop = rcs.y;
+    ypBottom = rcs.y + rcs.h;
+    return *this;
+}
+
+// Convert to an SDL rectangle
+RC::operator SDL_Rect(void)
+{
+    AssertThisMem();
+    SDL_Rect rect;
+
+    rect.x = xpLeft;
+    rect.w = xpRight - xpLeft;
+    rect.y = ypTop;
+    rect.h = ypBottom - ypTop;
+    return rect;
+}
+
+#endif // KAUAI_SDL
+
 /***************************************************************************
     Return the area of the rectangle.
 ***************************************************************************/
