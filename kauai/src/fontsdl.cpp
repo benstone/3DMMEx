@@ -14,7 +14,28 @@ ASSERTNAME
 
 RTCLASS(SDLF)
 
-// TODO: add destructor to NTL to ensure all TTF_Fonts are released
+NTL::~NTL(void)
+{
+    if (_pgst != pvNil)
+    {
+        for (int32_t onn = 0; onn < _pgst->IvMac(); onn++)
+        {
+            PGL pgl;
+            _pgst->GetExtra(onn, &pgl);
+            if (pgl != pvNil)
+            {
+                PSDLF psdlf = pvNil;
+                while (pgl->FPop(&psdlf))
+                {
+                    ReleasePpo(&psdlf);
+                }
+            }
+
+            ReleasePpo(&pgl);
+        }
+    }
+    ReleasePpo(&_pgst);
+}
 
 #ifdef DEBUG
 /***************************************************************************
@@ -37,9 +58,18 @@ void NTL::MarkMem(void)
 
     for (int32_t onn = 0; onn < _pgst->IstnMac(); onn++)
     {
-        SDLF *sdlf = pvNil;
-        _pgst->GetExtra(onn, &sdlf);
-        MarkMemObj(sdlf);
+        PGL pglsdlf = pvNil;
+        _pgst->GetExtra(onn, &pglsdlf);
+        if (pglsdlf != pvNil)
+        {
+            MarkMemObj(pglsdlf);
+            for (int32_t isdlf = 0; isdlf < pglsdlf->IvMac(); isdlf++)
+            {
+                PSDLF psdlf;
+                pglsdlf->Get(isdlf, &psdlf);
+                MarkMemObj(psdlf);
+            }
+        }
     }
 }
 
@@ -52,7 +82,9 @@ bool NTL::FInit(void)
 {
     STN stnFontName, stnFontPath;
     FNI fniFont;
-    SDLF *fntComicSans = pvNil;
+    PSDLF psdlfComicSans = pvNil;
+    PGL pglsdlf = pvNil;
+    int32_t onn;
     int ret;
 
     // Initialize SDL TTF
@@ -64,37 +96,51 @@ bool NTL::FInit(void)
         return fFalse;
     }
 
-    // Allocate GST to map font names/numbers to an SDLFont class
-    if (pvNil == (_pgst = GST::PgstNew(SIZEOF(SDLF *))))
+    // Allocate GST to store font face names
+    if (pvNil == (_pgst = GST::PgstNew(sizeof(PGL))))
         goto LFail;
 
     // TODO: enumerate fonts
     // For now we will add exactly one font to the list
     stnFontName = "Comic Sans MS";
-    stnFontPath = "C:\\windows\\fonts\\comicbd.ttf";
 
+    // Create list to map a font face to SDL fonts
+    if (pvNil == (pglsdlf = GL::PglNew(sizeof(PSDLF), 0)))
+        goto LFail;
+
+    // Add font face to list
+    AssertDo(_pgst->FAddStn(&stnFontName, &pglsdlf, &onn), "Could not add font name to list");
+
+    // Create fonts
+
+    // Comic Sans MS Bold and Italic
+    stnFontPath = "C:\\windows\\fonts\\comicz.ttf";
     AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(fntComicSans = SDLF::PsdlfNew(&fniFont), "Failed to allocate font");
+    AssertDo(psdlfComicSans = SDLF::PsdlfNew(&fniFont, (fontBold | fontItalic)), "Could not allocate font");
+    pglsdlf->FAdd(&psdlfComicSans);
 
-    if (fntComicSans == pvNil)
-    {
-        goto LFail;
-    }
+    // Comic Sans MS Italic
+    stnFontPath = "C:\\windows\\fonts\\comici.ttf";
+    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
+    AssertDo(psdlfComicSans = SDLF::PsdlfNew(&fniFont, fontItalic), "Could not allocate font");
+    pglsdlf->FAdd(&psdlfComicSans);
 
-    // Move pointer to SDLF to the GST
-    if (_pgst->FAddStn(&stnFontName, &fntComicSans, pvNil))
-    {
-        fntComicSans = pvNil;
-    }
-    else
-    {
-        goto LFail;
-    }
+    // Comic Sans MS Bold
+    stnFontPath = "C:\\windows\\fonts\\comicbd.ttf";
+    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
+    AssertDo(psdlfComicSans = SDLF::PsdlfNew(&fniFont, fontBold), "Could not allocate font");
+    pglsdlf->FAdd(&psdlfComicSans);
+
+    // Comic Sans MS
+    stnFontPath = "C:\\windows\\fonts\\comic.ttf";
+    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
+    AssertDo(psdlfComicSans = SDLF::PsdlfNew(&fniFont, fontAll), "Could not allocate font");
+    pglsdlf->FAdd(&psdlfComicSans);
 
     return fTrue;
 
 LFail:
-    ReleasePpo(&fntComicSans);
+    ReleasePpo(&psdlfComicSans);
     return fFalse;
 }
 
@@ -107,26 +153,68 @@ bool NTL::FFixedPitch(int32_t onn)
     return fFalse;
 }
 
-// Return the TTF_Font for the given font number
-TTF_Font *NTL::TtfFontFromOnn(int32_t onn)
+TTF_Font *NTL::TtfFontFromDsf(DSF *pdsf)
 {
-    SDLF *fntThis = pvNil;
-    TTF_Font *ttfThis = pvNil;
-    _pgst->GetExtra(onn, &fntThis);
+    AssertPo(pdsf, 0);
 
-    if (fntThis != pvNil)
+    PGL pglsdlf = pvNil;
+    TTF_Font *pttf = pvNil;
+    int32_t grfontWanted = 0;
+
+    if (pdsf == pvNil)
+        return pvNil;
+
+    // Find the list of SDL fonts for this font face number
+    _pgst->GetExtra(pdsf->onn, &pglsdlf);
+    if (pglsdlf == pvNil)
+        return pvNil;
+
+    // Go through the font list twice to find the best match
+    // First, try for an exact match of font style flags
+    // If not found, try matching the font styles with what the font can do
+    grfontWanted = pdsf->grfont;
+    for (int32_t cact = 0; cact < 2; cact++)
     {
-        ttfThis = fntThis->PttfFont();
+        for (int32_t ifnt = 0; ifnt < pglsdlf->IvMac(); ifnt++)
+        {
+            PSDLF *ppsdlf = (PSDLF *)pglsdlf->QvGet(ifnt);
+            if (ppsdlf != pvNil && *ppsdlf != pvNil)
+            {
+                int32_t grfont = (*ppsdlf)->Grfont();
+
+                bool fMatch = fFalse;
+                if (cact == 0)
+                {
+                    fMatch = grfont == grfontWanted;
+                }
+                else if (cact == 1)
+                {
+                    fMatch = (grfontWanted != 0) && ((grfontWanted & grfont) == grfontWanted);
+                    if (!fMatch)
+                    {
+                        fMatch = (grfont == fontAll);
+                    }
+                }
+
+                if (fMatch)
+                {
+                    pttf = (*ppsdlf)->PttfFont();
+                    break;
+                }
+            }
+        }
+
+        if (pttf != pvNil)
+        {
+            break;
+        }
     }
 
-    // TODO: REFACTOR: Pass DSF* to this function so that we can return the correct fonts for different styles.
-    // Some fonts use separate TTF files for bold/italic. Critically for 3DMM, one of these fonts is Comic Sans MS.
-    // We need to return the correct TTF file given the flags in the DSF.
-
-    return ttfThis;
+    Assert(pttf != pvNil, "Did not match any font");
+    return pttf;
 }
 
-PSDLF SDLF::PsdlfNew(PFNI pfniFont)
+PSDLF SDLF::PsdlfNew(PFNI pfniFont, int32_t grffont)
 {
     PSDLF psdlf = pvNil;
 
@@ -137,6 +225,7 @@ PSDLF SDLF::PsdlfNew(PFNI pfniFont)
     }
 
     psdlf->_fniFont = *pfniFont;
+    psdlf->_grfont = grffont;
 
     return psdlf;
 
