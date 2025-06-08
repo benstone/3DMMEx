@@ -108,8 +108,9 @@ class NTL : public NTL_PAR
     bool FFixedPitch(int32_t onn);
 
 #ifdef KAUAI_SDL
-    // Return the TTF_Font for the given font number
-    TTF_Font *TtfFontFromOnn(int32_t onn);
+
+    // Get a TTF font from a font description
+    TTF_Font *TtfFontFromDsf(DSF *pdsf);
 
 #endif // KAUAI_SDL
 
