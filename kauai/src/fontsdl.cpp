@@ -12,7 +12,9 @@ ASSERTNAME
 #include "gfx.h"
 #include "fontsdl.h"
 
-RTCLASS(SDLF)
+RTCLASS(SDLFont)
+RTCLASS(SDLFontFile)
+RTCLASS(SDLFontMemory)
 
 NTL::~NTL(void)
 {
@@ -24,7 +26,7 @@ NTL::~NTL(void)
             _pgst->GetExtra(onn, &pgl);
             if (pgl != pvNil)
             {
-                PSDLF psdlf = pvNil;
+                PSDLFont psdlf = pvNil;
                 while (pgl->FPop(&psdlf))
                 {
                     ReleasePpo(&psdlf);
@@ -58,15 +60,15 @@ void NTL::MarkMem(void)
 
     for (int32_t onn = 0; onn < _pgst->IstnMac(); onn++)
     {
-        PGL pglsdlf = pvNil;
-        _pgst->GetExtra(onn, &pglsdlf);
-        if (pglsdlf != pvNil)
+        PGL pglsdlfont = pvNil;
+        _pgst->GetExtra(onn, &pglsdlfont);
+        if (pglsdlfont != pvNil)
         {
-            MarkMemObj(pglsdlf);
-            for (int32_t isdlf = 0; isdlf < pglsdlf->IvMac(); isdlf++)
+            MarkMemObj(pglsdlfont);
+            for (int32_t isdlf = 0; isdlf < pglsdlfont->IvMac(); isdlf++)
             {
-                PSDLF psdlf;
-                pglsdlf->Get(isdlf, &psdlf);
+                PSDLFont psdlf;
+                pglsdlfont->Get(isdlf, &psdlf);
                 MarkMemObj(psdlf);
             }
         }
@@ -82,8 +84,8 @@ bool NTL::FInit(void)
 {
     STN stnFontName, stnFontPath;
     FNI fniFont;
-    PSDLF psdlfComicSans = pvNil;
-    PGL pglsdlf = pvNil;
+    PSDLFont psdlfComicSans = pvNil;
+    PGL pglsdlfont = pvNil;
     int32_t onn;
     int ret;
 
@@ -101,47 +103,85 @@ bool NTL::FInit(void)
         goto LFail;
 
     // TODO: enumerate fonts
-    // For now we will add exactly one font to the list
+
+    // Add system font
+    stnFontName = "System";
+    AssertDo(FAddFontName(stnFontName.Psz(), &onn, &pglsdlfont), "Could not add system font");
+
+    stnFontPath = "C:\\windows\\fonts\\vgasys.fon";
+    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
+    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, (fontBold | fontItalic)),
+             "Could not allocate font");
+    pglsdlfont->FAdd(&psdlfComicSans);
+    ReleasePpo(&pglsdlfont);
+
+    // Add Comic Sans MS
     stnFontName = "Comic Sans MS";
-
-    // Create list to map a font face to SDL fonts
-    if (pvNil == (pglsdlf = GL::PglNew(sizeof(PSDLF), 0)))
-        goto LFail;
-
-    // Add font face to list
-    AssertDo(_pgst->FAddStn(&stnFontName, &pglsdlf, &onn), "Could not add font name to list");
-
-    // Create fonts
+    AssertDo(FAddFontName(stnFontName.Psz(), &onn, &pglsdlfont), "Could not add system font");
 
     // Comic Sans MS Bold and Italic
     stnFontPath = "C:\\windows\\fonts\\comicz.ttf";
     AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLF::PsdlfNew(&fniFont, (fontBold | fontItalic)), "Could not allocate font");
-    pglsdlf->FAdd(&psdlfComicSans);
+    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, (fontBold | fontItalic)),
+             "Could not allocate font");
+    pglsdlfont->FAdd(&psdlfComicSans);
 
     // Comic Sans MS Italic
     stnFontPath = "C:\\windows\\fonts\\comici.ttf";
     AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLF::PsdlfNew(&fniFont, fontItalic), "Could not allocate font");
-    pglsdlf->FAdd(&psdlfComicSans);
+    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, fontItalic), "Could not allocate font");
+    pglsdlfont->FAdd(&psdlfComicSans);
 
     // Comic Sans MS Bold
     stnFontPath = "C:\\windows\\fonts\\comicbd.ttf";
     AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLF::PsdlfNew(&fniFont, fontBold), "Could not allocate font");
-    pglsdlf->FAdd(&psdlfComicSans);
+    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, fontBold), "Could not allocate font");
+    pglsdlfont->FAdd(&psdlfComicSans);
 
     // Comic Sans MS
     stnFontPath = "C:\\windows\\fonts\\comic.ttf";
     AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLF::PsdlfNew(&fniFont, fontAll), "Could not allocate font");
-    pglsdlf->FAdd(&psdlfComicSans);
+    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, fontAll), "Could not allocate font");
+    pglsdlfont->FAdd(&psdlfComicSans);
+
+    ReleasePpo(&pglsdlfont);
 
     return fTrue;
 
 LFail:
     ReleasePpo(&psdlfComicSans);
     return fFalse;
+}
+
+bool NTL::FAddFontName(PCSZ pcszFontName, int32_t *ponn, PGL *pglsdlfont)
+{
+    AssertSz(pcszFontName);
+    AssertPvCb(ponn, SIZEOF(*ponn));
+    AssertPvCb(pglsdlfont, SIZEOF(*pglsdlfont));
+
+    bool fRet = fFalse;
+    PGL pgl = pvNil;
+    STN stnFontName = pcszFontName;
+
+    // Create list to map a font face to SDL fonts
+    if (pvNil == (pgl = GL::PglNew(sizeof(PSDLFont), 0)))
+        goto LFail;
+
+    fRet = _pgst->FAddStn(&stnFontName, &pgl, ponn);
+    Assert(fRet, "Could not add font to list");
+    if (fRet)
+    {
+        // List is now owned by the GST
+        pgl->AddRef();
+
+        // Return a reference to the caller
+        pgl->AddRef();
+        *pglsdlfont = pgl;
+    }
+
+LFail:
+    ReleasePpo(&pgl);
+    return fRet;
 }
 
 /***************************************************************************
@@ -157,7 +197,7 @@ TTF_Font *NTL::TtfFontFromDsf(DSF *pdsf)
 {
     AssertPo(pdsf, 0);
 
-    PGL pglsdlf = pvNil;
+    PGL pglsdlfont = pvNil;
     TTF_Font *pttf = pvNil;
     int32_t grfontWanted = 0;
 
@@ -165,8 +205,8 @@ TTF_Font *NTL::TtfFontFromDsf(DSF *pdsf)
         return pvNil;
 
     // Find the list of SDL fonts for this font face number
-    _pgst->GetExtra(pdsf->onn, &pglsdlf);
-    if (pglsdlf == pvNil)
+    _pgst->GetExtra(pdsf->onn, &pglsdlfont);
+    if (pglsdlfont == pvNil)
         return pvNil;
 
     // Go through the font list twice to find the best match
@@ -175,9 +215,9 @@ TTF_Font *NTL::TtfFontFromDsf(DSF *pdsf)
     grfontWanted = pdsf->grfont;
     for (int32_t cact = 0; cact < 2; cact++)
     {
-        for (int32_t ifnt = 0; ifnt < pglsdlf->IvMac(); ifnt++)
+        for (int32_t ifnt = 0; ifnt < pglsdlfont->IvMac(); ifnt++)
         {
-            PSDLF *ppsdlf = (PSDLF *)pglsdlf->QvGet(ifnt);
+            PSDLFont *ppsdlf = (PSDLFont *)pglsdlfont->QvGet(ifnt);
             if (ppsdlf != pvNil && *ppsdlf != pvNil)
             {
                 int32_t grfont = (*ppsdlf)->Grfont();
@@ -214,54 +254,41 @@ TTF_Font *NTL::TtfFontFromDsf(DSF *pdsf)
     return pttf;
 }
 
-PSDLF SDLF::PsdlfNew(PFNI pfniFont, int32_t grffont)
-{
-    PSDLF psdlf = pvNil;
-
-    if (pvNil == (psdlf = NewObj SDLF))
-    {
-        PushErc(ercOomNew);
-        goto LFail;
-    }
-
-    psdlf->_fniFont = *pfniFont;
-    psdlf->_grfont = grffont;
-
-    return psdlf;
-
-LFail:
-    if (psdlf)
-    {
-        ReleasePpo(&psdlf);
-    }
-    return pvNil;
-}
-
-TTF_Font *SDLF::PttfFont()
+TTF_Font *SDLFont::PttfFont()
 {
     // Load the font on first use
     if (_ttfFont == pvNil && !_fLoadFailed)
     {
-        STN stnFontPath;
-        _fniFont.GetStnPath(&stnFontPath);
-        _ttfFont = TTF_OpenFont(stnFontPath.Psz(), 0);
-
-        if (_ttfFont == pvNil)
+        _fLoadFailed = fTrue;
+        SDL_RWops *rwops = GetFontRWops();
+        if (rwops != pvNil)
         {
-            // Loading the font failed
-            PushErc(ercGfxCantSetFont);
-            PCSZ pszErr = TTF_GetError();
-            Assert(0, pszErr);
+            _ttfFont = TTF_OpenFontRW(rwops, 1, 0);
 
-            // Don't try to load it again
-            _fLoadFailed = fTrue;
+            if (_ttfFont != pvNil)
+            {
+                _fLoadFailed = fFalse;
+                // The TTF font object now owns the rwops object
+                rwops = pvNil;
+            }
+            else
+            {
+                PCSZ pszErr = TTF_GetError();
+                Assert(0, pszErr);
+                PushErc(ercGfxCantSetFont);
+            }
+
+            if (rwops != pvNil)
+            {
+                SDL_RWclose(rwops);
+            }
         }
     }
 
     return _ttfFont;
 }
 
-SDLF::~SDLF()
+SDLFont::~SDLFont()
 {
     // Free font
     if (_ttfFont != pvNil)
@@ -269,4 +296,54 @@ SDLF::~SDLF()
         TTF_CloseFont(_ttfFont);
         _ttfFont = pvNil;
     }
+}
+
+PSDLFontFile SDLFontFile::PSDLFontFileNew(PFNI pfniFont, int32_t grffont)
+{
+    PSDLFontFile psdlf = pvNil;
+
+    if (pvNil == (psdlf = NewObj SDLFontFile))
+    {
+        PushErc(ercOomNew);
+        return pvNil;
+    }
+
+    psdlf->_fniFont = *pfniFont;
+    psdlf->_grfont = grffont;
+
+    return psdlf;
+}
+
+SDL_RWops *SDLFontFile::GetFontRWops()
+{
+    STN stnFontPath;
+    _fniFont.GetStnPath(&stnFontPath);
+
+    SDL_RWops *rwops = SDL_RWFromFile(stnFontPath.Psz(), "rb");
+    Assert(rwops != pvNil, "Opening file failed!");
+    return rwops;
+}
+
+PSDLFontMemory SDLFontMemory::PSDLFontMemoryNew(const uint8_t *pbFont, const int32_t cbFont, int32_t grffont)
+{
+    PSDLFontMemory psdlf = pvNil;
+
+    if (pvNil == (psdlf = NewObj SDLFontMemory))
+    {
+        PushErc(ercOomNew);
+        return pvNil;
+    }
+
+    psdlf->_pbFont = pbFont;
+    psdlf->_cbFont = cbFont;
+    psdlf->_grfont = grffont;
+
+    return psdlf;
+}
+
+SDL_RWops *SDLFontMemory::GetFontRWops()
+{
+    SDL_RWops *rwops = SDL_RWFromConstMem(_pbFont, _cbFont);
+    Assert(rwops != pvNil, "Opening file failed!");
+    return rwops;
 }

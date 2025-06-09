@@ -85,6 +85,19 @@ class NTL : public NTL_PAR
     PGST _pgst;
     int32_t _onnSystem;
 
+#ifdef KAUAI_SDL
+
+    /**
+     * @brief Add a font face to the SDL font list
+     *
+     * @param pcszFontName Font face name
+     * @param ponn Set to the font number
+     * @param pglsdlfont Set to the list of SDLFont objects. Release with ReleasePpo().
+     */
+    bool FAddFontName(PCSZ pcszFontName, int32_t *ponn, PGL *pglsdlfont);
+
+#endif // KAUAI_SDL
+
   public:
     NTL(void);
     ~NTL(void);
