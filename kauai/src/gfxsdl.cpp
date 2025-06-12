@@ -522,6 +522,8 @@ void GPT::_SetTextProps(TTF_Font *ttfFont, DSF *pdsf)
         Bug("not implemented");
     }
     TTF_SetFontStyle(ttfFont, fontStyle);
+
+    TTF_SetFontHinting(ttfFont, TTF_HINTING_MONO);
 }
 
 /***************************************************************************
