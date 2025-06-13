@@ -588,6 +588,7 @@ void GPT::DrawRgch(const achar *prgch, int32_t cch, PTS pts, GDD *pgdd, DSF *pds
     stnText.SetRgch(prgch, cch);
 
     // Draw text
+    // TODO: Convert string from CP1252 to a character set supported by SDL_TTF
     surRendered = TTF_RenderText_Solid(ttfFont, stnText.Psz(), sdlcFore);
     Assert(surRendered != pvNil, "TTF_RenderText failed");
 
