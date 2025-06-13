@@ -104,17 +104,6 @@ bool NTL::FInit(void)
 
     // TODO: enumerate fonts
 
-    // Add system font
-    stnFontName = "System";
-    AssertDo(FAddFontName(stnFontName.Psz(), &onn, &pglsdlfont), "Could not add system font");
-
-    stnFontPath = "C:\\windows\\fonts\\vgasys.fon";
-    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, (fontBold | fontItalic)),
-             "Could not allocate font");
-    pglsdlfont->FAdd(&psdlfComicSans);
-    ReleasePpo(&pglsdlfont);
-
     // Add Comic Sans MS
     stnFontName = "Comic Sans MS";
     AssertDo(FAddFontName(stnFontName.Psz(), &onn, &pglsdlfont), "Could not add system font");
@@ -144,6 +133,18 @@ bool NTL::FInit(void)
     AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, fontAll), "Could not allocate font");
     pglsdlfont->FAdd(&psdlfComicSans);
 
+    ReleasePpo(&pglsdlfont);
+
+    // Add a system default font last
+    stnFontName = "System";
+    AssertDo(FAddFontName(stnFontName.Psz(), &onn, &pglsdlfont), "Could not add system font");
+    _onnSystem = onn;
+
+    // TODO: package a default font
+    stnFontPath = "C:\\windows\\fonts\\vgasys.fon";
+    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
+    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, fontAll), "Could not allocate font");
+    pglsdlfont->FAdd(&psdlfComicSans);
     ReleasePpo(&pglsdlfont);
 
     return fTrue;
