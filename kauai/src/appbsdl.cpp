@@ -76,7 +76,9 @@ bool APPB::_FInitOS(void)
     // TODO: replace starting position with SDL_WINDOWPOS_UNDEFINED
     // TODO: set starting size properly
 
-    SDL_Window *wnd = SDL_CreateWindow(stnApp.Psz(), 64, 64, 640, 480, 0);
+    U8SZ u8szApp;
+    stnApp.GetUtf8Sz(u8szApp);
+    SDL_Window *wnd = SDL_CreateWindow(u8szApp, 64, 64, 640, 480, 0);
     Assert(wnd != pvNil, "no window returned from SDL_CreateWindow");
     if (wnd == pvNil)
     {
@@ -506,6 +508,9 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
     stn0.FAppendSz(PszLit("\n"));
     stn0.FAppendStn(&stn2);
 
+    U8SZ u8szMessage;
+    stn0.GetUtf8Sz(u8szMessage);
+
     SDL_MessageBoxButtonData rgbutton[3];
     FillPb(rgbutton, SIZEOF(rgbutton), 0);
 
@@ -519,7 +524,7 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
     SDL_MessageBoxData data = {0};
     data.buttons = rgbutton;
     data.numbuttons = 3;
-    data.message = stn0.Psz(); // TODO: UTF-8
+    data.message = u8szMessage;
     data.flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR;
     data.title = "Assertion Failure";
 
@@ -608,11 +613,17 @@ tribool APPB::TGiveAlertSz(const PCSZ psz, int32_t bk, int32_t cok)
         break;
     }
 
+    // Convert message to UTF-8
+    U8SZ u8szMessage;
+    STN stnMessage;
+    stnMessage.SetSz(psz);
+    stnMessage.GetUtf8Sz(u8szMessage);
+
     SDL_MessageBoxData data;
     ClearPb(&data, sizeof(data));
     data.buttons = rgbutton;
     data.numbuttons = ibutton;
-    data.message = psz; // TODO: UTF-8
+    data.message = u8szMessage;
     data.flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR;
     data.title = "3D Movie Maker";
 
