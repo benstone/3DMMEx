@@ -98,6 +98,14 @@ target_sources(studio
     $<$<NOT:$<PLATFORM_ID:Windows>>:${PROJECT_SOURCE_DIR}/src/studio/configstub.cpp>
 )
 
+if(3DMM_GUI STREQUAL "SDL")
+    target_sources(
+        studio
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/src/studio/dlgsdl.cpp"
+    )
+endif()
+
 target_include_directories(studio
   PUBLIC $<TARGET_PROPERTY:engine,INCLUDE_DIRECTORIES>
   "${PROJECT_BINARY_DIR}/inc"

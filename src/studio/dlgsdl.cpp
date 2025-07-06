@@ -1,9 +1,9 @@
 /***************************************************************************
     Author: Ben Stone
-    Project: Kauai
+    Project: Socrates
     Reviewed:
 
-    SDL dialog support
+    3DMM SDL Dialog support
 
 ***************************************************************************/
 #include "frame.h"
@@ -11,8 +11,6 @@ ASSERTNAME
 
 bool DLG::_FInit(void)
 {
-    RawRtn();
-
     return fFalse;
 }
 

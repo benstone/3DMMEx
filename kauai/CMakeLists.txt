@@ -447,11 +447,7 @@ if (3DMM_GUI STREQUAL "Win32")
         ${PROJECT_SOURCE_DIR}/kauai/src/dlgwin.cpp
     )
 elseif(3DMM_GUI STREQUAL "SDL")
-    target_sources(
-        KauaiDlg
-        PRIVATE
-        ${PROJECT_SOURCE_DIR}/kauai/src/dlgsdl.cpp
-    )
+    # SDL dialogs are implemented in the studio project
 endif()
 
 # Ctl: Control support (Win32 only)
