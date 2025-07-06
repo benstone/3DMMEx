@@ -510,18 +510,18 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
     FillPb(rgbutton, SIZEOF(rgbutton), 0);
 
     rgbutton[0].buttonid = 0;
-    rgbutton[0].text = PszLit("Ignore");
+    rgbutton[0].text = "Ignore";
     rgbutton[1].buttonid = 1;
-    rgbutton[1].text = PszLit("Debugger");
+    rgbutton[1].text = "Debugger";
     rgbutton[2].buttonid = 2;
-    rgbutton[2].text = PszLit("Abort");
+    rgbutton[2].text = "Abort";
 
     SDL_MessageBoxData data = {0};
     data.buttons = rgbutton;
     data.numbuttons = 3;
-    data.message = stn0.Psz();
+    data.message = stn0.Psz(); // TODO: UTF-8
     data.flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR;
-    data.title = PszLit("Assertion Failure");
+    data.title = "Assertion Failure";
 
     (void)SDL_ShowMessageBox(&data, &tmc);
 
