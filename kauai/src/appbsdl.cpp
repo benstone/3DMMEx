@@ -558,6 +558,71 @@ tribool APPB::TGiveAlertSz(const PCSZ psz, int32_t bk, int32_t cok)
     AssertThis(0);
     AssertSz(psz);
 
-    RawRtn();
-    return tNo;
+    int32_t ibutton = 0;
+    SDL_MessageBoxButtonData rgbutton[3];
+    ClearPb(rgbutton, SIZEOF(rgbutton));
+
+    // OK/Yes button
+    if (bk == bkYesNo || bk == bkYesNoCancel)
+    {
+        rgbutton[ibutton].text = "Yes";
+    }
+    else
+    {
+        Assert(bk == bkOk || bk == bkOkCancel, "invalid bk");
+        rgbutton[ibutton].text = "OK";
+    }
+    rgbutton[ibutton].buttonid = tYes;
+    ibutton++;
+
+    // No button
+    if (bk == bkYesNo || bk == bkYesNoCancel)
+    {
+        rgbutton[ibutton].text = "No";
+        rgbutton[ibutton].buttonid = tNo;
+        ibutton++;
+    }
+
+    // Cancel button
+    if (bk == bkOkCancel || bk == bkYesNoCancel)
+    {
+        rgbutton[ibutton].text = "Cancel";
+        rgbutton[ibutton].buttonid = tMaybe;
+        ibutton++;
+    }
+
+    uint32_t flags = 0;
+    switch (cok)
+    {
+    case cokInformation:
+        flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_INFORMATION;
+        break;
+    case cokExclamation:
+        flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_WARNING;
+        break;
+    case cokStop:
+        flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR;
+        break;
+    default:
+        flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_INFORMATION;
+        break;
+    }
+
+    SDL_MessageBoxData data;
+    ClearPb(&data, sizeof(data));
+    data.buttons = rgbutton;
+    data.numbuttons = ibutton;
+    data.message = psz; // TODO: UTF-8
+    data.flags = SDL_MessageBoxFlags::SDL_MESSAGEBOX_ERROR;
+    data.title = "3D Movie Maker";
+
+    int buttonid = tNo;
+    (void)SDL_ShowMessageBox(&data, &buttonid);
+
+    if (buttonid != tYes && buttonid != tNo && buttonid != tMaybe)
+    {
+        buttonid = tNo;
+    }
+
+    return (tribool)buttonid;
 }
