@@ -319,8 +319,10 @@ SDL_RWops *SDLFontFile::GetFontRWops()
 {
     STN stnFontPath;
     _fniFont.GetStnPath(&stnFontPath);
+    U8SZ u8szFontPath;
+    stnFontPath.GetUtf8Sz(u8szFontPath);
 
-    SDL_RWops *rwops = SDL_RWFromFile(stnFontPath.Psz(), "rb");
+    SDL_RWops *rwops = SDL_RWFromFile(u8szFontPath, "rb");
     Assert(rwops != pvNil, "Opening file failed!");
     return rwops;
 }

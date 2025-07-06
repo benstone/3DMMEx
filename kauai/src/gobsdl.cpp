@@ -170,7 +170,9 @@ void GOB::SetHwndName(PSTN pstn)
         RawRtn();
     }
 
-    SDL_SetWindowTitle((SDL_Window *)_hwnd, pstn->Psz());
+    U8SZ u8szTitle;
+    pstn->GetUtf8Sz(u8szTitle);
+    SDL_SetWindowTitle((SDL_Window *)_hwnd, u8szTitle);
 }
 
 /***************************************************************************
