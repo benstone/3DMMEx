@@ -239,7 +239,9 @@ void GPT::UpdateTexture()
 
 void GPT::DumpBitmap(STN *stnBmp)
 {
-    AssertDoSDL(SDL_SaveBMP(_surface, stnBmp->Psz()));
+    U8SZ u8szFilePath;
+    stnBmp->GetUtf8Sz(u8szFilePath);
+    AssertDoSDL(SDL_SaveBMP(_surface, u8szFilePath));
 }
 
 /***************************************************************************
@@ -588,8 +590,9 @@ void GPT::DrawRgch(const achar *prgch, int32_t cch, PTS pts, GDD *pgdd, DSF *pds
     stnText.SetRgch(prgch, cch);
 
     // Draw text
-    // TODO: Convert string from CP1252 to a character set supported by SDL_TTF
-    surRendered = TTF_RenderText_Solid(ttfFont, stnText.Psz(), sdlcFore);
+    U8SZ u8szText;
+    stnText.GetUtf8Sz(u8szText);
+    surRendered = TTF_RenderUTF8_Solid(ttfFont, u8szText, sdlcFore);
     Assert(surRendered != pvNil, "TTF_RenderText failed");
 
     if (surRendered != pvNil)
@@ -639,7 +642,9 @@ void GPT::GetRcsFromRgch(RCS *prcs, const achar *prgch, int32_t cch, PTS pts, DS
 
     // Get bounding box of text with current font
     stnText.SetRgch(prgch, cch);
-    TTF_SizeText(ttfFont, stnText.Psz(), &dxpText, &dypText);
+    U8SZ u8szText;
+    stnText.GetUtf8Sz(u8szText);
+    AssertDoSDL(TTF_SizeUTF8(ttfFont, u8szText, &dxpText, &dypText));
 
     tmAscent = TTF_FontAscent(ttfFont);
     tmHeight = TTF_FontHeight(ttfFont);
