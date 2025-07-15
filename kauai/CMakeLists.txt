@@ -392,6 +392,7 @@ elseif(3DMM_GUI STREQUAL "SDL")
         ${PROJECT_SOURCE_DIR}/kauai/src/gfxsdl.cpp
         ${PROJECT_SOURCE_DIR}/kauai/src/gobsdl.cpp
         ${PROJECT_SOURCE_DIR}/kauai/src/fontsdl.cpp
+        ${PROJECT_SOURCE_DIR}/kauai/src/cursorsdl.cpp
     )
 else()
     message(FATAL_ERROR "Invalid GUI specified: ${3DMM_GUI}")
