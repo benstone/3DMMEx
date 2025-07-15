@@ -44,12 +44,15 @@ class CURS : public CURS_PAR
 
   private:
   protected:
-#ifdef WIN
+#ifdef KAUAI_WIN32
     HCRS _hcrs;
-#endif // WIN
+#endif // KAUAI_WIN32
 #ifdef MAC
     Cursor _crs;
 #endif // MAC
+#ifdef KAUAI_SDL
+    SDL_Cursor *_crs;
+#endif // KAUAI_SDL
 
     CURS(void)
     {
