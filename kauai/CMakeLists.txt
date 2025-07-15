@@ -381,7 +381,7 @@ if (3DMM_GUI STREQUAL "Win32")
         ${PROJECT_SOURCE_DIR}/kauai/src/menuwin.cpp
         ${PROJECT_SOURCE_DIR}/kauai/src/gfxwin.cpp
         ${PROJECT_SOURCE_DIR}/kauai/src/gobwin.cpp
-        ${PROJECT_SOURCE_DIR}/kauai/src/cursor.cpp
+        ${PROJECT_SOURCE_DIR}/kauai/src/cursorwin.cpp
     )
 elseif(3DMM_GUI STREQUAL "SDL")
     target_sources(
