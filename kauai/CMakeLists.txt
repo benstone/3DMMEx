@@ -589,6 +589,14 @@ target_link_libraries(
 )
 add_dependencies(tools chomp)
 
+if(3DMM_GUI STREQUAL "SDL")
+    add_custom_command(
+        TARGET chomp
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL2::SDL2> $<TARGET_FILE_DIR:chomp>
+    )
+endif()
+
 # Hello World test app
 add_executable(khello WIN32)
 target_sources(khello
