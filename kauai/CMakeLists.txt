@@ -344,7 +344,6 @@ add_library(KauaiGui
     "${PROJECT_SOURCE_DIR}/kauai/src/appb.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/clok.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/cmd.cpp"
-    "${PROJECT_SOURCE_DIR}/kauai/src/cursor.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/gfx.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/gob.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/mbmpgui.cpp"
@@ -376,6 +375,7 @@ if (3DMM_GUI STREQUAL "Win32")
         ${PROJECT_SOURCE_DIR}/kauai/src/menuwin.cpp
         ${PROJECT_SOURCE_DIR}/kauai/src/gfxwin.cpp
         ${PROJECT_SOURCE_DIR}/kauai/src/gobwin.cpp
+        ${PROJECT_SOURCE_DIR}/kauai/src/cursorwin.cpp
     )
 elseif(3DMM_GUI STREQUAL "SDL")
     target_sources(
