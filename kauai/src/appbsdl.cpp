@@ -688,6 +688,42 @@ tribool APPB::TGiveAlertSz(const PCSZ psz, int32_t bk, int32_t cok)
 }
 
 /***************************************************************************
+    Get the current cursor/modifier state.  If fAsync is set, the key state
+    returned is the actual current values at the hardware level, ie, not
+    synchronized with the command stream.
+***************************************************************************/
+uint32_t APPB::GrfcustCur(bool fAsync)
+{
+    AssertThis(0);
+
+    uint32_t ret;
+
+    _grfcust &= ~kgrfcustUser;
+
+    ret = SDL_GetMouseState(pvNil, pvNil);
+    if (ret & SDL_BUTTON(1))
+    {
+        _grfcust |= fcustMouse;
+    }
+
+    ret = SDL_GetModState();
+    if (ret & SDL_Keymod::KMOD_CTRL)
+    {
+        _grfcust |= fcustCmd;
+    }
+    if (ret & SDL_Keymod::KMOD_ALT)
+    {
+        _grfcust |= fcustOption;
+    }
+    if (ret & SDL_Keymod::KMOD_SHIFT)
+    {
+        _grfcust |= fcustShift;
+    }
+
+    return _grfcust;
+}
+
+/***************************************************************************
     Hide the cursor
 ***************************************************************************/
 void APPB::HideCurs(void)

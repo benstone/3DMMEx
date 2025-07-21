@@ -168,62 +168,6 @@ void APPB::EndLongOp(bool fAll)
 }
 
 /***************************************************************************
-    Get the current cursor/modifier state.  If fAsync is set, the key state
-    returned is the actual current values at the hardware level, ie, not
-    synchronized with the command stream.
-***************************************************************************/
-uint32_t APPB::GrfcustCur(bool fAsync)
-{
-    AssertThis(0);
-
-#ifdef KAUAI_WIN32
-
-    auto pfnT = fAsync ? GetAsyncKeyState : GetKeyState;
-    _grfcust &= ~kgrfcustUser;
-    if (pfnT(VK_CONTROL) < 0)
-        _grfcust |= fcustCmd;
-    if (pfnT(VK_SHIFT) < 0)
-        _grfcust |= fcustShift;
-    if (pfnT(VK_MENU) < 0)
-        _grfcust |= fcustOption;
-    if (pfnT(VK_LBUTTON) < 0)
-        _grfcust |= fcustMouse;
-#endif // KAUAI_WIN32
-#ifdef MAC
-    Assert(!fAsync, "Unimplemented code"); // REVIEW shonk: Mac: implement
-#endif                                     // MAC
-
-#ifdef KAUAI_SDL
-    uint32_t ret;
-
-    _grfcust &= ~kgrfcustUser;
-
-    ret = SDL_GetMouseState(pvNil, pvNil);
-    if (ret & SDL_BUTTON(1))
-    {
-        _grfcust |= fcustMouse;
-    }
-
-    ret = SDL_GetModState();
-    if (ret & SDL_Keymod::KMOD_CTRL)
-    {
-        _grfcust |= fcustCmd;
-    }
-    if (ret & SDL_Keymod::KMOD_ALT)
-    {
-        _grfcust |= fcustOption;
-    }
-    if (ret & SDL_Keymod::KMOD_SHIFT)
-    {
-        _grfcust |= fcustShift;
-    }
-
-#endif // KAUAI_SDL
-
-    return _grfcust;
-}
-
-/***************************************************************************
     Modify the current cursor/modifier state.  Doesn't affect the key
     states or mouse state.
 ***************************************************************************/
