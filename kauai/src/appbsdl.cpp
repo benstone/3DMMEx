@@ -20,6 +20,9 @@ WIG vwig;
 // Number of milliseconds to wait for events before doing idle processing
 const uint32_t kdtsIdleTimer = 1;
 
+static SDL_Cursor *vpsdlcursWait = pvNil;
+static SDL_Cursor *vpsdlcursArrow = pvNil;
+
 /*
  * Create debug console window and wire up std streams
  */
@@ -636,4 +639,72 @@ tribool APPB::TGiveAlertSz(const PCSZ psz, int32_t bk, int32_t cok)
     }
 
     return (tribool)buttonid;
+}
+
+/***************************************************************************
+    Hide the cursor
+***************************************************************************/
+void APPB::HideCurs(void)
+{
+    AssertThis(0);
+
+    SDL_ShowCursor(SDL_DISABLE);
+}
+
+/***************************************************************************
+    Show the cursor
+***************************************************************************/
+void APPB::ShowCurs(void)
+{
+    AssertThis(0);
+
+    SDL_ShowCursor(SDL_ENABLE);
+}
+
+/***************************************************************************
+    Warp the cursor to (xpScreen, ypScreen)
+***************************************************************************/
+void APPB::PositionCurs(int32_t xpScreen, int32_t ypScreen)
+{
+    AssertThis(0);
+
+    SDL_WarpMouseGlobal(xpScreen, ypScreen);
+}
+
+/***************************************************************************
+    Make sure the current cursor is being used by the system.
+***************************************************************************/
+void APPB::RefreshCurs(void)
+{
+    AssertThis(0);
+
+    bool fBusy = (_cactLongOp > 0);
+
+    PCURS *ppcurs = fBusy ? &_pcursWait : &_pcurs;
+
+    if (pvNil != *ppcurs)
+        (*ppcurs)->Set();
+    else
+    {
+        SDL_Cursor *psdlcurs = pvNil;
+        if (fBusy)
+        {
+            if (vpsdlcursWait == pvNil)
+            {
+                vpsdlcursWait = SDL_CreateSystemCursor(SDL_SystemCursor::SDL_SYSTEM_CURSOR_WAIT);
+                Assert(vpsdlcursWait != pvNil, "Could not create wait cursor");
+            }
+            psdlcurs = vpsdlcursWait;
+        }
+        else
+        {
+            if (vpsdlcursArrow == pvNil)
+            {
+                vpsdlcursArrow = SDL_CreateSystemCursor(SDL_SystemCursor::SDL_SYSTEM_CURSOR_ARROW);
+                Assert(vpsdlcursArrow != pvNil, "Could not create arrow cursor");
+            }
+            psdlcurs = vpsdlcursArrow;
+        }
+        SDL_SetCursor(psdlcurs);
+    }
 }
