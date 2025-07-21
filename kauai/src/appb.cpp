@@ -136,33 +136,6 @@ void APPB::SetCursCno(PRCA prca, CNO cno, bool fLongOp)
 }
 
 /***************************************************************************
-    Make sure the current cursor is being used by the system.
-***************************************************************************/
-void APPB::RefreshCurs(void)
-{
-    AssertThis(0);
-
-    PCURS *ppcurs = _cactLongOp > 0 ? &_pcursWait : &_pcurs;
-
-    if (pvNil != *ppcurs)
-        (*ppcurs)->Set();
-    else
-    {
-#ifdef WIN
-        SetCursor(LoadCursor(hNil, _cactLongOp > 0 ? IDC_WAIT : IDC_ARROW));
-#endif // WIN
-#ifdef MAC
-        HCURS hcurs;
-
-        if (_cactLongOp > 0 && hNil != (hcurs = GetCursor(watchCursor)))
-            SetCursor(*hcurs);
-        else
-            SetCursor(&qd.arrow);
-#endif // MAC
-    }
-}
-
-/***************************************************************************
     Starting a int32_t operation, put up the wait cursor.
 ***************************************************************************/
 void APPB::BeginLongOp(void)
@@ -236,52 +209,6 @@ void APPB::ModifyGrfcust(uint32_t grfcustOr, uint32_t grfcustXor)
 
     _grfcust |= grfcustOr;
     _grfcust ^= grfcustXor;
-}
-
-/***************************************************************************
-    Hide the cursor
-***************************************************************************/
-void APPB::HideCurs(void)
-{
-    AssertThis(0);
-
-    MacWin(HideCursor(), ShowCursor(fFalse));
-}
-
-/***************************************************************************
-    Show the cursor
-***************************************************************************/
-void APPB::ShowCurs(void)
-{
-    AssertThis(0);
-
-    MacWin(ShowCursor(), ShowCursor(fTrue));
-}
-
-/***************************************************************************
-    Warp the cursor to (xpScreen, ypScreen)
-***************************************************************************/
-void APPB::PositionCurs(int32_t xpScreen, int32_t ypScreen)
-{
-    AssertThis(0);
-
-    // REVIEW shonk: implement on Mac
-    MacWin(RawRtn(), SetCursorPos(xpScreen, ypScreen));
-
-#ifdef WIN
-    if (_fFlushCursor)
-    {
-        // APPB::TrackMouse gets the mouse position by peeking the message queue for WM_MOUSE* messages.
-        // After the cursor position has been reset, there may still be some WM_MOUSEMOVE messages with old
-        // cooordinates in the message queue. This can cause jitter when dragging actors around the stage.
-        // Flush all mouse move messages from this thread's message queue.
-        MSG msg;
-        while (PeekMessage(&msg, hNil, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE | PM_NOYIELD))
-        {
-            // do nothing
-        }
-    }
-#endif // WIN
 }
 
 /***************************************************************************
