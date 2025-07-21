@@ -1061,6 +1061,35 @@ tribool APPB::TGiveAlertSz(const PCSZ psz, int32_t bk, int32_t cok)
 }
 
 /***************************************************************************
+    Get the current cursor/modifier state.  If fAsync is set, the key state
+    returned is the actual current values at the hardware level, ie, not
+    synchronized with the command stream.
+***************************************************************************/
+uint32_t APPB::GrfcustCur(bool fAsync)
+{
+    AssertThis(0);
+
+#ifdef WIN
+
+    auto pfnT = fAsync ? GetAsyncKeyState : GetKeyState;
+    _grfcust &= ~kgrfcustUser;
+    if (pfnT(VK_CONTROL) < 0)
+        _grfcust |= fcustCmd;
+    if (pfnT(VK_SHIFT) < 0)
+        _grfcust |= fcustShift;
+    if (pfnT(VK_MENU) < 0)
+        _grfcust |= fcustOption;
+    if (pfnT(VK_LBUTTON) < 0)
+        _grfcust |= fcustMouse;
+#endif // WIN
+#ifdef MAC
+    Assert(!fAsync, "Unimplemented code"); // REVIEW shonk: Mac: implement
+#endif                                     // MAC
+
+    return _grfcust;
+}
+
+/***************************************************************************
     Hide the cursor
 ***************************************************************************/
 void APPB::HideCurs(void)
