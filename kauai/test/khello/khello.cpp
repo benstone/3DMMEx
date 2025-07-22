@@ -83,6 +83,7 @@ class KhelloApp : public KhelloApp_PAR
 {
     RTCLASS_DEC
     CMD_MAP_DEC(KhelloApp)
+    MARKMEM
 
   protected:
     virtual bool _FInit(uint32_t grfapp, uint32_t grfgob, int32_t ginDef);
@@ -96,14 +97,23 @@ class KhelloApp : public KhelloApp_PAR
 
     bool FCmdKey(PCMD_KEY pcmd);
 
+    bool FCmdDissolve(PCMD pcmd);
+    bool FCmdPattern(PCMD pcmd);
+
   private:
     BackgroundGob *_gobBackground = pvNil;
     MessageLogGob *_gobTest = pvNil;
+    PATBL _patbl = pvNil;
 };
+
+#define cidDissolve 50001
+#define cidPattern 50002
 
 BEGIN_CMD_MAP(KhelloApp, APPB)
 ON_CID_GEN(cidClose, &KhelloApp::FCmdExit, pvNil)
 ON_CID_GEN(cidKey, &KhelloApp::FCmdKey, pvNil)
+ON_CID_GEN(cidDissolve, &KhelloApp::FCmdDissolve, pvNil)
+ON_CID_GEN(cidPattern, &KhelloApp::FCmdPattern, pvNil)
 END_CMD_MAP_NIL()
 
 // Globals
@@ -171,6 +181,17 @@ bool KhelloApp::_FInit(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
 
     _gobTest = NewObj MessageLogGob(&gcb);
 
+    // Create accelerator table
+    _patbl = ATBL::PatblNew(HidUnique(), vpcex);
+    if (_patbl != pvNil)
+    {
+        AssertDo(vpcex->FAddCmh(_patbl, 0, kgrfcmmAll), "Could not register accelerator table");
+        AssertDo(_patbl->FAddCmdKey(VK_FROM_ALPHA('Q'), fcustCmd, cidQuit), "Could not add accelerator table entry");
+        AssertDo(_patbl->FAddCmdKey(VK_FROM_ALPHA('D'), fcustNil, cidDissolve),
+                 "Could not add accelerator table entry");
+        AssertDo(_patbl->FAddCmdKey(VK_FROM_ALPHA('P'), fcustNil, cidPattern), "Could not add accelerator table entry");
+    }
+
     return fTrue;
 }
 
@@ -178,9 +199,19 @@ void KhelloApp::_CleanUp()
 {
     ReleasePpo(&_gobTest);
     ReleasePpo(&_gobBackground);
+    ReleasePpo(&_patbl);
 }
 
 #ifdef DEBUG
+
+void KhelloApp::MarkMem()
+{
+    KhelloApp_PAR::MarkMem();
+    MarkMemObj(_gobBackground);
+    MarkMemObj(_gobTest);
+    MarkMemObj(_patbl);
+}
+
 /***************************************************************************
     Unmarks all hqs, marks all hqs known to be in use, then asserts
     on all unmarked hqs.
@@ -225,23 +256,6 @@ bool KhelloApp::FCmdKey(PCMD_KEY pcmd)
 
     int32_t dxp = 0, dyp = 0;
 
-    // Handle hotkeys
-    switch (pcmd->ch)
-    {
-    case ChLit('q'):
-        vpcex->EnqueueCid(cidQuit);
-        break;
-    case ChLit('p'):
-        _gobBackground->TogglePattern();
-        break;
-    case ChLit('t'):
-        // Dissolve
-        this->SetGft(kgftDissolve, 0, 2000, pvNil, kacrBlack);
-        break;
-    default:
-        break;
-    }
-
     switch (pcmd->vk)
     {
     case kvkLeft:
@@ -270,6 +284,18 @@ bool KhelloApp::FCmdKey(PCMD_KEY pcmd)
         _gobTest->SetPos(&rc);
     }
 
+    return fTrue;
+}
+
+bool KhelloApp::FCmdPattern(PCMD cmd)
+{
+    _gobBackground->TogglePattern();
+    return fTrue;
+}
+
+bool KhelloApp::FCmdDissolve(PCMD cmd)
+{
+    this->SetGft(kgftDissolve, 0, 2000, pvNil, kacrBlack);
     return fTrue;
 }
 
