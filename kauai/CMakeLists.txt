@@ -340,6 +340,7 @@ add_library(KauaiGui
     "${PROJECT_SOURCE_DIR}/kauai/src/gob.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/mbmpgui.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/region.cpp"
+    "${PROJECT_SOURCE_DIR}/kauai/src/accelerator.cpp"
 )
 
 target_link_libraries(

@@ -71,5 +71,6 @@ typedef class SNDM *PSNDM;
 #include "sndam.h"
 #include "mididev.h"
 #include "mididev2.h"
+#include "accelerator.h"
 
 #endif //! FRAME_H
