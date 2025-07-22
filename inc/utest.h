@@ -149,10 +149,8 @@ class APP : public APP_PAR
     bool _fDown;
     int32_t _cactToggle;
 
-#ifdef WIN
-    HACCEL _haccel;
-    HACCEL _haccelGlobal;
-#endif
+    PATBL _patblMain;   // Main accelerator table
+    PATBL _patblGlobal; // Global accelerator table (always active)
 
   protected:
     bool _FAppAlreadyRunning(void);

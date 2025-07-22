@@ -55,37 +55,6 @@ END
 // Accelerator
 //
 
-acidMain ACCELERATORS DISCARDABLE 
-BEGIN
-    "C",            cidCopy,                VIRTKEY, CONTROL, NOINVERT
-    "C",            cidShiftCopy,           VIRTKEY, SHIFT, CONTROL, 
-                                                    NOINVERT
-    "I",            cidInfo,                VIRTKEY, SHIFT, CONTROL, 
-                                                    NOINVERT
-    "M",            cidMap,                 VIRTKEY, CONTROL, NOINVERT
-    "N",            cidNew,                 VIRTKEY, CONTROL, NOINVERT
-    "O",            cidOpen,                VIRTKEY, CONTROL, NOINVERT
-    "Q",            cidQuit,                VIRTKEY, CONTROL, NOINVERT
-    "S",            cidSave,                VIRTKEY, CONTROL, NOINVERT
-    "V",            cidPaste,               VIRTKEY, CONTROL, NOINVERT
-    VK_F1,          cidHelpBook,            VIRTKEY, NOINVERT
-    VK_F9,          cidToggleXY,            VIRTKEY, NOINVERT
-    VK_F10,         cidWriteBmps,           VIRTKEY, CONTROL, NOINVERT
-    "X",            cidCut,                 VIRTKEY, CONTROL, NOINVERT
-    "X",            cidShiftCut,            VIRTKEY, SHIFT, CONTROL, 
-                                                    NOINVERT
-    "Y",            cidRedo,                VIRTKEY, CONTROL, NOINVERT
-    "Z",            cidUndo,                VIRTKEY, CONTROL, NOINVERT
-END
-
-acidGlobal ACCELERATORS DISCARDABLE 
-BEGIN
-    "I",            cidInfo,                VIRTKEY, SHIFT, CONTROL, 
-                                                    NOINVERT
-    "Q",            cidQuit,                VIRTKEY, CONTROL, NOINVERT
-END
-
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon

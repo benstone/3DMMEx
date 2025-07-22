@@ -939,8 +939,6 @@ bool APP::_FInitOS(void)
         return fFalse;
     }
 
-    // TODO: Emulate the accelerator table used for keyboard shortcuts
-
     _fMainWindowCreated = fTrue;
 
 #elif defined(KAUAI_WIN32)
@@ -996,15 +994,48 @@ bool APP::_FInitOS(void)
     if (SetTimer(vwig.hwndApp, 0, 1, pvNil) == 0)
         return fFalse;
 
-    _haccel = LoadAccelerators(vwig.hinst, MIR(acidMain));
-    _haccelGlobal = LoadAccelerators(vwig.hinst, MIR(acidGlobal));
-    vwig.haccel = _haccel;
-
     ShowWindow(vwig.hwndApp, vwig.wShow);
     _fMainWindowCreated = fTrue;
 #else
     RawRtn();
 #endif
+
+    // Create global accelerator tabe
+    _patblGlobal = ATBL::PatblNew(HidUnique(), vpcex);
+    AssertPo(_patblGlobal, 0);
+    if (_patblGlobal != pvNil)
+    {
+        // Enable the accelerator table
+        AssertDo(vpcex->FAddCmh(_patblGlobal, 0, kgrfcmmAll), "Could not enable accelerator table");
+
+        // Register global keyboard accelerators
+        AssertDo(_patblGlobal->FAddCmdKey(VK_FROM_ALPHA('I'), fcustCmd | fcustShift, cidInfo), "Could not add hotkey");
+        AssertDo(_patblGlobal->FAddCmdKey(VK_FROM_ALPHA('Q'), fcustCmd, cidQuit), "Could not add hotkey");
+    }
+
+    // Create main accelerator table
+    _patblMain = ATBL::PatblNew(HidUnique(), vpcex);
+    AssertPo(_patblMain, 0);
+    if (_patblMain != pvNil)
+    {
+        // Register main keyboard accelerators
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('C'), fcustCmd, cidCopy), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('C'), fcustCmd | fcustShift, cidShiftCopy),
+                 "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('M'), fcustCmd, cidMap), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('N'), fcustCmd, cidNew), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('O'), fcustCmd, cidOpen), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('S'), fcustCmd, cidSave), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('V'), fcustCmd, cidPaste), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(kvkF1, fcustNil, cidHelpBook), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(kvkF9, fcustNil, cidToggleXY), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(kvkF10, fcustNil, cidWriteBmps), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(ChLit('X'), fcustCmd, cidCut), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(ChLit('X'), fcustCmd | fcustShift, cidShiftCut), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(ChLit('Y'), fcustCmd, cidRedo), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(ChLit('Z'), fcustCmd, cidUndo), "Could not add hotkey");
+    }
+
     return fTrue;
 }
 
@@ -4458,12 +4489,7 @@ void APP::DisableAccel(void)
 
     if (_cactDisable == 0)
     {
-#ifdef WIN
-        _haccel = vwig.haccel;
-        vwig.haccel = _haccelGlobal;
-#else
-        RawRtn();
-#endif
+        vpcex->BuryCmh(_patblMain);
     }
 
     _cactDisable++;
@@ -4481,11 +4507,7 @@ void APP::EnableAccel(void)
 
     if (_cactDisable == 0)
     {
-#ifdef WIN
-        vwig.haccel = _haccel;
-#else
-        RawRtn();
-#endif
+        AssertDo(vpcex->FAddCmh(_patblMain, 0, kgrfcmmAll), "Could not enable accelerator table");
     }
 }
 
@@ -4653,6 +4675,8 @@ void APP::AssertValid(uint32_t grf)
     AssertPo(_pcrmAll, 0);
     AssertPo(_pglicrfBuilding, 0);
     AssertPo(_pglicrfStudio, 0);
+    AssertPo(_patblMain, 0);
+    AssertPo(_patblGlobal, 0);
     AssertNilOrPo(_pcex, 0);
 }
 
@@ -4680,6 +4704,8 @@ void APP::MarkMem(void)
     MarkMemObj(_pglicrfBuilding);
     MarkMemObj(_pglicrfStudio);
     MarkMemObj(_pcex);
+    MarkMemObj(_patblMain);
+    MarkMemObj(_patblGlobal);
 }
 #endif // DEBUG
 
