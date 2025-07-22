@@ -11,7 +11,7 @@ ASSERTNAME
 
 bool DLG::_FInit(void)
 {
-    return fTrue;
+    return fFalse;
 }
 
 /***************************************************************************
