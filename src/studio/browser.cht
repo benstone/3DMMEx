@@ -92,7 +92,7 @@ CLICK_SCRIPT("Browser cancel clicked")
 	EnqueueCid(cidBrowserCancel, GidParGob(GidParThis()), GidThis(), 0, 0, 0);
 ENDCHUNK
 CHILD_SCRIPT("Browser cancel key press", kchidScript2)
-	If(_parm[2] == kvkeyEscape);
+	If(_parm[3] == kvkeyEscape);
 		EnqueueCid(cidBrowserCancel, GidParGob(GidParThis()), GidThis(), 0, 0, 0);
 		Return(fTrue);
 	End;

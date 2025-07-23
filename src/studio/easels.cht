@@ -197,7 +197,7 @@ CLICK_SCRIPT("Cancel clicked")
 	EnqueueCid(cidEaselCancel, kidSpltGlass, 0, 0, 0, 0);
 ENDCHUNK
 CHILD_SCRIPT("Spletters easel, cancel, key press", kchidScript2)
-	If(_parm[2] == kvkeyEscape);
+	If(_parm[3] == kvkeyEscape);
 		EnqueueCid(cidEaselCancel, kidSpltGlass, 0, 0, 0, 0);
 		Return(fTrue);
 	End;
@@ -366,7 +366,7 @@ CLICK_SCRIPT("Cancel clicked")
 	EnqueueCid(cidEaselCancel, kidCostGlass, 0, 0, 0, 0);
 ENDCHUNK
 CHILD_SCRIPT("Costume easel, cancel, key press", kchidScript2)
-	If(_parm[2] == kvkeyEscape);
+	If(_parm[3] == kvkeyEscape);
 		EnqueueCid(cidEaselCancel, kidCostGlass, 0, 0, 0, 0);
 		Return(fTrue);
 	End;
@@ -784,7 +784,7 @@ CLICK_SCRIPT("Scene sorter, cancel, clicked")
 ENDCHUNK
 
 CHILD_SCRIPT("Scene sorter, cancel, key press", kchidScript2)
-	If(_parm[2] == kvkeyEscape);
+	If(_parm[3] == kvkeyEscape);
 		EnqueueCid(cidSceneSortCancel, kidSSorterBackground, 0, 0, 0, 0);
 		OldState = GetModifierState();
 		OldState &= (fcustHand | fcustNuke);
@@ -1660,7 +1660,7 @@ CHILD_SCRIPT("Listener easel cancel clicked", CHID(kstDefault, kchidClick))
 	EnqueueCid(cidEaselCancel, GidParGob(GidParThis()), 0, 0, 0, 0);
 ENDCHUNK
 CHILD_SCRIPT("Listener easel cancel, key press", kchidScript2)
-	If(_parm[2] == kvkeyEscape);
+	If(_parm[3] == kvkeyEscape);
 		EnqueueCid(cidEaselCancel, GidParGob(GidParThis()), 0, 0, 0, 0);
 		Return(fTrue);
 	End;
@@ -1905,7 +1905,7 @@ CLICK_SCRIPT("Recorder easel cancel")
 	EnqueueCid(cidEaselCancel, kidRecordGlass, 0, 0, 0, 0);
 ENDCHUNK
 CHILD_SCRIPT("Recorder easel cancel, key press", kchidScript2)
-	If(_parm[2] == kvkeyEscape);
+	If(_parm[3] == kvkeyEscape);
 		EnqueueCid(cidEaselCancel, kidRecordGlass, 0, 0, 0, 0);
 		Return(fTrue);
 	End;
