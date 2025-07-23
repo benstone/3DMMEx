@@ -102,6 +102,8 @@
 #define kvkeyUp 0x40000052
 #define kvkeyRight 0x4000004f
 #define kvkeyDown 0x40000051
+#define kvkeyDelete 0x7f
+#define kvkeyBackspace 0x8
 #endif
 
 #endif // !KIDGSDEF_H
