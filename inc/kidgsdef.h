@@ -94,12 +94,16 @@
 #define kvkeyUp 0x26
 #define kvkeyRight 0x27
 #define kvkeyDown 0x28
+#define kvkeyDelete 0x2e
+#define kvkeyBackspace 0x8
 #elif defined(KAUAI_SDL)
 #define kvkeyEscape 0x1b
 #define kvkeyLeft 0x40000050
 #define kvkeyUp 0x40000052
 #define kvkeyRight 0x4000004f
 #define kvkeyDown 0x40000051
+#define kvkeyDelete 0x7f
+#define kvkeyBackspace 0x8
 #endif
 
 #endif // !KIDGSDEF_H
