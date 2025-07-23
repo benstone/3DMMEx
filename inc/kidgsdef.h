@@ -87,10 +87,19 @@
 #define kidNil 0
 
 // Virtual key codes
+// NOTE: We cannot include Windows.h or SDL_keycode.h here
+#if defined(KAUAI_WIN32)
 #define kvkeyEscape 0x1b
 #define kvkeyLeft 0x25
 #define kvkeyUp 0x26
 #define kvkeyRight 0x27
 #define kvkeyDown 0x28
+#elif defined(KAUAI_SDL)
+#define kvkeyEscape 0x1b
+#define kvkeyLeft 0x40000050
+#define kvkeyUp 0x40000052
+#define kvkeyRight 0x4000004f
+#define kvkeyDown 0x40000051
+#endif
 
 #endif // !KIDGSDEF_H
