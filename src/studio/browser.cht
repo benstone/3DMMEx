@@ -1045,7 +1045,7 @@ CHILD_SCRIPT("Delete user snd", kchidScript2)
 	// gets to whatever actually manipulates the text.
 
 	If(!FGobExists(kidRecordBackground));
-		If ((cid == cidKey) && ((vk == 46) || (vk == 8)));
+		If ((cid == cidKey) && ((vk == kvkeyDelete) || (vk == kvkeyBackspace)));
 		    EnqueueCid(cidBrowserDel, GidParGob( kidBrwsSoundsBackground ), GidThis(), 0, 0, 0);
 		End;
 	End;
