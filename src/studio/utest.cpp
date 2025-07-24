@@ -1030,10 +1030,11 @@ bool APP::_FInitOS(void)
         AssertDo(_patblMain->FAddCmdKey(kvkF1, fcustNil, cidHelpBook), "Could not add hotkey");
         AssertDo(_patblMain->FAddCmdKey(kvkF9, fcustNil, cidToggleXY), "Could not add hotkey");
         AssertDo(_patblMain->FAddCmdKey(kvkF10, fcustNil, cidWriteBmps), "Could not add hotkey");
-        AssertDo(_patblMain->FAddCmdKey(ChLit('X'), fcustCmd, cidCut), "Could not add hotkey");
-        AssertDo(_patblMain->FAddCmdKey(ChLit('X'), fcustCmd | fcustShift, cidShiftCut), "Could not add hotkey");
-        AssertDo(_patblMain->FAddCmdKey(ChLit('Y'), fcustCmd, cidRedo), "Could not add hotkey");
-        AssertDo(_patblMain->FAddCmdKey(ChLit('Z'), fcustCmd, cidUndo), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('X'), fcustCmd, cidCut), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('X'), fcustCmd | fcustShift, cidShiftCut),
+                 "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('Y'), fcustCmd, cidRedo), "Could not add hotkey");
+        AssertDo(_patblMain->FAddCmdKey(VK_FROM_ALPHA('Z'), fcustCmd, cidUndo), "Could not add hotkey");
     }
 
     return fTrue;
