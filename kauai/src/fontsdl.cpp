@@ -207,8 +207,18 @@ TTF_Font *NTL::TtfFontFromDsf(DSF *pdsf)
 
     // Find the list of SDL fonts for this font face number
     _pgst->GetExtra(pdsf->onn, &pglsdlfont);
-    if (pglsdlfont == pvNil)
+    if (pglsdlfont == pvNil || pglsdlfont->IvMac() == 0)
         return pvNil;
+
+    if (pglsdlfont->IvMac() == 1)
+    {
+        PSDLFont *ppsdlfont = (PSDLFont *)pglsdlfont->QvGet(0);
+        if (ppsdlfont == pvNil)
+            return pvNil;
+        if (*ppsdlfont == pvNil)
+            return pvNil;
+        return (*ppsdlfont)->PttfFont();
+    }
 
     // Go through the font list twice to find the best match
     // First, try for an exact match of font style flags
