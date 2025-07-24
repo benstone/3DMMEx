@@ -96,6 +96,13 @@ class NTL : public NTL_PAR
      */
     bool FAddFontName(PCSZ pcszFontName, int32_t *ponn, PGL *pglsdlfont);
 
+    /**
+     * @brief Find all TrueType font files in a directory and add them to the font list
+     *
+     * @param pfniFontDir Font directory
+     **/
+    bool FAddAllFontsInDir(PFNI pfniFontDir);
+
 #endif // KAUAI_SDL
 
   public:

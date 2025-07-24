@@ -12,9 +12,139 @@ ASSERTNAME
 #include "gfx.h"
 #include "fontsdl.h"
 
+#ifdef WIN
+#include <shlobj.h>
+#endif // WIN
+
 RTCLASS(SDLFont)
 RTCLASS(SDLFontFile)
 RTCLASS(SDLFontMemory)
+
+/***************************************************************************
+    Get the path to the system font directory
+***************************************************************************/
+static bool FFindSystemFontDir(PFNI pfniSystemFontDir)
+{
+    AssertPo(pfniSystemFontDir, 0);
+
+    pfniSystemFontDir->SetNil();
+
+#if defined(WIN)
+
+    STN stnSystemFontDir;
+    achar szSystemFontDir[MAX_PATH];
+    HRESULT hr;
+
+    hr = SHGetFolderPath(NULL, CSIDL_FONTS, NULL, 0, szSystemFontDir);
+    if (FAILED(hr))
+        return fFalse;
+
+    Assert(CchSz(szSystemFontDir) < kcchMaxSz, "System font path does not fit in a STN");
+    if (CchSz(szSystemFontDir) >= kcchMaxSz)
+        return fFalse;
+    stnSystemFontDir.SetSz(szSystemFontDir);
+
+    return pfniSystemFontDir->FBuildFromPath(&stnSystemFontDir, kftgDir);
+#else  // !WIN
+    // TODO: Find a directory containing fonts
+    RawRtn();
+    return fFalse;
+#endif // WIN
+}
+
+/***************************************************************************
+    Find a font to use as the default system font
+***************************************************************************/
+static bool FFindDefaultFontFile(PFNI pfniFontDir, PFNI pfniDefaultFont)
+{
+    AssertPo(pfniFontDir, 0);
+    AssertPo(pfniDefaultFont, 0);
+
+    STN stn;
+    FNE fne;
+    FTG ftgTtf = KLCONST3('T', 'T', 'F');
+
+    // Check for any of these default font files:
+    PCSZ rgpszDefaultFontFiles[] = {
+        PszLit("vgasys.fon"), // System (Windows)
+        PszLit("comic.ttf"),  // Comic Sans MS
+    };
+
+    for (int32_t ipsz = 0; ipsz < CvFromRgv(rgpszDefaultFontFiles); ipsz++)
+    {
+        stn = rgpszDefaultFontFiles[ipsz];
+        FNI fniFont = *pfniFontDir;
+        if (!fniFont.FSetLeaf(&stn))
+            continue;
+
+        if (fniFont.TExists() == tYes)
+        {
+            *pfniDefaultFont = fniFont;
+            return fTrue;
+        }
+    }
+
+    // Return the first font file in the font directory
+    if (!fne.FInit(pfniFontDir, &ftgTtf, 1, 0))
+        return fFalse;
+
+    return fne.FNextFni(pfniDefaultFont);
+}
+
+/***************************************************************************
+    Load the font using SDL_TTF to get the font face name and style
+***************************************************************************/
+static bool FGetTtfFontInfo(PFNI pfniFont, PSTN pstnFontName, int32_t *pgrfont)
+{
+    AssertPo(pfniFont, 0);
+    AssertPo(pstnFontName, 0);
+    AssertVarMem(pgrfont);
+
+    BOOL fRet = fFalse;
+    int grfont = 0;
+    STN stnFontName, stnFontPath;
+
+    // Load the font to get font name and style info
+    pfniFont->GetStnPath(&stnFontPath);
+
+    U8SZ u8szFontPath;
+    stnFontPath.GetUtf8Sz(u8szFontPath);
+
+    TTF_Font *ttfFont = TTF_OpenFont(u8szFontPath, 0);
+    if (ttfFont != pvNil)
+    {
+        // Get the font name
+        PU8SZ pu8szFontName = (PU8SZ)TTF_FontFaceFamilyName(ttfFont);
+        stnFontName.SetUtf8Sz(pu8szFontName);
+
+        // Get the font style
+        int style = TTF_GetFontStyle(ttfFont);
+        if (FPure(style & TTF_STYLE_BOLD))
+            grfont |= fontBold;
+        if (FPure(style & TTF_STYLE_ITALIC))
+            grfont |= fontItalic;
+        if (FPure(style & TTF_STYLE_UNDERLINE))
+            grfont |= fontUnderline;
+
+        if (stnFontName.Cch() > 0)
+            fRet = fTrue;
+
+        TTF_CloseFont(ttfFont);
+    }
+
+    if (fRet)
+    {
+        *pstnFontName = stnFontName;
+        *pgrfont = grfont;
+    }
+    else
+    {
+        pstnFontName->SetNil();
+        TrashVar(pgrfont);
+    }
+
+    return fRet;
+}
 
 NTL::~NTL(void)
 {
@@ -77,81 +207,124 @@ void NTL::MarkMem(void)
 
 #endif // DEBUG
 
+bool NTL::FAddAllFontsInDir(PFNI pfniFontDir)
+{
+    AssertPo(pfniFontDir, 0);
+
+    FTG rgftgFont[] = {KLCONST3('T', 'T', 'F'), KLCONST3('T', 'T', 'C')};
+    FNE fneFontFiles;
+    FNI fniFontFile;
+    int onn;
+    PGL pglsdlfont = pvNil;
+
+    // Find all font files in the font directory
+    if (!fneFontFiles.FInit(pfniFontDir, rgftgFont, CvFromRgv(rgftgFont), ffneNil))
+    {
+        Bug("Could not initialise font directory enumerator");
+        return fFalse;
+    }
+
+    while (fneFontFiles.FNextFni(&fniFontFile))
+    {
+        STN stnFontName;
+        int grfont;
+        bool fUseFont;
+
+        fUseFont = FGetTtfFontInfo(&fniFontFile, &stnFontName, &grfont);
+        if (!fUseFont)
+            continue;
+
+        // Get the list of SDL fonts for this font name
+        if (_pgst->FFindStn(&stnFontName, &onn))
+        {
+            _pgst->GetExtra(onn, &pglsdlfont);
+            AssertPo(pglsdlfont, 0);
+            pglsdlfont->AddRef();
+        }
+        else
+        {
+            if (!FAddFontName(stnFontName.Psz(), &onn, &pglsdlfont))
+            {
+                Bug("Could not add font to list");
+                continue;
+            }
+        }
+
+        // Add this font
+        PSDLFont psdlf;
+        AssertDo(psdlf = SDLFontFile::PSDLFontFileNew(&fniFontFile, grfont), "Could not allocate SDL font");
+        if (psdlf != pvNil)
+            AssertDo(pglsdlfont->FAdd(&psdlf), "Could not add SDL font to font list");
+
+        ReleasePpo(&pglsdlfont);
+    }
+
+    return fTrue;
+}
+
 /***************************************************************************
     Initialize the font table.
 ***************************************************************************/
 bool NTL::FInit(void)
 {
-    STN stnFontName, stnFontPath;
-    FNI fniFont;
-    PSDLFont psdlfComicSans = pvNil;
+    bool fRet = fFalse;
     PGL pglsdlfont = pvNil;
     int32_t onn;
     int ret;
+    FNI fniFontDir, fniDefaultFont;
 
     // Initialize SDL TTF
     ret = TTF_Init();
     if (ret != 0)
     {
         Bug("TTF_Init failed");
-        PushErc(ercGfxNoFontList);
-        return fFalse;
+        goto LFail;
     }
 
     // Allocate GST to store font face names
     if (pvNil == (_pgst = GST::PgstNew(sizeof(PGL))))
         goto LFail;
 
-    // TODO: enumerate fonts
+    // FUTURE: Add support for per-user fonts
+    if (!FFindSystemFontDir(&fniFontDir))
+    {
+        Bug("Could not find system fonts directory");
+        goto LFail;
+    }
 
-    // Add Comic Sans MS
-    stnFontName = "Comic Sans MS";
-    AssertDo(FAddFontName(stnFontName.Psz(), &onn, &pglsdlfont), "Could not add system font");
+    if (!FAddAllFontsInDir(&fniFontDir))
+    {
+        Bug("Could not add fonts from system fonts directory");
+        goto LFail;
+    }
 
-    // Comic Sans MS Bold and Italic
-    stnFontPath = "C:\\windows\\fonts\\comicz.ttf";
-    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, (fontBold | fontItalic)),
-             "Could not allocate font");
-    pglsdlfont->FAdd(&psdlfComicSans);
+    // Ensure we have at least one font
+    if (_pgst->IvMac() == 0)
+    {
+        goto LFail;
+    }
 
-    // Comic Sans MS Italic
-    stnFontPath = "C:\\windows\\fonts\\comici.ttf";
-    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, fontItalic), "Could not allocate font");
-    pglsdlfont->FAdd(&psdlfComicSans);
+    // Add a font to use as the system (default) font
+    if (!FAddFontName(PszLit("System Default"), &_onnSystem, &pglsdlfont))
+        goto LFail;
 
-    // Comic Sans MS Bold
-    stnFontPath = "C:\\windows\\fonts\\comicbd.ttf";
-    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, fontBold), "Could not allocate font");
-    pglsdlfont->FAdd(&psdlfComicSans);
+    // FUTURE: Embed a default font instead of loading one from disk
+    if (FFindDefaultFontFile(&fniFontDir, &fniDefaultFont))
+    {
+        PSDLFont psdlf;
+        AssertDo(psdlf = SDLFontFile::PSDLFontFileNew(&fniDefaultFont, 0), "Could not allocate SDL font");
+        if (psdlf != pvNil)
+            AssertDo(pglsdlfont->FAdd(&psdlf), "Could not add SDL font to font list");
+    }
 
-    // Comic Sans MS
-    stnFontPath = "C:\\windows\\fonts\\comic.ttf";
-    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, fontAll), "Could not allocate font");
-    pglsdlfont->FAdd(&psdlfComicSans);
-
-    ReleasePpo(&pglsdlfont);
-
-    // Add a system default font last
-    stnFontName = "System";
-    AssertDo(FAddFontName(stnFontName.Psz(), &onn, &pglsdlfont), "Could not add system font");
-    _onnSystem = onn;
-
-    // TODO: package a default font
-    stnFontPath = "C:\\windows\\fonts\\vgasys.fon";
-    AssertDo(fniFont.FBuildFromPath(&stnFontPath), "Could not build path to font");
-    AssertDo(psdlfComicSans = SDLFontFile::PSDLFontFileNew(&fniFont, fontAll), "Could not allocate font");
-    pglsdlfont->FAdd(&psdlfComicSans);
-    ReleasePpo(&pglsdlfont);
-
-    return fTrue;
+    fRet = fTrue;
 
 LFail:
-    ReleasePpo(&psdlfComicSans);
-    return fFalse;
+    if (!fRet)
+        PushErc(ercGfxNoFontList);
+
+    ReleasePpo(&pglsdlfont);
+    return fRet;
 }
 
 bool NTL::FAddFontName(PCSZ pcszFontName, int32_t *ponn, PGL *pglsdlfont)
