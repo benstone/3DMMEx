@@ -209,19 +209,24 @@ void APPB::_DispatchEvt(PEVT pevt)
         if (pvNil != vpcex)
         {
             Assert(pevt->text.type == SDL_TEXTINPUT, "incorrect message type");
-            int32_t ichLim = SDL_TEXTINPUTEVENT_TEXT_SIZE;
-            for (int32_t ich = 0; ich < ichLim; ich++)
+
+            // Convert text input from UTF-8
+            static_assert((SDL_TEXTINPUTEVENT_TEXT_SIZE + 1) < kcchTotUtf8Sz,
+                          "UTF8 string type not big enough for SDL text input");
+            U8SZ u8szInput;
+            ClearPb(u8szInput, SIZEOF(u8szInput));
+            CopyPb(pevt->text.text, u8szInput, SDL_TEXTINPUTEVENT_TEXT_SIZE);
+
+            STN stnInput;
+            stnInput.SetUtf8Sz(u8szInput);
+
+            // Create cidKey events for each character
+            for (int32_t ich = 0; ich < stnInput.Cch(); ich++)
             {
-                achar ch = pevt->text.text[ich];
+                achar ch = stnInput.Psz()[ich];
                 if (ch == chNil)
                 {
                     break;
-                }
-
-                if ((ch & 0x80) != 0)
-                {
-                    Bug("UTF-8 not supported yet");
-                    continue;
                 }
 
                 CMD_KEY cmd;
