@@ -336,9 +336,8 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
             grfcust |= fcustShift;
         if (pevt->key.keysym.mod & SDL_Keymod::KMOD_ALT)
             grfcust |= fcustOption;
-        // TODO: can't map fcustMouse: used in a few places
         pcmd->grfcust = grfcust;
-        pcmd->cact = pevt->key.repeat; // TODO: number of repeats, not just "repeat"
+        pcmd->cact = 1;
     }
 
     return fTrue;
