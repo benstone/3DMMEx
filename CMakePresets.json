@@ -1,5 +1,5 @@
 {
-  "version": 3,
+    "version": 3,
     "configurePresets": [
         {
             "name": "base",
@@ -165,6 +165,24 @@
             "inherits": "clangcl:x64:base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
+            "displayName": "SDL MSVC x64 Debug",
+            "name": "sdl-x64-msvc-debug",
+            "inherits": "msvc-x64-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "3DMM_GUI": "SDL"
+            }
+        },
+        {
+            "displayName": "SDL ClangCL x64 Debug",
+            "name": "sdl-x64-clangcl-debug",
+            "inherits": "clangcl:x64:base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "3DMM_GUI": "SDL"
             }
         }
     ]
