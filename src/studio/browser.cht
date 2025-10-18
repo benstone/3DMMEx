@@ -23,11 +23,11 @@ GOBCHUNK("Generic browser page fwd", kidGenericPageFwd, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttGenericPageFwd)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault ), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio\bmp\fwd.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio/bmp/fwd.bmp",
 	kxpregGenericPageFwd, kypregGenericPageFwd)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\fwdc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/fwdc.bmp",
 	kxpregGenericPageFwd, kypregGenericPageFwd)
 REP_RECT(CHID(kstBrowserDisabled, krepDefault ), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoBrwzBtnWav, CHID(kstBrowserEnabled, krepClicked))
@@ -50,11 +50,11 @@ GOBCHUNK("Generic browser page back", kidGenericPageBack, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttGenericPageBack)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault ), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio\bmp\bback.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio/bmp/bback.bmp",
 	kxpregGenericPageBack, kypregGenericPageBack)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\bbackc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/bbackc.bmp",
 	kxpregGenericPageBack, kypregGenericPageBack)
 REP_RECT(CHID(kstBrowserDisabled, krepDefault ), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoBrwzBtnWav, CHID(kstBrowserEnabled, krepClicked))
@@ -77,11 +77,11 @@ GOBCHUNK("Generic browser cancel", kidGenericCancel, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttEaselCancel)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault ), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio\bmp\cancel.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio/bmp/cancel.bmp",
 	kxpregGenericCancel, kypregGenericCancel)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\cancelc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/cancelc.bmp",
 	kxpregGenericCancel, kypregGenericCancel)
 REP_RECT(CHID(kstBrowserDisabled, krepDefault ), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoCancelWav, CHID(kstBrowserEnabled, krepClicked))
@@ -104,11 +104,11 @@ GOBCHUNK("Generic browser Okay", kidGenericOk, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttEaselOk)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault ), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio\bmp\okay.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio/bmp/okay.bmp",
 	kxpregGenericOk, kypregGenericOk)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\okayc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/okayc.bmp",
 	kxpregGenericOk, kypregGenericOk)
 REP_RECT(CHID(kstBrowserDisabled, krepDefault ), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoOkWav, CHID(kstBrowserEnabled, krepClicked))
@@ -169,7 +169,7 @@ GOBCHUNK("Scene browser background", kidBrwsBackground, kgokkRectHit)
 	DEFAULT_POSITION(kxpBrwsBackground, kypBrwsBackground, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio\bmp\book1.bmp", kxpregBrwsBackground, kypregBrwsBackground )
+REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio/bmp/book1.bmp", kxpregBrwsBackground, kypregBrwsBackground )
 ADOPT_WAVE(kcnoPBrowseWav, CHID(kstDefault, krepEnterAnimation))
 CREATE_SCRIPT("Scene browser created")
 	CreateChildThis(kidBrowserPageFwd, kidGenericPageFwd);
@@ -234,11 +234,11 @@ GOBCHUNK("Scene browser Frame", kidBrwsSceneFrame, kgokkRectNoKids)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, cnoNil)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\frame1.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/frame1.bmp",
 	kxpregBrwsSceneFrame, kypregBrwsSceneFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\frame1h.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/frame1h.bmp",
 	kxpregBrwsSceneFrame, kypregBrwsSceneFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 REP_RECT(CHID(kstBrowserDisabled, krepDefault), "hidden", 0, 0, 0, 0)
@@ -279,7 +279,7 @@ GOBCHUNK("Camera browser background", kidBrwsCamera, kgokkRectHit)
 	DEFAULT_POSITION(kxpBrwsCamera, kypBrwsCamera, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio\bmp\book2.bmp", kxpregBrwsCamera, kypregBrwsCamera )
+REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio/bmp/book2.bmp", kxpregBrwsCamera, kypregBrwsCamera )
 ADOPT_WAVE(kcnoPBrowseWav, CHID(kstDefault, krepEnterAnimation))
 CREATE_SCRIPT("Camera browser created")
 	CreateChildThis(kidBrowserPageFwd, kidGenericPageFwd);
@@ -345,11 +345,11 @@ GOBCHUNK("Object browser Frame", kidBrwsCameraFrame, kgokkRectNoKids)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, cnoNil)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\frame2.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/frame2.bmp",
 	kxpregBrwsCameraFrame, kypregBrwsCameraFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\frame2h.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/frame2h.bmp",
 	kxpregBrwsCameraFrame, kypregBrwsCameraFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 REP_RECT(CHID(kstBrowserDisabled, krepDefault), "hidden", 0, 0, 0, 0)
@@ -390,7 +390,7 @@ GOBCHUNK("Actor browser background", kidBrwsActor, kgokkRectHit)
 	DEFAULT_POSITION(kxpBrwsActor, kypBrwsActor, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio\bmp\book3.bmp", kxpregBrwsActor, kypregBrwsActor )
+REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio/bmp/book3.bmp", kxpregBrwsActor, kypregBrwsActor )
 ADOPT_WAVE(kcnoPBrowseWav, CHID(kstDefault, krepEnterAnimation))
 CREATE_SCRIPT("Actor browser created")
 	CreateChildThis(kidBrowserPageFwd, kidGenericPageFwd);
@@ -456,11 +456,11 @@ GOBCHUNK("Actor browser Frame", kidBrwsActorFrame, kgokkRectNoKids)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, cnoNil)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\frame3.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/frame3.bmp",
 	kxpregBrwsActorFrame, kypregBrwsActorFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\frame3h.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/frame3h.bmp",
 	kxpregBrwsActorFrame, kypregBrwsActorFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 REP_RECT(CHID(kstBrowserDisabled, krepDefault), "hidden", 0, 0, 0, 0)
@@ -501,7 +501,7 @@ GOBCHUNK("Prop browser background", kidBrwsProp, kgokkRectHit)
 	DEFAULT_POSITION(kxpBrwsProp, kypBrwsProp, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio\bmp\book4.bmp", kxpregBrwsProp, kypregBrwsProp )
+REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio/bmp/book4.bmp", kxpregBrwsProp, kypregBrwsProp )
 ADOPT_WAVE(kcnoPBrowseWav, CHID(kstDefault, krepEnterAnimation))
 CREATE_SCRIPT("Prop browser created")
 	CreateChildThis(kidBrowserPageFwd, kidGenericPageFwd);
@@ -568,11 +568,11 @@ GOBCHUNK("Prop browser Frame", kidBrwsPropFrame, kgokkRectNoKids)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, cnoNil)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\frame4.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/frame4.bmp",
 	kxpregBrwsPropFrame, kypregBrwsPropFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\frame4h.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/frame4h.bmp",
 	kxpregBrwsPropFrame, kypregBrwsPropFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 REP_RECT(CHID(kstBrowserDisabled, krepDefault), "hidden", 0, 0, 0, 0)
@@ -616,7 +616,7 @@ GOBCHUNK("Action browser background", kidBrwsAction, kgokkRectHit)
 	DEFAULT_POSITION(kxpBrwsAction, kypBrwsAction, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio\bmp\book5.bmp", kxpregBrwsAction, kypregBrwsAction )
+REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio/bmp/book5.bmp", kxpregBrwsAction, kypregBrwsAction )
 ADOPT_WAVE(kcnoPBrowseWav, CHID(kstDefault, krepEnterAnimation))
 CREATE_SCRIPT("Action browser created")
 	CreateChildThis(kidBrowserPageFwd, kidGenericPageFwd);
@@ -698,11 +698,11 @@ GOBCHUNK("Action browser Frame", kidBrwsActionFrame, kgokkRectNoKids)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, cnoNil)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\frame5.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/frame5.bmp",
 	kxpregBrwsActionFrame, kypregBrwsActionFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\frame5h.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/frame5h.bmp",
 	kxpregBrwsActionFrame, kypregBrwsActionFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 REP_RECT(CHID(kstBrowserDisabled, krepDefault), "hidden", 0, 0, 0, 0)
@@ -732,11 +732,11 @@ GOBCHUNK("Action browser - change cell", kidBrowserActionBackCel, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttBrwsActionBackCel)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\b5celbk.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/b5celbk.bmp",
 	kxpregBrwsActionBackCel, kypregBrwsActionBackCel)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\b5celbks.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/b5celbks.bmp",
 	kxpregBrwsActionBackCel, kypregBrwsActionBackCel)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 REP_RECT(CHID(kstBrowserDisabled, krepDefault), "hidden", 0, 0, 0, 0)
@@ -753,11 +753,11 @@ GOBCHUNK("Action browser - change cell", kidBrowserActionFwdCel, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttBrwsActionFwdCel)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\b5celfw.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/b5celfw.bmp",
 	kxpregBrwsActionFwdCel, kypregBrwsActionFwdCel)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\b5celfws.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/b5celfws.bmp",
 	kxpregBrwsActionFwdCel, kypregBrwsActionFwdCel)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 REP_RECT(CHID(kstBrowserDisabled, krepDefault), "hidden", 0, 0, 0, 0)
@@ -777,7 +777,7 @@ GOBCHUNK("Textbox create browser background", kidBrwsTextCreate, kgokkRectHit)
 	DEFAULT_POSITION( kxpBrwsTextCreate, kypBrwsTextCreate , 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio\bmp\book9.bmp", kxpregBrwsTextCreate, kypregBrwsTextCreate )
+REP_MBMPREG(CHID(kstDefault, krepDefault ), "studio/bmp/book9.bmp", kxpregBrwsTextCreate, kypregBrwsTextCreate )
 ADOPT_WAVE(kcnoPBrowseWav, CHID(kstDefault, krepEnterAnimation))
 CREATE_SCRIPT("Action browser created")
 	CreateChildGob(kidBackground, kidGenericDisableGlass, kidGenericDisableGlass);
@@ -830,11 +830,11 @@ GOBCHUNK("Textbox create - story", kidCTextsStory, kgokkRectHit)
 	DEFAULT_POSITION(kxpCTextsStory, kypCTextsStory, 10)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttCTextsStory)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault), "studio\bmp\e6stor.bmp",
+REP_MBMPREG(CHID(kstDefault, krepDefault), "studio/bmp/e6stor.bmp",
 	kxpregCTextsStory,	kypregCTextsStory)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\e6stors.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/e6stors.bmp",
 	kxpregCTextsStory, kypregCTextsStory)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("Click, create story", CHID(kstDefault, kchidClick))
@@ -850,10 +850,10 @@ GOBCHUNK("Textbox create - scroll", kidCTextsScroll, kgokkRectHit)
 	DEFAULT_POSITION(kxpCTextsScroll, kypCTextsScroll, 10)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttCTextsScroll)
 ENDCHUNK
-REP_MBMPREG(kcell1, "studio\bmp\e6scr1.bmp", kxpregCTextsScroll, kypregCTextsScroll);
-REP_MBMPREG(kcell2, "studio\bmp\e6scr2.bmp", kxpregCTextsScroll, kypregCTextsScroll);
-REP_MBMPREG(kcell3, "studio\bmp\e6scr3.bmp", kxpregCTextsScroll, kypregCTextsScroll);
-REP_MBMPREG(kcell4, "studio\bmp\e6scr4.bmp", kxpregCTextsScroll, kypregCTextsScroll);
+REP_MBMPREG(kcell1, "studio/bmp/e6scr1.bmp", kxpregCTextsScroll, kypregCTextsScroll);
+REP_MBMPREG(kcell2, "studio/bmp/e6scr2.bmp", kxpregCTextsScroll, kypregCTextsScroll);
+REP_MBMPREG(kcell3, "studio/bmp/e6scr3.bmp", kxpregCTextsScroll, kypregCTextsScroll);
+REP_MBMPREG(kcell4, "studio/bmp/e6scr4.bmp", kxpregCTextsScroll, kypregCTextsScroll);
 REP_ANIM(CHID(kstDefault, krepDefault), "Scroll tbox")
 	cell = 0;
 	While();
@@ -866,7 +866,7 @@ REP_ANIM(CHID(kstDefault, krepDefault), "Scroll tbox")
 	End;	
 ENDCHUNK
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\e6scr1s.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/e6scr1s.bmp",
 	kxpregCTextsScroll, kypregCTextsScroll)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("Click, create Scroll", CHID(kstDefault, kchidClick))
@@ -940,9 +940,9 @@ GOBCHUNK("Sound browser background", kidBrwsSoundsBackground, kgokkRectHit)
 	DEFAULT_POSITION(kxpBrwsSoundsBackground, kypBrwsSoundsBackground, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(kcell1, "studio\bmp\book6.bmp", kxpregBrwsSoundsBackground, kypregBrwsSoundsBackground )
-REP_MBMPREG(kcell2, "studio\bmp\book7.bmp", kxpregBrwsSoundsBackground, kypregBrwsSoundsBackground )
-REP_MBMPREG(kcell3, "studio\bmp\book8.bmp", kxpregBrwsSoundsBackground, kypregBrwsSoundsBackground )
+REP_MBMPREG(kcell1, "studio/bmp/book6.bmp", kxpregBrwsSoundsBackground, kypregBrwsSoundsBackground )
+REP_MBMPREG(kcell2, "studio/bmp/book7.bmp", kxpregBrwsSoundsBackground, kypregBrwsSoundsBackground )
+REP_MBMPREG(kcell3, "studio/bmp/book8.bmp", kxpregBrwsSoundsBackground, kypregBrwsSoundsBackground )
 REP_RECT(CHID(kstClosed, krepDefault), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoPBrowseWav, CHID(kstDefault, krepEnterAnimation))
 REP_ANIM(CHID(kstDefault, krepDefault), "Sound browser background")
@@ -1077,10 +1077,10 @@ GOBCHUNK("Sound browser Frame", kidBrwsSoundFrame, kgokkRectNoKids)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, cnoNil)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\frame5.bmp", kxpregBrwsActionFrame, kypregBrwsActionFrame)
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/frame5.bmp", kxpregBrwsActionFrame, kypregBrwsActionFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\frame5h.bmp", kxpregBrwsActionFrame, kypregBrwsActionFrame)
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/frame5h.bmp", kxpregBrwsActionFrame, kypregBrwsActionFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 REP_RECT(CHID(kstBrowserDisabled, krepDefault), "hidden", 0, 0, 0, 0)
 CLICK_SCRIPT( "Sound frame clicked" )
@@ -1094,11 +1094,11 @@ GOBCHUNK("Sounds Browser Record", kidBrowserRecord, kgokkRectHit)
 	DEFAULT_POSITION(0, 0, 100)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttBrowserRecord)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault), "studio\bmp\mike.bmp",
+REP_MBMPREG(CHID(kstDefault, krepDefault), "studio/bmp/mike.bmp",
 	kxpregBrowserRecord, kypregBrowserRecord)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\mikes.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/mikes.bmp",
 	kxpregBrowserRecord, kypregBrowserRecord )
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 ADOPT_WAVE(kcnoMikeWav, CHID(kstDefault, krepClicked))
@@ -1119,7 +1119,7 @@ GOBCHUNK("Sounds Browser Import", kidBrowserImport, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfst2, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttBrowserImportSpeech)
 	ACTION(fcustNil, fcustNil, fgrfst3, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttBrowserImportMidi)
 ENDCHUNK
-REP_MBMPREG(CHID(kst1, krepDefault), "studio\bmp\sndport.bmp",
+REP_MBMPREG(CHID(kst1, krepDefault), "studio/bmp/sndport.bmp",
 	kxpregBrowserImport, kypregBrowserImport)
 ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseDnOff))
@@ -1129,7 +1129,7 @@ ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepMouseDnOff))
 ADOPT_MBMP(LAST_MBMP, CHID(kst3, krepDefault))
 ADOPT_MBMP(LAST_MBMP, CHID(kst3, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kst3, krepMouseDnOff))
-REP_MBMPREG(CHID(kst1, krepMouseDnOn), "studio\bmp\sndports.bmp",
+REP_MBMPREG(CHID(kst1, krepMouseDnOn), "studio/bmp/sndports.bmp",
 	kxpregBrowserImport, kypregBrowserImport)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepMouseDnOn))
@@ -1190,9 +1190,9 @@ GOBCHUNK("Sound import browser background", kidBrwsSoundsImportBackground, kgokk
 	DEFAULT_POSITION(kxpBrwsImportBackground, kypBrwsImportBackground, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(kcell1, "studio\bmp\book6.bmp", kxpregBrwsImportBackground, kypregBrwsImportBackground )
-REP_MBMPREG(kcell2, "studio\bmp\book7.bmp", kxpregBrwsImportBackground, kypregBrwsImportBackground )
-REP_MBMPREG(kcell3, "studio\bmp\book8.bmp", kxpregBrwsImportBackground, kypregBrwsImportBackground )
+REP_MBMPREG(kcell1, "studio/bmp/book6.bmp", kxpregBrwsImportBackground, kypregBrwsImportBackground )
+REP_MBMPREG(kcell2, "studio/bmp/book7.bmp", kxpregBrwsImportBackground, kypregBrwsImportBackground )
+REP_MBMPREG(kcell3, "studio/bmp/book8.bmp", kxpregBrwsImportBackground, kypregBrwsImportBackground )
 REP_RECT(CHID(kstClosed, krepDefault), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoPBrowseWav, CHID(kstDefault, krepEnterAnimation))
 REP_ANIM(CHID(kstDefault, krepDefault), "Sound import browser background")
@@ -1279,10 +1279,10 @@ GOBCHUNK("Sound import browser Frame", kidBrwsSoundImportFrame, kgokkRectNoKids)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, cnoNil)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\frame5.bmp", kxpregBrwsActionFrame, kypregBrwsActionFrame)
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/frame5.bmp", kxpregBrwsActionFrame, kypregBrwsActionFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\frame5h.bmp", kxpregBrwsActionFrame, kypregBrwsActionFrame)
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/frame5h.bmp", kxpregBrwsActionFrame, kypregBrwsActionFrame)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserSelected, krepDefault))
 REP_RECT(CHID(kstBrowserDisabled, krepDefault), "hidden", 0, 0, 0, 0)
 CLICK_SCRIPT( "Sound import frame clicked" )
@@ -1298,11 +1298,11 @@ GOBCHUNK("Sound import browser page fwd", kidImportPageFwd, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttImportPageFwd)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault ), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio\bmp\fwd.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio/bmp/fwd.bmp",
 	kxpregImportPageFwd, kypregImportPageFwd)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\fwdc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/fwdc.bmp",
 	kxpregImportPageFwd, kypregImportPageFwd)
 REP_RECT(CHID(kstBrowserDisabled, krepDefault ), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoBrwzBtnWav, CHID(kstBrowserEnabled, krepClicked))
@@ -1315,11 +1315,11 @@ GOBCHUNK("Sound import browser page back", kidImportPageBack, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttImportPageBack)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault ), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio\bmp\bback.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio/bmp/bback.bmp",
 	kxpregImportPageBack, kypregImportPageBack)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\bbackc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/bbackc.bmp",
 	kxpregImportPageBack, kypregImportPageBack)
 REP_RECT(CHID(kstBrowserDisabled, krepDefault ), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoBrwzBtnWav, CHID(kstBrowserEnabled, krepClicked))
@@ -1332,11 +1332,11 @@ GOBCHUNK("Import browser cancel", kidImportCancel, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttEaselCancel)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault ), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio\bmp\cancel.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio/bmp/cancel.bmp",
 	kxpregImportCancel, kypregImportCancel)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\cancelc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/cancelc.bmp",
 	kxpregImportCancel, kypregImportCancel)
 REP_RECT(CHID(kstBrowserDisabled, krepDefault ), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoCancelWav, CHID(kstBrowserEnabled, krepClicked))
@@ -1349,11 +1349,11 @@ GOBCHUNK("Import browser Okay", kidImportOk, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttEaselOk)
 ENDCHUNK
 REP_RECT(CHID(kstBrowserInvisible, krepDefault ), "hidden", 0, 0, 0, 0)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio\bmp\okay.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault ), "studio/bmp/okay.bmp",
 	kxpregImportOk, kypregImportOk)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\okayc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/okayc.bmp",
 	kxpregImportOk, kypregImportOk)
 REP_RECT(CHID(kstBrowserDisabled, krepDefault ), "hidden", 0, 0, 0, 0)
 ADOPT_WAVE(kcnoOkWav, CHID(kstBrowserEnabled, krepClicked))
@@ -1419,11 +1419,11 @@ GOBCHUNK("RollCall Actor browser border 1", kidRollCallActorBorder1, gokkNoHitKi
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorFrame1)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserSelected, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorFrame1)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcact1.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcact1.bmp",
 	kxpregRollCallActorBorder1, kypregRollCallActorBorder1)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcact1e.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcact1e.bmp",
 	kxpregRollCallActorBorder1, kypregRollCallActorBorder1)
-REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio\bmp\rcact1s.bmp",
+REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio/bmp/rcact1s.bmp",
 	kxpregRollCallActorBorder1, kypregRollCallActorBorder1)
 CREATE_SCRIPT("Actor Rollcall border 1 create frame")
 	// We end up here ever time the state is changed to BrowserInvisible, because the
@@ -1457,11 +1457,11 @@ GOBCHUNK("RollCall Actor browser border 2", kidRollCallActorBorder2, gokkNoHitKi
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorFrame2)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserSelected, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorFrame2)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcact2.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcact2.bmp",
 	kxpregRollCallActorBorder2, kypregRollCallActorBorder2)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcact2e.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcact2e.bmp",
 	kxpregRollCallActorBorder2, kypregRollCallActorBorder2)
-REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio\bmp\rcact2s.bmp",
+REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio/bmp/rcact2s.bmp",
 	kxpregRollCallActorBorder2, kypregRollCallActorBorder2)
 CREATE_SCRIPT("Actor Rollcall border 2 create frame")
 	If(!FGobExists(kidRollCallActorFrame2));
@@ -1491,11 +1491,11 @@ GOBCHUNK("RollCall Actor browser border 3", kidRollCallActorBorder3, gokkNoHitKi
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorFrame3)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserSelected, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorFrame3)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcact3.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcact3.bmp",
 	kxpregRollCallActorBorder3, kypregRollCallActorBorder3)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcact3e.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcact3e.bmp",
 	kxpregRollCallActorBorder3, kypregRollCallActorBorder3)
-REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio\bmp\rcact3s.bmp",
+REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio/bmp/rcact3s.bmp",
 	kxpregRollCallActorBorder3, kypregRollCallActorBorder3)
 CREATE_SCRIPT("Actor Rollcall border 3 create frame")
 	If(!FGobExists(kidRollCallActorFrame3));
@@ -1525,11 +1525,11 @@ GOBCHUNK("RollCall Actor browser border 4", kidRollCallActorBorder4, gokkNoHitKi
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorFrame4)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserSelected, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorFrame4)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcact4.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcact4.bmp",
 	kxpregRollCallActorBorder4, kypregRollCallActorBorder4)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcact4e.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcact4e.bmp",
 	kxpregRollCallActorBorder4, kypregRollCallActorBorder4)
-REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio\bmp\rcact4s.bmp",
+REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio/bmp/rcact4s.bmp",
 	kxpregRollCallActorBorder4, kypregRollCallActorBorder4)
 CREATE_SCRIPT("Actor Rollcall border 4 create frame")
 	If(!FGobExists(kidRollCallActorFrame4));
@@ -1562,13 +1562,13 @@ GOBCHUNK("RollCall Actor up arrow", kidRollCallActorUpArrow, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserInvisible, kcrsArrow, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorUpArrow)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcaup.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcaup.bmp",
 	kxpregRollCallActorUp, kypregRollCallActorUp)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\rcaupc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/rcaupc.bmp",
 	kxpregRollCallActorUp, kypregRollCallActorUp)
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcaupd.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcaupd.bmp",
 	kxpregRollCallActorUp, kypregRollCallActorUp)
 ADOPT_WAVE(kcnoBrwzBtnWav, CHID(kstBrowserEnabled, krepClicked))
 CHILD_SCRIPT("RollCall Actor up arrow clicked", CHID(kstBrowserEnabled, kchidClick))
@@ -1580,13 +1580,13 @@ GOBCHUNK("RollCall Actor down arrow", kidRollCallActorDownArrow, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserInvisible, kcrsArrow, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallActorDownArrow)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcadwn.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcadwn.bmp",
 	kxpregRollCallActorDown, kypregRollCallActorDown)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\rcadwnc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/rcadwnc.bmp",
 	kxpregRollCallActorDown, kypregRollCallActorDown)
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcadwnd.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcadwnd.bmp",
 	kxpregRollCallActorDown, kypregRollCallActorDown)
 ADOPT_WAVE(kcnoBrwzBtnWav, CHID(kstBrowserEnabled, krepClicked))
 CHILD_SCRIPT("RollCall Actor down arrow clicked", CHID(kstBrowserEnabled, kchidClick))
@@ -1649,11 +1649,11 @@ GOBCHUNK("RollCall Prop browser border 1", kidRollCallPropBorder1, gokkNoHitKids
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropFrame1)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserSelected, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropFrame1)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcp1.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcp1.bmp",
 	kxpregRollCallPropBorder1, kypregRollCallPropBorder1)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcp1e.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcp1e.bmp",
 	kxpregRollCallPropBorder1, kypregRollCallPropBorder1)
-REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio\bmp\rcp1s.bmp",
+REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio/bmp/rcp1s.bmp",
 	kxpregRollCallPropBorder1, kypregRollCallPropBorder1)
 CREATE_SCRIPT("Prop Rollcall border 1 create frame")
 	If(!FGobExists(kidRollCallPropFrame1));
@@ -1683,11 +1683,11 @@ GOBCHUNK("RollCall Prop browser border 2", kidRollCallPropBorder2, gokkNoHitKids
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropFrame2)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserSelected, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropFrame2)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcp2.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcp2.bmp",
 	kxpregRollCallPropBorder2, kypregRollCallPropBorder2)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcp2e.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcp2e.bmp",
 	kxpregRollCallPropBorder2, kypregRollCallPropBorder2)
-REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio\bmp\rcp2s.bmp",
+REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio/bmp/rcp2s.bmp",
 	kxpregRollCallPropBorder2, kypregRollCallPropBorder2)
 CREATE_SCRIPT("Prop Rollcall border 2 create frame")
 	If(!FGobExists(kidRollCallPropFrame2));
@@ -1717,11 +1717,11 @@ GOBCHUNK("RollCall Prop browser border 3", kidRollCallPropBorder3, gokkNoHitKids
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropFrame3)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserSelected, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropFrame3)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcp3.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcp3.bmp",
 	kxpregRollCallPropBorder3, kypregRollCallPropBorder3)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcp3e.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcp3e.bmp",
 	kxpregRollCallPropBorder3, kypregRollCallPropBorder3)
-REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio\bmp\rcp3s.bmp",
+REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio/bmp/rcp3s.bmp",
 	kxpregRollCallPropBorder3, kypregRollCallPropBorder3)
 CREATE_SCRIPT("Prop Rollcall border 3 create frame")
 	If(!FGobExists(kidRollCallPropFrame3));
@@ -1751,11 +1751,11 @@ GOBCHUNK("RollCall Prop browser border 4", kidRollCallPropBorder4, gokkNoHitKids
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropFrame4)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserSelected, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropFrame4)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcp4.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcp4.bmp",
 	kxpregRollCallPropBorder4, kypregRollCallPropBorder4)
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcp4e.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcp4e.bmp",
 	kxpregRollCallPropBorder4, kypregRollCallPropBorder4)
-REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio\bmp\rcp4s.bmp",
+REP_MBMPREG(CHID(kstBrowserSelected, krepDefault), "studio/bmp/rcp4s.bmp",
 	kxpregRollCallPropBorder4, kypregRollCallPropBorder4)
 CREATE_SCRIPT("Prop Rollcall border 4 create frame")
 	If(!FGobExists(kidRollCallPropFrame4));
@@ -1788,13 +1788,13 @@ GOBCHUNK("RollCall Prop up arrow", kidRollCallPropUpArrow, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserInvisible, kcrsArrow, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropUpArrow)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcpup.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcpup.bmp",
 	kxpregRollCallPropUp, kypregRollCallPropUp)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\rcpupc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/rcpupc.bmp",
 	kxpregRollCallPropUp, kypregRollCallPropUp)
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcpupd.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcpupd.bmp",
 	kxpregRollCallPropUp, kypregRollCallPropUp)
 ADOPT_WAVE(kcnoBrwzBtnWav, CHID(kstBrowserEnabled, krepClicked))
 CHILD_SCRIPT("RollCall Prop up arrow clicked", CHID(kstBrowserEnabled, kchidClick))
@@ -1806,13 +1806,13 @@ GOBCHUNK("RollCall Prop down arrow", kidRollCallPropDownArrow, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserInvisible, kcrsArrow, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstBrowserEnabled, kcrsHand, CHID(kstBrowserEnabled, kchidClick), cidNil, kttRollCallPropDownArrow)
 ENDCHUNK
-REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio\bmp\rcpdwn.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepDefault), "studio/bmp/rcpdwn.bmp",
 	kxpregRollCallPropDown, kypregRollCallPropDown)
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstBrowserEnabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio\bmp\rcpdwnc.bmp",
+REP_MBMPREG(CHID(kstBrowserEnabled, krepMouseDnOn), "studio/bmp/rcpdwnc.bmp",
 	kxpregRollCallPropDown, kypregRollCallPropDown)
-REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio\bmp\rcpdwnd.bmp",
+REP_MBMPREG(CHID(kstBrowserInvisible, krepDefault), "studio/bmp/rcpdwnd.bmp",
 	kxpregRollCallPropDown, kypregRollCallPropDown)
 ADOPT_WAVE(kcnoBrwzBtnWav, CHID(kstBrowserEnabled, krepClicked))
 CHILD_SCRIPT("RollCall Prop down arrow clicked", CHID(kstBrowserEnabled, kchidClick))

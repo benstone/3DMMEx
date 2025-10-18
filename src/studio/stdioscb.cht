@@ -295,11 +295,11 @@ REP_MBMPREG(CHID1(krepDefault), __szPath, __xpreg, __ypreg)
  *
 \*****************************************************************************/
 
-NORMALGOB("Frame Title", kidFrameTitle, kxpFrameTitle, kypFrameTitle, kxpregFrameTitle, kypregFrameTitle, "studio\bmp\fttl.bmp")
-NORMALGOB("Frame Text Box", kidFrameText, kxpFrameText, kypFrameText, kxpregFrameText, kypregFrameText, "studio\bmp\ftxt.bmp")
+NORMALGOB("Frame Title", kidFrameTitle, kxpFrameTitle, kypFrameTitle, kxpregFrameTitle, kypregFrameTitle, "studio/bmp/fttl.bmp")
+NORMALGOB("Frame Text Box", kidFrameText, kxpFrameText, kypFrameText, kxpregFrameText, kypregFrameText, "studio/bmp/ftxt.bmp")
 
 BUTTONHOLDGOB("Frame Button FW", kidFrameFW, kxpFrameFW, kypFrameFW, kxpregFrameFW, kypregFrameFW,
-			  "studio\bmp\ffw.bmp", "studio\bmp\ffws.bmp", cidFrameScrollbar, chttFButtonFW, kttFForward)
+			  "studio/bmp/ffw.bmp", "studio/bmp/ffws.bmp", cidFrameScrollbar, chttFButtonFW, kttFForward)
 REP_ANIM(CHID1(krepDragOff), "Pressed")
 	SetNoSlipThis(fFalse);
 	SetRepThis(CHID1(krepDefault));
@@ -310,10 +310,10 @@ REP_ANIM(CHID1(krepClicked), "Pressed")
 ENDCHUNK
 
 BUTTONONCEGOB("Frame Button FW End", kidFrameFWEnd, kxpFrameFWEnd, kypFrameFWEnd, kxpregFrameFWEnd, kypregFrameFWEnd,
-              "studio\bmp\ffwe.bmp", "studio\bmp\ffwes.bmp", cidFrameScrollbar, chttButtonFWEnd, kttFForwardEnd)
+              "studio/bmp/ffwe.bmp", "studio/bmp/ffwes.bmp", cidFrameScrollbar, chttButtonFWEnd, kttFForwardEnd)
 ADOPT_WAVE(kcnoGoLastFWav, CHID(kstDefault, krepClicked))
 BUTTONHOLDGOB("Frame Button RW", kidFrameRW, kxpFrameRW, kypFrameRW, kxpregFrameRW, kypregFrameRW,
-			  "studio\bmp\frw.bmp", "studio\bmp\frws.bmp", cidFrameScrollbar, chttFButtonRW, kttRewind)
+			  "studio/bmp/frw.bmp", "studio/bmp/frws.bmp", cidFrameScrollbar, chttFButtonRW, kttRewind)
 REP_ANIM(CHID1(krepDragOff), "Pressed")
 	SetNoSlipThis(fFalse);
 	SetRepThis(CHID1(krepDefault));
@@ -324,14 +324,14 @@ REP_ANIM(CHID1(krepClicked), "Pressed")
 ENDCHUNK
 
 BUTTONONCEGOB("Frame Button RW End", kidFrameRWEnd, kxpFrameRWEnd, kypFrameRWEnd, kxpregFrameRWEnd, kypregFrameRWEnd,
-			  "studio\bmp\frwe.bmp", "studio\bmp\frwes.bmp", cidFrameScrollbar, chttButtonRWEnd, kttRewindEnd)
+			  "studio/bmp/frwe.bmp", "studio/bmp/frwes.bmp", cidFrameScrollbar, chttButtonRWEnd, kttRewindEnd)
 ADOPT_WAVE(kcnoGoFrstFWav, CHID(kstDefault, krepClicked))
 
 SCROLLBARGOB("Frame Scrollbar", kidFrameScrollbar, kidFrameThumb, kxpFrameScrollbar, kypFrameScrollbar,
-	kypregFrameScrollbar, kypregFrameScrollbar, "studio\bmp\fscl.bmp", cidFrameScrollbar, kttFrameSlider)
+	kypregFrameScrollbar, kypregFrameScrollbar, "studio/bmp/fscl.bmp", cidFrameScrollbar, kttFrameSlider)
 
 THUMBGOB("Frame Thumb Tab", kidFrameThumb, kidFrameScrollbar, kxpFrameThumb,
-	kypFrameThumb, "studio\bmp\fthm.bmp", "studio\bmp\fthms.bmp",
+	kypFrameThumb, "studio/bmp/fthm.bmp", "studio/bmp/fthms.bmp",
 	cidFrameThumb, 0)
 
 /*****************************************************************************\
@@ -341,25 +341,25 @@ THUMBGOB("Frame Thumb Tab", kidFrameThumb, kidFrameScrollbar, kxpFrameThumb,
 \*****************************************************************************/
 
 NORMALGOB("Scene Title", kidSceneTitle, kxpSceneTitle, kypSceneTitle,
-	kxpregSceneTitle, kypregSceneTitle, "studio\bmp\sttl.bmp")
+	kxpregSceneTitle, kypregSceneTitle, "studio/bmp/sttl.bmp")
 NORMALGOB("Scene Text Box", kidSceneText, kxpSceneText, kypSceneText,
-			kxpregSceneText, kypregSceneText, "studio\bmp\stxt.bmp")
+			kxpregSceneText, kypregSceneText, "studio/bmp/stxt.bmp")
 
 BUTTONONCEGOB("Scene Button FW", kidSceneFW, kxpSceneFW, kypSceneFW, kxpregSceneFW, kypregSceneFW,
-			  "studio\bmp\sfw.bmp", "studio\bmp\sfws.bmp", cidSceneScrollbar, chttSButtonFW, kttNextScene)
+			  "studio/bmp/sfw.bmp", "studio/bmp/sfws.bmp", cidSceneScrollbar, chttSButtonFW, kttNextScene)
 BUTTONONCEGOB("Scene Button FW End", kidSceneFWEnd, kxpSceneFWEnd, kypSceneFWEnd, kxpregSceneFWEnd, kypregSceneFWEnd,
-		      "studio\bmp\sfwe.bmp", "studio\bmp\sfwes.bmp", cidSceneScrollbar, chttButtonFWEnd, kttLastScene)
+		      "studio/bmp/sfwe.bmp", "studio/bmp/sfwes.bmp", cidSceneScrollbar, chttButtonFWEnd, kttLastScene)
 ADOPT_WAVE(kcnoGoLastSWav, CHID(kstDefault, krepClicked))
 BUTTONONCEGOB("Scene Button RW", kidSceneRW, kxpSceneRW, kypSceneRW, kxpregSceneRW, kypregSceneRW,
-			  "studio\bmp\srw.bmp", "studio\bmp\srws.bmp", cidSceneScrollbar, chttSButtonRW, kttPrevScene)
+			  "studio/bmp/srw.bmp", "studio/bmp/srws.bmp", cidSceneScrollbar, chttSButtonRW, kttPrevScene)
 BUTTONONCEGOB("Scene Button RW End", kidSceneRWEnd, kxpSceneRWEnd, kypSceneRWEnd, kxpregSceneRWEnd, kypregSceneRWEnd,
-			  "studio\bmp\srwe.bmp", "studio\bmp\srwes.bmp", cidSceneScrollbar, chttButtonRWEnd, kttFirstScene)
+			  "studio/bmp/srwe.bmp", "studio/bmp/srwes.bmp", cidSceneScrollbar, chttButtonRWEnd, kttFirstScene)
 ADOPT_WAVE(kcnoGoFrstSWav, CHID(kstDefault, krepClicked))
 
 SCROLLBARGOB("Scene Scrollbar", kidSceneScrollbar, kidSceneThumb, kxpSceneScrollbar, kypSceneScrollbar,
-		kxpregSceneScrollbar, kypregSceneScrollbar, "studio\bmp\sscl.bmp", cidSceneScrollbar, kttSceneSlider)
+		kxpregSceneScrollbar, kypregSceneScrollbar, "studio/bmp/sscl.bmp", cidSceneScrollbar, kttSceneSlider)
 
 THUMBGOB("Scene Thumb Tab", kidSceneThumb, kidSceneScrollbar, kxpSceneThumb,
-	kypSceneThumb, "studio\bmp\stmb.bmp", "studio\bmp\stmb.bmp",
+	kypSceneThumb, "studio/bmp/stmb.bmp", "studio/bmp/stmb.bmp",
 	cidSceneThumb, 0)
 

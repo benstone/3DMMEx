@@ -11,12 +11,12 @@
 
 // WAVE FILES for the help book 
 
-//WAVE_CHUNK("studio\sound\hmbtn.wav", kcnoHelpMainWav )
-WAVE_CHUNK("studio\sound\next.wav", kcnoHelpMainWav )
-WAVE_CHUNK("studio\sound\next.wav", kcnoHelpNextWav )
-WAVE_CHUNK("studio\sound\back.wav", kcnoHelpBackWav )
+//WAVE_CHUNK("studio/sound/hmbtn.wav", kcnoHelpMainWav )
+WAVE_CHUNK("studio/sound/next.wav", kcnoHelpMainWav )
+WAVE_CHUNK("studio/sound/next.wav", kcnoHelpNextWav )
+WAVE_CHUNK("studio/sound/back.wav", kcnoHelpBackWav )
 
-// WAVE_CHUNK ("studio\sound\bingo.wav", wavBingo)
+// WAVE_CHUNK ("studio/sound/bingo.wav", wavBingo)
 
 //------------------------------------------------------------------
 // Help book parent object
@@ -230,7 +230,7 @@ OBJECT("Help Book Parent", kgobHelpBookParent, 100, kcrsArrow)
 // Gizmo body image that masks stuff underneath it
 // -----------------------------------------------------
 OBJECTTY("Help Book Gizmo", kgobHelpBookGizmo, 180, kcrsArrow, kgokkRectHit )
-	REP_MBMP(CHID1(krepDefault), "studio\bmp\gizmo.bmp")
+	REP_MBMP(CHID1(krepDefault), "studio/bmp/gizmo.bmp")
 	CREATE_ANIM("help gizmo created")
 		
 	// Spot for the Help topic title
@@ -270,10 +270,10 @@ OBJECT("Help Book Fill", kgobHelpBookFill, 200, kcrsArrow)
 // Help book primary button #1
 // -----------------------------------------------------
 OBJECT("Help Table of Contents", kgobHelpBookPrimary1, 350, kcrsHand1)
-	REP_MBMP(CHID1(krepDefault), "studio\bmp\prim1.bmp")
+	REP_MBMP(CHID1(krepDefault), "studio/bmp/prim1.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\prim1s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/prim1s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button1 clicked")
 		// set section 1
@@ -285,10 +285,10 @@ OBJECT("Help Table of Contents", kgobHelpBookPrimary1, 350, kcrsHand1)
 // Help book primary button #2
 // -----------------------------------------------------
 OBJECT("Help Basics", kgobHelpBookPrimary2, 350, kcrsHand1)
-	REP_MBMP(CHID1(krepDefault), "studio\bmp\prim2.bmp")
+	REP_MBMP(CHID1(krepDefault), "studio/bmp/prim2.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\prim2s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/prim2s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button2 clicked")
 		// set section 1
@@ -300,10 +300,10 @@ OBJECT("Help Basics", kgobHelpBookPrimary2, 350, kcrsHand1)
 // Help book primary button #3
 // -----------------------------------------------------
 OBJECT("Help How To", kgobHelpBookPrimary3, 350, kcrsHand1)
-	REP_MBMP(CHID1(krepDefault), "studio\bmp\prim3.bmp")
+	REP_MBMP(CHID1(krepDefault), "studio/bmp/prim3.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\prim3s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/prim3s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button3 clicked")
 		// Set book to last section within "How To" section
@@ -315,10 +315,10 @@ OBJECT("Help How To", kgobHelpBookPrimary3, 350, kcrsHand1)
 // Help book primary button #4
 // -----------------------------------------------------
 OBJECT("Help Tools", kgobHelpBookPrimary4, 350, kcrsHand1)
-	REP_MBMP(CHID1(krepDefault), "studio\bmp\prim4.bmp")
+	REP_MBMP(CHID1(krepDefault), "studio/bmp/prim4.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\prim4s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/prim4s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button4 clicked")
 		// set section 1
@@ -330,10 +330,10 @@ OBJECT("Help Tools", kgobHelpBookPrimary4, 350, kcrsHand1)
 // Help book primary button #5
 // -----------------------------------------------------
 OBJECT("Help Tips", kgobHelpBookPrimary5, 350, kcrsHand1)
-	REP_MBMP(CHID1(krepDefault), "studio\bmp\prim5.bmp")
+	REP_MBMP(CHID1(krepDefault), "studio/bmp/prim5.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\prim5s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/prim5s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button5 clicked")
 		// set section 1
@@ -345,14 +345,14 @@ OBJECT("Help Tips", kgobHelpBookPrimary5, 350, kcrsHand1)
 // Gizmo volume control
 // -----------------------------------------------------
 OBJECTTTREG("Help Book Volume", kgobHelpBookVolume, 350, kcrsHand1, ttBookVolume, 39, 168)
-	REP_MBMPREG(CHID1(krepDefault), "studio\bmp\volume.bmp", 39, 168)
+	REP_MBMPREG(CHID1(krepDefault), "studio/bmp/volume.bmp", 39, 168)
 
 // --------------------------------------------------------------------------------
 // The thumbnail is the graphic indicator of volume level...
 // positioned within the slide path - not hittable
 // --------------------------------------------------------------------------------
 OBJECTTY( "HelpBook - volume slider",  kgobHelpBookVolumeSlider, 60, kcrsArrow1, kgokkRectNoHit )
-REP_MBMP( CHID1( krepDefault ), "studio\bmp\volthmb.bmp" )
+REP_MBMP( CHID1( krepDefault ), "studio/bmp/volthmb.bmp" )
 
 // --------------------------------------------------------------------------------
 // The slider is the rectangular path the volume slider rolls around in.
@@ -398,12 +398,12 @@ ADOPT_ANIM( LAST_ANIM, CHID1( kchidDownUpOff ))
 // Gizmo voice toggle control
 // -----------------------------------------------------
 OBJECTTTREG("Help Book Voice Toggle", kgobHelpBookVoice, 350, kcrsHand1, ttBookVoice, kxpHelpBookVoice, kypHelpBookVoice)
-	REP_MBMPREG(CHID1(krepDefault), "studio\bmp\vocon.bmp", kxpregHelpBookVoice, kypregHelpBookVoice )
+	REP_MBMPREG(CHID1(krepDefault), "studio/bmp/vocon.bmp", kxpregHelpBookVoice, kypregHelpBookVoice )
 	ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseDnOff))
 	ADOPT_MBMP( LAST_MBMP, CHID( kst2, krepMouseDnOn ))
 
-	REP_MBMPREG(CHID1( krepMouseDnOn ), "studio\bmp\vocoff.bmp", kxpregHelpBookVoice, kypregHelpBookVoice )
+	REP_MBMPREG(CHID1( krepMouseDnOn ), "studio/bmp/vocoff.bmp", kxpregHelpBookVoice, kypregHelpBookVoice )
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))	
 	CREATE_ANIM("MZ Voice control")
 		// see if voice should be on or off
@@ -438,10 +438,10 @@ ENDCHUNK
 	CHILD_SCRIPT("page Fwd clicked", CHID(kst1, kchidClick))
 		RunScriptGob( kgobHelpBookParent, kchidScript3 );
 	ENDCHUNK
-	REP_MBMPREG(CHID1(krepDefault), "studio\bmp\pgfwd.bmp" , kxpregHelpBookPageFwd, kypregHelpBookPageFwd )
+	REP_MBMPREG(CHID1(krepDefault), "studio/bmp/pgfwd.bmp" , kxpregHelpBookPageFwd, kypregHelpBookPageFwd )
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMPREG(CHID1( krepMouseDnOn), "studio\bmp\pgfwdds.bmp", kxpregHelpBookPageFwd, kypregHelpBookPageFwd )
+	REP_MBMPREG(CHID1( krepMouseDnOn), "studio/bmp/pgfwdds.bmp", kxpregHelpBookPageFwd, kypregHelpBookPageFwd )
 	REP_RECT( CHID(kst2, krepDefault), "hidden",0,0,0,0 )
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	ADOPT_WAVE( kcnoHelpNextWav , CHID1(krepClicked))		
@@ -456,20 +456,20 @@ ENDCHUNK
 	CHILD_SCRIPT("page back clicked", CHID(kst1, kchidClick))
 		RunScriptGob( kgobHelpBookParent, kchidScript2 );
 	ENDCHUNK
-	REP_MBMPREG(CHID1(krepDefault), "studio\bmp\pgback.bmp" , kxpregHelpBookPageBack, kypregHelpBookPageBack)
+	REP_MBMPREG(CHID1(krepDefault), "studio/bmp/pgback.bmp" , kxpregHelpBookPageBack, kypregHelpBookPageBack)
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMPREG(CHID1(krepMouseDnOn), "studio\bmp\pgbackds.bmp", kxpregHelpBookPageBack, kypregHelpBookPageBack)
+	REP_MBMPREG(CHID1(krepMouseDnOn), "studio/bmp/pgbackds.bmp", kxpregHelpBookPageBack, kypregHelpBookPageBack)
 	REP_RECT( CHID(kst2, krepDefault), "hidden",0,0,0,0 )	
 	ADOPT_WAVE( kcnoHelpBackWav , CHID1(krepClicked))	
 // -----------------------------------------------------
 // Help book cancel control -- ttBookCancel
 // -----------------------------------------------------
 OBJECTTTREG("Help Book Cancel", kgobHelpBookCancel, 350, kcrsHand1, ttBookCancel, kxpHelpBookCancel, kypHelpBookCancel)
-	REP_MBMPREG(CHID1(krepDefault), "studio\bmp\hcancel.bmp", kxpregHelpBookCancel, kypregHelpBookCancel)
+	REP_MBMPREG(CHID1(krepDefault), "studio/bmp/hcancel.bmp", kxpregHelpBookCancel, kypregHelpBookCancel)
 	ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseDnOff))
-	REP_MBMPREG(CHID1(krepMouseDnOn), "studio\bmp\hcancelc.bmp", kxpregHelpBookCancel, kypregHelpBookCancel)
+	REP_MBMPREG(CHID1(krepMouseDnOn), "studio/bmp/hcancelc.bmp", kxpregHelpBookCancel, kypregHelpBookCancel)
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("Cancel clicked")
 		ENABLEACCEL(fFalse);
@@ -491,17 +491,17 @@ OBJECT("Help Book How To Sub", kgobHelpBookHowSub, 250, kcrsArrow)
 		CreateChildThis(kgobHelpHowButton6, kgobHelpHowButton6);
 	ENDCHUNK
 	REP_RECT( CHID1( krepDefault ), "blank", 0, 0, 0, 0 )
-	REP_MASK( CHID( kst2, krepDefault ), "studio\bmp\howmsk.bmp", 0, 0 );
+	REP_MASK( CHID( kst2, krepDefault ), "studio/bmp/howmsk.bmp", 0, 0 );
 	REP_RECT( CHID( kst3, krepDefault ), "blank", 0, 0, 0, 0 )
 
 // -----------------------------------------------------
 // First "how to" subsection button
 // -----------------------------------------------------
 OBJECT("Help Book How button1", kgobHelpHowButton1, 275, kcrsHand1)
-	REP_MBMP(CHID(kst1, krepDefault), "studio\bmp\hbut1.bmp")
+	REP_MBMP(CHID(kst1, krepDefault), "studio/bmp/hbut1.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\hbut1s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/hbut1s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button1 clicked")
 		// set book to section 3
@@ -515,10 +515,10 @@ OBJECT("Help Book How button1", kgobHelpHowButton1, 275, kcrsHand1)
 // Second "how to" subsection button
 // -----------------------------------------------------
 OBJECT("Help Book How button2", kgobHelpHowButton2, 275, kcrsHand1)
-	REP_MBMP(CHID(kst1, krepDefault), "studio\bmp\hbut2.bmp")
+	REP_MBMP(CHID(kst1, krepDefault), "studio/bmp/hbut2.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\hbut2s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/hbut2s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button1 clicked")
 		RunScriptGob( kgobHelpBookParent, kchidScript1, 4 );
@@ -528,10 +528,10 @@ OBJECT("Help Book How button2", kgobHelpHowButton2, 275, kcrsHand1)
 // Third "how to" subsection button
 // -----------------------------------------------------
 OBJECT("help book How button3", kgobHelpHowButton3, 275, kcrsHand1)
-	REP_MBMP(CHID(kst1, krepDefault), "studio\bmp\hbut3.bmp")
+	REP_MBMP(CHID(kst1, krepDefault), "studio/bmp/hbut3.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\hbut3s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/hbut3s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button1 clicked")
 		RunScriptGob( kgobHelpBookParent, kchidScript1, 5 );
@@ -541,10 +541,10 @@ OBJECT("help book How button3", kgobHelpHowButton3, 275, kcrsHand1)
 // Fourth "how to" subsection button
 // -----------------------------------------------------
 OBJECT("Help Book How button4", kgobHelpHowButton4, 275, kcrsHand1)
-	REP_MBMP(CHID(kst1, krepDefault), "studio\bmp\hbut4.bmp")
+	REP_MBMP(CHID(kst1, krepDefault), "studio/bmp/hbut4.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\hbut4s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/hbut4s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button1 clicked")
 		RunScriptGob( kgobHelpBookParent, kchidScript1, 6 );
@@ -554,10 +554,10 @@ OBJECT("Help Book How button4", kgobHelpHowButton4, 275, kcrsHand1)
 // Fifth "how to" subsection button
 // -----------------------------------------------------
 OBJECT("Help Book How button5", kgobHelpHowButton5, 275, kcrsHand1)
-	REP_MBMP(CHID(kst1, krepDefault), "studio\bmp\hbut5.bmp")
+	REP_MBMP(CHID(kst1, krepDefault), "studio/bmp/hbut5.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\hbut5s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/hbut5s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button1 clicked")
 		RunScriptGob( kgobHelpBookParent, kchidScript1, 7 );
@@ -567,10 +567,10 @@ OBJECT("Help Book How button5", kgobHelpHowButton5, 275, kcrsHand1)
 // Sixth "how to" subsection button
 // -----------------------------------------------------
 OBJECT("Help Book How button6", kgobHelpHowButton6, 275, kcrsHand1)
-	REP_MBMP(CHID(kst1, krepDefault), "studio\bmp\hbut6.bmp")
+	REP_MBMP(CHID(kst1, krepDefault), "studio/bmp/hbut6.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(  krepMouseDnOff))
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\hbut6s.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/hbut6s.bmp")
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 	CLICK_SCRIPT("button1 clicked")
 		RunScriptGob( kgobHelpBookParent, kchidScript1, 8 );

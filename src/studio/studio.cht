@@ -122,7 +122,7 @@ ENDCHUNK
 //
 // Extract the palette from a bitmap
 //
-PALETTECHUNK("Palette", kidPalette, "studio\bmp\socpal.bmp")
+PALETTECHUNK("Palette", kidPalette, "studio/bmp/socpal.bmp")
 
 
 //
@@ -370,7 +370,7 @@ GOBCHUNK("Background 1", kidBackground1, kgokkRectHit)
 	DEFAULT_POSITION(kxpBackground1, kypBackground1, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\back1.bmp", kxpregBackground1, kypregBackground1)
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/back1.bmp", kxpregBackground1, kypregBackground1)
 
 // Background 2 only serves to create the rollcall actor browser.
 GOBCHUNK("Background 2", kidBackground2, kgokkRectHit)
@@ -381,7 +381,7 @@ CREATE_SCRIPT("Background 2 - create")
 	EnqueueCid(cidBrowserReady, khidStudio, kidRollCallActor, kidRollCallActorFrame, kidRollCallActorDownArrow,
 			   (kdxpRollCallActorFrameBorder << 16) | kdypRollCallActorFrameBorder);
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\back2.bmp", kxpregBackground2, kypregBackground2 )
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/back2.bmp", kxpregBackground2, kypregBackground2 )
 			
 // Background 3 only serves to create the rollcall prop browser.
 GOBCHUNK("Background 3", kidBackground3, kgokkRectHit)
@@ -392,13 +392,13 @@ CREATE_SCRIPT("Background 3 - create")
 	EnqueueCid(cidBrowserReady, khidStudio, kidRollCallProp, kidRollCallPropFrame, kidRollCallPropDownArrow,
 			   (kdxpRollCallPropFrameBorder << 16) | kdypRollCallPropFrameBorder);
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\back3.bmp", kxpregBackground3, kypregBackground3)
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/back3.bmp", kxpregBackground3, kypregBackground3)
 
 GOBCHUNK("Background 4", kidBackground4, kgokkRectHit)
 	DEFAULT_POSITION(kxpBackground4, kypBackground4, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\back4.bmp", kxpregBackground4, kypregBackground4)
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/back4.bmp", kxpregBackground4, kypregBackground4)
 
 
 //
@@ -410,7 +410,7 @@ GOBCHUNK("Background - Frame Scrollbar", kidFrameBackground, kgokkRectHit)
 	DEFAULT_POSITION(kxpFrameBackground, kypFrameBackground, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\fpar1.bmp", kxpregFrameBackground, kypregFrameBackground )
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/fpar1.bmp", kxpregFrameBackground, kypregFrameBackground )
 CREATE_SCRIPT("Background - Frame Scrollbar -- create")
 	CreateChildThis(kidFrameTitle, kidFrameTitle);
 	CreateChildThis(kidFrameText, kidFrameText);
@@ -426,7 +426,7 @@ GOBCHUNK("Background - Scene Scrollbar", kidSceneBackground, kgokkRectHit)
 	DEFAULT_POSITION(kxpSceneBackground, kypSceneBackground, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\spar1.bmp", kxpregSceneBackground, kypregSceneBackground)
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/spar1.bmp", kxpregSceneBackground, kypregSceneBackground)
 CREATE_SCRIPT("Background - Scene Scrollbar -- create")
 	CreateChildThis(kidSceneTitle, kidSceneTitle);
 	CreateChildThis(kidSceneText, kidSceneText);
@@ -454,7 +454,7 @@ GOBCHUNK("Help Anchor", kidHelpAnchor, kgokkRectNoHit )
 	DEFAULT_POSITION(kxpHelpAnchor, kypHelpAnchor, 20)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-//REP_MASK(CHID(kstDefault, krepDefault), "studio\bmp\helpanch.bmp", kxpregHelpAnchor, kypregHelpAnchor)
+//REP_MASK(CHID(kstDefault, krepDefault), "studio/bmp/helpanch.bmp", kxpregHelpAnchor, kypregHelpAnchor)
 REP_RECT( CHID( kstDefault, krepDefault), "anchor for help", 0, 0, 1, 1 )
 
 
@@ -472,11 +472,11 @@ GOBCHUNK("Settings", kidSettingsCover, kgokkRectHit)
 	DEFAULT_POSITION(kxpSettingsCover, kypSettingsCover, 20)
 	ACTION(fcustNil, fcustNil, fgrfstClosed, kcrsHand, CHID(kstClosed, kchidClick), cidNil, kttSettingsCover)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio\bmp\covr1d.bmp",
+REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio/bmp/covr1d.bmp",
 			kxpregSettingsCover, kypregSettingsCover)
-REP_MBMPREG(CHID(kstClosed, krepDefault), "studio\bmp\covr1c.bmp",
+REP_MBMPREG(CHID(kstClosed, krepDefault), "studio/bmp/covr1c.bmp",
 			kxpregSettingsCover, kypregSettingsCover)
-REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr1o.bmp",
+REP_MBMPREG(CHID(kstOpen, krepDefault), "studio/bmp/covr1o.bmp",
 			kxpregSettingsCover, kypregSettingsCover)
 ADOPT_WAVE(kcnoCoverWav, CHID(kstClosed, krepClicked))
 CREATE_ANIMST("Settings -- Covered -> Open", kstOpen)
@@ -515,9 +515,9 @@ GOBCHUNK("Actors", kidActorsCover, kgokkRectHit)
 	DEFAULT_POSITION(kxpActorsCover, kypActorsCover, 20)
 	ACTION(fcustNil, fcustNil, fgrfstClosed, kcrsHand, CHID(kstClosed, kchidClick), cidNil, kttActorsCover)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio\bmp\covr2d.bmp",
+REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio/bmp/covr2d.bmp",
 			kxpregActorsCover, kypregActorsCover)
-REP_MBMPREG(CHID(kstClosed, krepDefault), "studio\bmp\covr2c.bmp",
+REP_MBMPREG(CHID(kstClosed, krepDefault), "studio/bmp/covr2c.bmp",
 			kxpregActorsCover, kypregActorsCover)
 ADOPT_WAVE(kcnoCoverWav, CHID(kstClosed, krepClicked))
 CREATE_ANIMST("Actors -- Closed -> Open", kstOpen)
@@ -547,7 +547,7 @@ CHILD_SCRIPT("Actors -- Covered", CHID(kstClosed, kchidClick))
 		ChangeStateThis(kstOpen);
     End;
 ENDCHUNK
-REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr2o.bmp",
+REP_MBMPREG(CHID(kstOpen, krepDefault), "studio/bmp/covr2o.bmp",
 			kxpregActorsCover, kypregActorsCover)
 
 //
@@ -557,9 +557,9 @@ GOBCHUNK("Sounds", kidSoundsCover, kgokkRectHit)
 	DEFAULT_POSITION(kxpSoundsCover, kypSoundsCover, 20)
 	ACTION(fcustNil, fcustNil, fgrfstClosed, kcrsHand, CHID(kstClosed, kchidClick), cidNil, kttSoundsCover)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio\bmp\covr3d.bmp",
+REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio/bmp/covr3d.bmp",
 			kxpregSoundsCover, kypregSoundsCover)
-REP_MBMPREG(CHID(kstClosed, krepDefault), "studio\bmp\covr3c.bmp",
+REP_MBMPREG(CHID(kstClosed, krepDefault), "studio/bmp/covr3c.bmp",
 			kxpregSoundsCover, kypregSoundsCover)
 ADOPT_WAVE(kcnoCoverWav, CHID(kstClosed, krepClicked))
 CREATE_ANIMST("Sounds -- Covered -> Open", kstOpen)
@@ -586,7 +586,7 @@ CHILD_SCRIPT("Sounds -- Covered", CHID(kstClosed, kchidClick))
 		EnqueueCid(cidSetTool, khidStudio, chttListener, 0, 0, 0);
 	End;
 ENDCHUNK
-REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr3o.bmp",
+REP_MBMPREG(CHID(kstOpen, krepDefault), "studio/bmp/covr3o.bmp",
 			kxpregSoundsCover, kypregSoundsCover)
 
 //
@@ -596,9 +596,9 @@ GOBCHUNK("Text", kidTextsCover, kgokkRectHit)
 	DEFAULT_POSITION(kxpTextsCover, kypTextsCover, 20)
 	ACTION(fcustNil, fcustNil, fgrfstClosed, kcrsHand, CHID(kstClosed, kchidClick), cidNil, kttTextsCover)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio\bmp\covr4d.bmp",
+REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio/bmp/covr4d.bmp",
 			kxpregTextsCover, kypregTextsCover)
-REP_MBMPREG(CHID(kstClosed, krepDefault), "studio\bmp\covr4c.bmp",
+REP_MBMPREG(CHID(kstClosed, krepDefault), "studio/bmp/covr4c.bmp",
 			kxpregTextsCover, kypregTextsCover)
 ADOPT_WAVE(kcnoCoverWav, CHID(kstClosed, krepClicked))
 CREATE_ANIMST("Text -- Covered -> Open", kstOpen)
@@ -629,7 +629,7 @@ CHILD_SCRIPT("Text -- Covered", CHID(kstClosed, kchidClick))
 	EnqueueCid(cidSetTool, khidStudio, chttTboxSelect, 0, 0, 0);
 	End;
 ENDCHUNK
-REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr4o.bmp",
+REP_MBMPREG(CHID(kstOpen, krepDefault), "studio/bmp/covr4o.bmp",
 			kxpregTextsCover, kypregTextsCover)
 
 
@@ -639,11 +639,11 @@ REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr4o.bmp",
 GOBCHUNK("Scrollbars", kidScrollbarsCover, kgokkRectHit)
 	DEFAULT_POSITION(kxpScrollbarsCover, kypScrollbarsCover, 20)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio\bmp\covr5d.bmp",
+REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio/bmp/covr5d.bmp",
 			kxpregScrollbarsCover, kypregScrollbarsCover)
-REP_MBMPREG(CHID(kstClosed, krepDefault), "studio\bmp\covr5c.bmp",
+REP_MBMPREG(CHID(kstClosed, krepDefault), "studio/bmp/covr5c.bmp",
 			kxpregScrollbarsCover, kypregScrollbarsCover)
-REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr5o.bmp",
+REP_MBMPREG(CHID(kstOpen, krepDefault), "studio/bmp/covr5o.bmp",
 			kxpregScrollbarsCover, kypregScrollbarsCover)
 
 //
@@ -652,11 +652,11 @@ REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr5o.bmp",
 GOBCHUNK("Undo and C/C/P", kidUndosCover, kgokkRectHit)
 	DEFAULT_POSITION(kxpUndosCover, kypUndosCover, 20)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio\bmp\covr7d.bmp",
+REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio/bmp/covr7d.bmp",
 			kxpregUndosCover, kypregUndosCover)
-REP_MBMPREG(CHID(kstClosed, krepDefault), "studio\bmp\covr7c.bmp",
+REP_MBMPREG(CHID(kstClosed, krepDefault), "studio/bmp/covr7c.bmp",
 			kxpregUndosCover, kypregUndosCover)
-REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr7o.bmp",
+REP_MBMPREG(CHID(kstOpen, krepDefault), "studio/bmp/covr7o.bmp",
 			kxpregUndosCover, kypregUndosCover)
 
 //
@@ -665,11 +665,11 @@ REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr7o.bmp",
 GOBCHUNK("Book, Map and Portfolio", kidBooksCover, kgokkRectHit)
 	DEFAULT_POSITION(kxpBooksCover, kypBooksCover, 20)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio\bmp\covr8d.bmp",
+REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio/bmp/covr8d.bmp",
 			kxpregBooksCover, kypregBooksCover)
-REP_MBMPREG(CHID(kstClosed, krepDefault), "studio\bmp\covr8c.bmp",
+REP_MBMPREG(CHID(kstClosed, krepDefault), "studio/bmp/covr8c.bmp",
 			kxpregBooksCover, kypregBooksCover)
-REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\covr8o.bmp",
+REP_MBMPREG(CHID(kstOpen, krepDefault), "studio/bmp/covr8o.bmp",
 			kxpregBooksCover, kypregBooksCover)
 
 
@@ -689,11 +689,11 @@ GOBCHUNK("Book", kidBook, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstDefault, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttBook)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\book.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/book.bmp",
 	kxpregBook, kypregBook)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\bookc.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/bookc.bmp",
 	kxpregBook, kypregBook)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 ADOPT_WAVE(kcnoEzlOpenWav, CHID(kstDefault, krepClicked))
@@ -708,13 +708,13 @@ GOBCHUNK("Project Gadget", kidGadget, kgokkRectHit)
 	DEFAULT_POSITION(kxpBook, kypBook, 10)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, kchidClick, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(kcell1, "studio\bmp\gadg.bmp", kxpregBook, kypregBook)
+REP_MBMPREG(kcell1, "studio/bmp/gadg.bmp", kxpregBook, kypregBook)
 ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepDefault))
 ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseDnOff))
-REP_MBMPREG(kcell2, "studio\bmp\gadgblck.bmp", kxpregBook, kypregBook)
+REP_MBMPREG(kcell2, "studio/bmp/gadgblck.bmp", kxpregBook, kypregBook)
 ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
-REP_MBMPREG(kcell3, "studio\bmp\gadgc.bmp", kxpregBook, kypregBook)
+REP_MBMPREG(kcell3, "studio/bmp/gadgc.bmp", kxpregBook, kypregBook)
 ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseDnOn))
 REP_ANIM(CHID(kst3, krepDefault), "Gadget blinking state")
 	cell = 0;
@@ -737,11 +737,11 @@ GOBCHUNK("Map", kidMap, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstDefault, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttMap)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\map.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/map.bmp",
 	kxpregMap, kypregMap)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\mapc.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/mapc.bmp",
 	kxpregMap, kypregMap)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 //ADOPT_WAVE(kcnoMapOpenWav, CHID(kstDefault, krepClicked))
@@ -756,11 +756,11 @@ GOBCHUNK("CutCopyPaste", kidCutCopyPaste, kgokkRectHit)
 	DEFAULT_POSITION(kxpCutCopyPaste, kypCutCopyPaste, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttCutCopyPaste)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault), "studio\bmp\ccp.bmp",
+REP_MBMPREG(CHID(kstDefault, krepDefault), "studio/bmp/ccp.bmp",
 	kxpregCutCopyPaste, kypregCutCopyPaste)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\ccps.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/ccps.bmp",
 	kxpregCutCopyPaste, kypregCutCopyPaste)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CREATE_ANIMST("CutCopyPaste --> Default", kstDefault)
@@ -795,13 +795,13 @@ GOBCHUNK("Undo", kidUndo, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstOpen, kcrsHand, CHID(kstOpen, kchidClick), cidNil, kttUndo)
 	ACTION(fcustNil, fcustNil, fgrfstClosed, kcrsHand, CHID(kstClosed, kchidClick), cidNil, kttUndo)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio\bmp\undod.bmp",
+REP_MBMPREG(CHID(kstDisabled, krepDefault), "studio/bmp/undod.bmp",
 	kxpregUndo, kypregUndo)
-REP_MBMPREG(CHID(kstOpen, krepDefault), "studio\bmp\undo.bmp",
+REP_MBMPREG(CHID(kstOpen, krepDefault), "studio/bmp/undo.bmp",
 	kxpregUndo, kypregUndo)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDisabled, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDisabled, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDisabled, krepMouseDnOn), "studio\bmp\undos.bmp",
+REP_MBMPREG(CHID(kstDisabled, krepMouseDnOn), "studio/bmp/undos.bmp",
 	kxpregUndo, kypregUndo)
 ADOPT_MBMP(LAST_MBMP, CHID(kstClosed, krepDefault))
 CHILD_SCRIPT("Undo", CHID(kstOpen, kchidClick))
@@ -823,10 +823,10 @@ ENDCHUNK
 // Note, this code is copied from the Volume Control code in shared\map.cht.
 //
 OBJECTTY( "volume thumb",  kidVolumeThumb, 1, kcrsArrow1, kgokkRectNoHit )
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\volthmb.bmp", -4, -2)
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/volthmb.bmp", -4, -2)
 
 OBJECTTTREG("VolumeSlider", kidVolumeSlider, 0, kcrsHand1, kttVolumeSlider, kxpVolumeSlider, kypVolumeSlider)
-REP_MBMPREG(kcell1, "studio\bmp\vsld.bmp",
+REP_MBMPREG(kcell1, "studio/bmp/vsld.bmp",
 	kxpregVolumeSlider, kypregVolumeSlider)
 CREATE_SCRIPT( "Create VolumeSlider")
 	CreateChildThis(kidVolumeThumb, kidVolumeThumb);
@@ -881,21 +881,21 @@ GOBCHUNK("Play", kidPlay, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstDefault, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttPlay)
 	ACTION(fcustNil, fcustNil, fgrfstSelected, kcrsHand, CHID(kstSelected, kchidClick), cidNil, kttPlay)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault), "studio\bmp\play.bmp",
+REP_MBMPREG(CHID(kstDefault, krepDefault), "studio/bmp/play.bmp",
 	kxpregPlay, kypregPlay)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\playc1.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/playc1.bmp",
 	kxpregPlay, kypregPlay)
-REP_MBMPREG(CHID(kstSelected, krepDefault), "studio\bmp\plays.bmp",
+REP_MBMPREG(CHID(kstSelected, krepDefault), "studio/bmp/plays.bmp",
 	kxpregPlay, kypregPlay)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepMouseDnOff))
-REP_MBMPREG(CHID(kstSelected, krepMouseDnOn), "studio\bmp\playc2.bmp",
+REP_MBMPREG(CHID(kstSelected, krepMouseDnOn), "studio/bmp/playc2.bmp",
 	kxpregPlay, kypregPlay)
-REP_MBMPREG(CHID(kstRecording, kcell1), "studio\bmp\playm1.bmp",
+REP_MBMPREG(CHID(kstRecording, kcell1), "studio/bmp/playm1.bmp",
 	kxpregPlay, kypregPlay)
-REP_MBMPREG(CHID(kstRecording, kcell2), "studio\bmp\playm2.bmp",
+REP_MBMPREG(CHID(kstRecording, kcell2), "studio/bmp/playm2.bmp",
 	kxpregPlay, kypregPlay)
 REP_ANIM(CHID(kstRecording, krepDefault), "Flashing")
 	chidcell = CHID(kstRecording, kcell1);
@@ -966,11 +966,11 @@ GOBCHUNK("Portfolio", kidPortfolio, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstDefault, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttPortfolio)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault), "studio\bmp\port.bmp",
+REP_MBMPREG(CHID(kstDefault, krepDefault), "studio/bmp/port.bmp",
 	kxpregPortfolio, kypregPortfolio)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\ports.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/ports.bmp",
 	kxpregPortfolio, kypregPortfolio)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("Portfolio", CHID(kstDefault, kchidClick))
@@ -983,7 +983,7 @@ ENDCHUNK
 GOBCHUNK("Name", kidName, gokkNoHit)
 	DEFAULT_POSITION(kxpName, kypName, 0)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\name.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/name.bmp",
 	kxpregName, kypregName)
 
 #ifdef SHOW_FPS
@@ -991,7 +991,7 @@ REP_MBMPREG(CHID1(krepDefault), "studio\bmp\name.bmp",
 GOBCHUNK("Fps", kidFps, kgokkRectHit)
 	DEFAULT_POSITION(kxpFps, kypFps, 0)
 ENDCHUNK
-REP_MBMP(CHID1(krepDefault), "studio\bmp\fps.bmp")
+REP_MBMP(CHID1(krepDefault), "studio/bmp/fps.bmp")
 #endif // SHOW_FPS
 
 //
@@ -1001,11 +1001,11 @@ GOBCHUNK("Exit", kidExit, kgokkRectHit)
 	DEFAULT_POSITION(kxpExit, kypExit, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID1(kchidClick), cidNil, kttExit)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\exit.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/exit.bmp",
 	kxpregExit, kypregExit)
 ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseDnOff))
-REP_MBMPREG(CHID1(krepMouseDnOn), "studio\bmp\exitc.bmp",
+REP_MBMPREG(CHID1(krepMouseDnOn), "studio/bmp/exitc.bmp",
 	kxpregExit, kypregExit)
 ADOPT_WAVE(kcnoExitWav, CHID1(krepClicked))
 CHILD_SCRIPT("Exit", CHID1(kchidClick))
@@ -1026,11 +1026,11 @@ GOBCHUNK("SettingsBrowser", kidSettingsBrowser, kgokkRectHit)
 	DEFAULT_POSITION(kxpSettingsBrowser, kypSettingsBrowser, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttSettingsBrowser)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\1back.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/1back.bmp",
 	kxpregSettingsBrowser, kypregSettingsBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\1backs.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/1backs.bmp",
 	kxpregSettingsBrowser, kypregSettingsBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("SettingsBrowser", CHID(kstDefault, kchidClick))
@@ -1045,11 +1045,11 @@ GOBCHUNK("ActorsBrowser", kidActorsBrowser, kgokkRectHit)
 	DEFAULT_POSITION(kxpActorsBrowser, kypActorsBrowser, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID1(kchidClick), cidNil, kttActorsBrowser)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\2actr.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/2actr.bmp",
 	kxpregActorsBrowser, kypregActorsBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\2actrs.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/2actrs.bmp",
 	kxpregActorsBrowser, kypregActorsBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("ActorsBrowser", CHID(kstDefault, kchidClick))
@@ -1064,11 +1064,11 @@ GOBCHUNK("ActorsPropBrowser", kidActorsPropBrowser, kgokkRectHit)
 	DEFAULT_POSITION(kxpActorsPropBrowser, kypActorsPropBrowser, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID1(kchidClick), cidNil, kttActorsPropBrowser)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\2prop.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/2prop.bmp",
 	kxpregActorsPropBrowser, kypregActorsPropBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\2props.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/2props.bmp",
 	kxpregActorsPropBrowser, kypregActorsPropBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("ActorsPropBrowser", CHID(kstDefault, kchidClick))
@@ -1083,11 +1083,11 @@ GOBCHUNK("ActorsSpletters", kidActorsSpletters, kgokkRectHit)
 	DEFAULT_POSITION(kxpActorsSpletters, kypActorsSpletters, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttActorsSpletters)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\2splt.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/2splt.bmp",
 	kxpregActorsSpletters, kypregActorsSpletters)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\2splts.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/2splts.bmp",
 	kxpregActorsSpletters, kypregActorsSpletters)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("SplettersBrowser", CHID(kstDefault, kchidClick))
@@ -1101,11 +1101,11 @@ GOBCHUNK("SoundsEfxBrowser", kidSoundsEfxBrowser, kgokkRectHit)
 	DEFAULT_POSITION(kxpSoundsEfxBrowser, kypSoundsEfxBrowser, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID1(kchidClick), cidNil, kttSoundsEfxBrowser)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\3horn.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/3horn.bmp",
 	kxpregSoundsEfxBrowser, kypregSoundsEfxBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\3horns.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/3horns.bmp",
 	kxpregSoundsEfxBrowser, kypregSoundsEfxBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("SoundsMicBrowser", CHID(kstDefault, kchidClick))
@@ -1120,11 +1120,11 @@ GOBCHUNK("SoundsMicBrowser", kidSoundsMicBrowser, kgokkRectHit)
 	DEFAULT_POSITION(kxpSoundsMicBrowser, kypSoundsMicBrowser, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttSoundsMicBrowser)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\3mike.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/3mike.bmp",
 	kxpregSoundsMicBrowser, kypregSoundsMicBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\3mikes.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/3mikes.bmp",
 	kxpregSoundsMicBrowser, kypregSoundsMicBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("SoundsMicBrowser", CHID(kstDefault, kchidClick))
@@ -1139,11 +1139,11 @@ GOBCHUNK("SoundsMusicBrowser", kidSoundsMusicBrowser, kgokkRectHit)
 	DEFAULT_POSITION(kxpSoundsMusicBrowser, kypSoundsMusicBrowser, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttSoundsMusicBrowser)
 ENDCHUNK
-REP_MBMPREG(CHID1(krepDefault), "studio\bmp\3note.bmp",
+REP_MBMPREG(CHID1(krepDefault), "studio/bmp/3note.bmp",
 	kxpregSoundsMusicBrowser, kypregSoundsMusicBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\3notes.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/3notes.bmp",
 	kxpregSoundsMusicBrowser, kypregSoundsMusicBrowser)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("SoundsMusicBrowser", CHID(kstDefault, kchidClick))
@@ -1158,11 +1158,11 @@ GOBCHUNK("TextsCreate", kidTextsCreate, kgokkRectHit)
 	DEFAULT_POSITION(kxpTextsCreate, kypTextsCreate, 0)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand, CHID(kstDefault, kchidClick), cidNil, kttTextsCreate)
 ENDCHUNK
-REP_MBMPREG(CHID(kstDefault, krepDefault), "studio\bmp\4new.bmp",
+REP_MBMPREG(CHID(kstDefault, krepDefault), "studio/bmp/4new.bmp",
 	kxpregTextsCreate, kypregTextsCreate)
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID(kstDefault, krepMouseDnOff))
-REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio\bmp\4news.bmp",
+REP_MBMPREG(CHID(kstDefault, krepMouseDnOn), "studio/bmp/4news.bmp",
 	kxpregTextsCreate, kypregTextsCreate)
 ADOPT_MBMP(LAST_MBMP, CHID(kstSelected, krepDefault))
 CHILD_SCRIPT("Create Textbox", CHID(kstDefault, kchidClick))

@@ -79,12 +79,12 @@
 // Main view of the theatre & its objects
 // ---------------------------------------------------------
 
-WAVE_CHUNK( "building\sound\theatre\30_thr4.wav", kwav30_thr4 )
-WAVE_CHUNK( "building\sound\theatre\21_thr1a.wav", kwav21_thr1a )
-WAVE_CHUNK( "building\sound\theatre\VO74B.wav", kwavVO74B )
-WAVE_CHUNK( "building\sound\theatre\VO75.wav", kwavVO75 )
-WAVE_CHUNK( "building\sound\theatre\VO76.wav", kwavVO76 )
-WAVE_CHUNK( "building\sound\theatre\21_thr1b.wav", kwav21_thr1b )
+WAVE_CHUNK( "building/sound/theatre/30_thr4.wav", kwav30_thr4 )
+WAVE_CHUNK( "building/sound/theatre/21_thr1a.wav", kwav21_thr1a )
+WAVE_CHUNK( "building/sound/theatre/vo74b.wav", kwavVO74B )
+WAVE_CHUNK( "building/sound/theatre/vo75.wav", kwavVO75 )
+WAVE_CHUNK( "building/sound/theatre/vo76.wav", kwavVO76 )
+WAVE_CHUNK( "building/sound/theatre/21_thr1b.wav", kwav21_thr1b )
 
 OBJECT( "Theater1 McZee", kgobTheatre1McZee , 550, kcrsHand1 )
 	REP_RECT( kcellNull, "No representation.", 0,0,1,1 )
@@ -439,13 +439,13 @@ HELP_SCRIPT( ktpcTheatre2 )
 ENDCHUNK
 
 OBJECT( "theatre1, left door",   kgobTheatre1LeftDoor, 450, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\theatre\leftdr.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/theatre/leftdr.bmp", 0, 0 )
 	CLICK_SCRIPT( "left door clicked" )
  		NEXTPLACE1( kgobTheatre3, kst2 );
 	ENDCHUNK
 
 OBJECT( "theatre 1, right door",   kgobTheatre1RightDoor, 450, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\theatre\rightdr.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/theatre/rightdr.bmp", 0, 0 )
 	CLICK_SCRIPT( "theatre right fwd door" )
  		NEXTPLACE1( kgobTheatre4, kst2  );
 	ENDCHUNK
@@ -607,7 +607,7 @@ OBJECT("movie click filter", kgobMovieClickFilter, 450, kcrsArrow1)
 // positioned within the slide path - not hittable
 // --------------------------------------------------------------------------------
 OBJECTTY( "Theater - volume slider",  kgobVolumeButton, 451, kcrsArrow1, kgokkRectNoHit )
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\theatre\thumb.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/theatre/thumb.pbm" )
 
 #define _kdySlider 62  // Range the volume can slide in
 
@@ -652,8 +652,8 @@ OBJECTREG( "theater - volume slidepath", kgobTheaterVolume, 9, 110, 451, kcrsHan
 	#undef _kdySlider
 
 OBJECTREG( "Movie play/stop button", kgobPlayButton, 318, 7, 451, kcrsHand1 )
-	REP_PPMBMP( CHID( kst1, krepDefault ), "building\pbm\theatre\play1.pbm" )
-	REP_PPMBMP( CHID( kst2, krepDefault ), "building\pbm\theatre\play2.pbm" )
+	REP_PPMBMP( CHID( kst1, krepDefault ), "building/pbm/theatre/play1.pbm" )
+	REP_PPMBMP( CHID( kst2, krepDefault ), "building/pbm/theatre/play2.pbm" )
 	CLICK_SCRIPT( "Movie play/stop button clicked." )
 		// Pressing play to start the movie...
 		If( StateThis() == kst1 ); 
@@ -688,8 +688,8 @@ GOBCHUNK("Movie rewind button", kgobRewindButton, kgokkNormal)
 	ACTION(fcustNil, fcustNil, fgrfstDefault, kcrsHand1, kchidScript1, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfst2, kcrsArrow1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-	REP_PPMBMP( kcell1, "building\pbm\theatre\rewind1.pbm" )
-	REP_PPMBMP( kcell2, "building\pbm\theatre\rewind2.pbm" )
+	REP_PPMBMP( kcell1, "building/pbm/theatre/rewind1.pbm" )
+	REP_PPMBMP( kcell2, "building/pbm/theatre/rewind2.pbm" )
 
 	REP_ANIM( CHID( kst1, krepDefault ), "Default" )
 		Cell (kcell1, 0, 0, 0);
@@ -733,13 +733,13 @@ ENDCHUNK
 
 
 OBJECT( "theatre 2, back door",   kgobTheatre2Door, 50, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\theatre\the2door.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/theatre/the2door.bmp", 0, 0 )
 	CLICK_SCRIPT( "Theatre 2 back door clicked" )
  		NEXTPLACE1( kgobLobby2, kst2 );
 	ENDCHUNK
 
 OBJECT( "theatre2 map", kgobTheatre2Map, 50, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\theatre\the2map.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/theatre/the2map.bmp", 0, 0 )
 	CLICK_SCRIPT( "theatre 2 map clicked" ) 
 		CreateChildGob( GET_CURRENTPLACE(), kgobMapMain, kgobMapMain );
 	ENDCHUNK
@@ -753,25 +753,25 @@ OBJECT( "theatre2 exit",  kgobTheatre2Exit, 50, kcrsHand1 )
 
 
 OBJECT( "right screen",  kgobTheatre3Right, 10, kcrsRight )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\theatre\right.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/theatre/right.bmp", 0, 0 )
 	CLICK_SCRIPT( "right screen clicked" )
  		NEXTPLACE1( kgobTheatre1, kst4 ); // Goto theatre1, wait state.
 	ENDCHUNK
 
 OBJECT( "left front door",  kgobTheatre3Door, 10, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\theatre\bkleft.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/theatre/bkleft.bmp", 0, 0 )
 	CLICK_SCRIPT( "left front door clicked" )
 		NEXTPLACE1( kgobBackstage1, kst2 );
 	ENDCHUNK
 	
 OBJECT( "theatre3 map",  kgobTheatre3Map, 44, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\theatre\the3map.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/theatre/the3map.bmp", 0, 0 )
 	CLICK_SCRIPT( "theatre 3 map clicked") 
 		CreateChildGob( GET_CURRENTPLACE(), kgobMapMain, kgobMapMain );
 	ENDCHUNK
 
 OBJECT( "theatre3 exit",  kgobTheatre3Exit, 44, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\theatre\the3quit.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/theatre/the3quit.bmp", 0, 0 )
 	CLICK_SCRIPT( "theatre 3 exit clicked" ) 
 		QUITAPP();
 	ENDCHUNK
@@ -805,32 +805,32 @@ OBJECT( "Theatre  left door opening", kgobThe4OpenDoor, 150, kcrsArrow1 )
 			Cell( cnt++, 0,0, 6 );
 		End;
 	ENDCHUNK
-	REP_PPMBMP( kcell1, "building\pbm\theatre\Ldoor49.pbm" )
-	REP_PPMBMP( kcell2, "building\pbm\theatre\Ldoor50.pbm" )
-	REP_PPMBMP( kcell3, "building\pbm\theatre\Ldoor51.pbm" )
-	REP_PPMBMP( kcell4, "building\pbm\theatre\Ldoor52.pbm" )
-	REP_PPMBMP( kcell5, "building\pbm\theatre\Ldoor53.pbm" )
+	REP_PPMBMP( kcell1, "building/pbm/theatre/ldoor49.pbm" )
+	REP_PPMBMP( kcell2, "building/pbm/theatre/ldoor50.pbm" )
+	REP_PPMBMP( kcell3, "building/pbm/theatre/ldoor51.pbm" )
+	REP_PPMBMP( kcell4, "building/pbm/theatre/ldoor52.pbm" )
+	REP_PPMBMP( kcell5, "building/pbm/theatre/ldoor53.pbm" )
 		
 OBJECT( "left screen",  kgobTheatre4Left, 10, kcrsLeft )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\theatre\left.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/theatre/left.bmp", 0, 0 )
 	CLICK_SCRIPT( "Left screen clicked" )
  		NEXTPLACE1( kgobTheatre1, kst4 );   // Goto theatre1, wait state.
 	ENDCHUNK
 
 OBJECT( "right front door",  kgobTheatre4Door, 10, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\theatre\bkright.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/theatre/bkright.bmp", 0, 0 )
 	CLICK_SCRIPT( "left front door clicked" )
 		NEXTPLACE1( kgobBackstage1, kst2 );
 	ENDCHUNK
 	
 OBJECT( "theatre4 map",  kgobTheatre4Map, 44, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\theatre\the4map.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/theatre/the4map.bmp", 0, 0 )
 	CLICK_SCRIPT( "theatre 4 map clicked" ) 
 		CreateChildGob( GET_CURRENTPLACE(), kgobMapMain, kgobMapMain );
 	ENDCHUNK
 
 OBJECT( "theatre4 exit",  kgobTheatre4Exit, 44, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\theatre\the4quit.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/theatre/the4quit.bmp", 0, 0 )
 	CLICK_SCRIPT( "theatre 2 exit clicked" ) 
 		QUITAPP();
 	ENDCHUNK
@@ -839,7 +839,7 @@ OBJECT( "theatre4 exit",  kgobTheatre4Exit, 44, kcrsHand1 )
 //	Bio page hotspots
 //----------------------------------------------------------
 OBJECT( "Biopage 31 mask",  kgobTheater2m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\theatre\the2m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/theatre/the2m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 31 ) );
 			// Bio Page already found
@@ -852,7 +852,7 @@ OBJECT( "Biopage 31 mask",  kgobTheater2m1, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 32 mask",  kgobTheater2m2, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\theatre\the2m2.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/theatre/the2m2.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 32 ) );
 			// Bio Page already found
@@ -865,7 +865,7 @@ OBJECT( "Biopage 32 mask",  kgobTheater2m2, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 33 mask",  kgobTheater2m3, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\theatre\the2m3.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/theatre/the2m3.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 33 ) );
 			// Bio Page already found

@@ -29,10 +29,10 @@
 *
 *****************************************************************************/
 #include "socdefn.h"
-#include "shared\map.chh"
+#include "shared/map.chh"
 
-WAVE_CHUNK( "shared\sound\mapobj.wav", kwavMapObject )
-WAVE_CHUNK( "shared\sound\mapopen.wav", kwavMapOpen )	
+WAVE_CHUNK( "shared/sound/mapobj.wav", kwavMapObject )
+WAVE_CHUNK( "shared/sound/mapopen.wav", kwavMapOpen )
 //----------------------------------------------------------
 // This macro returns the normal map entry state for each place.
 //----------------------------------------------------------
@@ -51,7 +51,7 @@ WAVE_CHUNK( "shared\sound\mapopen.wav", kwavMapOpen )
 // ------------------------------------------------------------------------
 
 OBJECT( "Map main parent", kgobMapMain, 900, kcrsArrow1)
-REP_PPMBMP( kcell1, "shared\pbm\map\mapback.pbm" )
+REP_PPMBMP( kcell1, "shared/pbm/map/mapback.pbm" )
 CREATE_SCRIPT( "main map startup" )
 	PlaySoundGob(kgobUtil, kcctgWave, kwavMapOpen, 1, 0x00010000, 1, 1,ksclBldgSound);
 
@@ -166,11 +166,11 @@ ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECTREG( "map - cancel button",   kgobMapCancel, kxpMapCancel, kypMapCancel, 60, kcrsHand1 )
-REP_MBMPREG(CHID1(krepDefault), "shared\bmp\map\cancel.bmp", kxpregMapCancel, kypregMapCancel )
+REP_MBMPREG(CHID1(krepDefault), "shared/bmp/map/cancel.bmp", kxpregMapCancel, kypregMapCancel )
 ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseDnOff))
-REP_MBMPREG(CHID1(krepMouseDnOn), "shared\bmp\map\cancelc.bmp", kxpregMapCancel, kypregMapCancel )
-REP_WAVE( CHID1(krepClicked), "shared\sound\map\cancel.wav" )
+REP_MBMPREG(CHID1(krepMouseDnOn), "shared/bmp/map/cancelc.bmp", kxpregMapCancel, kypregMapCancel )
+REP_WAVE( CHID1(krepClicked), "shared/sound/map/cancel.wav" )
 CLICK_SCRIPT( "cancel Mask clicked" )
 	ENABLEACCEL(fFalse);
 	DestroyGob( kgobMapMain );
@@ -179,11 +179,11 @@ ENDCHUNK
 
 //----------------------------------------------------------------------------------
 OBJECTREG( "map - exit button", kgobMapExit, kxpMapExit, kypMapExit, 60, kcrsHand1)
-REP_MBMPREG(CHID1(krepDefault), "shared\bmp\map\exit.bmp", kxpregMapExit, kypregMapExit )
+REP_MBMPREG(CHID1(krepDefault), "shared/bmp/map/exit.bmp", kxpregMapExit, kypregMapExit )
 ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseDnOff))
-REP_MBMPREG(CHID1(krepMouseDnOn), "shared\bmp\map\exits.bmp", kxpregMapExit, kypregMapExit )
-REP_WAVE( CHID1(krepClicked), "shared\sound\map\mapexit.wav" )
+REP_MBMPREG(CHID1(krepMouseDnOn), "shared/bmp/map/exits.bmp", kxpregMapExit, kypregMapExit )
+REP_WAVE( CHID1(krepClicked), "shared/sound/map/mapexit.wav" )
 CLICK_SCRIPT( "map - exit clicked" )
 	ENABLEACCEL(fFalse);
 	DestroyGob( kgobMapMain );
@@ -194,7 +194,7 @@ ENDCHUNK
 // balloon for "You are Here" object.  Ignores the mouse.
 // --------------------------------------------------------------------------------
 OBJECTTY( "Map - You are here", kgobMapHere, 555, kcrsArrow1, gokkNoHit )
-REP_TILE( CHID1( krepDefault), "you are here Mask", "shared\bmp\map\here.bmp", 6, 22 )
+REP_TILE( CHID1( krepDefault), "you are here Mask", "shared/bmp/map/here.bmp", 6, 22 )
 	TILEDEF( 30,8,32,70,4,0,0,0,6 )
 	TILEDEF( 13,1,22,4,2,0,0,0,4 )
 ENDCHUNK
@@ -272,7 +272,7 @@ ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - inspiration Mask", kgobMapIdeaMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ),   "shared\bmp\map\ideamsk.bmp", 0, 0 )
+REP_MASK( CHID1( krepDefault ),   "shared/bmp/map/ideamsk.bmp", 0, 0 )
 CLICK_SCRIPT( "inspiration Mask clicked" )
 	
 	RunScriptGob(kgobMapMain, kchidScript1, kgobInspiration1,
@@ -281,7 +281,7 @@ ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - studio Mask",   kgobMapStudioMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\studmsk.bmp", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/studmsk.bmp", 0, 0 )
 CLICK_SCRIPT( "studio Mask clicked" )
  	RunScriptGob(kgobMapMain, kchidScript1, kgobStudio1,
 			MAPENTRY(kgobStudio1), fFalse);
@@ -289,7 +289,7 @@ ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - projects Mask",   kgobMapProjMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\projmsk.bmp", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/projmsk.bmp", 0, 0 )
 CLICK_SCRIPT( "Mask clicked" )
  	RunScriptGob(kgobMapMain, kchidScript1, kgobProjects1,
 			MAPENTRY(kgobProjects1), fFalse);
@@ -297,7 +297,7 @@ ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - backstage Mask",  kgobMapBackMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\bkstgmsk.bmp", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/bkstgmsk.bmp", 0, 0 )
 CLICK_SCRIPT( "Mask clicked" )
  	RunScriptGob(kgobMapMain, kchidScript1, kgobBackstage1,
 			MAPENTRY(kgobBackstage1), fFalse);
@@ -305,7 +305,7 @@ ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - theater Mask", kgobMapTheatreMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\theatmsk.bmp", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/theatmsk.bmp", 0, 0 )
 CLICK_SCRIPT( "Mask clicked" )
  	RunScriptGob(kgobMapMain, kchidScript1, kgobTheatre1,
 			MAPENTRY(kgobTheatre1), fFalse);
@@ -314,7 +314,7 @@ ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - lobby Mask", kgobMapLobbyMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\LOBBYMSK.BMP", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/lobbymsk.bmp", 0, 0 )
 CLICK_SCRIPT("Mask clicked")
  	RunScriptGob(kgobMapMain, kchidScript1, kgobLobby1, MAPENTRY(kgobLobby1),
 			fFalse);
@@ -322,7 +322,7 @@ ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - ticketbooth Mask",  kgobMapTicketMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\TICKTMSK.BMP", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/ticktmsk.bmp", 0, 0 )
 CLICK_SCRIPT( "Mask clicked" )
  	RunScriptGob(kgobMapMain, kchidScript1, kgobTicket2,
 			MAPENTRY(kgobTicket2), fFalse);
@@ -331,35 +331,35 @@ ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - bio book Mask", kgobMapBioMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\biomsk.bmp", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/biomsk.bmp", 0, 0 )
 CLICK_SCRIPT( "Mask clicked" )
  	RunScriptGob( kgobMapMain, kchidScript1, kgobInspiration1, kst8 , fFalse );
 ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - idea room - splot machine", kgobMapSplotMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\SPLOTMSK.BMP", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/splotmsk.bmp", 0, 0 )
 CLICK_SCRIPT( "Mask clicked" )
  	RunScriptGob( kgobMapMain, kchidScript1, kgobInspiration1, kst7 , fFalse );
 ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - tools Mask", kgobMapToolsMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\TBOXMSK.BMP", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/tboxmsk.bmp", 0, 0 )
 CLICK_SCRIPT( "Mask clicked" )
  	RunScriptGob(kgobMapMain, kchidScript1, kgobStudio1, kst2, fTrue);
 ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - project 1 Mask - logo", kgobMapLogoMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\LOGOMSK.BMP", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/logomsk.bmp", 0, 0 )
 CLICK_SCRIPT( "Mask clicked" )
  	RunScriptGob( kgobMapMain, kchidScript1, kgobProjects1, kst4 , fFalse );
 ENDCHUNK
 
 // --------------------------------------------------------------------------------
 OBJECT( "map - project 2 Mask",  kgobMapSnippetMask, 60, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ), "shared\bmp\map\GIZMOMSK.BMP", 0, 0 )
+REP_MASK( CHID1( krepDefault ), "shared/bmp/map/gizmomsk.bmp", 0, 0 )
 CLICK_SCRIPT( "Mask clicked" )
  	RunScriptGob( kgobMapMain, kchidScript1, kgobProjects1, kst5 , fFalse );
 ENDCHUNK
@@ -369,7 +369,7 @@ ENDCHUNK
 // positioned within the slide path - not hittable
 // --------------------------------------------------------------------------------
 OBJECTTY( "map - volume slider",  kgobMapVolumeSlider, 60, kcrsArrow1, kgokkRectNoHit )
-REP_MBMP( CHID1( krepDefault ), "shared\bmp\map\volthmb.bmp" )
+REP_MBMP( CHID1( krepDefault ), "shared/bmp/map/volthmb.bmp" )
 
 // --------------------------------------------------------------------------------
 // The slider is the rectangular path the volume slider rolls around in.

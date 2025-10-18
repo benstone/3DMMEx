@@ -22,7 +22,7 @@ OBJECT( "closet",  kgobCloset, 0, kcrsArrow1 )
 		End; 
 		NEXTPLACE1( kgobImagin, kst1 );
 	ENDCHUNK
-	REP_PPMBMP( kcell1,  "building\pbm\imagin\closet2.pbm" )
+	REP_PPMBMP( kcell1,  "building/pbm/imagin/closet2.pbm" )
 
 // The following object is the mczee packing AVI
 // The closet watches for the AVI to finish, then continues on to
@@ -33,7 +33,7 @@ OBJECTREG( "closet: mczee!", kgobMcZeePacker, 0, 0, 111, kcrsArrow1 )
 
 
 
-WAVE_CHUNK( "building\sound\imagin\rllrcstr.wav", kwavRollerCoaster )
+WAVE_CHUNK( "building/sound/imagin/rllrcstr.wav", kwavRollerCoaster )
 
 
 OBJECT( "roller mczee!", kgobMcZeeRoller, 111, kcrsArrow1 )

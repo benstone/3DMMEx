@@ -21,11 +21,11 @@
 // -----------------------------------------------------
 
 
-WAVE_CHUNK( "building\sound\inspirat\idea1a.wav", kwavIdea1a	)
-WAVE_CHUNK( "building\sound\inspirat\idea1b.wav", kwavIdea1b	)
-WAVE_CHUNK( "building\sound\inspirat\idea2.wav", kwavIdea2	)
-WAVE_CHUNK( "building\sound\inspirat\idea3.wav", kwavIdea3	)
-WAVE_CHUNK( "building\sound\inspirat\idea4.wav", kwavIdea4	)
+WAVE_CHUNK( "building/sound/inspirat/idea1a.wav", kwavIdea1a	)
+WAVE_CHUNK( "building/sound/inspirat/idea1b.wav", kwavIdea1b	)
+WAVE_CHUNK( "building/sound/inspirat/idea2.wav", kwavIdea2	)
+WAVE_CHUNK( "building/sound/inspirat/idea3.wav", kwavIdea3	)
+WAVE_CHUNK( "building/sound/inspirat/idea4.wav", kwavIdea4	)
 
 OBJECTREG("ticketbooth - dance", kgobIdeaMcZeeAVI1, 0, 0, 999, kcrsHand1)
 	REP_VIDEO( CHID1( krepDefault ), "idea2.avi", fTrue )	// the into animation
@@ -247,7 +247,7 @@ HELP_SCRIPT( ktpcIdeas )
 ENDCHUNK
 
 OBJECT( "Splot machine hot spot",  kgobSplotMachine, 100, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\inspirat\SplotMsk.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/inspirat/splotmsk.bmp", 0, 0 )
 	CLICK_SCRIPT( "Splot machine clicked" )
 		SETGLOBAL( fHelpOn, fFalse );
 		If( FGobExists( kgobBalloon1e ) );
@@ -258,7 +258,7 @@ OBJECT( "Splot machine hot spot",  kgobSplotMachine, 100, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Talent book hot spot",  kgobTalentBook, 100, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\inspirat\TalntMsk.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/inspirat/talntmsk.bmp", 0, 0 )
 	CLICK_SCRIPT( "Talent book clicked" )
 		SETGLOBAL( fHelpOn, fFalse );
 		If( FGobExists( kgobBalloon1e ) );
@@ -270,19 +270,19 @@ OBJECT( "Talent book hot spot",  kgobTalentBook, 100, kcrsHand1 )
 
 
 OBJECT( "doors out",  kgobInsp2Doors, 33, kcrsHand1 )
-	REP_MASK( CHID1(krepDefault), "building\bitmaps\inspirat\ins2door.bmp", 0, 0 )
+	REP_MASK( CHID1(krepDefault), "building/bitmaps/inspirat/ins2door.bmp", 0, 0 )
 	CLICK_SCRIPT( "doors out clicked" )
 		NEXTPLACE1( kgobBackstage1, kst2 );
 	ENDCHUNK
 
 OBJECT( "inspirat2 map", kgobInsp2Map, 44, kcrsHand1 )
-	REP_MASK( CHID1(krepDefault), "building\bitmaps\inspirat\ins2map.bmp", 0, 0 )
+	REP_MASK( CHID1(krepDefault), "building/bitmaps/inspirat/ins2map.bmp", 0, 0 )
 	CLICK_SCRIPT( "inspirat 2 map clicked" ) 
 		CreateChildGob( GET_CURRENTPLACE(), kgobMapMain, kgobMapMain );
 	ENDCHUNK
 
 OBJECT( "inspirat2 exit",  kgobInsp2Exit, 44, kcrsHand1 )
-	REP_MASK( CHID1(krepDefault), "building\bitmaps\inspirat\ins2quit.bmp", 0, 0 )
+	REP_MASK( CHID1(krepDefault), "building/bitmaps/inspirat/ins2quit.bmp", 0, 0 )
 	CLICK_SCRIPT( "inspirat 2 exit clicked" ) 
 		QUITAPP();
 	ENDCHUNK
@@ -291,7 +291,7 @@ OBJECT( "inspirat2 exit",  kgobInsp2Exit, 44, kcrsHand1 )
 // The splot machine
 // -----------------------------------------------------
 OBJECT( "Splot machine object", kgobSplotMachineObj, 1000, kcrsArrow1 )
-	REP_PPMBMP( CHID1(krepDefault), "building\pbm\inspirat\splot0.pbm" )
+	REP_PPMBMP( CHID1(krepDefault), "building/pbm/inspirat/splot0.pbm" )
 	CREATE_SCRIPT( "startup" )
 		PLAYMIDI( cnoNil );
 		CreateChildThis( kgobBSplot1, kgobBSplot1 );
@@ -329,13 +329,13 @@ GOBCHUNK("BSplot1 button", kgobBSplot1, kgokkRectHit )
 	ACTION(fcustNil, fcustNil, fgrfst1, kcrsHand1, CHID(kst1, kchidClick), cidNil, cnoNil)
 ENDCHUNK
 
-	REP_PPMBMP( kcell2, "building\pbm\inspirat\bigarm2.pbm" )
-	REP_PPMBMP( kcell3, "building\pbm\inspirat\bigarm3.pbm" )
-	REP_PPMBMP( kcell4, "building\pbm\inspirat\bigarm4.pbm" )
+	REP_PPMBMP( kcell2, "building/pbm/inspirat/bigarm2.pbm" )
+	REP_PPMBMP( kcell3, "building/pbm/inspirat/bigarm3.pbm" )
+	REP_PPMBMP( kcell4, "building/pbm/inspirat/bigarm4.pbm" )
 
-	REP_PPMBMP( CHID(kst1, krepDefault), "building\pbm\inspirat\bigarm1.pbm")	 // Disabled button
+	REP_PPMBMP( CHID(kst1, krepDefault), "building/pbm/inspirat/bigarm1.pbm")	 // Disabled button
 
-	REP_PPMBMP( CHID(kst1, kchidDownOn), "building\pbm\inspirat\bigarm5.pbm")	// Clicked button
+	REP_PPMBMP( CHID(kst1, kchidDownOn), "building/pbm/inspirat/bigarm5.pbm")	// Clicked button
 
 	REP_ANIM( CHID(kst1, kchidUpDownOn), "On button, mouse Up to Down transition")
 		Cell( kcell2, 0, 0, 9 );	
@@ -362,7 +362,7 @@ ENDCHUNK
 		Cell( kcell2, 0, 0, 9 );
 		Cell( CHID(kst1, krepDefault), 0, 0, 9 ); 
 	ENDCHUNK	
-	REP_WAVE( CHID( kst1, krepClicked ), "building\sound\inspirat\splthndl.wav" );
+	REP_WAVE( CHID( kst1, krepClicked ), "building/sound/inspirat/splthndl.wav" );
 	
 	CHILD_SCRIPT("BSplot1 script", CHID(kst1, kchidClick))
 		ChangeStateGob( kgobBSplot2, kst2 );			   // These activate the
@@ -388,14 +388,14 @@ GOBCHUNK("BSplot2 button", kgobBSplot2, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfst1, kcrsArrow1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfst2, kcrsHand1, CHID(kst2, kchidClick), cidNil, cnoNil)
 ENDCHUNK
-	REP_PPMBMP( kcell2, "building\pbm\inspirat\actarm2.pbm" );
-	REP_PPMBMP( kcell3, "building\pbm\inspirat\actarm3.pbm" );
-	REP_PPMBMP( kcell4, "building\pbm\inspirat\actarm4.pbm" );
+	REP_PPMBMP( kcell2, "building/pbm/inspirat/actarm2.pbm" );
+	REP_PPMBMP( kcell3, "building/pbm/inspirat/actarm3.pbm" );
+	REP_PPMBMP( kcell4, "building/pbm/inspirat/actarm4.pbm" );
 
-	REP_PPMBMP( CHID(kst1, krepDefault), "building\pbm\inspirat\actarm1.pbm")	 	// Disabled button
+	REP_PPMBMP( CHID(kst1, krepDefault), "building/pbm/inspirat/actarm1.pbm")	 	// Disabled button
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 
-	REP_PPMBMP( CHID(kst2, kchidDownOn), "building\pbm\inspirat\actarm5.pbm")	// Clicked button
+	REP_PPMBMP( CHID(kst2, kchidDownOn), "building/pbm/inspirat/actarm5.pbm")	// Clicked button
 
 	REP_ANIM( CHID(kst2, kchidUpDownOn), "On button, mouse Up to Down transition")
 		Cell( kcell2, 0, 0, 9 );	
@@ -422,7 +422,7 @@ ENDCHUNK
 		Cell( kcell2, 0, 0, 9 );
 		Cell( CHID(kst2, krepDefault), 0, 0, 9 ); 
 	ENDCHUNK	
-	REP_WAVE( CHID( kst2, krepClicked ), "building\sound\inspirat\splthndl.wav" );
+	REP_WAVE( CHID( kst2, krepClicked ), "building/sound/inspirat/splthndl.wav" );
 		
 	CHILD_SCRIPT("BSplot2 script", CHID(kst2, kchidClick))
 		If( FGobExists( kgobCalloutBalloon4 ) );		// takedown callouts
@@ -441,15 +441,15 @@ GOBCHUNK("BSplot3 button", kgobBSplot3, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfst1, kcrsArrow1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfst2, kcrsHand1, CHID(kst2, kchidClick), cidNil, cnoNil)
 ENDCHUNK
-	REP_WAVE( CHID( kst2, krepClicked ), "building\sound\inspirat\splthndl.wav" );
-	REP_PPMBMP( kcell2, "building\pbm\inspirat\cmrarm2.pbm" );
-	REP_PPMBMP( kcell3, "building\pbm\inspirat\cmrarm3.pbm" );
-	REP_PPMBMP( kcell4, "building\pbm\inspirat\cmrarm4.pbm" );
+	REP_WAVE( CHID( kst2, krepClicked ), "building/sound/inspirat/splthndl.wav" );
+	REP_PPMBMP( kcell2, "building/pbm/inspirat/cmrarm2.pbm" );
+	REP_PPMBMP( kcell3, "building/pbm/inspirat/cmrarm3.pbm" );
+	REP_PPMBMP( kcell4, "building/pbm/inspirat/cmrarm4.pbm" );
 
-	REP_PPMBMP( CHID(kst1, krepDefault), "building\pbm\inspirat\cmrarm1.pbm")	 // Disabled button
+	REP_PPMBMP( CHID(kst1, krepDefault), "building/pbm/inspirat/cmrarm1.pbm")	 // Disabled button
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 
-	REP_PPMBMP( CHID(kst2, kchidDownOn), "building\pbm\inspirat\cmrarm5.pbm")	// Clicked button
+	REP_PPMBMP( CHID(kst2, kchidDownOn), "building/pbm/inspirat/cmrarm5.pbm")	// Clicked button
 
 	REP_ANIM( CHID(kst2, kchidUpDownOn), "On button, mouse Up to Down transition")
 		Cell( kcell2, 0, 0, 9 );	
@@ -494,15 +494,15 @@ GOBCHUNK("BSplot4 button", kgobBSplot4, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfst1, kcrsArrow1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfst2, kcrsHand1, CHID(kst2, kchidClick), cidNil, cnoNil)
 ENDCHUNK
-	REP_WAVE( CHID( kst2, krepClicked ), "building\sound\inspirat\splthndl.wav" );
-	REP_PPMBMP( kcell2, "building\pbm\inspirat\muscarm2.pbm" );
-	REP_PPMBMP( kcell3, "building\pbm\inspirat\muscarm3.pbm" );
-	REP_PPMBMP( kcell4, "building\pbm\inspirat\muscarm4.pbm" );
+	REP_WAVE( CHID( kst2, krepClicked ), "building/sound/inspirat/splthndl.wav" );
+	REP_PPMBMP( kcell2, "building/pbm/inspirat/muscarm2.pbm" );
+	REP_PPMBMP( kcell3, "building/pbm/inspirat/muscarm3.pbm" );
+	REP_PPMBMP( kcell4, "building/pbm/inspirat/muscarm4.pbm" );
 
-	REP_PPMBMP( CHID(kst1, krepDefault), "building\pbm\inspirat\muscarm1.pbm")	 	// Disabled button
+	REP_PPMBMP( CHID(kst1, krepDefault), "building/pbm/inspirat/muscarm1.pbm")	 	// Disabled button
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 
-	REP_PPMBMP( CHID(kst2, kchidDownOn), "building\pbm\inspirat\muscarm5.pbm")	// Clicked button
+	REP_PPMBMP( CHID(kst2, kchidDownOn), "building/pbm/inspirat/muscarm5.pbm")	// Clicked button
 
 	REP_ANIM( CHID(kst2, kchidUpDownOn), "On button, mouse Up to Down transition")
 		Cell( kcell2, 0, 0, 9 );	
@@ -548,15 +548,15 @@ GOBCHUNK("BSplot5 button", kgobBSplot5, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfst1, kcrsArrow1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfst2, kcrsHand1, CHID(kst2, kchidClick), cidNil, cnoNil)
 ENDCHUNK
-	REP_WAVE( CHID( kst2, krepClicked ), "building\sound\inspirat\splthndl.wav" );
-	REP_PPMBMP( kcell2, "building\pbm\inspirat\scnarm2.pbm" );
-	REP_PPMBMP( kcell3, "building\pbm\inspirat\scnarm3.pbm" );
-	REP_PPMBMP( kcell4, "building\pbm\inspirat\scnarm4.pbm" );
+	REP_WAVE( CHID( kst2, krepClicked ), "building/sound/inspirat/splthndl.wav" );
+	REP_PPMBMP( kcell2, "building/pbm/inspirat/scnarm2.pbm" );
+	REP_PPMBMP( kcell3, "building/pbm/inspirat/scnarm3.pbm" );
+	REP_PPMBMP( kcell4, "building/pbm/inspirat/scnarm4.pbm" );
 
-	REP_PPMBMP( CHID(kst1, krepDefault), "building\pbm\inspirat\scnarm1.pbm")	 	// Disabled button
+	REP_PPMBMP( CHID(kst1, krepDefault), "building/pbm/inspirat/scnarm1.pbm")	 	// Disabled button
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepDefault))
 
-	REP_PPMBMP( CHID(kst2, kchidDownOn), "building\pbm\inspirat\scnarm5.pbm")	// Clicked button
+	REP_PPMBMP( CHID(kst2, kchidDownOn), "building/pbm/inspirat/scnarm5.pbm")	// Clicked button
 
 	REP_ANIM( CHID(kst2, kchidUpDownOn), "On button, mouse Up to Down transition")
 		Cell( kcell2, 0, 0, 9 );	
@@ -603,12 +603,12 @@ GOBCHUNK("BSplot6 button", kgobBSplot6, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfst1, kcrsArrow1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand1, CHID(kst2, kchidClick), cidNil, cnoNil)
 ENDCHUNK
-	REP_PPMBMP( CHID(kst1, krepDefault), "building\pbm\inspirat\toolboxd.pbm")	 	// Enabled button up
-	REP_PPMBMP( CHID(kst2, krepDefault), "building\pbm\inspirat\toolbox1.pbm")	 	// Enabled button up
+	REP_PPMBMP( CHID(kst1, krepDefault), "building/pbm/inspirat/toolboxd.pbm")	 	// Enabled button up
+	REP_PPMBMP( CHID(kst2, krepDefault), "building/pbm/inspirat/toolbox1.pbm")	 	// Enabled button up
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepMouseDnOff))
 	ADOPT_MBMP(LAST_MBMP, CHID(kst2, krepMouseUpOn))
 
-	REP_PPMBMP( CHID(kst2, krepMouseDnOn), "building\pbm\inspirat\toolbox2.pbm")	// Clicked button
+	REP_PPMBMP( CHID(kst2, krepMouseDnOn), "building/pbm/inspirat/toolbox2.pbm")	// Clicked button
 
 	CHILD_SCRIPT("BSplot6 script", CHID(kst2, kchidClick))
 		// set up a transition
@@ -631,11 +631,11 @@ GOBCHUNK("BSplot7 button", kgobBSplot7, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand1, CHID(kst1, kchidClick), cidNil, cnoNil)
 ENDCHUNK
 
-	REP_PPMBMP( CHID(kst1, krepDefault), "building\pbm\inspirat\cancel1.pbm")	 	// Enabled button up
+	REP_PPMBMP( CHID(kst1, krepDefault), "building/pbm/inspirat/cancel1.pbm")	 	// Enabled button up
 	ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseDnOff))
 	ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseUpOn))
 
-	REP_PPMBMP( CHID(kst1, krepMouseDnOn), "building\pbm\inspirat\cancel2.pbm")	// Clicked button
+	REP_PPMBMP( CHID(kst1, krepMouseDnOn), "building/pbm/inspirat/cancel2.pbm")	// Clicked button
 
 	CHILD_SCRIPT("BSplot7 script", CHID(kst1, kchidClick))
 		If( FGobExists( kgobCalloutBalloon4 ) );		// takedown callouts
@@ -651,7 +651,7 @@ ENDCHUNK
 //--------------------------------------------------------
 
 OBJECT( "Biopage 39 mask",  kgobIdea1m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\inspirat\idea1m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/inspirat/idea1m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If( fBIO_AVAIL( 39 ) );
 			// Bio Page already found
@@ -665,7 +665,7 @@ OBJECT( "Biopage 39 mask",  kgobIdea1m1, 0, kcrsHand1 )
 
 
 OBJECT( "Biopage 7 mask",  kgobIdea4m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\inspirat\idea4m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/inspirat/idea4m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If( fBIO_AVAIL( 7 ) );
 			// Bio Page already found
@@ -678,7 +678,7 @@ OBJECT( "Biopage 7 mask",  kgobIdea4m1, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 8 mask",  kgobIdea4m2, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\inspirat\idea4m2.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/inspirat/idea4m2.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If( fBIO_AVAIL( 8 ) );
 			// Bio Page already found
@@ -691,7 +691,7 @@ OBJECT( "Biopage 8 mask",  kgobIdea4m2, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 9 mask",  kgobIdea4m3, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\inspirat\idea4m3.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/inspirat/idea4m3.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 9 ) );
 			// Bio Page already found
@@ -704,7 +704,7 @@ OBJECT( "Biopage 9 mask",  kgobIdea4m3, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 10 mask",  kgobIdea3m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\inspirat\idea3m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/inspirat/idea3m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 10 ) );
 			// Bio Page already found
@@ -717,7 +717,7 @@ OBJECT( "Biopage 10 mask",  kgobIdea3m1, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 11 mask",  kgobIdea3m2, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\inspirat\idea3m2.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/inspirat/idea3m2.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 11 ) );
 			// Bio Page already found
@@ -730,7 +730,7 @@ OBJECT( "Biopage 11 mask",  kgobIdea3m2, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 12 mask",  kgobIdea3m3, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\inspirat\idea3m3.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/inspirat/idea3m3.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 12 ) );
 			// Bio Page already found
@@ -743,7 +743,7 @@ OBJECT( "Biopage 12 mask",  kgobIdea3m3, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 13 mask",  kgobIdea2m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\inspirat\idea2m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/inspirat/idea2m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 13 ) );
 			// Bio Page already found

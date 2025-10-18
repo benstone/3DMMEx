@@ -134,12 +134,12 @@
 #if (gokkRectangle | gokkNoHitThis) == 3
 #define kgokkRectNoHit          3
 #else
-#error Can't define kgokkRectNoHit
+#error "Can't define kgokkRectNoHit"
 #endif
 #if (gokkRectangle | gokkNoHitKids) == 5
 #define kgokkRectNoKids          5
 #else
-#error Can't define kgokkRectNoKids
+#error "Can't define kgokkRectNoKids"
 #endif
 
 // the following is the type used for GOKD's created with OBJECT() macros

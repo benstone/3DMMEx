@@ -5,7 +5,7 @@
 // Snackbar and contents
 // -----------------------------------------------------
 
-WAVE_CHUNK( "building\sound\snackbar\VO60.wav", kwavVO60 )
+WAVE_CHUNK( "building/sound/snackbar/vo60.wav", kwavVO60 )
 //OBJECT( "Snackbar McZee", kgobSnackbarMczee, 0, kcrsHand1 )
 GOBCHUNK("Snackbar McZee", kgobSnackbarMczee, kgokkNormal)
 	DEFAULT_POSITION( 0, 0, 0 )
@@ -38,7 +38,7 @@ ENDCHUNK
 	#include "snackbar.seq"
 
 OBJECT( "Biopage 28 mask",  kgobLobby3m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\lobby\lobby2m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/lobby/lobby2m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 28 ) );
 			// Bio Page already found
@@ -51,7 +51,7 @@ OBJECT( "Biopage 28 mask",  kgobLobby3m1, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 29 mask",  kgobLobby3m2, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\lobby\lobby2m2.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/lobby/lobby2m2.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 29 ) );
 			// Bio Page already found

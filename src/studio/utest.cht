@@ -8,32 +8,32 @@
 #include "kidgs.chh"
 
 // Localized strings
-#include "studio\utestgst.cht"
+#include "studio/utestgst.cht"
 
 //
 // Initial Palette
 //
-PALETTECHUNK ("Initial Palette", kcnoGlcrInit, "studio\bmp\homelogo.bmp")
+PALETTECHUNK ("Initial Palette", kcnoGlcrInit, "studio/bmp/homelogo.bmp")
 
 //
 // Home Logo
 //
 CHUNK (kcctgMbmp kcnoMbmpHomeLogo "Home Logo")
-	PACK BITMAP (0 0 0) "studio\bmp\homelogo.bmp"
+	PACK BITMAP (0 0 0) "studio/bmp/homelogo.bmp"
 ENDCHUNK
 
 //
 // Splash Screen
 //
 CHUNK (kcctgMbmp kcnoMbmpSplash "Splash Screen")
-	PACK BITMAP (0 0 0) "studio\bmp\splash.bmp"
+	PACK BITMAP (0 0 0) "studio/bmp/splash.bmp"
 ENDCHUNK
 
 //
 // Splash Sound
 //
 CHUNK (kcctgMidi kcnoMidiSplash "Splash Sound")
-	MIDI "studio\bmp\splash.mid"
+	MIDI "studio/bmp/splash.mid"
 ENDCHUNK
 
 //

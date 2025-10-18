@@ -52,7 +52,7 @@ else()
 endif()
 
 target_include_directories(engine PUBLIC
-  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/INC>)
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/inc>)
 target_link_libraries(engine
     PUBLIC
     KauaiBase

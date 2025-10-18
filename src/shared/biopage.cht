@@ -14,14 +14,14 @@
 
 #include "projmain.h"	// to get ksclBuilding?
 
-WAVE_CHUNK( "shared\sound\biofound.wav", kwavFoundBio )
-WAVE_CHUNK( "shared\sound\bioalrdy.wav", kwavBioAlreadyFound )
-WAVE_CHUNK( "shared\sound\tbkopen.wav", kwavOpenBio )
-WAVE_CHUNK( "shared\sound\biocancl.wav", kwavBioCancel )
-WAVE_CHUNK( "shared\sound\biopop.wav", kwavBioPopup )
+WAVE_CHUNK( "shared/sound/biofound.wav", kwavFoundBio )
+WAVE_CHUNK( "shared/sound/bioalrdy.wav", kwavBioAlreadyFound )
+WAVE_CHUNK( "shared/sound/tbkopen.wav", kwavOpenBio )
+WAVE_CHUNK( "shared/sound/biocancl.wav", kwavBioCancel )
+WAVE_CHUNK( "shared/sound/biopop.wav", kwavBioPopup )
 
 OBJECTTY( "Bio Page background", kgobBioPage, 1000, kcrsArrow1, kgokkRectHit )
-REP_PPMBMP( CHID1( krepDefault ), "shared\pbm\biopage.pbm" )
+REP_PPMBMP( CHID1( krepDefault ), "shared/pbm/biopage.pbm" )
 ADOPT_MBMP( LAST_MBMP, kcell1 )
 CREATE_SCRIPT( "bio page : create" )
 	// Disable keyboard accelerators while the bio book is up.
@@ -126,15 +126,15 @@ REP_VIDEO( CHID1( krepDefault ), "bldgdata.chk", fTrue )
 // ---------------------------------------------------------------
 // graphic that contains the rings, etc.
 OBJECT( "Bio Panel", kgobBioPanel, 10, kcrsHand1 )
-REP_PPMBMP( CHID1(krepDefault ), "shared\pbm\biopanel.pbm" )
+REP_PPMBMP( CHID1(krepDefault ), "shared/pbm/biopanel.pbm" )
 
 
 // ---------------------------------------------------------------
 OBJECTREG( "Bio cancel", kgobBioCancel, kxpBioCancel, kypBioCancel, 10, kcrsHand1 )
-REP_PPMBMP( CHID1(krepDefault ), "shared\pbm\cancel.pbm" )
+REP_PPMBMP( CHID1(krepDefault ), "shared/pbm/cancel.pbm" )
 ADOPT_MBMP(LAST_MBMP, CHID1( krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID1( krepMouseDnOff))
-REP_PPMBMP(CHID1(krepMouseDnOn), "shared\pbm\cancelc.pbm" )
+REP_PPMBMP(CHID1(krepMouseDnOn), "shared/pbm/cancelc.pbm" )
 CLICK_SCRIPT("Bio cancel clicked")
 	// This is the only way out of the biobook -- re-enable keyboard
 	// accelerators here.
@@ -149,10 +149,10 @@ ENDCHUNK
 
 // ---------------------------------------------------------------
 OBJECTREG( "Bio Fwd", kgobBioFwd, kxpBioFwd, kypBioFwd, 10, kcrsHand1 )
-REP_PPMBMP( CHID1(krepDefault ), "shared\pbm\fwd.pbm" )
+REP_PPMBMP( CHID1(krepDefault ), "shared/pbm/fwd.pbm" )
 ADOPT_MBMP(LAST_MBMP, CHID1( krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID1( krepMouseDnOff))
-REP_PPMBMP(CHID1(krepMouseDnOn), "shared\pbm\fwdc.pbm" )
+REP_PPMBMP(CHID1(krepMouseDnOn), "shared/pbm/fwdc.pbm" )
 CLICK_SCRIPT("Bio forward clicked")
 	curr = ::nBioPage;
 	While( 1 );
@@ -173,10 +173,10 @@ ENDCHUNK
 
 // ---------------------------------------------------------------
 OBJECTREG( "Bio Back", kgobBioBack, kxpBioBack, kypBioBack, 10, kcrsHand1 )
-REP_PPMBMP( CHID1(krepDefault ), "shared\pbm\back.pbm" )
+REP_PPMBMP( CHID1(krepDefault ), "shared/pbm/back.pbm" )
 ADOPT_MBMP(LAST_MBMP, CHID1( krepMouseUpOn))
 ADOPT_MBMP(LAST_MBMP, CHID1( krepMouseDnOff))
-REP_PPMBMP(CHID1(krepMouseDnOn), "shared\pbm\backc.pbm" )
+REP_PPMBMP(CHID1(krepMouseDnOn), "shared/pbm/backc.pbm" )
 CLICK_SCRIPT("Bio back clicked")
 	curr = ::nBioPage;
 	While( 1 );
@@ -200,10 +200,10 @@ ENDCHUNK
 // ---------------------------------------------------------
 // BUILDING BIO PAGE STUB
 
-WAVE_CHUNK( "shared\sound\bio\TBPAGEB1.WAV", kwavBio1 )	// back
-WAVE_CHUNK( "shared\sound\bio\TBPAGEB2.WAV", kwavBio2 )	// back 2
-WAVE_CHUNK( "shared\sound\bio\TBPAGEF1.WAV", kwavBio3 )
-WAVE_CHUNK( "shared\sound\bio\TBPAGEF2.WAV", kwavBio4 )
+WAVE_CHUNK( "shared/sound/bio/tbpageb1.wav", kwavBio1 )	// back
+WAVE_CHUNK( "shared/sound/bio/tbpageb2.wav", kwavBio2 )	// back 2
+WAVE_CHUNK( "shared/sound/bio/tbpagef1.wav", kwavBio3 )
+WAVE_CHUNK( "shared/sound/bio/tbpagef2.wav", kwavBio4 )
 
 // -----------------------------------------------------
 // transparent rectangular balloon that allows hit testing
@@ -235,7 +235,7 @@ GOBCHUNK("Hot help for tools", kgobPopTip, kgokkNormal)
 	DEFAULT_POSITION(0,0,700)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow1, CHID1(kchidClick), cidNil, cnoNil)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Tool topic tile", "shared\bmp\biotip.bmp", 84, 61)
+REP_TILE( CHID1( krepDefault), "Tool topic tile", "shared/bmp/biotip.bmp", 84, 61)
 	TILEDEF( 15, 15, 24, 120, 8, 0, 0, 0, 24 )
 	TILEDEF( 12, 12, 24,  74, 8, 0, 0, 0, 24 )
 ENDCHUNK

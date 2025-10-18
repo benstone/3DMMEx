@@ -7,7 +7,7 @@
 
 
 OBJECT( "waiting area", kgobWaiting, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault ),  "building\pbm\waiting\waiting.pbm" )
+REP_PPMBMP( CHID1( krepDefault ),  "building/pbm/waiting/waiting.pbm" )
 CREATE_SCRIPT( "waiting: create" )
 	SETPALETTE( kpalSocLobby );
 	SETKEYS(kflgBuildingAll);
@@ -25,7 +25,7 @@ ENDCHUNK
 //	Bio page hotspots
 //----------------------------------------------------------
 OBJECT( "Biopage 25 mask",  kgobLobby2m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\lobby\lobby3m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/lobby/lobby3m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 25 ) );
 			// Bio Page already found
@@ -38,7 +38,7 @@ OBJECT( "Biopage 25 mask",  kgobLobby2m1, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 26 mask",  kgobLobby2m2, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\lobby\lobby3m2.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/lobby/lobby3m2.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 26 ) );
 			// Bio Page already found
@@ -51,7 +51,7 @@ OBJECT( "Biopage 26 mask",  kgobLobby2m2, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 27 mask",  kgobLobby2m3, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\lobby\lobby3m3.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/lobby/lobby3m3.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 27 ) );
 			// Bio Page already found

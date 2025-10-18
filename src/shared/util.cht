@@ -63,8 +63,8 @@ ENDCHUNK
 
 #include "socdefn.h"
 
-WAVE_CHUNK( "shared\sound\util\splot.wav", kwavSplot )
-WAVE_CHUNK( "shared\sound\util\ding.wav", kwavDing )
+WAVE_CHUNK( "shared/sound/util/splot.wav", kwavSplot )
+WAVE_CHUNK( "shared/sound/util/ding.wav", kwavDing )
 
 // ---------------------------------------------------------
 // The following is the object definition for the utility

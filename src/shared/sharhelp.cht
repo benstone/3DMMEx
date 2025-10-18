@@ -17,11 +17,11 @@
 GOBCHUNK("Utest Error", kgobBalloonError, kgokkNormal)
 	DEFAULT_POSITION(0,0,700)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Tool page tile", "shared\bmp\alert.bmp", 115, 72 )
+REP_TILE( CHID1( krepDefault), "Tool page tile", "shared/bmp/alert.bmp", 115, 72 )
 	TILEDEF( 14,14,24,183,8,0,0,0,24 )
 	TILEDEF( 14,14,24,95,8,0,0,0,24 )
 ENDCHUNK
-REP_WAVE( CHID1( krepDefault ), "shared\sound\alert2.wav" )
+REP_WAVE( CHID1( krepDefault ), "shared/sound/alert2.wav" )
 
 // scripts to run
 SCRIPTCHUNK("Handling error messages", ktpcErrorScript)
@@ -49,7 +49,7 @@ ENDCHUNK
 GOBCHUNK( "help balloon #1", kgobBalloon1, 0)
 	DEFAULT_POSITION( 40,40,500 )
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "help balloon 1 tile", "shared\bmp\balln1b.bmp", 93, 29 )
+REP_TILE( CHID1( krepDefault), "help balloon 1 tile", "shared/bmp/balln1b.bmp", 93, 29 )
 	TILEDEF( 7, 24, 7, 64, 8, 0,0,0,22 )
 	TILEDEF( 7, 8, 7, 22, 8, 17, 8, 8, 8 )
 ENDCHUNK
@@ -61,7 +61,7 @@ GOBCHUNK( "tooltip balloon", kgobBalloonToolTip, 0)
 	DEFAULT_POSITION( 0,0,500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Tool tip tile", "shared\bmp\tooltip.bmp", 0, 0 )
+REP_TILE( CHID1( krepDefault), "Tool tip tile", "shared/bmp/tooltip.bmp", 0, 0 )
 	TILEDEF( 4,4,4, 160,8, 0, 0, 0, 4 )
 	TILEDEF( 3,3,3,50,8,0,0,0,3 )
 ENDCHUNK
@@ -73,7 +73,7 @@ GOBCHUNK( "tooltip balloon", kgobBalloonToolTip2, 0)
 	DEFAULT_POSITION( 0,0,500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Tool tip tile", "shared\bmp\tooltip.bmp", 168, 56 )
+REP_TILE( CHID1( krepDefault), "Tool tip tile", "shared/bmp/tooltip.bmp", 168, 56 )
 	TILEDEF( 4,4,4, 160,8, 0, 0, 0, 4 )
 	TILEDEF( 3,3,3,50,8,0,0,0,3 )
 ENDCHUNK
@@ -95,7 +95,7 @@ GOBCHUNK( "tool topic", kgobBalloonToolTopic, 0)
 	DEFAULT_POSITION( 40,40,500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Tool page tile", "shared\bmp\toolhelp.bmp", 231, 143 )
+REP_TILE( CHID1( krepDefault), "Tool page tile", "shared/bmp/toolhelp.bmp", 231, 143 )
 	TILEDEF( 14,14,24,183,8,0,0,0,24 )
 	TILEDEF( 14,14,24,95,8,0,0,0,24 )
 ENDCHUNK
@@ -108,7 +108,7 @@ GOBCHUNK("Query help topic", kgobQueryTopics, kgokkNormal)
 	DEFAULT_POSITION(100,100,700)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, kchidClick, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Tool page tile", "shared\bmp\alert.bmp", 120, 72 )
+REP_TILE( CHID1( krepDefault), "Tool page tile", "shared/bmp/alert.bmp", 120, 72 )
 	TILEDEF( 14,14,24,191,8,0,0,0,24 )
 	TILEDEF( 14,14,24,95,8,0,0,0,24 )
 ENDCHUNK
@@ -130,7 +130,7 @@ GOBCHUNK( "blank label balloon", kgobBalloonPageLeft, kgokkNormal )
 	DEFAULT_POSITION( 0,0,899 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Invisible", "shared\bmp\balln3.bmp", 1, 1)
+REP_TILE( CHID1( krepDefault), "Invisible", "shared/bmp/balln3.bmp", 1, 1)
 	TILEDEF( 0, 0, 0, 32, 1, 0, 0, 0,0  )
 	TILEDEF( 0, 0, 0, 32, 1, 0, 0, 0,0  )
 ENDCHUNK
@@ -142,7 +142,7 @@ GOBCHUNK( "blank label balloon", kgobBalloonPageRight, kgokkNormal )
 	DEFAULT_POSITION( 0,0,899 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Invisible", "shared\bmp\balln3.bmp", 1, 1)
+REP_TILE( CHID1( krepDefault), "Invisible", "shared/bmp/balln3.bmp", 1, 1)
 	TILEDEF( 0, 0, 0, 32, 1, 0, 0, 0,0  )
 	TILEDEF( 0, 0, 0, 32, 1, 0, 0, 0,0  )
 ENDCHUNK
@@ -154,7 +154,7 @@ GOBCHUNK( "blank, invisible balloon", kgobBalloonBlank, kgokkNormal )
 	DEFAULT_POSITION( 0,0,899 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Invisible", "shared\bmp\balln3.bmp", 1, 1)
+REP_TILE( CHID1( krepDefault), "Invisible", "shared/bmp/balln3.bmp", 1, 1)
 	TILEDEF( 0, 0, 0, 32, 1, 0, 0, 0,0  )
 	TILEDEF( 0, 0, 0, 32, 1, 0, 0, 0,0  )
 ENDCHUNK
@@ -165,7 +165,7 @@ ENDCHUNK
 GOBCHUNK( "alert help", kgobBalloonAlert, 0)
 	DEFAULT_POSITION( 0, 0,999 )
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "alert tile", "shared\bmp\balln2.bmp", 40, 29 )
+REP_TILE( CHID1( krepDefault), "alert tile", "shared/bmp/balln2.bmp", 40, 29 )
 	TILEDEF( 7, 24, 7, 64, 8, 0,0,0, 22 )
 	TILEDEF( 3, 8, 7, 20, 8, 17, 8, 8, 8 )
 ENDCHUNK
@@ -176,7 +176,7 @@ ENDCHUNK
 GOBCHUNK( "voice over balloon", kgobVoiceOver, gokkNoHit )
 	DEFAULT_POSITION( 0, 0,999 )
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "alert tile", "shared\bmp\vo.bmp", 40, 29 )
+REP_TILE( CHID1( krepDefault), "alert tile", "shared/bmp/vo.bmp", 40, 29 )
 	TILEDEF( 7, 24, 7, 64, 8, 0,0,0, 22 )
 	TILEDEF( 3, 8, 7, 20, 8, 17, 8, 8, 8 )
 ENDCHUNK
@@ -187,7 +187,7 @@ ENDCHUNK
 GOBCHUNK( "alert help", kgobBalloonBorder1, 0)
 	DEFAULT_POSITION( 0,0,999 )
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Bordered tile", "shared\bmp\border1.bmp", 30, 5 )
+REP_TILE( CHID1( krepDefault), "Bordered tile", "shared/bmp/border1.bmp", 30, 5 )
 	TILEDEF( 11, 20, 31, 40, 1, 0,0,0, 8 )
 	TILEDEF( 25, 8, 25, 32, 1, 0,0,0, 8 )
 ENDCHUNK
@@ -200,7 +200,7 @@ GOBCHUNK("Tool help", kgobHelpBookToolTopics, kgokkNormal)
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, CHID1(kchidClick), cidNil, cnoNil)
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Tool page tile", "shared\bmp\tooltip.bmp", 168, 56 )
+REP_TILE( CHID1( krepDefault), "Tool page tile", "shared/bmp/tooltip.bmp", 168, 56 )
 	TILEDEF( 4,4,4, 160,8, 0, 0, 0, 4 )
 	TILEDEF( 3,3,3,50,8,0,0,0,3 )
 ENDCHUNK
@@ -231,7 +231,7 @@ GOBCHUNK("Hot help for tools", kgobBalloonHotHelp, kgokkNormal)
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, kchidScript1, cidNil, cnoNil) 
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Tool page tile", "shared\bmp\tooltip.bmp", 84, 28 )
+REP_TILE( CHID1( krepDefault), "Tool page tile", "shared/bmp/tooltip.bmp", 84, 28 )
 	TILEDEF( 4,4,4, 160,8, 0, 0, 0, 4 )
 	TILEDEF( 3,3,3,50,8,0,0,0,3 )
 ENDCHUNK
@@ -254,7 +254,7 @@ GOBCHUNK("Hot help for projects", kgobBalloonHotGadgetHelp, kgokkNormal)
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, kchidScript1, cidNil, cnoNil) 
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "Tool page tile", "shared\bmp\tooltip.bmp", 84, 28 )
+REP_TILE( CHID1( krepDefault), "Tool page tile", "shared/bmp/tooltip.bmp", 84, 28 )
 	TILEDEF( 4,4,4, 160,8, 0, 0, 0, 4 )
 	TILEDEF( 3,3,3,50,8,0,0,0,3 )
 ENDCHUNK
@@ -279,7 +279,7 @@ GOBCHUNK( "Callout Balloon0", kgobCalloutBalloon0, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon0 Tile", "shared\bmp\coblln0.bmp", 83, 61 )
+REP_TILE(CHID1(krepDefault), "Callout Balloon0 Tile", "shared/bmp/coblln0.bmp", 83, 61 )
 	TILEDEF( 5, 5, 8, 151, 8, 0, 0,0, 8  )
 	TILEDEF( 4, 4, 8, 106, 8, 0, 0, 0,8  )
 ENDCHUNK
@@ -291,7 +291,7 @@ GOBCHUNK( "Callout Balloon1", kgobCalloutBalloon1, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon1 Tile", "shared\bmp\coblln1.bmp", 1, 1)
+REP_TILE(CHID1(krepDefault), "Callout Balloon1 Tile", "shared/bmp/coblln1.bmp", 1, 1)
 	TILEDEF( 29, 8, 36, 146, 8, 0, 0, 0,8 )
 	TILEDEF( 28, 8, 32, 103, 8, 0, 0, 0,8  )
 ENDCHUNK
@@ -303,7 +303,7 @@ GOBCHUNK( "Callout Balloon2", kgobCalloutBalloon2, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon2 Tile", "shared\bmp\coblln2.bmp", 83, 1)
+REP_TILE(CHID1(krepDefault), "Callout Balloon2 Tile", "shared/bmp/coblln2.bmp", 83, 1)
 	TILEDEF( 4, 8, 8, 58, 8, 35, 60, 8,8  )
 	TILEDEF( 41, 8, 42, 108, 8, 0, 0, 0,8  )
 ENDCHUNK
@@ -315,7 +315,7 @@ GOBCHUNK( "Callout Balloon3", kgobCalloutBalloon3, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon3 Tile", "shared\bmp\coblln3.bmp", 189, 2 )
+REP_TILE(CHID1(krepDefault), "Callout Balloon3 Tile", "shared/bmp/coblln3.bmp", 189, 2 )
 	TILEDEF( 4, 32, 8, 147, 8, 0, 0, 0, 36 )
 	TILEDEF( 30, 8, 34, 103, 4, 0, 0, 0, 8  )
 ENDCHUNK
@@ -327,7 +327,7 @@ GOBCHUNK( "Callout Balloon4", kgobCalloutBalloon4, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon4 Tile", "shared\bmp\coblln4.bmp", 201, 65)
+REP_TILE(CHID1(krepDefault), "Callout Balloon4 Tile", "shared/bmp/coblln4.bmp", 201, 65)
 	TILEDEF( 4, 46, 8, 148, 8, 0, 0, 0, 48 )
 	TILEDEF( 3, 8, 8, 40, 4, 34, 40, 4, 8  )
 ENDCHUNK
@@ -339,7 +339,7 @@ GOBCHUNK( "Callout Balloon5", kgobCalloutBalloon5, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon5 Tile", "shared\bmp\coblln5.bmp", 189, 143 )
+REP_TILE(CHID1(krepDefault), "Callout Balloon5 Tile", "shared/bmp/coblln5.bmp", 189, 143 )
 	TILEDEF( 4, 32, 8, 148, 8, 0, 0, 0, 36 )
 	TILEDEF( 3, 32, 8, 102, 8, 0, 0, 0, 36 )
 ENDCHUNK
@@ -351,7 +351,7 @@ GOBCHUNK( "Callout Balloon6", kgobCalloutBalloon6, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon6 Tile", "shared\bmp\coblln6.bmp", 83, 155 )
+REP_TILE(CHID1(krepDefault), "Callout Balloon6 Tile", "shared/bmp/coblln6.bmp", 83, 155 )
 	TILEDEF( 4, 8, 8, 60, 8, 33, 60, 8, 8  )
 	TILEDEF( 3, 38, 8, 105, 8, 0, 0, 0, 44  )
 ENDCHUNK
@@ -363,7 +363,7 @@ GOBCHUNK( "Callout Balloon7", kgobCalloutBalloon7, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon7 Tile", "shared\bmp\coblln7.bmp", 0, 147 )
+REP_TILE(CHID1(krepDefault), "Callout Balloon7 Tile", "shared/bmp/coblln7.bmp", 0, 147 )
 	TILEDEF( 30, 8, 34, 149, 8, 0, 0, 0, 8 )
 	TILEDEF( 3, 28, 8, 101, 8, 0, 0, 0, 38 )
 ENDCHUNK
@@ -375,7 +375,7 @@ GOBCHUNK( "Callout Balloon8", kgobCalloutBalloon8, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon8 Tile", "shared\bmp\coblln8.bmp", 0, 66)
+REP_TILE(CHID1(krepDefault), "Callout Balloon8 Tile", "shared/bmp/coblln8.bmp", 0, 66)
 	TILEDEF( 32, 8, 42, 150, 8, 0, 0, 0, 8  )
 	TILEDEF( 3,8, 8, 40, 4, 34, 32, 4, 8  )
 ENDCHUNK
@@ -387,7 +387,7 @@ GOBCHUNK( "Callout BalloonP", kgobCalloutBalloonP, kgokkNormal)
 	DEFAULT_POSITION(0, 0, 500 )
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon0 Tile", "shared\bmp\coblln0.bmp", 83, 61 )
+REP_TILE(CHID1(krepDefault), "Callout Balloon0 Tile", "shared/bmp/coblln0.bmp", 83, 61 )
 	TILEDEF( 5, 5, 8, 151, 8, 0, 0,0, 8  )
 	TILEDEF( 4, 4, 8, 106, 8, 0, 0, 0,8  )
 ENDCHUNK
@@ -410,7 +410,7 @@ GOBCHUNK( "Easel Callout Balloon2", kgobEaselBalloon2, kgokkNormal)
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, CHID1(kchidClick), cidNil, cnoNil) 
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon2 Easel Tile", "shared\bmp\coblln2.bmp", 83, 1)
+REP_TILE(CHID1(krepDefault), "Callout Balloon2 Easel Tile", "shared/bmp/coblln2.bmp", 83, 1)
 	TILEDEF( 4, 8, 8, 58, 8, 35, 60, 8,8  )
 	TILEDEF( 41, 8, 42, 108, 8, 0, 0, 0,8  )
 ENDCHUNK
@@ -438,7 +438,7 @@ GOBCHUNK( "Easel Callout Balloon4", kgobEaselBalloon4, kgokkNormal)
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, CHID1(kchidClick), cidNil, cnoNil) 
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon4 Easel Tile", "shared\bmp\coblln4.bmp", 201, 65)
+REP_TILE(CHID1(krepDefault), "Callout Balloon4 Easel Tile", "shared/bmp/coblln4.bmp", 201, 65)
 	TILEDEF( 8, 46, 8, 148, 8, 0, 0, 0, 48 )
 	TILEDEF( 8, 8, 8, 40, 4, 34, 40, 4, 8  )
 ENDCHUNK
@@ -466,7 +466,7 @@ GOBCHUNK( "Easel Callout BalloonP", kgobEaselBalloonP, kgokkNormal)
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, CHID1(kchidClick), cidNil, cnoNil) 
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon0 Tile", "shared\bmp\coblln0.bmp", 83, 61 )
+REP_TILE(CHID1(krepDefault), "Callout Balloon0 Tile", "shared/bmp/coblln0.bmp", 83, 61 )
 	TILEDEF( 5, 5, 8, 151, 8, 0, 0,0, 8  )
 	TILEDEF( 4, 4, 8, 106, 8, 0, 0, 0,8  )
 ENDCHUNK
@@ -494,7 +494,7 @@ GOBCHUNK( "Easel Callout Balloon6", kgobEaselBalloon6, kgokkNormal)
 	ACTION(fcustHotText, fcustHotText, fgrfstAll, kcrsHand1, chidNil, cidNil, cnoNil)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow, CHID1(kchidClick), cidNil, cnoNil) 
 ENDCHUNK
-REP_TILE(CHID1(krepDefault), "Callout Balloon6 Easel Tile", "shared\bmp\coblln6.bmp", 83, 155 )
+REP_TILE(CHID1(krepDefault), "Callout Balloon6 Easel Tile", "shared/bmp/coblln6.bmp", 83, 155 )
 	TILEDEF( 8, 8, 8, 60, 8, 33, 60, 8, 8  )
 	TILEDEF( 8, 38, 8, 105, 8, 0, 0, 0, 44  )
 ENDCHUNK
@@ -591,7 +591,7 @@ ENDCHUNK
 GOBCHUNK( "help balloon #1a", kgobBalloon1a, 0)
 	DEFAULT_POSITION( 40,40,800 )
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "help balloon 1 tile", "shared\bmp\balln1a.bmp", 93, 29 )
+REP_TILE( CHID1( krepDefault), "help balloon 1 tile", "shared/bmp/balln1a.bmp", 93, 29 )
 	TILEDEF( 7, 7, 7, 133, 4, 0, 0, 0, 7 )
 	TILEDEF( 7, 7, 7, 89, 4, 0, 0, 0, 7 )
 ENDCHUNK
@@ -602,7 +602,7 @@ ENDCHUNK
 GOBCHUNK( "help balloon #1e", kgobBalloon1e, 0)
 	DEFAULT_POSITION( 40,40,800 )
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "help balloon 1 tile", "shared\bmp\balln1e.bmp", 170, 103 )
+REP_TILE( CHID1( krepDefault), "help balloon 1 tile", "shared/bmp/balln1e.bmp", 170, 103 )
 	TILEDEF( 7, 32, 7, 131, 4, 0, 0, 0, 32 )
 	TILEDEF( 7, 7, 7, 70, 4, 0, 0, 0, 26 )
 ENDCHUNK
@@ -614,7 +614,7 @@ ENDCHUNK
 GOBCHUNK( "help balloon #1d", kgobBalloon1d, 0)
 	DEFAULT_POSITION( 40,40,800 )
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "help balloon 1 tile", "shared\bmp\balln1d.bmp", 0, 102 )
+REP_TILE( CHID1( krepDefault), "help balloon 1 tile", "shared/bmp/balln1d.bmp", 0, 102 )
 	TILEDEF( 32, 7, 32, 131, 4, 0, 0, 0, 7 )
 	TILEDEF( 7, 7, 7, 68, 4, 0, 0, 0, 26 )
 ENDCHUNK
@@ -625,7 +625,7 @@ ENDCHUNK
 GOBCHUNK( "alert help", kgobBalloonTip, 0)
 	DEFAULT_POSITION( 0, 0,999 )
 ENDCHUNK
-REP_TILE( CHID1( krepDefault), "alert tile", "shared\bmp\balln2.bmp", 40, 29 )
+REP_TILE( CHID1( krepDefault), "alert tile", "shared/bmp/balln2.bmp", 40, 29 )
 	TILEDEF( 7, 24, 7, 64, 8, 0,0,0, 22 )
 	TILEDEF( 7, 8, 7, 20, 8, 17, 8, 8, 8 )
 ENDCHUNK
@@ -638,9 +638,9 @@ GOBCHUNK( "kgobHelpSquishy", kgobHelpSquishy, 0 )
 	ACTION( fcustNil, fcustNil, fgrfstAll, kcrsHand1, kchidClick, cidNil, cnoNil )
 ENDCHUNK
 // normal
-REP_MBMP( CHID1( krepDefault), "shared\bmp\squishy1.bmp"  )
+REP_MBMP( CHID1( krepDefault), "shared/bmp/squishy1.bmp"  )
 // splotted
-REP_MBMP( CHID1( krepMouseDnOn ), "shared\bmp\squishy3.bmp" )
-REP_MBMP( CHID1( krepMouseUpOn ), "shared\bmp\squishy2.bmp" )
+REP_MBMP( CHID1( krepMouseDnOn ), "shared/bmp/squishy3.bmp" )
+REP_MBMP( CHID1( krepMouseUpOn ), "shared/bmp/squishy2.bmp" )
 ADOPT_MBMP( LAST_MBMP, CHID1( krepMouseDnOff ))
-REP_WAVE( CHID1( krepClicked ), "shared\sound\ok.wav" )
+REP_WAVE( CHID1( krepClicked ), "shared/sound/ok.wav" )

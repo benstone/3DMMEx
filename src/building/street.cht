@@ -26,7 +26,7 @@
 // polls until it's done.
 // -----------------------------------------------------
 OBJECTTY( "street", kgobStreet, 0, kcrsArrow1, gokkNoHitThis )
-REP_PPMBMP( kcell1, "building\pbm\street\street1.pbm" )
+REP_PPMBMP( kcell1, "building/pbm/street/street1.pbm" )
 REP_ANIM( CHID1( krepDefault ), "closet, default" )
 	SETGLOBAL( fTrans, fTrue );
 	SETPALETTE( kpalSocStreet );	// dissolve to new palette

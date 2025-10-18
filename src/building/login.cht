@@ -6,7 +6,7 @@
 // -----------------------------------------------------
 
 OBJECT( "login: main view",  kgobLogin, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1( krepDefault), "building\pbm\login\login.pbm" )
+	REP_PPMBMP( CHID1( krepDefault), "building/pbm/login/login.pbm" )
 	CREATE_ANIM( "login : create" )
 		SETPALETTE( kpalImaginopolis );
 		SETKEYS(kflgBuildingMin);

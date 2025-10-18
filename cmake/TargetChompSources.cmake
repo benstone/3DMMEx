@@ -43,6 +43,7 @@ function(target_chomp_sources target)
     target_include_directories(${target} PRIVATE ${parent})
     cmake_path(GET parent PARENT_PATH parent)
     target_include_directories(${target} PRIVATE ${parent})
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/chomp/${target}")
     set(output "${CMAKE_CURRENT_BINARY_DIR}/chomp/${target}/${output}")
     set(processed "${CMAKE_CURRENT_BINARY_DIR}/chomp/${target}/${filename}.i")
     add_custom_command(

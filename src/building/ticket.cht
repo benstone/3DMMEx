@@ -20,19 +20,19 @@
 // 	
 // -----------------------------------------------------
 
-WAVE_CHUNK( "building\sound\ticket\TKTBTH.wav", kwavTKTBTH )
-WAVE_CHUNK( "building\sound\ticket\TBCY2.wav", kwavTBCY2 )
-WAVE_CHUNK( "building\sound\ticket\TBTH3.wav", kwavTBTH3 )
-WAVE_CHUNK( "building\sound\ticket\VO54.wav", kwavVO54 )
-WAVE_CHUNK( "building\sound\ticket\VO56B.wav", kwavVO56B )
-WAVE_CHUNK( "building\sound\ticket\tbfar.wav", kwavTicketFar )
+WAVE_CHUNK( "building/sound/ticket/tktbth.wav", kwavTKTBTH )
+WAVE_CHUNK( "building/sound/ticket/tbcy2.wav", kwavTBCY2 )
+WAVE_CHUNK( "building/sound/ticket/tbth3.wav", kwavTBTH3 )
+WAVE_CHUNK( "building/sound/ticket/vo54.wav", kwavVO54 )
+WAVE_CHUNK( "building/sound/ticket/vo56b.wav", kwavVO56B )
+WAVE_CHUNK( "building/sound/ticket/tbfar.wav", kwavTicketFar )
 
 
 // ----------------------------------------------------------
 // Doors leading into the lobby
 // ----------------------------------------------------------
 OBJECT( "ticket1:doors in", kgobTicket1Doors, 44, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\ticket\tik1drs.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/ticket/tik1drs.bmp", 0, 0 )
 	CLICK_SCRIPT( "ticket booth doors clicked" )
 		If( GetProp(kpridFirstTimeUser) && GLOBAL(fTicketPS) );
 			SETGLOBAL( fTicketPS, fFalse );
@@ -305,7 +305,7 @@ ENDCHUNK
 // Film Cans McZee puts up on the counter
 // ----------------------------------------------------
 OBJECT( "ticket2:film cans", kgobTicket2Cans, 30, kcrsHand1 )
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\ticket\tik2cans.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/ticket/tik2cans.pbm" )
 	CLICK_SCRIPT( "ticket2: films clicked" )
 		// Get portfolio selection
 		ChangeStateGob( kgobTicket2McZee, kst5 );
@@ -316,7 +316,7 @@ OBJECT( "ticket2:film cans", kgobTicket2Cans, 30, kcrsHand1 )
 // Camera McZee puts up on the counter
 // ----------------------------------------------------
 OBJECT( "ticket2:camera clicked",  kgobTicket2Camera, 30, kcrsHand1 )
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\ticket\tik2cam.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/ticket/tik2cam.pbm" )
 	CLICK_SCRIPT( "ticket2: camera clicked" )
 		ChangeStateGob( kgobTicket2McZee, kst7 );
 	ENDCHUNK
@@ -326,7 +326,7 @@ OBJECT( "ticket2:camera clicked",  kgobTicket2Camera, 30, kcrsHand1 )
 //	Bio page hotspots
 //----------------------------------------------------------
 OBJECT( "Biopage 24 mask",  kgobTic1m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\ticket\tic1m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/ticket/tic1m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 24 ) );
 			// Bio Page already found

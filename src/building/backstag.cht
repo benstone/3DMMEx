@@ -1,9 +1,9 @@
 /* Copyright (c) Microsoft Corporation.
    Licensed under the MIT License. */
 
-WAVE_CHUNK( "building\sound\backstag\GOIDA.wav", kwavVO40 )
-WAVE_CHUNK( "building\sound\backstag\GOSTU.wav", kwavVO41 )
-WAVE_CHUNK( "building\sound\backstag\GOPRJ.wav", kwavVO43 )
+WAVE_CHUNK( "building/sound/backstag/goida.wav", kwavVO40 )
+WAVE_CHUNK( "building/sound/backstag/gostu.wav", kwavVO41 )
+WAVE_CHUNK( "building/sound/backstag/goprj.wav", kwavVO43 )
 
 OBJECT( "Backstage: mczee!", kgobBackstageMcZee, 200, kcrsHand1 )
 
@@ -309,7 +309,7 @@ OBJECT( "Ideas room opening door", kgobIdeaDoor, 150, kcrsArrow1 )
 	#include "iddoor.seq"
 
  OBJECT( "Mz's carpet bag", kgobBackstage1Bag, 150, kcrsArrow1 )
-	REP_PPMBMP( CHID( kst1, krepDefault ), "building\pbm\backstag\bag12.pbm" )
+	REP_PPMBMP( CHID( kst1, krepDefault ), "building/pbm/backstag/bag12.pbm" )
  	REP_ANIM( CHID( kst2, krepDefault ), "Backstage carpet bag anim" )
 		cnt=kcell1;
 		While( cnt <= kcell20 );
@@ -359,14 +359,14 @@ OBJECTREG( "AVI6", kgobBackstageMcZeeAVI6, 0, 0, 100, kcrsArrow1 )
 
 
 OBJECT( "bs1 - inspiration door", kgobBackstage1Insp, 150, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\backstag\Bkstgdr1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/backstag/bkstgdr1.bmp", 0, 0 )
 	CLICK_SCRIPT( "bkstg2 : click insp. door" )
 		ChangeStateGob( kgobBackstageMcZee, kst8 );
 	ENDCHUNK
 
 // -----------------------------------------------------
 OBJECT( "bs1 - studio door", kgobBackstage1Studio, 150, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\backstag\Bkstgdr2.bmp",0 ,0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/backstag/bkstgdr2.bmp",0 ,0 )
 	CLICK_SCRIPT( "bkstg2 : click studio door" )
 		kgobBackstageMcZee->nxtPlcState	= kst1;
 		ChangeStateGob( kgobBackstageMcZee, kst6 );
@@ -374,7 +374,7 @@ OBJECT( "bs1 - studio door", kgobBackstage1Studio, 150, kcrsHand1 )
 
 // -----------------------------------------------------
 OBJECT( "bs1 - projects door", kgobBackstage1Proj, 150, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\backstag\Bkstgdr3.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/backstag/bkstgdr3.bmp", 0, 0 )
 	CLICK_SCRIPT( "bs2 : click projects door" )
 		ChangeStateGob( kgobBackstageMcZee, kst9 );
 	ENDCHUNK

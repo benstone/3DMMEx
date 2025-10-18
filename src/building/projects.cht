@@ -27,9 +27,9 @@
 // Called Projects Main on the flowchart.
 // -----------------------------------------------------
 
-WAVE_CHUNK( "building\sound\projects\Prjt1.wav", kwavPrjt1 )
-// WAVE_CHUNK( "building\sound\projects\Prjt2A.wav", kwavPrjt2A )
-WAVE_CHUNK( "building\sound\projects\monitor.wav", kwavPrjtMonitor )
+WAVE_CHUNK( "building/sound/projects/prjt1.wav", kwavPrjt1 )
+// WAVE_CHUNK( "building/sound/projects/Prjt2A.wav", kwavPrjt2A )
+WAVE_CHUNK( "building/sound/projects/monitor.wav", kwavPrjtMonitor )
 
 GOBCHUNK("melanie - AVI ", kgobMelAVI, gokkNoHitThis )
 	DEFAULT_POSITION( 64, 140, 999 )
@@ -51,7 +51,7 @@ ENDCHUNK
 
 
 OBJECT("projects1: mon1", kgobProj1Mon1, 75, kcrsHand1)
-	REP_PPMBMP( CHID(kst1, krepDefault ), "building\pbm\projects\prj1mon1.pbm" )
+	REP_PPMBMP( CHID(kst1, krepDefault ), "building/pbm/projects/prj1mon1.pbm" )
 	REP_ANIM(CHID(kst2, krepDefault ), "projects1: monitor1")
 		DISABLEHOTSPOTS(kflgBuildingMin);
 		DEBUGCMD(PrintStr("Monitor1: animation"));
@@ -80,11 +80,11 @@ OBJECT("projects1: mon1", kgobProj1Mon1, 75, kcrsHand1)
 	#include "prjmon1.seq"
 
 OBJECTTY( "Projects1: TV animation", kgobTvViewL, 150, kcrsHand1, gokkNoHitThis )
-	REP_MBMP( CHID(kst1, krepDefault ), "building\bitmaps\projects\holder1.bmp"	)
+	REP_MBMP( CHID(kst1, krepDefault ), "building/bitmaps/projects/holder1.bmp"	)
 
 
 OBJECT("projects1: mon2", kgobProj1Mon2, 155, kcrsHand1)
-	REP_PPMBMP( CHID(kst1, krepDefault ), "building\pbm\projects\prj1mon2.pbm" )
+	REP_PPMBMP( CHID(kst1, krepDefault ), "building/pbm/projects/prj1mon2.pbm" )
 	REP_ANIM(CHID(kst2, krepDefault ), "projects1: monitor2")
 		DISABLEHOTSPOTS(kflgBuildingMin);
 		DEBUGCMD(PrintStr("Monitor2: animation"));
@@ -112,7 +112,7 @@ OBJECT("projects1: mon2", kgobProj1Mon2, 155, kcrsHand1)
 	#include "prjmon2.seq"
 
 OBJECTTY( "Projects1: TV animation", kgobTvViewR, 155, kcrsHand1, gokkNoHitThis )
-	REP_MBMP( CHID(kst1, krepDefault ), "building\bitmaps\projects\holder2.bmp"	)
+	REP_MBMP( CHID(kst1, krepDefault ), "building/bitmaps/projects/holder2.bmp"	)
 
 // -----------------------------------------------------
 // Projects Main Melanie
@@ -230,19 +230,19 @@ OBJECT("MOVIE TECHNIQUES", kgobMovieTech, 200, kcrsHand1)
 // project back view object
 
 OBJECT( "project2 map",  kgobProj2Map, 44, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prj2map.bmp", 0, 0 )
+REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prj2map.bmp", 0, 0 )
 CLICK_SCRIPT( "project 2 map clicked" ) 
 	CreateChildGob( GET_CURRENTPLACE(), kgobMapMain, kgobMapMain );
 ENDCHUNK
 
 OBJECT( "project2 exit",  kgobProj2Exit, 44, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prj2exit.bmp", 0, 0 )
+REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prj2exit.bmp", 0, 0 )
 CLICK_SCRIPT( "project 2 exit clicked") 
 	QUITAPP();
 ENDCHUNK
 
 OBJECT( "doors out",  kgobProj2Doors, 33, kcrsHand1 )
-REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prj2door.bmp", 0, 0 )
+REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prj2door.bmp", 0, 0 )
 CLICK_SCRIPT( "project doors out clicked" )
 	NEXTPLACE1(kgobBackstage1, kst2);
 ENDCHUNK
@@ -253,7 +253,7 @@ ENDCHUNK
 //--------------------------------------------------------
 
 OBJECT( "Biopage 37 mask",  kgobPrjt1m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\p1mask.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/p1mask.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 37 ) );
 			// Bio Page already found
@@ -268,7 +268,7 @@ OBJECT( "Biopage 37 mask",  kgobPrjt1m1, 0, kcrsHand1 )
 
 
 OBJECT( "Biopage 34 mask",  kgobPrjt2m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prjt2m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prjt2m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 34 ) );
 			// Bio Page already found
@@ -284,7 +284,7 @@ OBJECT( "Biopage 34 mask",  kgobPrjt2m1, 0, kcrsHand1 )
 
 
 OBJECT( "Biopage 1 mask",  kgobPrjt2m2, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prjt2m2.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prjt2m2.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 1 ) );
 			// Bio Page already found
@@ -298,7 +298,7 @@ OBJECT( "Biopage 1 mask",  kgobPrjt2m2, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 2 mask",  kgobPrjt2m3, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prjt2m3.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prjt2m3.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 2 ) );
 			// Bio Page already found
@@ -312,7 +312,7 @@ OBJECT( "Biopage 2 mask",  kgobPrjt2m3, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 3 mask",  kgobPrjt2m4, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prjt2m4.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prjt2m4.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 3 ) );
 			// Bio Page already found
@@ -326,7 +326,7 @@ OBJECT( "Biopage 3 mask",  kgobPrjt2m4, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 4 mask",  kgobPrjt4m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prjt4m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prjt4m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 4 ) );
 			// Bio Page already found
@@ -340,7 +340,7 @@ OBJECT( "Biopage 4 mask",  kgobPrjt4m1, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 5 mask",  kgobPrjt4m2, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prjt4m2.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prjt4m2.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 5 ) );
 			// Bio Page already found
@@ -354,7 +354,7 @@ OBJECT( "Biopage 5 mask",  kgobPrjt4m2, 0, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 6 mask",  kgobPrjt4m3, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\projects\prjt4m3.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/projects/prjt4m3.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 6 ) );
 			// Bio Page already found

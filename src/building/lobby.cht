@@ -24,12 +24,12 @@
 // Stuff for View #1 of lobby
 // ------------------------------------------------------------------------
 
-WAVE_CHUNK( "building\sound\lobby\bingo.wav", kwavBingo )
-WAVE_CHUNK( "building\sound\lobby\04_logn3.wav", kwav04_logn3 )
-WAVE_CHUNK( "building\sound\lobby\VO57A.wav", kwavVO57A	)
-WAVE_CHUNK( "building\sound\lobby\VO57aa.wav", kwavVO57AA	)
-WAVE_CHUNK( "building\sound\lobby\VO58.wav", kwavVO58	)
-WAVE_CHUNK( "building\sound\lobby\VO59.wav", kwavVO59	)
+WAVE_CHUNK( "building/sound/lobby/bingo.wav", kwavBingo )
+WAVE_CHUNK( "building/sound/lobby/04_logn3.wav", kwav04_logn3 )
+WAVE_CHUNK( "building/sound/lobby/vo57a.wav", kwavVO57A	)
+WAVE_CHUNK( "building/sound/lobby/vo57aa.wav", kwavVO57AA	)
+WAVE_CHUNK( "building/sound/lobby/vo58.wav", kwavVO58	)
+WAVE_CHUNK( "building/sound/lobby/vo59.wav", kwavVO59	)
 
 
 
@@ -268,7 +268,7 @@ OBJECT( "lobby1: mczee!", kgobLobby1McZee, 111, kcrsHand1 )
 		End;
 	ENDCHUNK
 
-	REP_PPMBMP( kcell5, "building\pbm\lobby\fork217.pbm" )
+	REP_PPMBMP( kcell5, "building/pbm/lobby/fork217.pbm" )
  	#include "mzlobby.seq" // include all mczee cells
 
 OBJECTREG("McZee 04logn3 - AVI ", kgobLobbyAVI, 0, 0, 999, kcrsArrow1)
@@ -298,7 +298,7 @@ HELP_SCRIPT( ktpcLobbyTip )
 ENDCHUNK
 	
 OBJECT( "theatre door", kgobLobby1Door, 33, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\lobby\lob1door.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/lobby/lob1door.bmp", 0, 0 )
 	CLICK_SCRIPT( "theatre door clicked" )
 		If(	!kgobLobby1->fExitLobby );  	// Prevents repeat strikes
 			PLAYMIDI( kmidTheatre );
@@ -317,7 +317,7 @@ OBJECT( "theatre door", kgobLobby1Door, 33, kcrsHand1 )
 
 // poster 3 = bio page # 35
 OBJECT( "poster #3",  kgobLobby1Poster3, 45, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\lobby\poster3.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/lobby/poster3.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 35 ) );
 			// Bio Page already found
@@ -331,7 +331,7 @@ OBJECT( "poster #3",  kgobLobby1Poster3, 45, kcrsHand1 )
 
 // poster 4 = bio page #36
 OBJECT( "poster #4",  kgobLobby1Poster4, 45, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\lobby\poster4.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/lobby/poster4.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 36 ) );
 			// Bio Page already found
@@ -346,13 +346,13 @@ OBJECT( "poster #4",  kgobLobby1Poster4, 45, kcrsHand1 )
 // back view
 
 OBJECT( "lobby 2 doors",  kgobLobby2Doors, 22, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),"building\bitmaps\lobby\lob2door.bmp", 0, 0 ) 
+	REP_MASK( CHID1( krepDefault ),"building/bitmaps/lobby/lob2door.bmp", 0, 0 )
 	CLICK_SCRIPT( "lobby2 doors clicked" )
 		NEXTPLACE1( kgobTicket1, kst1 );
 	ENDCHUNK
 
 OBJECT( "lobby2 map",  kgobLobby2Map, 44, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\lobby\lob2map.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/lobby/lob2map.bmp", 0, 0 )
 	CLICK_SCRIPT( "lobby 2 map clicked" ) 
 		CreateChildGob( GET_CURRENTPLACE(), kgobMapMain, kgobMapMain );
 	ENDCHUNK
@@ -364,7 +364,7 @@ OBJECT( "lobby2 exit", kgobLobby2Exit, 44, kcrsHand1 )
 	ENDCHUNK
 
 OBJECT( "Biopage 30 mask",  kgobLobby1m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\lobby\lobby1m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/lobby/lobby1m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If(fBIO_AVAIL( 30 ) );
 			// Bio Page already found

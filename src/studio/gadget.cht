@@ -173,7 +173,7 @@ GOBCHUNK("Body of gadget object", kidGadgetBody, kgokkRectHit)
 	DEFAULT_POSITION(0, 0, 150)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-REP_MBMP( CHID1(krepDefault), "studio\bmp\gdbody.bmp")
+REP_MBMP( CHID1(krepDefault), "studio/bmp/gdbody.bmp")
 CREATE_ANIM( "gadget created" )
 	CreateChildThis( kidGadgetVolumePath, kidGadgetVolumePath );
 ENDCHUNK
@@ -185,8 +185,8 @@ GOBCHUNK("Gadget play button", kidGadgetPlay, kgokkRectHit)
 	DEFAULT_POSITION(kxpGdPlay, kypGdPlay, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand1, CHID1(kchidClick), cidNil, ttPlayButton)
 ENDCHUNK
-	REP_MBMPREG(kcell1, "studio\bmp\gdplay.bmp", kxpregGdPlay, kypregGdPlay)
-	REP_MBMPREG(kcell2, "studio\bmp\gdstop.bmp", kxpregGdPlay, kypregGdPlay)
+	REP_MBMPREG(kcell1, "studio/bmp/gdplay.bmp", kxpregGdPlay, kypregGdPlay)
+	REP_MBMPREG(kcell2, "studio/bmp/gdstop.bmp", kxpregGdPlay, kypregGdPlay)
 	REP_ANIM(CHID(kst1, krepDefault), "play button, movie stopped")
 		// Got the play button showing -- make sure the movie isn't playing
 		// reset the video to the static cell
@@ -232,7 +232,7 @@ GOBCHUNK("Gadget Volume Thumb", kidGadgetVolumeThumb, kgokkRectNoHit)
 	DEFAULT_POSITION(0, 0, 100)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-	REP_MBMP(CHID1(krepDefault), "studio\bmp\gdvolthm.bmp")
+	REP_MBMP(CHID1(krepDefault), "studio/bmp/gdvolthm.bmp")
   
 // --------------------------------------------------------------------------------
 // The slider is the rectangular path the volume slider rolls around in.
@@ -283,9 +283,9 @@ GOBCHUNK("Gadget Voice Toggle", kidGadgetVoice, kgokkRectHit)
 	DEFAULT_POSITION(kxpGdMelVoice, kypGdMelVoice, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand1, CHID1(kchidClick), cidNil, ttMelanieOnOff)
 ENDCHUNK
-	REP_MBMPREG(CHID1(krepDefault), "studio\bmp\gdmelon.bmp", kxpregGdMelVoice, kypregGdMelVoice)
+	REP_MBMPREG(CHID1(krepDefault), "studio/bmp/gdmelon.bmp", kxpregGdMelVoice, kypregGdMelVoice)
 	ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseDnOn))
-	REP_MBMPREG(CHID(kst2, krepDefault), "studio\bmp\gdmeloff.bmp", kxpregGdMelVoice, kypregGdMelVoice)
+	REP_MBMPREG(CHID(kst2, krepDefault), "studio/bmp/gdmeloff.bmp", kxpregGdMelVoice, kypregGdMelVoice)
 	CREATE_ANIM("Mel Voice control")
 		// see if voice should be on or off
 		fMelAudio = GetProp( kpridMcZeeAudio ) & kflgMelAudio;
@@ -318,9 +318,9 @@ GOBCHUNK("Gadget Cancel", kidGadgetCancel, kgokkRectHit)
 	DEFAULT_POSITION(kxpGdClose, kypGdClose, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand1, CHID1(kchidClick), cidNil, ttCloseButton)
 ENDCHUNK
-	REP_MBMPREG(CHID1(krepDefault), "studio\bmp\gdclose.bmp", kxpregGdClose, kypregGdClose)
+	REP_MBMPREG(CHID1(krepDefault), "studio/bmp/gdclose.bmp", kxpregGdClose, kypregGdClose)
 	ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseDnOff))
-	REP_MBMPREG(CHID1(krepMouseDnOn), "studio\bmp\gdcloses.bmp", kxpregGdClose, kypregGdClose)
+	REP_MBMPREG(CHID1(krepMouseDnOn), "studio/bmp/gdcloses.bmp", kxpregGdClose, kypregGdClose)
 	CLICK_SCRIPT("Cancel clicked")
 		// stop playing video from playing if playing
 		If (StateGob(kidGadgetPlay) == kst2);		
@@ -358,10 +358,10 @@ GOBCHUNK("Gadget How button", kidGadgetHow, kgokkRectHit)
 	DEFAULT_POSITION(kxpGdHow, kypGdHow, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand1, CHID1(kchidClick), cidNil, ttHowButton)
 ENDCHUNK
-	REP_MBMPREG(CHID1(krepDefault), "studio\bmp\gdhow.bmp", kxpregGdHow, kypregGdHow)
+	REP_MBMPREG(CHID1(krepDefault), "studio/bmp/gdhow.bmp", kxpregGdHow, kypregGdHow)
 	ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID1(krepMouseDnOff))
-	REP_MBMPREG(CHID1(krepMouseDnOn), "studio\bmp\gdhows.bmp", kxpregGdHow, kypregGdHow)
+	REP_MBMPREG(CHID1(krepMouseDnOn), "studio/bmp/gdhows.bmp", kxpregGdHow, kypregGdHow)
 	CLICK_SCRIPT("button up clicked")
 		::gdCurrStep++;
 		// turn tooltips back off
@@ -379,15 +379,15 @@ GOBCHUNK("Gadget Why button", kidGadgetWhy, kgokkRectHit)
 	ACTION(fcustNil, fcustNil, fgrfst1, kcrsHand1, CHID1(kchidClick), cidNil, ttWhyButton)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow1, chidNil, cidNil, ttWhyButton)
 ENDCHUNK
-	REP_MBMPREG(CHID(kst1, krepDefault), "studio\bmp\gdwhy.bmp", kxpregGdWhy, kypregGdWhy)
+	REP_MBMPREG(CHID(kst1, krepDefault), "studio/bmp/gdwhy.bmp", kxpregGdWhy, kypregGdWhy)
 	ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseDnOff))
-	REP_MBMPREG(CHID(kst1, krepMouseDnOn), "studio\bmp\gdwhys.bmp", kxpregGdWhy, kypregGdWhy)
-	REP_MBMPREG(CHID(kst2, krepDefault), "studio\bmp\gdwhyd.bmp", kxpregGdWhy, kypregGdWhy)
+	REP_MBMPREG(CHID(kst1, krepMouseDnOn), "studio/bmp/gdwhys.bmp", kxpregGdWhy, kypregGdWhy)
+	REP_MBMPREG(CHID(kst2, krepDefault), "studio/bmp/gdwhyd.bmp", kxpregGdWhy, kypregGdWhy)
 	CLICK_SCRIPT("button clicked")
 //	  	ChangeStateGob( kidGadgetPlay, kst1 );
 	ENDCHUNK
-	REP_WAVE( CHID1( krepClicked ), "studio\sound\gemtip.wav" )
+	REP_WAVE( CHID1( krepClicked ), "studio/sound/gemtip.wav" )
 
 // -----------------------------------------------------
 // Selector up button
@@ -396,10 +396,10 @@ GOBCHUNK("Gadget up button", kidGadgetSelectorUp, kgokkRectHit)
 	DEFAULT_POSITION(kxpGdSelUp, kypGdSelUp, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand1, CHID1(kchidClick), cidNil, ttNextMovie)
 ENDCHUNK
-	REP_MBMPREG(CHID(kst1, krepDefault), "studio\bmp\gdselup.bmp", kxpregGdSelUp, kypregGdSelUp)
+	REP_MBMPREG(CHID(kst1, krepDefault), "studio/bmp/gdselup.bmp", kxpregGdSelUp, kypregGdSelUp)
 	ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseDnOff))
-	REP_MBMPREG(CHID(kst1, krepMouseDnOn), "studio\bmp\gdselups.bmp", kxpregGdSelUp, kypregGdSelUp)
+	REP_MBMPREG(CHID(kst1, krepMouseDnOn), "studio/bmp/gdselups.bmp", kxpregGdSelUp, kypregGdSelUp)
 	ADOPT_WAVE( kcnoPageUpWav, CHID1( krepClicked ))
 
 	CLICK_SCRIPT("button up clicked")
@@ -446,12 +446,12 @@ GOBCHUNK("Gadget selector number", kidGadgetSelectorNum, gokkNoHit)
 	DEFAULT_POSITION(kxpGdMovieNum, kypGdMovieNum, 200)
 //	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow1, CHID1(kchidClick), cidNil, cnoNil)
 ENDCHUNK
-	REP_MBMPREG(CHID(kst1, krepDefault), "studio\bmp\gdmovie1.bmp", kxpregGdMovieNum, kypregGdMovieNum)
-	REP_MBMPREG(CHID(kst2, krepDefault), "studio\bmp\gdmovie2.bmp", kxpregGdMovieNum, kypregGdMovieNum)
-	REP_MBMPREG(CHID(kst3, krepDefault), "studio\bmp\gdmovie3.bmp", kxpregGdMovieNum, kypregGdMovieNum)
-	REP_MBMPREG(CHID(kst4, krepDefault), "studio\bmp\gdmovie4.bmp", kxpregGdMovieNum, kypregGdMovieNum)
-	REP_MBMPREG(CHID(kst5, krepDefault), "studio\bmp\gdmovie5.bmp", kxpregGdMovieNum, kypregGdMovieNum)
-	REP_MBMPREG(CHID(kst6, krepDefault), "studio\bmp\gdmovie6.bmp", kxpregGdMovieNum, kypregGdMovieNum)
+	REP_MBMPREG(CHID(kst1, krepDefault), "studio/bmp/gdmovie1.bmp", kxpregGdMovieNum, kypregGdMovieNum)
+	REP_MBMPREG(CHID(kst2, krepDefault), "studio/bmp/gdmovie2.bmp", kxpregGdMovieNum, kypregGdMovieNum)
+	REP_MBMPREG(CHID(kst3, krepDefault), "studio/bmp/gdmovie3.bmp", kxpregGdMovieNum, kypregGdMovieNum)
+	REP_MBMPREG(CHID(kst4, krepDefault), "studio/bmp/gdmovie4.bmp", kxpregGdMovieNum, kypregGdMovieNum)
+	REP_MBMPREG(CHID(kst5, krepDefault), "studio/bmp/gdmovie5.bmp", kxpregGdMovieNum, kypregGdMovieNum)
+	REP_MBMPREG(CHID(kst6, krepDefault), "studio/bmp/gdmovie6.bmp", kxpregGdMovieNum, kypregGdMovieNum)
 
 // -----------------------------------------------------
 // Selector down button
@@ -460,10 +460,10 @@ GOBCHUNK("Gadget down button", kidGadgetSelectorDown, kgokkRectHit)
 	DEFAULT_POSITION(kxpGdSelDn, kypGdSelDn, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsHand1, CHID1(kchidClick), cidNil, ttPreviousMovie)
 ENDCHUNK
-	REP_MBMPREG(CHID(kst1, krepDefault), "studio\bmp\gdseldn.bmp", kxpregGdSelDn, kypregGdSelDn)
+	REP_MBMPREG(CHID(kst1, krepDefault), "studio/bmp/gdseldn.bmp", kxpregGdSelDn, kypregGdSelDn)
 	ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseUpOn))
 	ADOPT_MBMP(LAST_MBMP, CHID(kst1, krepMouseDnOff))
-	REP_MBMPREG(CHID(kst1, krepMouseDnOn), "studio\bmp\gdseldns.bmp", kxpregGdSelDn, kypregGdSelDn)
+	REP_MBMPREG(CHID(kst1, krepMouseDnOn), "studio/bmp/gdseldns.bmp", kxpregGdSelDn, kypregGdSelDn)
 	ADOPT_WAVE( kcnoPageDnWav, CHID1( krepClicked ))
 	CLICK_SCRIPT("button down clicked")
 		::gdUpSelected = fFalse;
@@ -520,12 +520,12 @@ GOBCHUNK("Gadget movie avi", kidGadgetAvi, gokkNoHit)
 	DEFAULT_POSITION( 0, 0, 100)
 //	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow1, CHID1(kchidClick), cidNil, cnoNil)
 ENDCHUNK
-	REP_MBMP(CHID(kst1, krepDefault), "studio\bmp\gdavi1.bmp")
-	REP_MBMP(CHID(kst2, krepDefault), "studio\bmp\gdavi3.bmp")
-	REP_MBMP(CHID(kst3, krepDefault), "studio\bmp\gdavi2.bmp")
-	REP_MBMP(CHID(kst4, krepDefault), "studio\bmp\gdavi6.bmp")
-	REP_MBMP(CHID(kst5, krepDefault), "studio\bmp\gdavi5.bmp")
-	REP_MBMP(CHID(kst6, krepDefault), "studio\bmp\gdavi4.bmp")
+	REP_MBMP(CHID(kst1, krepDefault), "studio/bmp/gdavi1.bmp")
+	REP_MBMP(CHID(kst2, krepDefault), "studio/bmp/gdavi3.bmp")
+	REP_MBMP(CHID(kst3, krepDefault), "studio/bmp/gdavi2.bmp")
+	REP_MBMP(CHID(kst4, krepDefault), "studio/bmp/gdavi6.bmp")
+	REP_MBMP(CHID(kst5, krepDefault), "studio/bmp/gdavi5.bmp")
+	REP_MBMP(CHID(kst6, krepDefault), "studio/bmp/gdavi4.bmp")
 	REP_VIDEO(CHID(kst7, krepDefault), "proj1.avi", fTrue)
 	REP_VIDEO(CHID(kst8, krepDefault), "proj2.avi", fTrue)
 	REP_VIDEO(CHID(kst9, krepDefault), "proj3.avi", fTrue)
@@ -543,7 +543,7 @@ GOBCHUNK("Gadget text area", kidGadgetWord, gokkNoHit)
 	DEFAULT_POSITION(0, 0, 200)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow1, chidNil, cidNil, cnoNil)
 ENDCHUNK
-	REP_MBMP(CHID(kst1, krepDefault), "studio\bmp\gdword.bmp")
+	REP_MBMP(CHID(kst1, krepDefault), "studio/bmp/gdword.bmp")
 	CREATE_ANIM("Text box created")
 		CreateChildThis(kidGadgetTextBox, kidGadgetTextBox);
 	ENDCHUNK
@@ -581,51 +581,51 @@ GOBCHUNK("Gadget locker picture", kidGadgetLockerPict, gokkNoHit)
 	ACTION(fcustNil, fcustNil, fgrfstAll, kcrsArrow1, chidNil, cidNil, cnoNil)
 ENDCHUNK
 	
-	REP_MBMP(kcell1, "studio\bmp\pnshot7.bmp")
-	REP_MBMP(kcell2, "studio\bmp\pnshot7a.bmp")
-	REP_MBMP(kcell3, "studio\bmp\pnshot7b.bmp")
-	REP_MBMP(kcell4, "studio\bmp\pnshot7c.bmp")
-	REP_MBMP(kcell5, "studio\bmp\pnshot7d.bmp")
-	REP_MBMP(kcell6, "studio\bmp\pnshot7e.bmp")
-	REP_MBMP(kcell7, "studio\bmp\pnshot7f.bmp")
+	REP_MBMP(kcell1, "studio/bmp/pnshot7.bmp")
+	REP_MBMP(kcell2, "studio/bmp/pnshot7a.bmp")
+	REP_MBMP(kcell3, "studio/bmp/pnshot7b.bmp")
+	REP_MBMP(kcell4, "studio/bmp/pnshot7c.bmp")
+	REP_MBMP(kcell5, "studio/bmp/pnshot7d.bmp")
+	REP_MBMP(kcell6, "studio/bmp/pnshot7e.bmp")
+	REP_MBMP(kcell7, "studio/bmp/pnshot7f.bmp")
 
-	REP_MBMP(kcell8, "studio\bmp\pnshot5.bmp")
-	REP_MBMP(kcell9, "studio\bmp\pnshot5a.bmp")
-	REP_MBMP(kcell10, "studio\bmp\pnshot5b.bmp")
-	REP_MBMP(kcell11, "studio\bmp\pnshot5c.bmp")
-	REP_MBMP(kcell12, "studio\bmp\pnshot5d.bmp")
+	REP_MBMP(kcell8, "studio/bmp/pnshot5.bmp")
+	REP_MBMP(kcell9, "studio/bmp/pnshot5a.bmp")
+	REP_MBMP(kcell10, "studio/bmp/pnshot5b.bmp")
+	REP_MBMP(kcell11, "studio/bmp/pnshot5c.bmp")
+	REP_MBMP(kcell12, "studio/bmp/pnshot5d.bmp")
 
-	REP_MBMP(kcell13, "studio\bmp\pnshot9a.bmp")
-	REP_MBMP(kcell14, "studio\bmp\pnshot9b.bmp")
-	REP_MBMP(kcell15, "studio\bmp\pnshot9c.bmp")
+	REP_MBMP(kcell13, "studio/bmp/pnshot9a.bmp")
+	REP_MBMP(kcell14, "studio/bmp/pnshot9b.bmp")
+	REP_MBMP(kcell15, "studio/bmp/pnshot9c.bmp")
 
 	// Review::temps - need bitmaps for project 6
 
-	REP_MBMP(kcell16, "studio\bmp\pnshot4.bmp")
-	REP_MBMP(kcell17, "studio\bmp\pnshot4a.bmp")
-	REP_MBMP(kcell18, "studio\bmp\pnshot4b.bmp")
-	REP_MBMP(kcell19, "studio\bmp\pnshot4c.bmp")
-	REP_MBMP(kcell20, "studio\bmp\pnshot4d.bmp")
-	REP_MBMP(kcell21, "studio\bmp\pnshot4e.bmp")
+	REP_MBMP(kcell16, "studio/bmp/pnshot4.bmp")
+	REP_MBMP(kcell17, "studio/bmp/pnshot4a.bmp")
+	REP_MBMP(kcell18, "studio/bmp/pnshot4b.bmp")
+	REP_MBMP(kcell19, "studio/bmp/pnshot4c.bmp")
+	REP_MBMP(kcell20, "studio/bmp/pnshot4d.bmp")
+	REP_MBMP(kcell21, "studio/bmp/pnshot4e.bmp")
 
-	REP_MBMP(kcell22, "studio\bmp\pnshot6.bmp")
-	REP_MBMP(kcell23, "studio\bmp\pnshot6a.bmp")
-	REP_MBMP(kcell24, "studio\bmp\pnshot6b.bmp")
-	REP_MBMP(kcell25, "studio\bmp\pnshot6c.bmp")
-	REP_MBMP(kcell26, "studio\bmp\pnshot6d.bmp")
-	REP_MBMP(kcell27, "studio\bmp\pnshot6e.bmp")
-	REP_MBMP(kcell28, "studio\bmp\pnshot6f.bmp")
-	REP_MBMP(kcell29, "studio\bmp\pnshot6g.bmp")
-	REP_MBMP(kcell30, "studio\bmp\pnshot6h.bmp")
-	REP_MBMP(kcell31, "studio\bmp\pnshot6i.bmp")
+	REP_MBMP(kcell22, "studio/bmp/pnshot6.bmp")
+	REP_MBMP(kcell23, "studio/bmp/pnshot6a.bmp")
+	REP_MBMP(kcell24, "studio/bmp/pnshot6b.bmp")
+	REP_MBMP(kcell25, "studio/bmp/pnshot6c.bmp")
+	REP_MBMP(kcell26, "studio/bmp/pnshot6d.bmp")
+	REP_MBMP(kcell27, "studio/bmp/pnshot6e.bmp")
+	REP_MBMP(kcell28, "studio/bmp/pnshot6f.bmp")
+	REP_MBMP(kcell29, "studio/bmp/pnshot6g.bmp")
+	REP_MBMP(kcell30, "studio/bmp/pnshot6h.bmp")
+	REP_MBMP(kcell31, "studio/bmp/pnshot6i.bmp")
 
-	REP_MBMP(kcell32, "studio\bmp\pnshot8.bmp")
-	REP_MBMP(kcell33, "studio\bmp\pnshot8a.bmp")
-	REP_MBMP(kcell34, "studio\bmp\pnshot8b.bmp")
-	REP_MBMP(kcell35, "studio\bmp\pnshot8c.bmp")
-	REP_MBMP(kcell36, "studio\bmp\pnshot8d.bmp")
+	REP_MBMP(kcell32, "studio/bmp/pnshot8.bmp")
+	REP_MBMP(kcell33, "studio/bmp/pnshot8a.bmp")
+	REP_MBMP(kcell34, "studio/bmp/pnshot8b.bmp")
+	REP_MBMP(kcell35, "studio/bmp/pnshot8c.bmp")
+	REP_MBMP(kcell36, "studio/bmp/pnshot8d.bmp")
 
-	REP_MBMP(kcell37, "studio\bmp\pnclosed.bmp")
+	REP_MBMP(kcell37, "studio/bmp/pnclosed.bmp")
 	REP_ANIM(CHID(kst1, krepDefault), "Show closed locker")
 		Cell(kcell37, 0, 0, 1);
 	ENDCHUNK	

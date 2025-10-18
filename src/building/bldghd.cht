@@ -108,7 +108,7 @@ ENDCHUNK
 // ----------------------------------------------------------
 
 OBJECT( "ticket1-far view",  kgobTicket1, 0, kcrsHand1 )
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\ticket\ticket1.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/ticket/ticket1.pbm" )
 	CREATE_SCRIPT( "ticket1: create" )
 		SETPALETTE( kpalSocTicket );
 		SETKEYS(kflgBuildingMin);
@@ -127,7 +127,7 @@ OBJECT( "ticket1-far view",  kgobTicket1, 0, kcrsHand1 )
 // Definitions for the ticket booth place 2- close up view
 // -------------------------------------------------------
 OBJECT( "ticket2-zoom view",  kgobTicket2, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\ticket\ticket2.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/ticket/ticket2.pbm" )
 	CREATE_SCRIPT( "ticket2 created" )
 		SETPALETTE( kpalSocTicket );
 		SETKEYS(kflgBuildingAll);
@@ -152,7 +152,7 @@ OBJECT( "ticket2-zoom view",  kgobTicket2, 0, kcrsArrow1 )
 // lobby 
 
 OBJECT( "lobby1-front view",  kgobLobby1, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\lobby\lobby1.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/lobby/lobby1.pbm" )
 	CREATE_SCRIPT( "lobby1 startup" )
 
 		SETPALETTE( kpalSocLobby );
@@ -185,7 +185,7 @@ OBJECT( "lobby1-front view",  kgobLobby1, 0, kcrsArrow1 )
 // Stuff for view #2 of lobby.
 // ------------------------------------------------------------------------
 OBJECT( "lobby-back view",  kgobLobby2, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\lobby\lobby2.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/lobby/lobby2.pbm" )
 	CREATE_SCRIPT( "lobby2 startup" )
 		SETPALETTE( kpalSocLobby );
 		SETKEYS(kflgBuildingAll);
@@ -207,7 +207,7 @@ OBJECT( "lobby-back view",  kgobLobby2, 0, kcrsArrow1 )
 // Snackbar backgrounds
 
 OBJECT( "snackbar", kgobSnackBar, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault),  "building\pbm\snackbar\snackbr2.pbm" )
+REP_PPMBMP( CHID1( krepDefault),  "building/pbm/snackbar/snackbr2.pbm" )
 CREATE_SCRIPT( "snackbar create" )
 	SETPALETTE( kpalSocLobby );
 	SETKEYS(kflgBuildingAll);
@@ -226,8 +226,8 @@ ENDCHUNK
 
 OBJECT( "theatre1",  kgobTheatre1, 0, kcrsArrow1 )
 	REP_RECT(CHID(kst1, krepDefault), "Theatre1 State1 Rep", 0, 0, 640, 480)
- 	REP_PPMBMP(CHID(kst2, krepDefault),  "building\pbm\theatre\theatre1.pbm")
-	REP_PPMBMP(CHID(kst3, krepDefault),  "building\pbm\theatre\the1dark.pbm")
+	REP_PPMBMP(CHID(kst2, krepDefault),  "building/pbm/theatre/theatre1.pbm")
+	REP_PPMBMP(CHID(kst3, krepDefault),  "building/pbm/theatre/the1dark.pbm")
 	CREATE_SCRIPT( "theatre1: create" )
 		DEBUGCMD(PrintStr("Creating Theatre1"));
 		SETPALETTE( kpalSocTheatre);
@@ -254,7 +254,7 @@ OBJECT( "theatre1",  kgobTheatre1, 0, kcrsArrow1 )
 // back view of the theatre & its objects
 // ---------------------------------------------------------
 OBJECT( "theatre2", kgobTheatre2, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1( krepDefault ),  "building\pbm\theatre\theatre2.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ),  "building/pbm/theatre/theatre2.pbm" )
 	CREATE_SCRIPT( "theatre2: create" )
 		SETPALETTE( kpalSocTheatre );
 		SETKEYS(kflgBuildingAll);
@@ -273,7 +273,7 @@ OBJECT( "theatre2", kgobTheatre2, 0, kcrsArrow1 )
 // front left view of the theatre & its objects
 // ---------------------------------------------------------
 OBJECT( "theatre3", kgobTheatre3, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1( krepDefault ),  "building\pbm\theatre\theatre3.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ),  "building/pbm/theatre/theatre3.pbm" )
 	CREATE_SCRIPT( "theatre3: create")
 		SETPALETTE( kpalSocTheatre );
 		SETKEYS(kflgBuildingAll);
@@ -288,7 +288,7 @@ OBJECT( "theatre3", kgobTheatre3, 0, kcrsArrow1 )
 // Front right view of the theatre & its objects
 // ---------------------------------------------------------
 OBJECT( "theatre4",  kgobTheatre4, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\theatre\theatre4.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/theatre/theatre4.pbm" )
 	CREATE_SCRIPT( "theatre4: create" )
 		ASSERT(GLOBAL(kstEntry) >= kst2 && GLOBAL(kstEntry) <= kst4);
 		DEBUGCMD( PrintStr("Create theatre4 object") );
@@ -342,7 +342,7 @@ OBJECT( "backstage", kgobBackstage1, 0, kcrsArrow1 )
 		CreateChildThis( kgobBackstage1Proj, kgobBackstage1Proj );
 		CreateChildThis( kgobBackstageMcZee, kgobBackstageMcZee );
 	ENDCHUNK
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\backstag\backstg1.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/backstag/backstg1.pbm" )
 
 #ifdef DEBUG
 	// If we needed to implement multiple-state entries from the map to the
@@ -354,7 +354,7 @@ OBJECT( "backstage", kgobBackstage1, 0, kcrsArrow1 )
 #endif	// DEBUG
 
 OBJECT( "backstage view 2 ", kgobBackstage2, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1( krepDefault ), "building\pbm\backstag\backstg2.pbm" )
+	REP_PPMBMP( CHID1( krepDefault ), "building/pbm/backstag/backstg2.pbm" )
 	CREATE_SCRIPTST( "startup", kst1 )
 		SETPALETTE( kpalSocBackstage );
 		SETKEYS(kflgBuildingAll);
@@ -374,34 +374,34 @@ OBJECT( "backstage view 2 ", kgobBackstage2, 0, kcrsArrow1 )
 
 // -----------------------------------------------------
 OBJECT( "bs2 - left door", kgobBackstage2Left, 33, kcrsLeft )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\backstag\bk2ltdr2.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/backstag/bk2ltdr2.bmp", 0, 0 )
 	CLICK_SCRIPT( "bs2 left door clicked!" )
 		NEXTPLACE1( kgobTheatre4, kst2 );
 	ENDCHUNK
 
 // -----------------------------------------------------
 OBJECT( "bs2 - right door", kgobBackstage2Right, 33, kcrsRight)
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\backstag\bk2rtdr2.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/backstag/bk2rtdr2.bmp", 0, 0 )
 	CLICK_SCRIPT( "bs2 right door clicked!" )
 		NEXTPLACE1( kgobTheatre3, kst1 );
 	ENDCHUNK
 
 // -----------------------------------------------------
 OBJECT( "backstage2 map", kgobBackstage2Map, 44, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\backstag\bk2map.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/backstag/bk2map.bmp", 0, 0 )
 	CLICK_SCRIPT( "backstage2 map clicked" ) 
 		CreateChildGob( GET_CURRENTPLACE(), kgobMapMain, kgobMapMain );
 	ENDCHUNK
 
 // -----------------------------------------------------
 OBJECT( "backstage2 exit", kgobBackstage2Exit, 44, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ), "building\bitmaps\backstag\bk2quit.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ), "building/bitmaps/backstag/bk2quit.bmp", 0, 0 )
 	CLICK_SCRIPT( "backstage2 exit clicked" ) 
 		QUITAPP();
 	ENDCHUNK
 
 OBJECT( "Biopage 40 mask",  kgobBackstage2m1, 0, kcrsHand1 )
-	REP_MASK( CHID1( krepDefault ),  "building\bitmaps\backstag\bkstg2m1.bmp", 0, 0 )
+	REP_MASK( CHID1( krepDefault ),  "building/bitmaps/backstag/bkstg2m1.bmp", 0, 0 )
 	CLICK_SCRIPT( "mask clicked" ) 
 		If( fBIO_AVAIL( 40 ) );
 			// Bio Page already found
@@ -418,7 +418,7 @@ OBJECT( "Biopage 40 mask",  kgobBackstage2m1, 0, kcrsHand1 )
 // Inspiration (Ideas) room
 
 OBJECT( "inspiration view 1", kgobInspiration1, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1(krepDefault), "building\pbm\inspirat\inspir1.pbm" )
+	REP_PPMBMP( CHID1(krepDefault), "building/pbm/inspirat/inspir1.pbm" )
 	CREATE_SCRIPTST( "startup", kst1 )
 		SETKEYS(kflgBuildingAll);
 		SETPALETTE( kpalSocInspiration );
@@ -449,7 +449,7 @@ OBJECT( "inspiration view 1", kgobInspiration1, 0, kcrsArrow1 )
 // Inspiration 2 - back view
 // -----------------------------------------------------
 OBJECT( "inspiration view 2", kgobInspiration2, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1(krepDefault), "building\pbm\inspirat\inspir2.pbm" )
+REP_PPMBMP( CHID1(krepDefault), "building/pbm/inspirat/inspir2.pbm" )
 CREATE_SCRIPT( "startup" )
 	SETPALETTE( kpalSocInspiration );
 	SETKEYS(kflgBuildingAll);
@@ -468,7 +468,7 @@ ENDCHUNK
 // Inspiration 3 - left view
 // -----------------------------------------------------
 OBJECT( "inspiration view 3",  kgobInspiration3, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1(krepDefault), "building\pbm\inspirat\inspir3.pbm" )
+REP_PPMBMP( CHID1(krepDefault), "building/pbm/inspirat/inspir3.pbm" )
 CREATE_SCRIPT( "startup" )
 	SETPALETTE( kpalSocInspiration );
 	SETKEYS(kflgBuildingAll);
@@ -486,7 +486,7 @@ ENDCHUNK
 // Inspiration 4 - right view
 // -----------------------------------------------------
 OBJECT( "inspiration view 4",  kgobInspiration4, 0, kcrsArrow1 )
-	REP_PPMBMP( CHID1(krepDefault), "building\pbm\inspirat\inspir4.pbm" )
+	REP_PPMBMP( CHID1(krepDefault), "building/pbm/inspirat/inspir4.pbm" )
 	CREATE_SCRIPT( "startup" )
 		SETPALETTE( kpalSocInspiration );
 		SETKEYS(kflgBuildingAll);
@@ -507,8 +507,8 @@ OBJECT( "inspiration view 4",  kgobInspiration4, 0, kcrsArrow1 )
 // -----------------------------------------------------
 
 OBJECT( "studio view 1",  kgobStudio1, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault),"building\pbm\studio\studio1.pbm" )
-REP_PPMBMP( CHID( kst2, krepDefault),"building\pbm\studio\studio1b.pbm" )	// state 2=tools background
+REP_PPMBMP( CHID1( krepDefault),"building/pbm/studio/studio1.pbm" )
+REP_PPMBMP( CHID( kst2, krepDefault),"building/pbm/studio/studio1b.pbm" )	// state 2=tools background
 CREATE_SCRIPT( "studio1: startup" )
 	ASSERT(GLOBAL(kstEntry) == kst1 || GLOBAL(kstEntry) == kst2);
 
@@ -551,7 +551,7 @@ ENDCHUNK
 // -----------------------------------------------------
 
 OBJECT( "studio view 2 ",  kgobStudio2, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault), "building\pbm\studio\studio2.pbm" )
+REP_PPMBMP( CHID1( krepDefault), "building/pbm/studio/studio2.pbm" )
 CREATE_SCRIPT( "studio2: startup" )
 	SETPALETTE( kpalSocStudio );
 	SETKEYS(kflgBuildingAll);
@@ -575,7 +575,7 @@ ENDCHUNK
 
 
 OBJECT( "studio view 3 ",  kgobStudio3, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault), "building\pbm\studio\studio3.pbm" )
+REP_PPMBMP( CHID1( krepDefault), "building/pbm/studio/studio3.pbm" )
 CREATE_SCRIPT( "studio3 : startup" )
 	SETPALETTE( kpalSocStudio );
 	SETKEYS(kflgBuildingAll);
@@ -594,7 +594,7 @@ ENDCHUNK
 // -----------------------------------------------------
 
 OBJECT( "studio view 4",  kgobStudio4, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault), "building\pbm\studio\studio4.pbm" )
+REP_PPMBMP( CHID1( krepDefault), "building/pbm/studio/studio4.pbm" )
 CREATE_SCRIPT( "studio4: startup" )
 	SETPALETTE( kpalSocStudio );
 	SETKEYS(kflgBuildingAll);
@@ -615,7 +615,7 @@ ENDCHUNK
 // Projects room
 
 OBJECT( "projects view 1", kgobProjects1, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault ),  "building\pbm\projects\project1.pbm" )
+REP_PPMBMP( CHID1( krepDefault ),  "building/pbm/projects/project1.pbm" )
 CREATE_SCRIPT( "projects1: startup" )
 	
 	// Projects1 states:	kst1 == Entry from another room;
@@ -686,7 +686,7 @@ ENDCHUNK
 // -----------------------------------------------------
 
 OBJECT( "projects view 2 ", kgobProjects2, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault ),  "building\pbm\projects\project2.pbm" )
+REP_PPMBMP( CHID1( krepDefault ),  "building/pbm/projects/project2.pbm" )
 CREATE_SCRIPT( "projects2: startup" )
 	SETPALETTE( kpalSocProjects );
 	SETKEYS(kflgBuildingAll);
@@ -709,7 +709,7 @@ ENDCHUNK
 // Called Projects Right on the flowchart.
 // -----------------------------------------------------
 OBJECT( "projects view 3",  kgobProjects3, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault ),  "building\pbm\projects\project3.pbm" )
+REP_PPMBMP( CHID1( krepDefault ),  "building/pbm/projects/project3.pbm" )
 CREATE_SCRIPT( "projects3: startup" )
 	SETPALETTE( kpalSocProjects );
 	SETKEYS(kflgBuildingAll);
@@ -724,7 +724,7 @@ ENDCHUNK
 // Called Projects Left on the flowchart.
 // -----------------------------------------------------
 OBJECT( "projects view 4",  kgobProjects4, 0, kcrsArrow1 )
-REP_PPMBMP( CHID1( krepDefault ),  "building\pbm\projects\project4.pbm" )
+REP_PPMBMP( CHID1( krepDefault ),  "building/pbm/projects/project4.pbm" )
 CREATE_SCRIPT( "projects4: startup" )
 	SETPALETTE( kpalSocProjects );
 	SETKEYS(kflgBuildingAll);
@@ -746,8 +746,8 @@ OBJECT( "imaginopolis",  kgobImagin, 0, kcrsArrow1 )
 		PLAYMIDI( cnoNil );			// roller coaster music
 		CreateChildThis( kgobMcZeeRoller, kgobMcZeeRoller );
 	ENDCHUNK
-	REP_PPMBMP( CHID( kst1, krepDefault ),  "building\pbm\imagin\back1.pbm" )
-	REP_PPMBMP( CHID( kst2, krepDefault ),  "building\pbm\imagin\back2.pbm" )
-	REP_PPMBMP( CHID( kst3, krepDefault ),  "building\pbm\imagin\back3.pbm" )
-	REP_PPMBMP( CHID( kst4, krepDefault ),  "building\pbm\imagin\back4.pbm" )
-	REP_PPMBMP( CHID( kst5, krepDefault ),  "building\pbm\imagin\back5.pbm" )
+	REP_PPMBMP( CHID( kst1, krepDefault ),  "building/pbm/imagin/back1.pbm" )
+	REP_PPMBMP( CHID( kst2, krepDefault ),  "building/pbm/imagin/back2.pbm" )
+	REP_PPMBMP( CHID( kst3, krepDefault ),  "building/pbm/imagin/back3.pbm" )
+	REP_PPMBMP( CHID( kst4, krepDefault ),  "building/pbm/imagin/back4.pbm" )
+	REP_PPMBMP( CHID( kst5, krepDefault ),  "building/pbm/imagin/back5.pbm" )
