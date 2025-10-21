@@ -247,9 +247,16 @@ bool NTL::FInit(void)
         goto LFail;
 
     // Load fonts
-    fRet = _FLoadFontTable();
+    if (!_FLoadFontTable())
+        goto LFail;
+
     Assert(_pgst->IvMac() > 0, "No fonts loaded");
     Assert(_onnSystem != 0, "System font number not set");
+
+    if (_pgst->IvMac() == 0)
+        goto LFail;
+
+    fRet = fTrue;
 
 LFail:
     if (!fRet)
