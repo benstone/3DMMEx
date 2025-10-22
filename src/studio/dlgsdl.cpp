@@ -6,12 +6,39 @@
     3DMM SDL Dialog support
 
 ***************************************************************************/
+#include <cstdio>
 #include "frame.h"
 ASSERTNAME
 
+#include "utestres.h"
+
 bool DLG::_FInit(void)
 {
-    return fFalse;
+    bool fRet = fFalse;
+    const int32_t kcdit = 2;
+
+    // We only support certain dialog boxes
+    if (_rid != dlidAbnormalExit && _rid != dlidInitFailed && _rid != dlidInitFailedOOM && _rid != dlidGenericErrorBox)
+        goto LFail;
+
+    // Allocate some dialog items to allow setting text in error messages
+    if (!FEnsureSpace(kcdit, SIZEOF(int32_t), fgrpNil))
+        goto LFail;
+
+    DIT dit;
+    ClearPb(&dit, SIZEOF(dit));
+    dit.ditk = ditkEditText;
+
+    for (int32_t idit = 0; idit < kcdit; idit++)
+    {
+        if (!FInsert(idit, 0, pvNil, &dit))
+            goto LFail;
+    }
+
+    fRet = fTrue;
+
+LFail:
+    return fRet;
 }
 
 /***************************************************************************
@@ -20,8 +47,51 @@ bool DLG::_FInit(void)
 ***************************************************************************/
 int32_t DLG::IditDo(int32_t iditFocus)
 {
-    RawRtn();
-    return ivNil;
+    STN stnMessage;
+    STN stnT;
+    U8SZ u8szTitle;
+    U8SZ u8szMessage;
+
+    switch (_rid)
+    {
+    case dlidAbnormalExit:
+        stnMessage = PszLit("3D Movie Maker ended unexpectedly. Attempting to clean up.");
+        break;
+
+    case dlidInitFailed:
+        stnMessage = PszLit("3D Movie Maker could not start.");
+        break;
+
+    case dlidInitFailedOOM:
+        stnMessage = PszLit("3D Movie Maker could not start because there is not enough memory available.");
+        break;
+
+    case dlidGenericErrorBox:
+        stnT = PszLit("(unknown)");
+        GetStn(1, &stnT);
+        stnMessage.FFormatSz(PszLit("3D Movie Maker could not start because the following function failed: %s"), &stnT);
+        break;
+
+    default:
+        Bug("Unimplemented dialog box type");
+        stnMessage.FFormatSz(PszLit("Unimplemented dialog box type: %d"), _rid);
+        break;
+    }
+
+    vpappb->GetStnAppName(&stnT);
+    stnT.GetUtf8Sz(u8szTitle);
+
+    stnMessage.GetUtf8Sz(u8szMessage);
+    if (SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, u8szTitle, u8szMessage, pvNil) != 0)
+    {
+        Bug(SDL_GetError());
+        // Cannot show a message box, so we will print to stderr instead.
+        fprintf(stderr, "%s\n", u8szMessage);
+    }
+
+    // This should return the ID of the dialog box item that dismissed the dialog.
+    // However, we don't have any dialog box item IDs, so we will just return non-zero to indicate success.
+    return 1;
 }
 
 /***************************************************************************
