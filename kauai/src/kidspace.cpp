@@ -1005,6 +1005,14 @@ bool GOK::_FFilterCmd(PCMD pcmd, CHID chidScript, bool *pfFilter)
     rglw[3] = pcmd->rglw[1];
     rglw[4] = pcmd->rglw[2];
     rglw[5] = pcmd->rglw[3];
+
+    if (rglw[1] == cidKey)
+    {
+        // Scripts use Win32 virtual key codes for keyboard handling
+        // Translate the key if required
+        rglw[3] = APPB::Win32VkFromVk(rglw[3]);
+    }
+
     fGokExists = FRunScript(chidScript, rglw, 6, &lw, &tRet);
     *pfFilter = FPure(lw) && tRet == tYes;
 

@@ -344,6 +344,9 @@ class APPB : public APPB_PAR
 
     virtual bool FIsMaximized();
     virtual bool FSetMaximized(bool fMaximized);
+
+    // Translate a key code from the current platform to a Win32 virtual key
+    static int32_t Win32VkFromVk(int32_t vk);
 };
 
 extern PAPPB vpappb;

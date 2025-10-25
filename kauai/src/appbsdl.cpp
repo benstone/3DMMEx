@@ -794,3 +794,40 @@ bool APPB::FSetMaximized(bool fMaximized)
         return fFalse;
     }
 }
+
+/***************************************************************************
+    Translate a key code from the current platform to a Win32 virtual key
+***************************************************************************/
+int32_t APPB::Win32VkFromVk(int32_t vk)
+{
+    // Only translate key codes that are used in scripts
+    switch (vk)
+    {
+    case SDL_KeyCode::SDLK_ESCAPE:
+        vk = 0x1b; // VK_ESCAPE
+        break;
+    case SDL_KeyCode::SDLK_BACKSPACE:
+        vk = 8; // VK_BACK
+        break;
+    case SDL_KeyCode::SDLK_LEFT:
+        vk = 0x25; // VK_LEFT
+        break;
+    case SDL_KeyCode::SDLK_UP:
+        vk = 0x26; // VK_UP
+        break;
+    case SDL_KeyCode::SDLK_RIGHT:
+        vk = 0x27; // VK_RIGHT
+        break;
+    case SDL_KeyCode::SDLK_DOWN:
+        vk = 0x28; // VK_DOWN
+        break;
+    case SDL_KeyCode::SDLK_DELETE:
+        vk = 0x2e; // VK_DELETE
+        break;
+    default:
+        // Not translated
+        break;
+    }
+
+    return vk;
+}

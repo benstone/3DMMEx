@@ -1243,3 +1243,12 @@ bool APPB::FSetMaximized(bool fMaximized)
         return FPure(ShowWindow(vwig.hwndApp, fMaximized ? SW_SHOWMAXIMIZED : SW_SHOWNORMAL));
     }
 }
+
+/***************************************************************************
+    Translate a key code from the current platform to a Win32 virtual key
+***************************************************************************/
+int32_t APPB::Win32VkFromVk(int32_t vk)
+{
+    // No translation required
+    return vk;
+}
