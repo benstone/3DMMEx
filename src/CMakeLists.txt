@@ -88,7 +88,6 @@ target_sources(studio
     "${PROJECT_SOURCE_DIR}/src/studio/utest.rc2"
 
     # Windows
-    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/src/studio/portfwin.cpp>
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/src/studio/mminstal.cpp>
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/src/studio/configwin.cpp>
 
@@ -96,7 +95,6 @@ target_sources(studio
 
     # TODO: replace with a module that saves settings to a file
     $<$<NOT:$<PLATFORM_ID:Windows>>:${PROJECT_SOURCE_DIR}/src/studio/configstub.cpp>
-    $<$<NOT:$<PLATFORM_ID:Windows>>:${PROJECT_SOURCE_DIR}/src/studio/portfstub.cpp>
 )
 
 if(3DMM_GUI STREQUAL "SDL")
@@ -104,6 +102,36 @@ if(3DMM_GUI STREQUAL "SDL")
         studio
         PRIVATE
         "${PROJECT_SOURCE_DIR}/src/studio/dlgsdl.cpp"
+    )
+
+    # Select portfolio
+    if (WIN32 OR APPLE OR (UNIX AND NOT APPLE))
+        # Use Native File Dialog Extended for file dialogs
+        include(FetchNativeFileDialogExtended)
+        target_sources(
+            studio
+            PRIVATE
+            "${PROJECT_SOURCE_DIR}/src/studio/portfnative.cpp"
+        )
+        target_link_libraries(
+            studio
+            PRIVATE
+            nfd::nfd
+        )
+    else()
+        # Portfolio not supported
+        target_sources(
+            studio
+            PRIVATE
+            "${PROJECT_SOURCE_DIR}/src/studio/portfstub.cpp"
+        )
+    endif()
+elseif(3DMM_GUI STREQUAL "Win32")
+    # Use original Win32 portfolio
+    target_sources(
+        studio
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/src/studio/portfwin.cpp"
     )
 endif()
 
