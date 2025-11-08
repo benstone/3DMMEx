@@ -691,6 +691,16 @@ void CEX::BuryCmh(PCMH pcmh)
         if (hNil != _hwndCapture && GetCapture() == _hwndCapture)
             ReleaseCapture();
         _hwndCapture = hNil;
+#elif defined(KAUAI_SDL)
+        int ret = SDL_CaptureMouse(SDL_FALSE);
+        if (ret == 0)
+        {
+            _fTrackingMouse = fFalse;
+        }
+        else
+        {
+            Bug(SDL_GetError());
+        }
 #endif // KAUAI_WIN32
         _pgobTrack = pvNil;
     }
@@ -1182,6 +1192,15 @@ void CEX::TrackMouse(PGOB pgob)
 #ifdef KAUAI_WIN32
     _hwndCapture = pgob->HwndContainer();
     SetCapture(_hwndCapture);
+#elif defined(KAUAI_SDL)
+    if (SDL_CaptureMouse(SDL_TRUE) == 0)
+    {
+        _fTrackingMouse = fTrue;
+    }
+    else
+    {
+        Warn(SDL_GetError());
+    }
 #endif // KAUAI_WIN32
 }
 
@@ -1199,6 +1218,17 @@ void CEX::EndMouseTracking(void)
             ReleaseCapture();
         _hwndCapture = hNil;
     }
+#elif defined(KAUAI_SDL)
+    if (pvNil != _pgobTrack)
+    {
+        if (_fTrackingMouse)
+        {
+            SDL_CaptureMouse(SDL_FALSE);
+            _fTrackingMouse = fFalse;
+        }
+    }
+#else
+    RawRtn();
 #endif // KAUAI_WIN32
     _pgobTrack = pvNil;
 }
@@ -1221,14 +1251,28 @@ void CEX::Suspend(bool fSuspend)
 {
     AssertThis(0);
 
-#ifdef KAUAI_WIN32
-    if (pvNil == _pgobTrack || hNil == _hwndCapture)
+    if (pvNil == _pgobTrack)
         return;
 
+#ifdef KAUAI_WIN32
+    if (hNil == _hwndCapture)
+        return;
     if (fSuspend && GetCapture() == _hwndCapture)
         ReleaseCapture();
     else if (!fSuspend && GetCapture() != _hwndCapture)
         SetCapture(_hwndCapture);
+#elif defined(KAUAI_WIN32)
+    if (_fTrackingMouse)
+    {
+        if (fSuspend)
+        {
+            SDL_CaptureMouse(SDL_FALSE);
+        }
+        else
+        {
+            SDL_CaptureMouse(SDL_TRUE);
+        }
+    }
 #endif // KAUAI_WIN32
 }
 

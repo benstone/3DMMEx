@@ -261,6 +261,10 @@ class CEX : public CEX_PAR
     HWND _hwndCapture; // the hwnd that we captured the mouse with
 #endif                 // KAUAI_WIN32
 
+#ifdef KAUAI_SDL
+    bool _fTrackingMouse;
+#endif // KAUAI_SDL
+
     // filter list and command queue
     PGL _pglcmhe;       // the command filter list
     PGL _pglcmd;        // the command queue
