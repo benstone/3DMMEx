@@ -729,8 +729,13 @@ void APPB::PositionCurs(int32_t xpScreen, int32_t ypScreen)
     AssertThis(0);
 
     SDL_WarpMouseGlobal(xpScreen, ypScreen);
-}
 
+    if (_fFlushCursor)
+    {
+        // Flush all mouse events
+        SDL_FlushEvents(SDL_MOUSEMOTION, SDL_MOUSEWHEEL);
+    }
+}
 /***************************************************************************
     Make sure the current cursor is being used by the system.
 ***************************************************************************/
