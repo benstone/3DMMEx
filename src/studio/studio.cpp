@@ -1551,7 +1551,7 @@ void STDIO::SetCurs(int32_t tool)
         Bug("Unknown tool type");
     }
 
-    pcurs = (PCURS)_pcrm->PbacoFetch('GGCR', cursID, CURS::FReadCurs);
+    pcurs = (PCURS)_pcrm->PbacoFetch(KLCONST4('G', 'G', 'C', 'R'), cursID, CURS::FReadCurs);
     if (pvNil != pcurs)
     {
         vpappb->SetCurs(pcurs);
