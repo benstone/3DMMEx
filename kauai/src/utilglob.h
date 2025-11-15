@@ -54,18 +54,6 @@ inline uint32_t TsCurrent(void)
 {
     return vpusac->TsCur();
 }
-inline uint32_t TsCurrentSystem(void)
-{
-#if defined(KAUAI_WIN32)
-    // n.b. WIN: timeGetTime is more accurate than GetTickCount
-    return MacWin(TickCount(), timeGetTime());
-#elif defined(KAUAI_SDL)
-    return SDL_GetTicks();
-#else
-    RawRtn();
-    return 0;
-#endif
-}
 inline uint32_t DtsCaret(void)
 {
 #if defined(KAUAI_WIN32)

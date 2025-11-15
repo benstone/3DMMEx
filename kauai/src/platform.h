@@ -36,5 +36,6 @@ uint32_t LwThreadCur(void);
 ***************************************************************************/
 
 extern const uint32_t kdtsSecond;
+extern uint32_t TsCurrentSystem(void);
 
 #endif //! PLATFORM_H
