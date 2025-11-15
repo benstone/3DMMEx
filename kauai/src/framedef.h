@@ -19,6 +19,8 @@
 #ifndef FRAMEDEF_H
 #define FRAMEDEF_H
 
+#include "endian.h"
+
 #ifdef MAC
 #define MacWin(mac, win) mac
 #define Mac(foo) foo

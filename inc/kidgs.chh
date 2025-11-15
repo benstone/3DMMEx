@@ -237,7 +237,7 @@
 		LONG _kacrFore _kacrBack
 
 #define PATTERN( _b1, _b2, _b3, _b4, _b5, _b6, _b7,  _b8 ) \
-		BYTE MacWin(_b1 _b2 _b3 _b4 _b5 _b6 _b7 _b8, \
+		BYTE BigLittle(_b1 _b2 _b3 _b4 _b5 _b6 _b7 _b8, \
 				    _b4 _b3 _b2 _b1 _b8 _b7 _b6 _b5)
 
 // ---------------------------------------------------------
@@ -301,9 +301,9 @@
 // constants for color fills and any other color references
 // ---------------------------------------------------------
 #define Transparent             0xffffffff
-#define Palette( _i )           BYTE MacWin( 0xfe 0 0 _i,  _i 0 0 0xfe ) LONG
-#define Invert                          BYTE MacWin( 0x00 0x00 0x00 0xff, 0xff 0x00 0x00 0x00 ) LONG
-#define Rgb( _r, _g, _b)        BYTE MacWin(0x01 _r _g _b, _b _g _r 0x01) LONG
+#define Palette( _i )           BYTE BigLittle( 0xfe 0 0 _i,  _i 0 0 0xfe ) LONG
+#define Invert                          BYTE BigLittle( 0x00 0x00 0x00 0xff, 0xff 0x00 0x00 0x00 ) LONG
+#define Rgb( _r, _g, _b)        BYTE BigLittle(0x01 _r _g _b, _b _g _r 0x01) LONG
 
 // ---------------------------------------------------------
 // The following is used to combine "button" state with
