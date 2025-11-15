@@ -80,7 +80,6 @@ void DeserializeTagfToTag(PTAGF ptagf, PTAG ptag)
 
 void SerializeTagToTagf(PTAG ptag, PTAGF ptagf)
 {
-    Assert(ptag->sid != ksidUseCrf, "Attempt to serialize open tag");
     ptagf->sid = ptag->sid;
     ptagf->_pcrf = 0;
     ptagf->ctg = ptag->ctg;
