@@ -31,4 +31,10 @@ class MUTX
 
 uint32_t LwThreadCur(void);
 
+/***************************************************************************
+    Universal scalable application clock and other time stuff
+***************************************************************************/
+
+extern const uint32_t kdtsSecond;
+
 #endif //! PLATFORM_H

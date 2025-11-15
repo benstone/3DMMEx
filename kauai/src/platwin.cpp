@@ -48,3 +48,8 @@ uint32_t LwThreadCur(void)
 {
     return GetCurrentThreadId();
 }
+
+/***************************************************************************
+    Universal scalable application clock and other time stuff
+***************************************************************************/
+const uint32_t kdtsSecond = 1000;
