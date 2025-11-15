@@ -260,36 +260,7 @@ inline int32_t BvSubPvs(void *pv1, void *pv2)
     return (uint8_t *)pv1 - (uint8_t *)pv2;
 }
 
-/****************************************
-    Mutex (critical section) object
-****************************************/
-typedef class MUTX *PMUTX;
-class MUTX
-{
-  protected:
-#ifdef WIN
-    CRITICAL_SECTION _crit;
-#endif // WIN
-
-  public:
-    MUTX(void)
-    {
-        Win(InitializeCriticalSection(&_crit);)
-    }
-    ~MUTX(void)
-    {
-        Win(DeleteCriticalSection(&_crit);)
-    }
-
-    void Enter(void)
-    {
-        Win(EnterCriticalSection(&_crit);)
-    }
-    void Leave(void)
-    {
-        Win(LeaveCriticalSection(&_crit);)
-    }
-};
+#include "platform.h"
 
 extern MUTX vmutxMem;
 
