@@ -69,3 +69,17 @@ uint32_t TsCurrentSystem(void)
     return 0;
 #endif
 }
+
+uint32_t DtsCaret(void)
+{
+#if defined(KAUAI_WIN32)
+    return GetCaretBlinkTime();
+#elif defined(KAUAI_SDL)
+    // Return the default caret blink time on Windows
+    const uint32_t kdtsCaret = 530; // milliseconds
+    return kdtsCaret;
+#else
+    RawRtn();
+    return 0;
+#endif
+}

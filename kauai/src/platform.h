@@ -37,5 +37,6 @@ uint32_t LwThreadCur(void);
 
 extern const uint32_t kdtsSecond;
 extern uint32_t TsCurrentSystem(void);
+extern uint32_t DtsCaret(void);
 
 #endif //! PLATFORM_H
