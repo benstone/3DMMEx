@@ -479,13 +479,13 @@ TEST(KauaiTests, TestCfl)
     }
     AssertPo(pcfl, fcflFull);
 
-    pcfl->FSave('JUNK', pvNil);
+    pcfl->FSave(KLCONST4('J', 'U', 'N', 'K'), pvNil);
 
     // FIXME: this check in the original test.cpp fails:
     // EXPECT_EQ(pcfl->Ccki(), 14);
     ReleasePpo(&pcflDst);
 
-    EXPECT_TRUE(pcfl->FSave(BigLittle('JUNK', 'KNUJ'), pvNil));
+    EXPECT_TRUE(pcfl->FSave(BigLittle(KLCONST4('J', 'U', 'N', 'K'), KLCONST4('K', 'N', 'U', 'J')), pvNil));
     ReleasePpo(&pcfl);
 
     CFL::CloseUnmarked();
@@ -535,7 +535,7 @@ TEST(KauaiTests, TestCrf)
 {
     const CNO cnoLim = 10;
     FNI fni;
-    CTG ctg = 'JUNK';
+    CTG ctg = KLCONST4('J', 'U', 'N', 'K');
     CNO cno;
     PGHQ rgpghq[cnoLim];
     PCFL pcfl;
