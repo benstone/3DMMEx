@@ -2269,7 +2269,7 @@ bool APP::_FEnsureProductNames(void)
         _stnProductShort.SetSz(sz);
 #else
         _stnProductLong = PszLit("3D Movie Maker");
-        _stnProductShort = PszLit("3DMovie");
+        _stnProductShort = PszLit("3dmovie");
 #endif
     }
 

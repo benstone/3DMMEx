@@ -108,7 +108,8 @@ const auto kcvnMinGrfcrp = 4;
 const auto kcvnMinSmallIndex = 4;
 const auto kcvnMinForest = 5;
 
-const int32_t klwMagicChunky = BigLittle('CHN2', '2NHC'); // chunky file signature
+const int32_t klwMagicChunky =
+    BigLittle(KLCONST4('C', 'H', 'N', '2'), KLCONST4('2', 'N', 'H', 'C')); // chunky file signature
 
 // chunky file prefix
 struct CFP

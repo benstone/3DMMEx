@@ -1655,7 +1655,7 @@ void APPB::WarnProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg)
             goto LDone;
 
         ftg = FIL::vftgCreator;
-        FIL::vftgCreator = 'ttxt';
+        FIL::vftgCreator = KLCONST4('t', 't', 'x', 't');
         _pfilWarn = FIL::PfilCreate(&fni);
         FIL::vftgCreator = ftg;
         if (pvNil == _pfilWarn)

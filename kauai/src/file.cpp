@@ -13,7 +13,7 @@
 #include "util.h"
 ASSERTNAME
 
-FTG FIL::vftgCreator = '____';
+FTG FIL::vftgCreator = KLCONST4('_', '_', '_', '_');
 PFIL FIL::_pfilFirst;
 MUTX FIL::_mutxList;
 

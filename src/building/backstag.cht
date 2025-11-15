@@ -339,22 +339,22 @@ OBJECTREG( "Backstage McZee AVI", kgobBackstageMcZeeAVI, 0, 0, 200, kcrsHand1 )
 	ENDCHUNK
 
 OBJECTREG( "AVI1", kgobBackstageMcZeeAVI1, 0, 0, 100, kcrsArrow1 )
-	REP_VIDEO( CHID1( krepDefault ), "05LOGN4.AVI", fTrue )
+	REP_VIDEO( CHID1( krepDefault ), "05logn4.avi", fTrue )
 
 OBJECTREG( "AVI2", kgobBackstageMcZeeAVI2, 0, 0, 100, kcrsArrow1 )
-	REP_VIDEO( CHID1( krepDefault ), "LOGN5.AVI", fTrue )
+	REP_VIDEO( CHID1( krepDefault ), "logn5.avi", fTrue )
 
 OBJECTREG( "AVI3", kgobBackstageMcZeeAVI3, 0, 0, 100, kcrsArrow1 )
-	REP_VIDEO( CHID1( krepDefault ), "LOGN06.AVI", fTrue )
+	REP_VIDEO( CHID1( krepDefault ), "logn06.avi", fTrue )
 
 OBJECTREG( "AVI4", kgobBackstageMcZeeAVI4, 0, 0, 100, kcrsArrow1 )
-	REP_VIDEO( CHID1( krepDefault ), "GOIDA.AVI", fTrue )
+	REP_VIDEO( CHID1( krepDefault ), "goida.avi", fTrue )
 
 OBJECTREG( "AVI5", kgobBackstageMcZeeAVI5, 0, 0, 100, kcrsArrow1 )
-	REP_VIDEO( CHID1( krepDefault ), "GOPRJ.AVI", fTrue )
+	REP_VIDEO( CHID1( krepDefault ), "goprj.avi", fTrue )
 
 OBJECTREG( "AVI6", kgobBackstageMcZeeAVI6, 0, 0, 100, kcrsArrow1 )
-	REP_VIDEO( CHID1( krepDefault ), "GOSTU.AVI", fTrue )
+	REP_VIDEO( CHID1( krepDefault ), "gostu.avi", fTrue )
 
 
 

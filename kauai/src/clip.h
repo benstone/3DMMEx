@@ -65,8 +65,8 @@ extern PCLIP vpclip;
 
 const int32_t clfmNil = 0;
 // REVIEW shonk: Mac unicode
-const int32_t kclfmUniText = MacWin('WTXT', CF_UNICODETEXT);
-const int32_t kclfmSbText = MacWin('TEXT', CF_TEXT);
+const int32_t kclfmUniText = MacWin(KLCONST4('W', 'T', 'X', 'T'), CF_UNICODETEXT);
+const int32_t kclfmSbText = MacWin(KLCONST4('T', 'E', 'X', 'T'), CF_TEXT);
 
 #ifdef UNICODE
 const int32_t kclfmText = kclfmUniText;

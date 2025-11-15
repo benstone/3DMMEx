@@ -769,7 +769,7 @@ void FNI::_SetFtgFromName(void)
         AssertIn(cch, -1, kcchsMaxExt + 1);
         pchLim -= cch;
         for (ich = 0; ich < cch; ich++)
-            _ftg = (_ftg << 8) | (int32_t)(uint8_t)ChsUpper((schar)pchLim[ich]);
+            _ftg = (_ftg << 8) | (int32_t)(uint8_t)ChsLower((schar)pchLim[ich]);
     }
     AssertThis(ffniFile | ffniDir);
 }
@@ -833,7 +833,7 @@ priv void _CleanFtg(FTG *pftg, PSTN pstnExt)
         fZero |= (chs == 0);
         if (!fZero)
         {
-            chs = ChsUpper(chs);
+            chs = ChsLower(chs);
             ftgNew |= (int32_t)(uint8_t)chs << (8 * ichs);
             if (pvNil != pstnExt)
                 pstnExt->FInsertCh(0, (achar)(uint8_t)chs);

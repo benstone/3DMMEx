@@ -8,8 +8,8 @@
 #ifndef TMAP_H
 #define TMAP_H
 
-const CTG kctgTmap = 'TMAP';
-const CTG kctgTxxf = 'TXXF';
+const CTG kctgTmap = KLCONST4('T', 'M', 'A', 'P');
+const CTG kctgTxxf = KLCONST4('T', 'X', 'X', 'F');
 
 // tmap on file
 struct TMAPF
