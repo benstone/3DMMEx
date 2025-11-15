@@ -591,7 +591,7 @@ OBJECT( "Movie Work Space",  kgobMovie, 400, kcrsArrow1 )
 	ENDCHUNK
 
 OBJECTREG( "Movie count down", kgobCountDn, 0, 1, 150, kcrsArrow1 )
-	REP_VIDEO( CHID1( krepDefault ), "CNTDWN5.AVI", fTrue )
+	REP_VIDEO( CHID1( krepDefault ), "cntdwn5.avi", fTrue )
 
 // Note, the movie controls need to be above the movie click filter, which
 // I've put at 450.
