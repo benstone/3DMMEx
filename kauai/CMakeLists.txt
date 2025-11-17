@@ -262,9 +262,9 @@ target_link_libraries(
     KauaiStream
 )
 
-if (3DMM_GUI STREQUAL "Win32")
+# Build AudioMan and Win32 MIDI playback devices for all Windows builds
+if(WIN32)
     # Win32: Use AudioMan for wave sounds
-
     if (NOT "${3DMM_AUDIOMAN_LIBRARY}" STREQUAL "None")
         target_sources(
             KauaiSound
@@ -303,9 +303,20 @@ if (3DMM_GUI STREQUAL "Win32")
         PUBLIC
         winmm
     )
+endif()
 
-else()
-    message(WARNING "Sound playback disabled")
+# SDL Sound playback support
+if(3DMM_GUI STREQUAL "SDL")
+    target_sources(
+        KauaiSound
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/sndsdl.cpp"
+    )
+    target_link_libraries(
+        KauaiSound
+        PUBLIC
+        SDL2_mixer::SDL2_mixer
+    )
 endif()
 
 # Pic: vector graphics support
@@ -690,6 +701,11 @@ if (WIN32 AND 3DMM_GUI STREQUAL "SDL")
     add_custom_command(
         TARGET khello POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL2_ttf::SDL2_ttf>" "$<TARGET_FILE_DIR:khello>"
+        VERBATIM
+    )
+    add_custom_command(
+        TARGET khello POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "$<TARGET_FILE:SDL2_mixer::SDL2_mixer>" "$<TARGET_FILE_DIR:khello>"
         VERBATIM
     )
 endif()

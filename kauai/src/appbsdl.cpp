@@ -11,6 +11,8 @@
 #include "fcntl.h"
 #include "stdio.h"
 
+#include "sndsdl.h"
+
 ASSERTNAME
 
 WIG vwig;
@@ -305,6 +307,18 @@ void APPB::_DispatchEvt(PEVT pevt)
         }
         else
             _pgobMouse = pvNil;
+        break;
+    case SDL_USEREVENT_SOUND_FINISHED:
+        // Notify the sound player that the sound has finished
+        {
+            PSNDV psndv = vpsndm->PsndvFromCtg(kctgWave);
+            if (psndv != pvNil)
+            {
+                Assert(psndv->FIs(kclsSDLSoundDevice), "not a SDL sound device!");
+                PSDLSoundDevice psdlsd = (PSDLSoundDevice)psndv;
+                psdlsd->NotifyChannelFinished(pevt->user.code);
+            }
+        }
         break;
     default:
         // ignore event
