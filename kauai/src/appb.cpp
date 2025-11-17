@@ -13,6 +13,10 @@
 #include "frame.h"
 ASSERTNAME
 
+#ifdef KAUAI_SDL
+#include <sndsdl.h>
+#endif // KAUAI_SDL
+
 PAPPB vpappb;
 PCEX vpcex;
 PSNDM vpsndm;
@@ -499,6 +503,16 @@ bool APPB::_FInitSound(int32_t wav)
         ReleasePpo(&psndv);
     }
 #endif // KAUAI_WIN32
+
+#if defined(KAUAI_SDL)
+
+    if ((pvNil != (psndv = SDLSoundDevice::PsdlsdNew(vpcex))))
+    {
+        vpsndm->FAddDevice(kctgWave, psndv);
+        ReleasePpo(&psndv);
+    }
+
+#endif // KAUAI_SDL
 
     return fTrue;
 }

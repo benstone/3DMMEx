@@ -272,6 +272,6 @@ install(DIRECTORY "${PROJECT_SOURCE_DIR}/content-files/"
 
 if (WIN32 AND 3DMM_GUI STREQUAL "SDL")
     # Install SDL DLLs
-    install(FILES $<TARGET_FILE:SDL2::SDL2> $<TARGET_FILE:SDL2_ttf::SDL2_ttf>
+    install(FILES $<TARGET_FILE:SDL2::SDL2> $<TARGET_FILE:SDL2_ttf::SDL2_ttf> $<TARGET_FILE:SDL2_mixer::SDL2_mixer>
         DESTINATION .)
 endif()
