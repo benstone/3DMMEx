@@ -174,7 +174,10 @@ bool SCEB::FAttachScript(PSCPT pscpt, int32_t *prglw, int32_t clw)
         }
 
         stnTrace.FAppendCh(ChLit('\n'));
+        // FUTURE: Add script logging for non-Windows platforms if needed
+#ifdef WIN
         OutputDebugString(stnTrace.Psz());
+#endif // WIN
     }
 #endif // DEBUG
 
