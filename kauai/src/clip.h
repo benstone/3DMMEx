@@ -36,7 +36,9 @@ class CLIP : public CLIP_PAR
     bool _fImporting : 1;
     bool _fDelayImport : 1;
 
+#ifdef WIN
     HN _hnExport;
+#endif
     int32_t _clfmExport;
     int32_t _clfmImport;
 
