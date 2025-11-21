@@ -21,6 +21,9 @@ inline void Debugger(void)
 {
     DebugBreak();
 }
+#else
+/* Defer to platform implementation */
+extern void Debugger(void);
 #endif // WIN
 
 #ifdef DEBUG
