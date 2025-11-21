@@ -11,6 +11,10 @@
 
 ***************************************************************************/
 #include "util.h"
+#if !defined(MAC) && !defined(WIN)
+#include <ctype.h>
+#endif
+
 ASSERTNAME
 
 #include "chtrans.h"
@@ -1295,6 +1299,9 @@ void UpperRgchs(schar *prgchs, int32_t cchs)
         UppercaseText(_mpchschsUpper, 256, smSystemScript);
 #elif defined(WIN)
         CharUpperBuffA(_mpchschsUpper, 256);
+#else
+        for (ichs = 0; ichs < 256; ichs++)
+            _mpchschsUpper[ichs] = toupper(_mpchschsUpper[ichs]);
 #endif
         _fInited = fTrue;
     }
@@ -1321,6 +1328,9 @@ void LowerRgchs(schar *prgchs, int32_t cchs)
         LowercaseText(_mpchschsLower, 256, smSystemScript);
 #elif defined(WIN)
         CharLowerBuffA(_mpchschsLower, 256);
+#else
+        for (ichs = 0; ichs < 256; ichs++)
+            _mpchschsLower[ichs] = tolower(_mpchschsLower[ichs]);
 #endif
         _fInited = fTrue;
     }
