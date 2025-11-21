@@ -44,9 +44,16 @@ const int16_t koskWin = koskUniWin;
 const int16_t koskMac = koskSbMac;
 const int16_t koskWin = koskSbWin;
 #endif //! UNICODE
-const int16_t koskCur = MacWin(koskMac, koskWin);
-const int16_t koskSb = MacWin(koskSbMac, koskSbWin);
-const int16_t koskUni = MacWin(koskUniMac, koskUniWin);
+
+#ifdef MAC
+const int16_t koskCur = koskMac;
+const int16_t koskSb = koskSbMac;
+const int16_t koskUni = koskUniMac;
+#else
+const int16_t koskCur = koskWin;
+const int16_t koskSb = koskSbWin;
+const int16_t koskUni = koskUniWin;
+#endif
 
 #ifdef DEBUG
 void AssertOsk(int16_t osk);
