@@ -45,7 +45,12 @@ typedef HPALETTE HPAL;
 typedef HCURSOR HCRS;
 #define hBadWin INVALID_HANDLE_VALUE // some windows APIs return this
 
-#endif // WIN
+#else // WIN
+
+// Unused
+typedef void *HPIC;
+
+#endif
 
 #ifdef KAUAI_SDL
 #define SDL_MAIN_HANDLED 1
