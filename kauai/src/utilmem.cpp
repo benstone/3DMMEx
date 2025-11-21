@@ -239,7 +239,7 @@ bool FAllocPv(void **ppv, int32_t cb, uint32_t grfmem, int32_t mpr)
     return fTrue;
 }
 
-#ifdef WIN
+#ifndef MAC
 /***************************************************************************
     Resizes the given block.  *ppv may change.  If fmemClear, clears any
     newly added space.
@@ -359,7 +359,7 @@ bool _FResizePpv(void **ppv, int32_t cbNew, int32_t cbOld, uint32_t grfmem, int3
 
     return fTrue;
 }
-#endif // WIN
+#endif // MAC
 
 /***************************************************************************
     If *ppv is not nil, frees it and sets *ppv to nil.
@@ -458,7 +458,10 @@ void _AssertMbh(MBH *pmbh)
     AssertVarMem(pmbh);
     Assert(pmbh->swMagic == kswMagicMem, "bad magic number");
     AssertIn(pmbh->cb - SIZEOF(MBH) - SIZEOF(MBF), 0, kcbMax);
-    Win(Assert(pmbh->cb <= (int32_t)_msize(pmbh), "bigger than malloced block");) AssertPvCb(pmbh, pmbh->cb);
+#ifdef WIN
+    Assert(pmbh->cb <= (int32_t)_msize(pmbh), "bigger than malloced block");
+#endif
+    AssertPvCb(pmbh, pmbh->cb);
     if (pmbh->pmbhPrev != pvNil)
     {
         AssertVarMem(pmbh->pmbhPrev);
@@ -521,10 +524,11 @@ void AssertUnmarkedMem(void)
             }
         }
     }
-    Mac(_AssertUnmarkedHqs();)
-
-        // leave the critical section
-        vmutxMem.Leave();
+#ifdef MAC
+    _AssertUnmarkedHqs();
+#endif
+    // leave the critical section
+    vmutxMem.Leave();
 }
 
 /***************************************************************************
@@ -544,10 +548,12 @@ void UnmarkAllMem(void)
         if (pmbh->lwThread == lwThread)
             pmbh->cactRef = 0;
     }
-    Mac(_UnmarkAllHqs();)
+#ifdef MAC
+    _UnmarkAllHqs();
+#endif
 
-        // leave the critical section
-        vmutxMem.Leave();
+    // leave the critical section
+    vmutxMem.Leave();
 }
 
 /***************************************************************************
