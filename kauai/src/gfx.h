@@ -778,7 +778,9 @@ class GPT : public GPT_PAR
 #endif // KAUAI_WIN32
 #ifdef KAUAI_SDL
 
+#ifdef WIN
     static PGPT PgptNew(HDC hdc);
+#endif
     static PGPT PgptNewHwnd(KWND hwnd);
 
     static PGPT PgptNew(SDL_Window *wnd, int32_t cbitPixel, bool fOffscreen, int32_t dxp, int32_t dyp);
@@ -842,6 +844,8 @@ class GPT : public GPT_PAR
     int32_t CbitPixel(void);
 };
 
+#ifdef WIN
+
 /****************************************
     Regions
 ****************************************/
@@ -854,6 +858,8 @@ bool FDiffRgn(HRGN hrgnDst, HRGN hrgnSrc, HRGN hrgnSrcSub, bool *pfEmpty = pvNil
 bool FRectRgn(HRGN hrgn, RC *prc = pvNil);
 bool FEmptyRgn(HRGN hrgn, RC *prc = pvNil);
 bool FEqualRgn(HRGN hrgn1, HRGN hrgn2);
+
+#endif
 
 /****************************************
     Misc.

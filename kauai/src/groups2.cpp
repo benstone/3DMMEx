@@ -621,7 +621,7 @@ bool GSTB::_FTranslateGrst(int16_t osk)
         {
             wchar chw;
             CopyPb(PvAddBv(pvSrc, bstOld), &chw, SIZEOF(wchar));
-            if (osk == MacWin(koskUniWin, koskUniMac))
+            if (osk == BigLittle(koskUniWin, koskUniMac))
                 SwapBytesRgsw(&chw, 1);
             cch = (int32_t)(uint16_t)chw;
         }

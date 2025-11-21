@@ -16,7 +16,11 @@
 #define SPELL_H
 
 // REVIEW shonk: dictionary type on Mac
-const FTG kftgDictionary = MacWin(KLCONST4('D', 'I', 'C', 'T'), KLCONST3('d', 'i', 'c'));
+#ifdef MAC
+const FTG kftgDictionary = KLCONST4('D', 'I', 'C', 'T');
+#else
+const FTG kftgDictionary = KLCONST3('d', 'i', 'c');
+#endif
 
 // include the standard spell checker API header
 #ifdef WIN
@@ -70,7 +74,9 @@ class SPLC : public SPLC_PAR
 
 #ifdef WIN
     HINSTANCE _hlib;
-
+#else
+#define __cdecl
+#endif
     SC_SEC(__cdecl *_pfnInit)(SC_SPLID *psplid, SC_WSC *pwsc);
     SC_SEC(__cdecl *_pfnOptions)(SC_SPLID splid, int32_t grfso);
     SC_SEC(__cdecl *_pfnCheck)(SC_SPLID splid, SC_CC sccc, LPSC_SIB psib, LPSC_SRB psrb);
@@ -105,7 +111,6 @@ class SPLC : public SPLC_PAR
     //	LPSC_SRB psrb);
     SC_SEC SpellCloseMdr(SC_SPLID splid, LPSC_MDRS pmdrs);
     SC_SEC SpellCloseUdr(SC_SPLID splid, SC_UDR udr, SC_BOOL fForce);
-#endif // WIN
 
     SPLC(void);
     virtual bool _FInit(SC_LID sclid, PSTN pstnCustom = pvNil);

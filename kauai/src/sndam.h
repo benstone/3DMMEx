@@ -47,7 +47,9 @@ class SDAM : public SDAM_PAR
     ASSERT
 
   protected:
+#ifdef WIN
     DWORD _luVolSys;
+#endif
     int32_t _vlm;
     bool _fAudioManInited : 1;
 

@@ -507,7 +507,7 @@ bool FLO::FTranslate(int16_t osk)
     bool fRet = fFalse;
 
     // look for a unicode byte order signature
-    oskSig = MacWin(koskSbMac, koskSbWin);
+    oskSig = koskSbWin;
     if (this->cb >= SIZEOF(wchar) && this->cb % SIZEOF(wchar) == 0)
     {
         wchar chw;
@@ -516,13 +516,13 @@ bool FLO::FTranslate(int16_t osk)
             return fFalse;
         if (chw == kchwUnicode)
         {
-            oskSig = MacWin(koskUniMac, koskUniWin);
+            oskSig = koskUniWin;
             this->fp += SIZEOF(wchar);
             this->cb -= SIZEOF(wchar);
         }
         else if (chw == kchwUnicodeSwap)
         {
-            oskSig = MacWin(koskUniWin, koskUniMac);
+            oskSig = koskUniMac;
             this->fp += SIZEOF(wchar);
             this->cb -= SIZEOF(wchar);
         }
@@ -1406,7 +1406,11 @@ void MSFIL::ReportLine(const PCSZ psz)
     Report(psz);
     if (pvNil != _pfil)
     {
-        _fError |= !_pfil->FWriteRgbSeq(rgch, MacWin(SIZEOF(achar), 2 * SIZEOF(achar)), &_fpCur);
+#ifdef WIN
+        _fError |= !_pfil->FWriteRgbSeq(rgch, 2 * SIZEOF(achar), &_fpCur);
+#else
+        _fError |= !_pfil->FWriteRgbSeq(rgch, SIZEOF(achar), &_fpCur);
+#endif
     }
 }
 

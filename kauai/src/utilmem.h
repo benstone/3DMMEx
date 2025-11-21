@@ -148,12 +148,12 @@ inline void *QvFromHq(HQ hq)
 {
     return vadst.PvStrip(*(void **)hq);
 }
-#elif defined(WIN)
+#else
 inline void *QvFromHq(HQ hq)
 {
     return (void *)hq;
 }
-#endif // WIN
+#endif
 
 #define AssertHq(hq)
 #define MarkHq(hq)
@@ -170,10 +170,10 @@ bool FAllocPvDebug(void **ppv, int32_t cb, uint32_t grfmem, int32_t mpr, schar *
                    DMAGL *pdmagl);
 #define FAllocPv(ppv, cb, grfmem, mpr) FAllocPvDebug(ppv, cb, grfmem, mpr, __szsFile, __LINE__, &vdmglob.dmaglPv)
 
-// resizing routine - WIN only
-#ifdef WIN
+// resizing routine - not MAC
+#ifndef MAC
 bool _FResizePpvDebug(void **ppv, int32_t cbNew, int32_t cbOld, uint32_t grfmem, int32_t mpr, DMAGL *pdmagl);
-#endif // WIN
+#endif
 
 // freeing routine
 void FreePpvDebug(void **ppv, DMAGL *pdmagl);
@@ -194,10 +194,10 @@ void MarkPv(void *pv);
 bool FAllocPv(void **ppv, int32_t cb, uint32_t grfmem, int32_t mpr);
 
 // resizing routine - WIN only
-#ifdef WIN
+#ifndef MAC
 #define _FResizePpvDebug(ppv, cbNew, cbOld, grfmem, mpr, pdmagl) _FResizePpv(ppv, cbNew, cbOld, grfmem, mpr)
 bool _FResizePpv(void **ppv, int32_t cbNew, int32_t cbOld, uint32_t grfmem, int32_t mpr);
-#endif // WIN
+#endif // !MAC
 
 // freeing routine
 #define FreePpvDebug(ppv, pdmagl) FreePpv(ppv)

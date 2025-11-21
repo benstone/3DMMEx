@@ -11,6 +11,10 @@
 
 ***************************************************************************/
 #include "util.h"
+#if !defined(MAC) && !defined(WIN)
+#include <ctype.h>
+#endif
+
 ASSERTNAME
 
 #include "chtrans.h"
@@ -411,7 +415,7 @@ bool STN::FSetData(void *pv, int32_t cbMax, int32_t *pcbRead)
         CopyPb(PvAddBv(pv, ibT), &chw, SIZEOF(wchar));
         ibT += SIZEOF(wchar);
 
-        if (osk == MacWin(koskUniWin, koskUniMac))
+        if (osk == koskUni)
             SwapBytesRgsw(&chw, 1);
         cch = (int32_t)(uint16_t)chw;
 
@@ -523,7 +527,7 @@ bool STN::FRead(PBLCK pblck, int32_t ib, int32_t *pcbRead)
         }
         ibT += SIZEOF(wchar);
 
-        if (osk == MacWin(koskUniWin, koskUniMac))
+        if (osk == koskUni)
             SwapBytesRgsw(&chw, 1);
         cch = (int32_t)(uint16_t)chw;
 
@@ -1291,7 +1295,14 @@ void UpperRgchs(schar *prgchs, int32_t cchs)
     {
         for (ichs = 0; ichs < 256; ichs++)
             _mpchschsUpper[ichs] = (uint8_t)ichs;
-        MacWin(UppercaseText(_mpchschsUpper, 256, smSystemScript), CharUpperBuffA(_mpchschsUpper, 256));
+#ifdef MAC
+        UppercaseText(_mpchschsUpper, 256, smSystemScript);
+#elif defined(WIN)
+        CharUpperBuffA(_mpchschsUpper, 256);
+#else
+        for (ichs = 0; ichs < 256; ichs++)
+            _mpchschsUpper[ichs] = toupper(_mpchschsUpper[ichs]);
+#endif
         _fInited = fTrue;
     }
 
@@ -1313,7 +1324,14 @@ void LowerRgchs(schar *prgchs, int32_t cchs)
     {
         for (ichs = 0; ichs < 256; ichs++)
             _mpchschsLower[ichs] = (uint8_t)ichs;
-        MacWin(LowercaseText(_mpchschsLower, 256, smSystemScript), CharLowerBuffA(_mpchschsLower, 256));
+#ifdef MAC
+        LowercaseText(_mpchschsLower, 256, smSystemScript);
+#elif defined(WIN)
+        CharLowerBuffA(_mpchschsLower, 256);
+#else
+        for (ichs = 0; ichs < 256; ichs++)
+            _mpchschsLower[ichs] = tolower(_mpchschsLower[ichs]);
+#endif
         _fInited = fTrue;
     }
 
@@ -1555,8 +1573,13 @@ void TranslateRgch(achar *prgch, int32_t cch, int16_t osk, bool fToCur)
 #ifdef UNICODE
     // for unicode, we just have to change the byte ordering
     SwapBytesRgsw(prgch, cch);
-#else  //! UNICODE
-    auto pmpchschs = MacWin(!fToCur, fToCur) ? _mpchschsMacToWin : _mpchschsWinToMac;
+#else //! UNICODE
+#ifdef MAC
+#define FTOCUR !fToCur
+#else
+#define FTOCUR fToCur
+#endif
+    auto pmpchschs = FTOCUR ? _mpchschsMacToWin : _mpchschsWinToMac;
 
     for (; cch > 0; cch--, prgch++)
     {

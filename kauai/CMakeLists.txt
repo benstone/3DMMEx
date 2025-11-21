@@ -69,6 +69,10 @@ add_library(KauaiBase
     # Windows implementations
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/memwin.cpp>
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/platwin.cpp>
+
+    # Linux implementations
+    $<$<PLATFORM_ID:Linux>:${PROJECT_SOURCE_DIR}/kauai/src/memwin.cpp>
+    $<$<PLATFORM_ID:Linux>:${PROJECT_SOURCE_DIR}/kauai/src/platlinux.cpp>
 )
 target_include_directories(
     KauaiBase

@@ -20,7 +20,9 @@
 typedef HWND HCTL;
 #elif defined(MAC)
 typedef ControlHandle HCTL;
-#endif // MAC
+#else
+typedef KWND HCTL;
+#endif
 
 // general control
 typedef class CTL *PCTL;

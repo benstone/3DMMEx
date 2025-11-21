@@ -22,6 +22,7 @@ class KWND
   public:
     KWND() = default;
 
+#ifdef WIN
     KWND(std::nullptr_t) : _hwnd(nullptr)
     {
     }
@@ -29,6 +30,11 @@ class KWND
     KWND(HWND hwnd) : _hwnd(hwnd)
     {
     }
+#else
+    KWND(std::nullptr_t) : _wnd(nullptr)
+    {
+    }
+#endif
 
 #ifdef KAUAI_SDL
 
@@ -36,11 +42,17 @@ class KWND
     explicit KWND(SDL_Window *wnd)
     {
         _wnd = wnd;
+#ifdef WIN
         _hwnd = HwndFromSDLWindow(_wnd);
+#endif
     }
 
     // Get SDL Window handle
+#ifdef WIN
     explicit operator SDL_Window *() const
+#else
+    operator SDL_Window *() const
+#endif
     {
         return _wnd;
     }
@@ -49,12 +61,15 @@ class KWND
     KWND &operator=(SDL_Window *wnd)
     {
         _wnd = wnd;
+#ifdef WIN
         _hwnd = HwndFromSDLWindow(_wnd);
+#endif
         return *this;
     }
 
 #endif // KAUAI_SDL
 
+#ifdef WIN
     // Get Win32 HWND
     operator HWND() const
     {
@@ -82,13 +97,27 @@ class KWND
     {
         return _hwnd != nullptr;
     }
+#else
+    bool operator==(std::nullptr_t) const
+    {
+        return _wnd == nullptr;
+    }
+
+    bool operator!=(std::nullptr_t) const
+    {
+        return _wnd != nullptr;
+    }
+#endif // !WIN
 
   private:
+#ifdef WIN
     HWND _hwnd = nullptr;
+#endif
 
 #ifdef KAUAI_SDL
     SDL_Window *_wnd = nullptr;
 
+#ifdef WIN
     static HWND HwndFromSDLWindow(SDL_Window *wnd)
     {
         SDL_SysWMinfo wmInfo;
@@ -102,6 +131,7 @@ class KWND
             return nullptr;
         }
     }
+#endif // WIN
 
 #endif // KAUAI_SDL
 };

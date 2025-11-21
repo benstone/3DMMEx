@@ -285,10 +285,10 @@ bool CHCM::_FGetCleanTok(TOK *ptok, bool fEofOk)
             _cbNum = SIZEOF(int32_t);
             break;
         case ttMacBo:
-            _bo = MacWin(kboCur, kboOther);
+            _bo = BigLittle(kboCur, kboOther);
             break;
         case ttWinBo:
-            _bo = MacWin(kboOther, kboCur);
+            _bo = BigLittle(kboOther, kboCur);
             break;
         case ttMacOsk:
             _osk = koskMac;
@@ -2700,7 +2700,7 @@ bool CHDC::_FDumpList(PBLCK pblck, bool fAl)
 
     if (bo != _bo)
     {
-        if (MacWin(bo != kboCur, bo == kboCur))
+        if (BigLittle(bo != kboCur, bo == kboCur))
         {
             _chse.DumpSz(PszLit("WINBO"));
         }
@@ -2752,7 +2752,7 @@ bool CHDC::_FDumpGroup(PBLCK pblck, bool fAg)
 
     if (bo != _bo)
     {
-        if (MacWin(bo != kboCur, bo == kboCur))
+        if (BigLittle(bo != kboCur, bo == kboCur))
         {
             _chse.DumpSz(PszLit("WINBO"));
         }
@@ -2805,7 +2805,7 @@ bool CHDC::_FDumpStringTable(PBLCK pblck, bool fAst)
 
     if (bo != _bo)
     {
-        if (MacWin(bo != kboCur, bo == kboCur))
+        if (BigLittle(bo != kboCur, bo == kboCur))
         {
             _chse.DumpSz(PszLit("WINBO"));
         }
