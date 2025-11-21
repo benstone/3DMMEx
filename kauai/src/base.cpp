@@ -202,11 +202,14 @@ void *BASE::operator new(size_t cb) noexcept
 #ifdef WIN
     if ((pv = (void *)GlobalAlloc(GMEM_FIXED | GMEM_ZEROINIT, cb + kcbBaseDebug)) == pvNil)
 #else  //! WIN
-    if ((pv = ::operator new(cb + kcbBaseDebug)) == pvNil)
+    if ((pv = malloc(cb + kcbBaseDebug)) == pvNil)
 #endif //! WIN
         PushErc(ercOomNew);
     else
     {
+#ifndef WIN
+        memset(pv, 0, cb + kcbBaseDebug);
+#endif
 #ifdef DEBUG
         _Enter();
 
@@ -276,7 +279,7 @@ void BASE::operator delete(void *pv)
 #ifdef WIN
     GlobalFree((HGLOBAL)pv);
 #else  //! WIN
-    ::delete (pv);
+    free(pv);
 #endif //! WIN
 }
 
