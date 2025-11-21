@@ -844,6 +844,8 @@ class GPT : public GPT_PAR
     int32_t CbitPixel(void);
 };
 
+#ifdef WIN
+
 /****************************************
     Regions
 ****************************************/
@@ -856,6 +858,8 @@ bool FDiffRgn(HRGN hrgnDst, HRGN hrgnSrc, HRGN hrgnSrcSub, bool *pfEmpty = pvNil
 bool FRectRgn(HRGN hrgn, RC *prc = pvNil);
 bool FEmptyRgn(HRGN hrgn, RC *prc = pvNil);
 bool FEqualRgn(HRGN hrgn1, HRGN hrgn2);
+
+#endif
 
 /****************************************
     Misc.
