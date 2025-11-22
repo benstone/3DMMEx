@@ -1023,18 +1023,22 @@ KWND GOB::_HwndGetDptFromCoo(PT *pdpt, int32_t coo)
         if (cooGlobal == coo && kwndNil != hwnd)
         {
             // Map from Hwnd to screen
+#if defined(KAUAI_WIN32)
             POINT pts;
             pts = POINT(*pdpt);
-#if defined(KAUAI_WIN32)
+
             ClientToScreen(hwnd, &pts);
 #elif defined(KAUAI_SDL)
+            // FIXME MCA: is this correct?
+            int xpWnd, ypWnd;
+            PTS pts;
 
             Assert(hwnd == vwig.hwndApp, "We should only have one window");
 
-            int xpWnd, ypWnd;
+            pts = *pdpt;
             SDL_GetWindowPosition((SDL_Window *)hwnd, &xpWnd, &ypWnd);
-            pts.x += xpWnd;
-            pts.y += ypWnd;
+            pts.xp += xpWnd;
+            pts.yp += ypWnd;
 
 #else
 #error not implemented
