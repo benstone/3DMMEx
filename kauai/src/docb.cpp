@@ -1354,7 +1354,7 @@ void DDG::MarkMem(void)
 }
 #endif // DEBUG
 
-#if defined(KAUAI_WIN32)
+#ifndef MAC
 
 /***************************************************************************
     Static method: create a new Document MDI window.  Put a size box in
@@ -2483,4 +2483,4 @@ tribool DSSM::TVert(void)
     return pdmw->TVert(pdsg);
 }
 
-#endif // KAUAI_WIN32
+#endif // !MAC
