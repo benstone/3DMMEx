@@ -670,6 +670,7 @@ target_sources(khello
 target_link_libraries(
     khello
     PRIVATE
+    KauaiBase
     KauaiGui
     KauaiGuiMain
     KauaiDoc # TODO: should this be a dependency of KauaiGui?
