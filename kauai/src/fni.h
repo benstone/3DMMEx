@@ -16,6 +16,14 @@
 #ifndef FNI_H
 #define FNI_H
 
+#include "kwnd.h"
+
+#ifndef WIN
+#include <filesystem>
+
+namespace fs = std::filesystem;
+#endif
+
 #ifdef MAC
 typedef FSSpec FSS;
 #endif // MAC
@@ -79,13 +87,15 @@ class FNI : public FNI_PAR
     FSS _fss;
 #elif defined(WIN)
     STN _stnFile;
-#endif // WIN
+#else // WIN
+    STN _stnFile;
+#endif
 
-#ifdef WIN
+#ifndef MAC
     void _SetFtgFromName(void);
     int32_t _CchExt(void);
     bool _FChangeLeaf(PSTN pstn);
-#endif // WIN
+#endif // MAC
 
   public:
     FNI(void);
@@ -95,7 +105,7 @@ class FNI : public FNI_PAR
     bool FGetOpen(FTG *prgftg, short cftg);
     bool FGetSave(FTG ftg, PST pstPrompt, PST pstDefault);
     bool FBuild(int32_t lwVol, int32_t lwDir, PSTN pstn, FTG ftg);
-#elif defined(WIN)
+#else
     bool FGetOpen(const achar *prgchFilter, KWND hwndOwner);
     bool FGetSave(const achar *prgchFilter, KWND hwndOwner);
     bool FSearchInPath(PSTN pstn, PCSZ pcszEnv = pvNil);
@@ -129,8 +139,7 @@ class FNI : public FNI_PAR
 #ifdef MAC
 #define FGetFniOpenMacro(pfni, prgftg, cftg, prgchFilter, hwndOwner) (pfni)->FGetOpen(prgftg, cftg)
 #define FGetFniSaveMacro(pfni, ftg, pstPrompt, pstDef, prgchFilter, hwndOwner) (pfni)->FGetSave(ftg, pstPrompt, pstDef)
-#endif // MAC
-#ifdef WIN
+#else // MAC
 #define FGetFniOpenMacro(pfni, prgftg, cftg, prgchFilter, hwndOwner) (pfni)->FGetOpen(prgchFilter, hwndOwner)
 #define FGetFniSaveMacro(pfni, ftg, pstPrompt, pstDef, prgchFilter, hwndOwner) (pfni)->FGetSave(prgchFilter, hwndOwner)
 #endif // WIN
@@ -168,14 +177,17 @@ class FNE : public FNE_PAR
         int32_t lwVol;
         int32_t lwDir;
         int32_t iv;
-#endif // MAC
-#ifdef WIN
+#elif defined(WIN)
         FNI fni; // directory fni
         HN hn;   // for enumerating files/directories
         WIN32_FIND_DATA wfd;
         uint32_t grfvol; // which volumes are available (for enumerating volumes)
         int32_t chVol;   // which volume we're on (for enumerating volumes)
-#endif                   // WIN
+#else  // WIN
+        FNI fni;
+        fs::directory_iterator it;
+        bool it_init;
+#endif // Other
     };
 
     FTG _rgftg[kcftgFneBase];
@@ -187,9 +199,9 @@ class FNE : public FNE_PAR
     FES _fesCur;
 
     void _Free(void);
-#ifdef WIN
+#ifndef MAC
     bool _FPop(void);
-#endif // WIN
+#endif // MAC
 
   public:
     FNE(void);

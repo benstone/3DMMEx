@@ -138,6 +138,9 @@ add_library(KauaiFile
     # Windows implementations
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/filewin.cpp>
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/fniwin.cpp>
+
+    # Linux implementations
+    $<$<PLATFORM_ID:Linux>:${PROJECT_SOURCE_DIR}/kauai/src/fniposix.cpp>
 )
 if (ENABLE_ASM_X86)
     target_sources(
