@@ -46,11 +46,11 @@ void APPB::CreateConsole()
     freopen_s(&fDummy, "CONOUT$", "w", stdout);
     freopen_s(&fDummy, "CONOUT$", "w", stderr);
     freopen_s(&fDummy, "CONIN$", "r", stdin);
+#endif // WIN32
     std::cout.clear();
     std::clog.clear();
     std::cerr.clear();
     std::cin.clear();
-#endif // WIN32
 }
 
 /***************************************************************************
