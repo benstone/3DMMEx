@@ -98,6 +98,7 @@ PCTL CTL::PctlFromHctl(HCTL hctl)
 ***************************************************************************/
 void CTL::_NewRc(void)
 {
+#ifdef WIN
     RC rc;
     RECT rcs;
     HWND hwnd;
@@ -108,6 +109,7 @@ void CTL::_NewRc(void)
     hwnd = _HwndGetRc(&rc);
     Assert(hwnd != hNil, "control isn't based in an hwnd");
     rcs = RCS(rc);
+#endif
 #ifdef MAC
     RCS rcsOld = (*_hctl)->contrlRect;
 
@@ -203,10 +205,9 @@ int32_t SCB::DxpNormal(void)
     if (_dxp > 0)
         return _dxp;
     return (_dxp = GetSystemMetrics(SM_CXVSCROLL));
-#endif // WIN
-#ifdef MAC
+#else // WIN
     return 16;
-#endif // MAC
+#endif
 }
 
 /***************************************************************************
@@ -220,10 +221,9 @@ int32_t SCB::DypNormal(void)
     if (_dyp > 0)
         return _dyp;
     return (_dyp = GetSystemMetrics(SM_CYHSCROLL));
-#endif // WIN
-#ifdef MAC
+#else // WIN
     return 16;
-#endif // MAC
+#endif
 }
 
 /***************************************************************************
@@ -273,6 +273,8 @@ void SCB::GetClientRc(uint32_t grfscb, RC *prcAbs, RC *prcRel)
 bool SCB::_FCreate(int32_t val, int32_t valMin, int32_t valMax, uint32_t grfscb)
 {
     Assert(_Hctl() == hNil, "scb already created");
+    bool redraw = fFalse;
+#ifdef WIN
     RC rc;
     HWND hwnd;
     HCTL hctl;
@@ -283,7 +285,7 @@ bool SCB::_FCreate(int32_t val, int32_t valMin, int32_t valMax, uint32_t grfscb)
         Bug("can only add controls to hwnd based gobs");
         return fFalse;
     }
-
+#endif
 #ifdef MAC
     GNV gnv(this);
     gnv.Set();
@@ -292,6 +294,7 @@ bool SCB::_FCreate(int32_t val, int32_t valMin, int32_t valMax, uint32_t grfscb)
     if (hctl == hNil || !_FSetHctl(hctl))
         return fFalse;
     ValidRc(pvNil);
+    redraw = true;
 #endif // MAC
 #ifdef WIN
     RECT rcs(rc);
@@ -303,7 +306,7 @@ bool SCB::_FCreate(int32_t val, int32_t valMin, int32_t valMax, uint32_t grfscb)
     SetScrollPos(hctl, SB_CTL, 0, fFalse);
 #endif // WIN
 
-    SetValMinMax(val, valMin, valMax, MacWin(fTrue, fFalse));
+    SetValMinMax(val, valMin, valMax, redraw);
     return fTrue;
 }
 
