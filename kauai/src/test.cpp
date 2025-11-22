@@ -325,7 +325,7 @@ void TestFil(void)
                             "Save As: ",
                             "\x4"
                             "Junk",
-                            PszLit("All files\0*.*\0"), NULL))
+                            PszLit("All files\0*.*\0"), nullptr))
     {
         AssertDo(fni.TExists() == tNo, 0);
         pfil = FIL::PfilCreate(&fni);
@@ -468,7 +468,7 @@ void TestCfl(void)
                             "Save As: ",
                             "\x4"
                             "Junk",
-                            PszLit("All files\0*.*\0"), NULL))
+                            PszLit("All files\0*.*\0"), nullptr))
     {
         AssertDo((pcfl = CFL::PcflCreate(&fni, fcflNil)) != pvNil, 0);
         AssertDo(fniDst.FGetTemp(), 0);
@@ -557,7 +557,7 @@ void TestCfl(void)
         ReleasePpo(&pcfl);
     }
 
-    while (FGetFniOpenMacro(&fni, pvNil, 0, PszLit("All files\0*.*\0"), NULL))
+    while (FGetFniOpenMacro(&fni, pvNil, 0, PszLit("All files\0*.*\0"), nullptr))
     {
         AssertDo(fni.TExists() == tYes, 0);
         pcfl = CFL::PcflOpen(&fni, fcflNil);
@@ -569,7 +569,7 @@ void TestCfl(void)
                              "Save As: ",
                              "\x4"
                              "Junk",
-                             PszLit("All files\0*.*\0"), NULL))
+                             PszLit("All files\0*.*\0"), nullptr))
         {
             AssertDo(pcfl->FSave(BigLittle('JUNK', 'KNUJ'), &fni), 0);
         }

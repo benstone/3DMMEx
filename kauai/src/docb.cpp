@@ -369,10 +369,17 @@ bool DOCB::FSaveToFni(FNI *pfni, bool fSetFni)
 ***************************************************************************/
 bool DOCB::FGetFniSave(FNI *pfni)
 {
+#ifdef WIN
     return FGetFniSaveMacro(pfni, 'TEXT',
                             "\x9"
                             "Save As: ",
                             "", PszLit("All files\0*.*\0"), vwig.hwndApp);
+#else
+    return FGetFniSaveMacro(pfni, 'TEXT',
+                            "\x9"
+                            "Save As: ",
+                            "", PszLit("All files\0*.*\0"), nullptr);
+#endif
 }
 
 /***************************************************************************
@@ -1347,7 +1354,7 @@ void DDG::MarkMem(void)
 }
 #endif // DEBUG
 
-#if defined(KAUAI_WIN32)
+#ifndef MAC
 
 /***************************************************************************
     Static method: create a new Document MDI window.  Put a size box in
@@ -2476,4 +2483,4 @@ tribool DSSM::TVert(void)
     return pdmw->TVert(pdsg);
 }
 
-#endif // KAUAI_WIN32
+#endif // !MAC

@@ -197,7 +197,11 @@ int32_t APPB::OnnDefVariable(void)
     {
         STN stn;
 
-        stn = MacWin(PszLit("New York"), PszLit("Times New Roman"));
+#ifdef MAC
+        stn = PszLit("New York");
+#else
+        stn = PszLit("Times New Roman");
+#endif
         if (!vntl.FGetOnn(&stn, &_onnDefVariable))
             _onnDefVariable = vntl.OnnSystem();
     }
@@ -215,7 +219,11 @@ int32_t APPB::OnnDefFixed(void)
     {
         STN stn;
 
-        stn = MacWin(PszLit("Courier"), PszLit("Courier New"));
+#ifdef MAC
+        stn = PszLit("Courier");
+#else
+        stn = PszLit("Courier New");
+#endif
         if (!vntl.FGetOnn(&stn, &_onnDefFixed))
         {
             // just use the first fixed pitch font
@@ -1664,8 +1672,15 @@ void APPB::WarnProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg)
     stnFile.SetSzs(pszsFile);
     stnMsg.SetSzs(pszsMsg);
 
-    stn.FFormatSz(PszLit("%s(%d): %s\xD") Win(PszLit("\xA")), &stnFile, lwLine, &stnMsg);
-    Win(OutputDebugString(stn.Psz());) _pfilWarn->FWriteRgbSeq(stn.Prgch(), stn.Cch(), &_fpCur);
+#ifdef WIN
+    stn.FFormatSz(PszLit("%s(%d): %s\xD\xA"), &stnFile, lwLine, &stnMsg);
+    OutputDebugString(stn.Psz());
+#elif defined(MAC)
+    stn.FFormatSz(PszLit("%s(%d): %s\xD"), &stnFile, lwLine, &stnMsg);
+#else
+    stn.FFormatSz(PszLit("%s(%d): %s\xA"), &stnFile, lwLine, &stnMsg);
+#endif
+    _pfilWarn->FWriteRgbSeq(stn.Prgch(), stn.Cch(), &_fpCur);
 
 LDone:
     _fInWarn = fFalse;

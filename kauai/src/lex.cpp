@@ -17,8 +17,12 @@ ASSERTNAME
 RTCLASS(LEXB)
 
 // #line handling
-achar _szPoundLine[] = PszLit("#line");
-#define kcchPoundLine (CvFromRgv(_szPoundLine) - 1)
+achar _szMsvcPoundLine[] = PszLit("#line");
+#define kcchMsvcPoundLine (CvFromRgv(_szMsvcPoundLine) - 1)
+
+// #<space> handling
+achar _szGccPoundLine[] = PszLit("# ");
+#define kcchGccPoundLine (CvFromRgv(_szGccPoundLine) - 1)
 
 uint16_t LEXB::_mpchgrfct[128] = {
     // 0x00 - 0x07
@@ -461,9 +465,9 @@ bool LEXB::_FSkipWhiteSpace(void)
 {
     AssertThis(0);
     achar ch;
-    bool fStar, fSkipComment, fSlash;
+    bool fStar, fSkipComment, fSlash, fCppMs, fCppGcc;
     int32_t lwLineSav;
-    achar rgch[kcchPoundLine + 1];
+    achar rgch[kcchMsvcPoundLine + 1];
     STN stn;
 
     fSkipComment = fFalse;
@@ -472,7 +476,11 @@ bool LEXB::_FSkipWhiteSpace(void)
         if ((_GrfctCh(ch) & fctSpc) || _fSkipToNextLine || fSkipComment)
         {
             _Advance();
+#ifdef WIN
             if (kchReturn == ch)
+#else
+            if (kchLineFeed == ch)
+#endif
             {
                 _lwLine++;
                 _ichLine = 0;
@@ -513,83 +521,187 @@ bool LEXB::_FSkipWhiteSpace(void)
             }
         }
 
-        // if this is at the beginning of a line, check for a #line directive
-        if (!_fLineStart || (ch != _szPoundLine[0]) || !_FFetchRgch(rgch, kcchPoundLine + 1) ||
-            !FEqualRgb(rgch, _szPoundLine, kcchPoundLine) || !(_GrfctCh(rgch[kcchPoundLine]) & fctSpc))
+        // if this is at the beginning of a line, check for a pre-processor directive
+        fCppMs = fFalse;
+        fCppGcc = fFalse;
+        if (_fLineStart && (ch == _szMsvcPoundLine[0]) && _FFetchRgch(rgch, 2))
+        {
+            // check for #line directive (msvc)
+            if (FEqualRgb(rgch, _szMsvcPoundLine, 2) && _FFetchRgch(rgch, kcchMsvcPoundLine + 1) &&
+                (_GrfctCh(rgch[kcchMsvcPoundLine]) & fctSpc))
+                fCppMs = fTrue;
+
+            // check for #<space> directive (gcc)
+            if (FEqualRgb(rgch, _szGccPoundLine, 2) && _FFetchRgch(rgch, kcchGccPoundLine) &&
+                (_GrfctCh(rgch[kcchGccPoundLine - 1]) & fctSpc))
+                fCppGcc = fTrue;
+
+            if (fCppMs == fFalse && fCppGcc == fFalse)
+            {
+                _fLineStart = fFalse;
+                break;
+            }
+        }
+        else
         {
             _fLineStart = fFalse;
             break;
         }
 
-        // a #line directive - skip it and white space
-        _Advance(kcchPoundLine);
-        while (_FFetchRgch(&ch) && (_GrfctCh(ch) & fctSpc) && ch != kchReturn)
-            _Advance();
-
-        // read the line number
-        lwLineSav = _lwLine;
-        if (!_FFetchRgch(&ch) || !(_GrfctCh(ch) & fctDec))
-            goto LBadDirective;
-        _Advance();
-        _ReadNumber(&_lwLine, ch, 10, klwMax);
-        _lwLine--;
-
-        // skip white space (and make sure there is some)
-        if (!_FFetchRgch(&ch))
-            break; // eof
-        if (!(_GrfctCh(ch) & fctSpc))
-            goto LBadDirective;
-        while (_FFetchRgch(&ch) && (_GrfctCh(ch) & fctSpc) && ch != kchReturn)
-            _Advance();
-        if (!_FFetchRgch(&ch))
-            break; // eof
-        if (ch == kchReturn)
-            continue; // end of #line
-
-        // read file name
-        if (ch != ChLit('"'))
-            goto LBadDirective;
-        _Advance();
-        stn.SetNil();
-        for (fSlash = fFalse;;)
+        if (fCppMs == fTrue)
         {
-            if (!_FFetchRgch(&ch) || ch == kchReturn)
+            // a #line directive - skip it and white space
+            _Advance(kcchMsvcPoundLine);
+            while (_FFetchRgch(&ch) && (_GrfctCh(ch) & fctSpc) && ch != kchReturn)
+                _Advance();
+
+            // read the line number
+            lwLineSav = _lwLine;
+            if (!_FFetchRgch(&ch) || !(_GrfctCh(ch) & fctDec))
                 goto LBadDirective;
             _Advance();
-            if (ch == ChLit('"'))
-                break;
-            if (ch == ChLit('\\'))
+            _ReadNumber(&_lwLine, ch, 10, klwMax);
+            _lwLine--;
+
+            // skip white space (and make sure there is some)
+            if (!_FFetchRgch(&ch))
+                break; // eof
+            if (!(_GrfctCh(ch) & fctSpc))
+                goto LBadDirective;
+            while (_FFetchRgch(&ch) && (_GrfctCh(ch) & fctSpc) && ch != kchReturn)
+                _Advance();
+            if (!_FFetchRgch(&ch))
+                break; // eof
+            if (ch == kchReturn)
+                continue; // end of #line
+
+            // read file name
+            if (ch != ChLit('"'))
+                goto LBadDirective;
+            _Advance();
+            stn.SetNil();
+            for (fSlash = fFalse;;)
             {
-                // if this is the second of a pair of slashes, skip it
-                fSlash = !fSlash;
-                if (!fSlash)
-                    continue;
+                if (!_FFetchRgch(&ch) || ch == kchReturn)
+                    goto LBadDirective;
+                _Advance();
+                if (ch == ChLit('"'))
+                    break;
+                if (ch == ChLit('\\'))
+                {
+                    // if this is the second of a pair of slashes, skip it
+                    fSlash = !fSlash;
+                    if (!fSlash)
+                        continue;
+                }
+                else
+                    fSlash = fFalse;
+                stn.FAppendCh(ch);
+            }
+
+            // skip white space to end of line
+            if (!_FFetchRgch(&ch))
+                goto LSetFileName; // eof
+            if (!(_GrfctCh(ch) & fctSpc))
+                goto LBadDirective;
+            while (_FFetchRgch(&ch) && (_GrfctCh(ch) & fctSpc) && ch != kchReturn)
+                _Advance();
+            if (!_FFetchRgch(&ch))
+                goto LSetFileName; // eof
+            if (ch != kchReturn)
+            {
+            LBadDirective:
+                // Bad #line directive - restore the line number
+                _lwLine = lwLineSav;
+                return fFalse;
             }
             else
-                fSlash = fFalse;
-            stn.FAppendCh(ch);
+            {
+            LSetFileName:
+                _stnFile = stn;
+            }
         }
 
-        // skip white space to end of line
-        if (!_FFetchRgch(&ch))
-            goto LSetFileName; // eof
-        if (!(_GrfctCh(ch) & fctSpc))
-            goto LBadDirective;
-        while (_FFetchRgch(&ch) && (_GrfctCh(ch) & fctSpc) && ch != kchReturn)
+        if (fCppGcc == fTrue)
+        {
+            // a #<space> directive - skip it and white space
+            _Advance(kcchGccPoundLine);
+            while (_FFetchRgch(&ch) && (_GrfctCh(ch) & fctSpc) && ch != kchReturn && ch != kchLineFeed)
+                _Advance();
+
+            // read the line number
+            lwLineSav = _lwLine;
+            if (!_FFetchRgch(&ch) || !(_GrfctCh(ch) & fctDec))
+                goto LBadDirective;
             _Advance();
-        if (!_FFetchRgch(&ch))
-            goto LSetFileName; // eof
-        if (ch != kchReturn)
-        {
-        LBadDirective:
-            // Bad #line directive - restore the line number
-            _lwLine = lwLineSav;
-            return fFalse;
-        }
-        else
-        {
-        LSetFileName:
-            _stnFile = stn;
+            _ReadNumber(&_lwLine, ch, 10, klwMax);
+            if (_lwLine)
+                _lwLine--;
+
+            // skip white space (and make sure there is some)
+            if (!_FFetchRgch(&ch))
+                break; // eof
+            if (!(_GrfctCh(ch) & fctSpc))
+                goto LBadDirective;
+            while (_FFetchRgch(&ch) && (_GrfctCh(ch) & fctSpc) && ch != kchReturn && ch != kchLineFeed)
+                _Advance();
+            if (!_FFetchRgch(&ch))
+                break; // eof
+            if (ch == kchReturn || ch == kchLineFeed)
+                continue; // end of #<space>
+
+            // read file name
+            if (ch != ChLit('"'))
+                goto LBadDirective;
+            _Advance();
+            stn.SetNil();
+            for (fSlash = fFalse;;)
+            {
+                if (!_FFetchRgch(&ch) || ch == kchReturn || ch == kchLineFeed)
+                    goto LBadDirective2;
+                _Advance();
+                if (ch == ChLit('"'))
+                    break;
+                if (ch == ChLit('\\'))
+                {
+                    // if this is the second of a pair of slashes, skip it
+                    fSlash = !fSlash;
+                    if (!fSlash)
+                        continue;
+                }
+                else
+                    fSlash = fFalse;
+                stn.FAppendCh(ch);
+            }
+
+            // if end of line, no flags
+            if (!_FFetchRgch(&ch))
+                goto LSetFileName2; // eof
+            if (!(_GrfctCh(ch) & fctSpc))
+                goto LBadDirective2;
+            if (ch == kchReturn || ch == kchLineFeed)
+            {
+                goto LSetFileName2; // no flags
+            }
+            // fetch up until end of line
+            while (_FFetchRgch(&ch) && ((_GrfctCh(ch) & fctSpc) || (_GrfctCh(ch) & fctDec)) && ch != kchReturn &&
+                   ch != kchLineFeed)
+                _Advance();
+            if (!_FFetchRgch(&ch))
+                goto LSetFileName; // eof
+
+            if (ch != kchReturn && ch != kchLineFeed)
+            {
+            LBadDirective2:
+                // Bad #<space> directive - restore the line number
+                _lwLine = lwLineSav;
+                return fFalse;
+            }
+            else
+            {
+            LSetFileName2:
+                _stnFile = stn;
+            }
         }
     }
 

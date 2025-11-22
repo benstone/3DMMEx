@@ -1,32 +1,29 @@
-/* Copyright (c) Microsoft Corporation.
+/* Copyright (c) Mark Cave-Ayland.
    Licensed under the MIT License. */
 
 /***************************************************************************
-    Author: ShonK
+    Author: Mark Cave-Ayland
     Project: Kauai
     Reviewed:
-    Copyright (c) Microsoft Corporation
+    Copyright (c) Mark Cave-Ayland
 
     File name management.
 
 ***************************************************************************/
 #include "util.h"
-ASSERTNAME
+#include <filesystem>
 
-#ifdef WIN
-#include <commdlg.h>
-#endif // WIN
+namespace fs = std::filesystem;
+
+ASSERTNAME
 
 // This is the FTG to use for temp files - clients may set this to whatever
 // they want.
 FTG vftgTemp = kftgTemp;
 
-typedef OFSTRUCT OFS;
-typedef OPENFILENAME OFN;
-
 // maximal number of short characters in an extension is 4 (so it fits in
 // a long).
-const int32_t kcchsMaxExt = SIZEOF(int32_t);
+const long kcchsMaxExt = SIZEOF(int32_t);
 
 priv void _CleanFtg(FTG *pftg, PSTN pstnExt = pvNil);
 FNI _fniTemp;
@@ -60,40 +57,9 @@ bool FNI::FGetOpen(const achar *prgchFilter, KWND hwndOwner)
     AssertThis(0);
     AssertNilOrVarMem(prgchFilter);
 
-#ifdef WIN
-    OFN ofn;
-    SZ sz;
-
-    ClearPb(&ofn, SIZEOF(OFN));
-    SetNil();
-
-    sz[0] = 0;
-    ofn.lStructSize = SIZEOF(OFN);
-    ofn.hwndOwner = hwndOwner;
-    ofn.hInstance = NULL;
-    ofn.lpstrFilter = prgchFilter;
-    ofn.nFilterIndex = 1L;
-    ofn.lpstrFile = sz;
-    ofn.nMaxFile = kcchMaxSz;
-    ofn.lpstrFileTitle = NULL;
-    ofn.Flags = OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_NOTESTFILECREATE | OFN_READONLY;
-
-    if (!GetOpenFileName(&ofn))
-    {
-        SetNil();
-        return fFalse;
-    }
-
-    _stnFile = ofn.lpstrFile;
-    _SetFtgFromName();
-    AssertThis(ffniFile);
-    return fTrue;
-
-#else  // !WIN
-    // FGetOpen not supported on non-Windows
+    // Should be unused
     RawRtn();
     return fFalse;
-#endif // WIN
 }
 
 /***************************************************************************
@@ -104,42 +70,48 @@ bool FNI::FGetSave(const achar *prgchFilter, KWND hwndOwner)
     AssertThis(0);
     AssertNilOrVarMem(prgchFilter);
 
-#ifdef WIN
-    OFN ofn;
-    SZ sz;
-
-    ClearPb(&ofn, SIZEOF(OFN));
-    SetNil();
-
-    sz[0] = 0;
-    ofn.lStructSize = SIZEOF(OFN);
-    ofn.hwndOwner = hwndOwner;
-    ofn.hInstance = NULL;
-    ofn.lpstrFilter = prgchFilter;
-    ofn.nFilterIndex = 1L;
-    ofn.lpstrFile = sz;
-    ofn.nMaxFile = kcchMaxSz;
-    ofn.lpstrFileTitle = NULL;
-    ofn.Flags = OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
-    ofn.lpstrDefExt = PszLit("");
-
-    if (!GetSaveFileName(&ofn))
-    {
-        SetNil();
-        return fFalse;
-    }
-
-    _stnFile = sz;
-    _SetFtgFromName();
-    AssertThis(ffniFile);
-    return fTrue;
-#else // !WIN
-
-    // FGetSave not supported on non-Windows
+    // Should be unused
     RawRtn();
     return fFalse;
+}
 
-#endif // WIN
+/******************************************************************************
+    Will attempt to build an FNI with the given filename.  Uses the
+    Windows SearchPath API, and thus the Windows path*search rules.
+
+    Arguments:
+        PSTN pstn ** the filename to look for
+
+    Returns: fTrue if it could find the file
+******************************************************************************/
+bool FNI::FSearchInPath(PSTN pstn, PCSZ pcszEnv)
+{
+    AssertThis(0);
+    AssertPo(pstn, 0);
+
+    int32_t cch;
+    fs::path path;
+    PCSZ sz;
+
+    if (pcszEnv)
+    {
+        path = pcszEnv;
+    }
+    else
+    {
+        path = PszLit("");
+    }
+
+    path = path / pstn->Psz();
+    sz = path.c_str();
+    cch = strlen(sz);
+
+    Assert(cch <= kcchMaxSz, 0);
+    _stnFile = sz;
+    _SetFtgFromName();
+
+    AssertThis(ffniFile | ffniDir);
+    return fTrue;
 }
 
 /***************************************************************************
@@ -152,7 +124,8 @@ bool FNI::FBuildFromPath(PSTN pstn, FTG ftgDef)
 
     int32_t cch;
     const achar *pchT;
-    SZ sz;
+    fs::path fullpath;
+    PCSZ sz;
 
     if (kftgDir != ftgDef)
     {
@@ -172,13 +145,14 @@ bool FNI::FBuildFromPath(PSTN pstn, FTG ftgDef)
         }
     }
 
-    /* ask windows to parse the file name (resolves ".." and ".") and returns
-       absolute filename "X:\FOO\BAR", relative to the current drive and
-       directory if no drive or directory is given in pstn */
-    if ((cch = GetFullPathName(pstn->Psz(), kcchMaxSz, sz, NULL)) == 0 || cch > kcchMaxSz)
+    fullpath = pstn->Psz();
+    sz = fullpath.c_str();
+    cch = strlen(sz);
+    if (cch > kcchMaxSz)
     {
         goto LFail;
     }
+
     Assert(cch <= kcchMaxSz, 0);
     _stnFile = sz;
 
@@ -187,7 +161,7 @@ bool FNI::FBuildFromPath(PSTN pstn, FTG ftgDef)
         achar ch = _stnFile.Prgch()[_stnFile.Cch() - 1];
         if (ch != ChLit('\\') && ch != ChLit('/'))
         {
-            if (!_stnFile.FAppendCh(ChLit('\\')))
+            if (!_stnFile.FAppendCh(ChLit('/')))
             {
                 goto LFail;
             }
@@ -210,59 +184,27 @@ bool FNI::FBuildFromPath(PSTN pstn, FTG ftgDef)
     return fTrue;
 }
 
-/******************************************************************************
-    Will attempt to build an FNI with the given filename.  Uses the
-    Windows SearchPath API, and thus the Windows path*search rules.
-
-    Arguments:
-        PSTN pstn ** the filename to look for
-
-    Returns: fTrue if it could find the file
-******************************************************************************/
-bool FNI::FSearchInPath(PSTN pstn, PCSZ pcszEnv)
-{
-    AssertThis(0);
-    AssertPo(pstn, 0);
-
-    int32_t cch;
-    SZ sz;
-    achar *pchT;
-
-    if ((cch = SearchPath(pcszEnv, pstn->Psz(), pvNil, kcchMaxSz, sz, &pchT)) == 0 || cch > kcchMaxSz)
-    {
-        SetNil();
-        return fFalse;
-    }
-
-    Assert(cch <= kcchMaxSz, 0);
-    _stnFile = sz;
-    _SetFtgFromName();
-
-    AssertThis(ffniFile | ffniDir);
-    return fTrue;
-}
-
 /***************************************************************************
     Get a unique filename in the directory currently indicated by the fni.
 ***************************************************************************/
 bool FNI::FGetUnique(FTG ftg)
 {
     AssertThis(ffniFile | ffniDir);
-    static int16_t _dsw = 0;
+    static short _dsw = 0;
     STN stn;
     STN stnOld;
-    int16_t sw;
-    int32_t cact;
+    short sw;
+    long cact;
 
     if (Ftg() == kftgDir)
         stnOld.SetNil();
     else
         GetLeaf(&stnOld);
 
-    sw = (int16_t)TsCurrentSystem() + ++_dsw;
+    sw = (short)TsCurrentSystem() + ++_dsw;
     for (cact = 20; cact != 0; cact--, sw += ++_dsw)
     {
-        stn.FFormatSz(PszLit("Temp%04x"), (int32_t)sw);
+        stn.FFormatSz(PszLit("Temp%04x"), (long)sw);
         if (stn.FEqual(&stnOld))
             continue;
         if (FSetLeaf(&stn, ftg) && TExists() == tNo)
@@ -283,9 +225,11 @@ bool FNI::FGetTemp(void)
     if (_fniTemp._ftg != kftgDir)
     {
         // get the temp directory
-        SZ sz;
+        fs::path tmppath = fs::temp_directory_path();
+        tmppath = tmppath / "";
 
-        if (GetTempPath(kcchMaxSz, sz) == 0)
+        PCSZ sz = tmppath.c_str();
+        if (sz == NULL)
         {
             PushErc(ercFniGeneral);
             return fFalse;
@@ -317,10 +261,10 @@ bool FNI::FGetExe()
     AssertThis(0);
 
     bool fRet;
-    SZ sz;
+    char sz[kcchMaxSz];
     STN stnExe;
 
-    GetModuleFileName(NULL, sz, kcchMaxSz);
+    GetExecutableName(sz, kcchMaxSz);
     stnExe.SetSz(sz);
 
     return FBuildFromPath(&stnExe);
@@ -340,43 +284,11 @@ FTG FNI::Ftg(void)
 ***************************************************************************/
 uint32_t FNI::Grfvk(void)
 {
-    AssertThis(ffniDir | ffniFile);
-    STN stn;
-    PSZ psz;
+    AssertThis(0);
     uint32_t grfvk = fvkNil;
 
-    psz = _stnFile.Psz();
-    if (_stnFile.Cch() < 3 || psz[1] != ChLit(':') || psz[2] != ChLit('\\') && psz[2] != ChLit('/'))
-        return fvkNetwork;
-
-    stn.FFormatSz(PszLit("%c:\\"), psz[0]);
-    switch (GetDriveType(stn.Psz()))
-    {
-    case DRIVE_FIXED:
-    case DRIVE_RAMDISK:
-        break;
-    case DRIVE_REMOVABLE:
-        grfvk |= fvkRemovable;
-        switch (stn.Psz()[0])
-        {
-        case ChLit('A'):
-        case ChLit('B'):
-        case ChLit('a'):
-        case ChLit('b'):
-            grfvk |= fvkFloppy;
-            break;
-        }
-        break;
-    case DRIVE_CDROM:
-        grfvk |= fvkRemovable | fvkCD;
-        break;
-    case DRIVE_REMOTE:
-    default:
-        // treat anything else like a network drive
-        grfvk |= fvkNetwork;
-        break;
-    }
-
+    // Should be unused
+    RawRtn();
     return grfvk;
 }
 
@@ -490,26 +402,16 @@ tribool FNI::TExists(void)
         stn.Delete(cch - 1);
     }
 
-    if (0xFFFFFFFF == (lu = GetFileAttributes(pstn->Psz())))
+    if (!fs::exists(pstn->Psz()))
     {
-        /* Any of these are equivalent to "there's no file with that name" */
-        if ((lu = GetLastError()) == ERROR_FILE_NOT_FOUND || lu == ERROR_INVALID_DRIVE)
-        {
-            return tNo;
-        }
-        PushErc(ercFniGeneral);
-        return tMaybe;
+        return tNo;
     }
-    if ((_ftg == kftgDir) != FPure(lu & FILE_ATTRIBUTE_DIRECTORY))
+    if ((_ftg == kftgDir) != fs::is_directory(pstn->Psz()))
     {
         PushErc(ercFniMismatch);
         return tMaybe;
     }
-    if (lu & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM))
-    {
-        PushErc(ercFniHidden);
-        return tMaybe;
-    }
+
     return tYes;
 }
 
@@ -521,7 +423,7 @@ bool FNI::FDelete(void)
     AssertThis(ffniFile);
     Assert(FIL::PfilFromFni(this) == pvNil, "file is open");
 
-    if (DeleteFile(_stnFile.Psz()))
+    if (!std::remove(_stnFile.Psz()))
         return fTrue;
     PushErc(ercFniDelete);
     return fFalse;
@@ -534,10 +436,15 @@ bool FNI::FRename(FNI *pfni)
 {
     AssertThis(ffniFile);
     AssertPo(pfni, ffniFile);
+    fs::perms perms;
 
-    if (!(FILE_ATTRIBUTE_READONLY & GetFileAttributes(_stnFile.Psz())) &&
-        MoveFile(_stnFile.Psz(), pfni->_stnFile.Psz()))
+    perms = fs::status(_stnFile.Psz()).permissions();
+    if (!((perms & fs::perms::owner_write) == fs::perms::none))
     {
+        fs::path src = fs::path(_stnFile.Psz());
+        fs::path dst = fs::path(pfni->_stnFile.Psz());
+
+        fs::rename(src, dst);
         return fTrue;
     }
     PushErc(ercFniRename);
@@ -600,7 +507,7 @@ bool FNI::FDownDir(PSTN pstn, uint32_t grffni)
         return fFalse;
     }
     AssertDo(fniT._stnFile.FAppendStn(pstn), 0);
-    AssertDo(fniT._stnFile.FAppendCh(ChLit('\\')), 0);
+    AssertDo(fniT._stnFile.FAppendCh(ChLit('/')), 0);
     fniT._ftg = kftgDir;
     AssertPo(&fniT, ffniDir);
 
@@ -609,7 +516,7 @@ bool FNI::FDownDir(PSTN pstn, uint32_t grffni)
         if (!(grffni & ffniCreateDir))
             return fFalse;
         // try to create it
-        if (!CreateDirectory(fniT._stnFile.Psz(), NULL))
+        if (!fs::create_directory(fniT._stnFile.Psz()))
         {
             PushErc(ercFniDirCreate);
             return fFalse;
@@ -632,14 +539,18 @@ bool FNI::FUpDir(PSTN pstn, uint32_t grffni)
 
     int32_t cch;
     achar *pchT;
-    SZ sz;
+    PCSZ sz;
     STN stn;
+    fs::path fullpath;
 
     stn = _stnFile;
     if (!stn.FAppendSz(PszLit("..")))
         return fFalse;
 
-    if ((cch = GetFullPathName(stn.Psz(), kcchMaxSz, sz, &pchT)) == 0 || cch >= _stnFile.Cch() - 1)
+    fullpath = fs::canonical(stn.Psz());
+    sz = fullpath.c_str();
+    cch = strlen(sz);
+    if (cch >= _stnFile.Cch() - 1)
     {
         return fFalse;
     }
@@ -652,7 +563,7 @@ bool FNI::FUpDir(PSTN pstn, uint32_t grffni)
     case ChLit('/'):
         break;
     default:
-        AssertDo(stn.FAppendCh(ChLit('\\')), 0);
+        AssertDo(stn.FAppendCh(ChLit('/')), 0);
         cch++;
         break;
     }
@@ -681,9 +592,10 @@ void FNI::AssertValid(uint32_t grffni)
     FNI_PAR::AssertValid(0);
     AssertPo(&_stnFile, 0);
 
-    SZ szT;
+    fs::path fullpath;
+    PCSZ szT;
     int32_t cch;
-    PSZ pszT;
+    PCSZ pszT;
 
     if (grffni == 0)
         grffni = ffniEmpty | ffniDir | ffniFile;
@@ -694,19 +606,29 @@ void FNI::AssertValid(uint32_t grffni)
         Assert(_stnFile.Cch() == 0, "named empty?");
         return;
     }
-
+#ifdef WIN
     if ((cch = GetFullPathName(_stnFile.Psz(), kcchMaxSz, szT, &pszT)) == 0 || cch > kcchMaxSz ||
         !_stnFile.FEqualUserRgch(szT, CchSz(szT)))
     {
         Bug("bad fni");
         return;
     }
+#endif
+    fullpath = _stnFile.Psz();
+    szT = fullpath.c_str();
+    cch = strlen(fullpath.c_str());
+    if ((cch > kcchMaxSz) || !_stnFile.FEqualUserRgch(szT, CchSz(szT)))
+    {
+        Bug("bad fni");
+        return;
+    }
+    pszT = &szT[cch - strlen(fullpath.filename().c_str())];
 
     if (_ftg == kftgDir)
     {
         Assert(grffni & ffniDir, "unexpected dir");
         Assert(szT[cch - 1] == ChLit('\\') || szT[cch - 1] == ChLit('/'), "expected trailing slash");
-        Assert(pszT == NULL, "unexpected filename");
+        Assert(strlen(fullpath.filename().c_str()) == 0, "unexpected filename");
     }
     else
     {
@@ -769,7 +691,7 @@ void FNI::_SetFtgFromName(void)
         AssertIn(cch, -1, kcchsMaxExt + 1);
         pchLim -= cch;
         for (ich = 0; ich < cch; ich++)
-            _ftg = (_ftg << 8) | (int32_t)(uint8_t)ChsLower((schar)pchLim[ich]);
+            _ftg = (_ftg << 8) | (int32_t)(uint8_t)tolower((schar)pchLim[ich]);
     }
     AssertThis(ffniFile | ffniDir);
 }
@@ -790,7 +712,7 @@ bool FNI::_FChangeLeaf(PSTN pstn)
     for (pch = psz + _stnFile.Cch(); pch-- > psz && *pch != ChLit('\\') && *pch != ChLit('/');)
     {
     }
-    Assert(pch > psz, "bad fni");
+    Assert(pch >= psz, "bad fni");
 
     cchBase = pch - psz + 1;
     _stnFile.Delete(cchBase);
@@ -807,7 +729,7 @@ bool FNI::_FChangeLeaf(PSTN pstn)
 }
 
 /***************************************************************************
-    Make sure the ftg is all uppercase and has no characters after a zero.
+    Make sure the ftg is all lowercase and has no characters after a zero.
 ***************************************************************************/
 priv void _CleanFtg(FTG *pftg, PSTN pstnExt)
 {
@@ -851,7 +773,6 @@ FNE::FNE(void)
     AssertBaseThis(0);
     _prgftg = _rgftg;
     _pglfes = pvNil;
-    _fesCur.hn = hBadWin;
     _fInited = fFalse;
     AssertThis(0);
 }
@@ -875,12 +796,6 @@ void FNE::_Free(void)
         FreePpv((void **)&_prgftg);
         _prgftg = _rgftg;
     }
-    do
-    {
-        if (hBadWin != _fesCur.hn)
-            FindClose(_fesCur.hn);
-    } while (pvNil != _pglfes && _pglfes->FPop(&_fesCur));
-    _fesCur.hn = hBadWin;
     _fInited = fFalse;
     ReleasePpo(&_pglfes);
     AssertThis(0);
@@ -921,17 +836,15 @@ bool FNE::FInit(FNI *pfniDir, FTG *prgftg, int32_t cftg, uint32_t grffne)
 
     if (pfniDir == pvNil)
     {
-        _fesCur.chVol = ChLit('A');
-        _fesCur.grfvol = GetLogicalDrives();
+        _fesCur.fni.SetNil();
     }
     else
     {
         STN stn;
 
-        _fesCur.grfvol = 0;
-        _fesCur.chVol = 0;
         _fesCur.fni = *pfniDir;
-        stn = PszLit("*");
+
+        stn = PszLit("");
         if (!_fesCur.fni._FChangeLeaf(&stn))
         {
             PushErc(ercFneGeneral);
@@ -940,7 +853,7 @@ bool FNE::FInit(FNI *pfniDir, FTG *prgftg, int32_t cftg, uint32_t grffne)
             return fFalse;
         }
     }
-    _fesCur.hn = hBadWin;
+    _fesCur.it_init = false;
     _fRecurse = FPure(grffne & ffneRecurse);
     _fInited = fTrue;
     AssertThis(0);
@@ -960,6 +873,7 @@ bool FNE::FNextFni(FNI *pfni, uint32_t *pgrffneOut, uint32_t grffneIn)
     int32_t fvol;
     int32_t err;
     FTG *pftg;
+    fs::path basepath;
 
     if (!_fInited)
     {
@@ -974,49 +888,37 @@ bool FNE::FNextFni(FNI *pfni, uint32_t *pgrffneOut, uint32_t grffneIn)
             goto LDone;
     }
 
-    if (_fesCur.chVol != 0)
-    {
-        // volume
-        for (fvol = 1L << (_fesCur.chVol - 'A'); _fesCur.chVol <= 'Z' && (_fesCur.grfvol & fvol) == 0;
-             _fesCur.chVol++, fvol <<= 1)
-        {
-        }
-
-        if (_fesCur.chVol > ChLit('Z'))
-            goto LDone;
-        // we've got one
-        stn.FFormatSz(PszLit("%c:\\"), (int32_t)_fesCur.chVol++);
-        AssertDo(pfni->FBuildFromPath(&stn), 0);
-        goto LGotOne;
-    }
-
     // directory or file
+    basepath = fs::path(_fesCur.fni._stnFile.Psz());
     for (;;)
     {
-        if (hBadWin == _fesCur.hn)
+        fs::directory_entry de;
+
+        if (_fesCur.fni._stnFile.Cch() == 0)
+            goto LDone;
+
+        if (_fesCur.it_init == false)
         {
-            _fesCur.hn = FindFirstFile(_fesCur.fni._stnFile.Psz(), &_fesCur.wfd);
-            if (hBadWin == _fesCur.hn)
-            {
-                err = GetLastError();
-                goto LReportError;
-            }
+            STN stn;
+
+            _fesCur.it = fs::directory_iterator(_fesCur.fni._stnFile.Psz());
+            _fesCur.it_init = true;
         }
-        else if (!FindNextFile(_fesCur.hn, &_fesCur.wfd))
+        else
         {
-            err = GetLastError();
-        LReportError:
-            if (err != ERROR_NO_MORE_FILES)
-                PushErc(ercFneGeneral);
+            _fesCur.it++;
+        }
+
+        if (_fesCur.it == fs::end(_fesCur.it))
+        {
             goto LPop;
         }
 
-        if (_fesCur.wfd.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM))
-            continue;
+        de = *_fesCur.it;
 
-        stn.SetSz(_fesCur.wfd.cFileName);
+        stn.SetSz(fs::relative(de.path(), basepath).c_str());
         *pfni = _fesCur.fni;
-        if (_fesCur.wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        if (de.is_directory())
         {
             if (stn.FEqualSz(PszLit(".")) || stn.FEqualSz(PszLit("..")))
                 continue;
@@ -1079,9 +981,7 @@ LGotOne:
             }
             else
             {
-                _fesCur.hn = hBadWin;
-                _fesCur.grfvol = 0;
-                _fesCur.chVol = 0;
+                _fesCur.it = fs::end(_fesCur.it);
                 if (pvNil != pgrffneOut)
                     *pgrffneOut = ffnePre;
             }
@@ -1099,11 +999,8 @@ LGotOne:
 bool FNE::_FPop(void)
 {
     AssertBaseThis(0);
-    if (hBadWin != _fesCur.hn)
-    {
-        FindClose(_fesCur.hn);
-        _fesCur.hn = hBadWin;
-    }
+
+    _fesCur.it == fs::end(_fesCur.it);
     return pvNil != _pglfes && _pglfes->FPop(&_fesCur);
 }
 

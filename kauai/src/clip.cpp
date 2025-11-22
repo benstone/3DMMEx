@@ -304,9 +304,9 @@ bool CLIP::FInitExport(void)
         return fFalse;
     }
 
+#ifdef WIN
     _hnExport = hNil;
 
-#ifdef WIN
     if (!OpenClipboard(vwig.hwndApp))
         return fFalse;
     if (!EmptyClipboard())

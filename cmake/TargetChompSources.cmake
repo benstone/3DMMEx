@@ -12,11 +12,14 @@ function(target_chomp_sources target)
 
   set(is-msvc 0)
   set(is-clangcl 0)
+  set(is-gcc 0)
   if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(is-msvc 1)
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND "${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "MSVC")
     set(is-msvc 1)
     set(is-clangcl 1)
+  elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(is-gcc 1)
   endif()
 
   set(external-chomp 0)
@@ -56,6 +59,9 @@ function(target_chomp_sources target)
         "$<${is-msvc}:/E>"
         "$<${is-msvc}:/TP>"
         "$<${is-clangcl}:/clang:-fuse-line-directives>"
+        "$<${is-gcc}:-E>"
+        "$<${is-gcc}:-x>"
+        "$<${is-gcc}:c>"
         "${include-directories}"
         "${compile-definitions}"
         "${source}" > "${processed}"

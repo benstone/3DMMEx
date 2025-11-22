@@ -538,7 +538,38 @@ bool FReadBitmap(FNI *pfni, uint8_t **pprgb, PGL *ppglclr, int32_t *pdxp, int32_
     AssertNilOrVarMem(pdyp);
     AssertNilOrVarMem(pfUpsideDown);
 
-#ifdef WIN
+#ifndef WIN
+#pragma pack(2) // the stupid bmfh is an odd number of shorts
+    typedef struct BITMAPFILEHEADER
+    {
+        uint16_t bfType;
+        uint32_t bfSize;
+        uint16_t bfReserved1 = 0;
+        uint16_t bfReserved2 = 0;
+        uint32_t bfOffBits = 54;
+    } BITMAPFILEHEADER;
+
+    typedef struct BITMAPINFOHEADER
+    {
+        uint32_t biSize = 40;
+        uint32_t biWidth;
+        uint32_t biHeight;
+        uint16_t biPlanes = 1;
+        uint16_t biBitCount;
+        uint32_t biCompression = 0;
+        uint32_t biSizeImage;
+        uint32_t printSizeW;
+        uint32_t printSizeH;
+        uint32_t biClrUsed;
+        uint32_t importantColors;
+    } BITMAPINFOHEADER;
+#pragma pack()
+
+#define BI_RGB 0
+#define BI_RLE8 1
+
+#endif
+#ifndef MAC
 #pragma pack(2) // the stupid bmfh is an odd number of shorts
     struct BMH
     {
@@ -750,7 +781,7 @@ LDone:
         *pfUpsideDown = bmh.bmih.biHeight < 0;
     ReleasePpo(&pfil);
     return fTrue;
-#endif // WIN
+#endif // !MAC
 #ifdef MAC
     if (pvNil != pprgb)
         *pprgb = pvNil;

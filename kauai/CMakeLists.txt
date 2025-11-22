@@ -138,6 +138,10 @@ add_library(KauaiFile
     # Windows implementations
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/filewin.cpp>
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/fniwin.cpp>
+
+    # Linux implementations
+    $<$<PLATFORM_ID:Linux>:${PROJECT_SOURCE_DIR}/kauai/src/fileposix.cpp>
+    $<$<PLATFORM_ID:Linux>:${PROJECT_SOURCE_DIR}/kauai/src/fniposix.cpp>
 )
 if (ENABLE_ASM_X86)
     target_sources(
@@ -307,6 +311,7 @@ endif()
 add_library(KauaiPic
     "${PROJECT_SOURCE_DIR}/kauai/src/pic.cpp"
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/picwin.cpp>
+    $<$<NOT:$<PLATFORM_ID:Windows>>:${PROJECT_SOURCE_DIR}/kauai/src/picstub.cpp>
 )
 target_link_libraries(
     KauaiPic
@@ -485,17 +490,15 @@ elseif(3DMM_GUI STREQUAL "SDL")
     # SDL dialogs are implemented in the studio project
 endif()
 
-# Ctl: Control support (Win32 only)
-if (3DMM_GUI STREQUAL "Win32")
-    add_library(KauaiCtl
-        "${PROJECT_SOURCE_DIR}/kauai/src/ctl.cpp"
-    )
-    target_link_libraries(
-        KauaiCtl
-        PUBLIC
-        KauaiGui
-    )
-endif()
+# Ctl: Control support
+add_library(KauaiCtl
+    "${PROJECT_SOURCE_DIR}/kauai/src/ctl.cpp"
+)
+target_link_libraries(
+    KauaiCtl
+    PUBLIC
+    KauaiGui
+)
 
 # Doc: Base document class support
 add_library(KauaiDoc
@@ -508,13 +511,11 @@ target_link_libraries(
     KauaiGui
 )
 
-if (3DMM_GUI STREQUAL "Win32")
-    target_link_libraries(
-        KauaiDoc
-        PRIVATE
-        KauaiCtl
-    )
-endif()
+target_link_libraries(
+    KauaiDoc
+    PRIVATE
+    KauaiCtl
+)
 
 # RichText: Rich text document support
 add_library(KauaiRichText
@@ -669,6 +670,7 @@ target_sources(khello
 target_link_libraries(
     khello
     PRIVATE
+    KauaiBase
     KauaiGui
     KauaiGuiMain
     KauaiDoc # TODO: should this be a dependency of KauaiGui?

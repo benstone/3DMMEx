@@ -46,11 +46,11 @@ void APPB::CreateConsole()
     freopen_s(&fDummy, "CONOUT$", "w", stdout);
     freopen_s(&fDummy, "CONOUT$", "w", stderr);
     freopen_s(&fDummy, "CONIN$", "r", stdin);
+#endif // WIN32
     std::cout.clear();
     std::clog.clear();
     std::cerr.clear();
     std::cin.clear();
-#endif // WIN32
 }
 
 /***************************************************************************
@@ -251,6 +251,7 @@ void APPB::_DispatchEvt(PEVT pevt)
         ResetToolTip();
         break;
     case SDL_SYSWMEVENT:
+#ifdef WIN
         if (pevt->syswm.msg->msg.win.msg == WM_COMMAND)
         {
             int32_t lwT = pevt->syswm.msg->msg.win.wParam;
@@ -263,6 +264,7 @@ void APPB::_DispatchEvt(PEVT pevt)
             else if (pvNil != vpcex)
                 vpcex->EnqueueCid(lwT);
         }
+#endif
         break;
     case SDL_MOUSEBUTTONDOWN:
         ResetToolTip();

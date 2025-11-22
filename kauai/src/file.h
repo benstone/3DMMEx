@@ -81,6 +81,8 @@ class FIL : public FIL_PAR
     int16_t _fref;
 #elif defined(WIN)
     HANDLE _hfile;
+#else
+    FILE *_fp;
 #endif // WIN
 
     // private methods

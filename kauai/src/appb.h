@@ -221,7 +221,7 @@ class APPB : public APPB_PAR
     // setting up the heap
     static void _SetupHeap(int32_t cbExtraStack, int32_t cactMoreMasters);
     virtual void SetupHeap(void);
-#elif defined(WIN)
+#else
     static void CreateConsole();
 #endif
 

@@ -418,17 +418,19 @@ bool GOB::FGetRcInval(RC *prc, int32_t gin)
     if (kginMark != gin)
     {
         // get any system invalidated area
-        RECT rcs;
         RC rcT;
 
 #if defined(KAUAI_WIN32)
+        RECT rcs;
+
         GetUpdateRect(pgob->_hwnd, &rcs, fFalse);
+        rcT = RC(rcs);
 #elif defined(KAUAI_SDL)
         // No system invalidated areas
+        rcT = {};
 #else
 #error not implemented
 #endif
-        rcT = RC(rcs);
         if (rcT.FIntersect(&rc))
             prc->Union(&rcT);
     }
@@ -1021,18 +1023,22 @@ KWND GOB::_HwndGetDptFromCoo(PT *pdpt, int32_t coo)
         if (cooGlobal == coo && kwndNil != hwnd)
         {
             // Map from Hwnd to screen
+#if defined(KAUAI_WIN32)
             POINT pts;
             pts = POINT(*pdpt);
-#if defined(KAUAI_WIN32)
+
             ClientToScreen(hwnd, &pts);
 #elif defined(KAUAI_SDL)
+            // FIXME MCA: is this correct?
+            int xpWnd, ypWnd;
+            PTS pts;
 
             Assert(hwnd == vwig.hwndApp, "We should only have one window");
 
-            int xpWnd, ypWnd;
+            pts = *pdpt;
             SDL_GetWindowPosition((SDL_Window *)hwnd, &xpWnd, &ypWnd);
-            pts.x += xpWnd;
-            pts.y += ypWnd;
+            pts.xp += xpWnd;
+            pts.yp += ypWnd;
 
 #else
 #error not implemented
@@ -1064,12 +1070,14 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
 {
     AssertNilOrVarMem(pptLocal);
     KWND hwnd;
-    POINT pts;
     PGOB pgob;
+
+#if defined(KAUAI_WIN32)
+    POINT pts;
 
     pts.x = xp;
     pts.y = yp;
-#if defined(KAUAI_WIN32)
+
     if (hNil == (hwnd = WindowFromPoint(pts)) || pvNil == (pgob = PgobFromHwnd(hwnd)))
     {
         if (pvNil != pptLocal)
@@ -1081,11 +1089,12 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
     }
     ScreenToClient(hwnd, &pts);
 #elif defined(KAUAI_SDL)
+    PTS pts;
     int xpWnd, ypWnd;
     SDL_GetWindowPosition((SDL_Window *)vwig.hwndApp, &xpWnd, &ypWnd);
 
-    pts.x -= xpWnd;
-    pts.y -= ypWnd;
+    pts.xp -= xpWnd;
+    pts.yp -= ypWnd;
 
     pgob = PgobScreen();
 #else
@@ -1097,7 +1106,14 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
         return pvNil;
     }
 
+#if defined(KAUAI_WIN32)
     return pgob->PgobFromPt(pts.x, pts.y, pptLocal);
+#elif defined(KAUAI_SDL)
+    // FIXME MCA: is this right?
+    return pgob->PgobFromPt(pts.xp, pts.yp, pptLocal);
+#else
+#error not implemented
+#endif
 }
 
 /***************************************************************************

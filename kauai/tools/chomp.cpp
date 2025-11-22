@@ -14,7 +14,7 @@ ASSERTNAME
     Main routine for the stand-alone chunky compiler.  Returns non-zero
     iff there's an error.
 ***************************************************************************/
-int __cdecl main(int cpszs, char *prgpszs[])
+int main(int cpszs, char *prgpszs[])
 {
     FNI fniSrc, fniDst;
     PCFL pcfl;
@@ -35,7 +35,7 @@ int __cdecl main(int cpszs, char *prgpszs[])
     for (prgpszs++; --cpszs > 0; prgpszs++)
     {
         pszs = *prgpszs;
-        if (pszs[0] == '-' || pszs[0] == '/')
+        if (strlen(pszs) == 2 && (pszs[0] == '-' || pszs[0] == '/'))
         {
             // option
             switch (pszs[1])
@@ -56,12 +56,6 @@ int __cdecl main(int cpszs, char *prgpszs[])
                 break;
 
             default:
-                fprintf(stderr, "Bad command line option\n\n");
-                goto LUsage;
-            }
-
-            if (pszs[2] != 0)
-            {
                 fprintf(stderr, "Bad command line option\n\n");
                 goto LUsage;
             }

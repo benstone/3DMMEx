@@ -25,7 +25,7 @@ static bool FGetTtfFontInfo(PFNI pfniFont, PSTN pstnFontName, int32_t *pgrfont)
     AssertPo(pstnFontName, 0);
     AssertVarMem(pgrfont);
 
-    BOOL fRet = fFalse;
+    bool fRet = fFalse;
     int grfont = 0;
     STN stnFontName, stnFontPath;
 
