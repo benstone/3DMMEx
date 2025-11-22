@@ -282,7 +282,7 @@ void GPT::DumpBitmap(STN *stnBmp)
     If this is an offscreen bitmap, return the pointer to the pixels and
     optionally get the bounds. Must balance with a call to Unlock().
 ***************************************************************************/
-byte *GPT::PrgbLockPixels(RC *prc)
+uint8_t *GPT::PrgbLockPixels(RC *prc)
 {
     AssertThis(0);
     AssertNilOrVarMem(prc);
@@ -294,7 +294,7 @@ byte *GPT::PrgbLockPixels(RC *prc)
         *prc = _rcOff;
     }
 
-    return (byte *)_surface->pixels;
+    return (uint8_t *)_surface->pixels;
 }
 
 /***************************************************************************
@@ -551,7 +551,7 @@ SDL_Color ACR::_SDLColor()
     ClearPb(&sdlColor, SIZEOF(sdlColor));
 
     // Check what type of color this is
-    byte colortype = B3Lw(_lu);
+    uint8_t colortype = B3Lw(_lu);
     switch (colortype)
     {
     case kbIndexAcr:
@@ -992,7 +992,7 @@ void GPT::DrawMbmp(PMBMP pmbmp, RCS *prcs, GDD *pgdd)
     if (_surface->format->BitsPerPixel == 8 && rcSrc.Dxp() == rcDst.Dxp() && rcSrc.Dyp() == rcDst.Dyp())
     {
         Lock();
-        pmbmp->Draw((byte *)_surface->pixels, _surface->w * _surface->format->BytesPerPixel, _surface->h,
+        pmbmp->Draw((uint8_t *)_surface->pixels, _surface->w * _surface->format->BytesPerPixel, _surface->h,
                     rcDst.xpLeft - rcSrc.xpLeft, rcDst.ypTop - rcSrc.ypTop, &rcClip, _pregnClip);
         Unlock();
     }
