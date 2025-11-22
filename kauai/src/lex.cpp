@@ -472,7 +472,11 @@ bool LEXB::_FSkipWhiteSpace(void)
         if ((_GrfctCh(ch) & fctSpc) || _fSkipToNextLine || fSkipComment)
         {
             _Advance();
+#ifdef WIN
             if (kchReturn == ch)
+#else
+            if (kchLineFeed == ch)
+#endif
             {
                 _lwLine++;
                 _ichLine = 0;
