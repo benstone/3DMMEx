@@ -182,12 +182,14 @@ PGPT GPT::PgptNewHwnd(KWND hwnd)
     return pgpt;
 }
 
+#ifdef KAUAI_WIN32
 PGPT GPT::PgptNew(HDC hdc)
 {
     // Used by the Portfolio on Win32. No longer required.
     RawRtn();
     return pvNil;
 }
+#endif
 
 /***************************************************************************
     Destructor for a port.
