@@ -87,3 +87,14 @@ uint32_t DtsCaret(void)
 {
     return 1000; /* 1s for now */
 }
+
+/****************************************
+    Current executable name
+****************************************/
+void GetExecutableName(char *psz, int cchMax)
+{
+    ssize_t len;
+
+    len = ::readlink("/proc/self/exe", psz, cchMax - 1);
+    psz[len] = '\0';
+}

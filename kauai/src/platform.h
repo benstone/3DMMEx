@@ -39,4 +39,11 @@ extern const uint32_t kdtsSecond;
 extern uint32_t TsCurrentSystem(void);
 extern uint32_t DtsCaret(void);
 
+#ifndef WIN
+/****************************************
+    Current executable name
+****************************************/
+extern void GetExecutableName(char *psz, int cchMax);
+#endif
+
 #endif //! PLATFORM_H
