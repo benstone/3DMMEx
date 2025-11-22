@@ -14,7 +14,7 @@ ASSERTNAME
     Main routine for the stand-alone chunky compiler.  Returns non-zero
     iff there's an error.
 ***************************************************************************/
-int __cdecl main(int cpszs, char *prgpszs[])
+int main(int cpszs, char *prgpszs[])
 {
     FNI fniSrc, fniDst;
     PCFL pcfl;
