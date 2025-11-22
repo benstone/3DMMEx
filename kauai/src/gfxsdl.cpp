@@ -171,7 +171,6 @@ PGPT GPT::PgptNewHwnd(KWND hwnd)
 {
     Assert(kwndNil != hwnd, "Null hwnd");
     Assert(pvNil != ((SDL_Window *)hwnd), "Not an SDL window");
-    HDC hdc;
     PGPT pgpt;
     if (pvNil == (pgpt = PgptNew((SDL_Window *)hwnd, 32, fFalse, 0, 0)))
     {
