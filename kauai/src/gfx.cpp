@@ -151,7 +151,10 @@ GNV::GNV(PGOB pgob, PGPT pgpt)
 GNV::~GNV(void)
 {
     AssertThis(0);
-    Mac(_pgpt->Unlock();) ReleasePpo(&_pgpt);
+#ifdef MAC
+    _pgpt->Unlock();
+#endif
+    ReleasePpo(&_pgpt);
 }
 
 /***************************************************************************
@@ -163,7 +166,10 @@ void GNV::_Init(PGPT pgpt)
 
     _pgpt = pgpt;
     pgpt->AddRef();
-    Mac(pgpt->Lock();) _rcSrc.Set(0, 0, 1, 1);
+#ifdef MAC
+    pgpt->Lock();
+#endif
+    _rcSrc.Set(0, 0, 1, 1);
     pgpt->GetPtBase(&pt);
     _rcDst.OffsetCopy(&_rcSrc, -pt.xp, -pt.yp);
     _xp = _yp = 0;
