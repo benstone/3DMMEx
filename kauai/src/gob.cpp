@@ -418,17 +418,19 @@ bool GOB::FGetRcInval(RC *prc, int32_t gin)
     if (kginMark != gin)
     {
         // get any system invalidated area
-        RECT rcs;
         RC rcT;
 
 #if defined(KAUAI_WIN32)
+        RECT rcs;
+
         GetUpdateRect(pgob->_hwnd, &rcs, fFalse);
+        rcT = RC(rcs);
 #elif defined(KAUAI_SDL)
         // No system invalidated areas
+        rcT = {};
 #else
 #error not implemented
 #endif
-        rcT = RC(rcs);
         if (rcT.FIntersect(&rc))
             prc->Union(&rcT);
     }
