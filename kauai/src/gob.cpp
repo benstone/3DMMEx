@@ -1070,12 +1070,14 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
 {
     AssertNilOrVarMem(pptLocal);
     KWND hwnd;
-    POINT pts;
     PGOB pgob;
+
+#if defined(KAUAI_WIN32)
+    POINT pts;
 
     pts.x = xp;
     pts.y = yp;
-#if defined(KAUAI_WIN32)
+
     if (hNil == (hwnd = WindowFromPoint(pts)) || pvNil == (pgob = PgobFromHwnd(hwnd)))
     {
         if (pvNil != pptLocal)
@@ -1087,11 +1089,12 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
     }
     ScreenToClient(hwnd, &pts);
 #elif defined(KAUAI_SDL)
+    PTS pts;
     int xpWnd, ypWnd;
     SDL_GetWindowPosition((SDL_Window *)vwig.hwndApp, &xpWnd, &ypWnd);
 
-    pts.x -= xpWnd;
-    pts.y -= ypWnd;
+    pts.xp -= xpWnd;
+    pts.yp -= ypWnd;
 
     pgob = PgobScreen();
 #else
@@ -1103,7 +1106,14 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
         return pvNil;
     }
 
+#if defined(KAUAI_WIN32)
     return pgob->PgobFromPt(pts.x, pts.y, pptLocal);
+#elif defined(KAUAI_SDL)
+    // FIXME MCA: is this right?
+    return pgob->PgobFromPt(pts.xp, pts.yp, pptLocal);
+#else
+#error not implemented
+#endif
 }
 
 /***************************************************************************
