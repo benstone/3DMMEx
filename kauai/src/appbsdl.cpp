@@ -251,6 +251,7 @@ void APPB::_DispatchEvt(PEVT pevt)
         ResetToolTip();
         break;
     case SDL_SYSWMEVENT:
+#ifdef WIN
         if (pevt->syswm.msg->msg.win.msg == WM_COMMAND)
         {
             int32_t lwT = pevt->syswm.msg->msg.win.wParam;
@@ -263,6 +264,7 @@ void APPB::_DispatchEvt(PEVT pevt)
             else if (pvNil != vpcex)
                 vpcex->EnqueueCid(lwT);
         }
+#endif
         break;
     case SDL_MOUSEBUTTONDOWN:
         ResetToolTip();
