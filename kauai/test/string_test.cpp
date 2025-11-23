@@ -7,6 +7,8 @@
 #include "util.h"
 ASSERTNAME
 
+#include "utilhex.h"
+
 const char kchEmDash = 0x97;       // CP-1252
 const wchar_t kwchEmDash = 0x2014; // Unicode
 
@@ -152,4 +154,31 @@ TEST(KauaiStringTests, StnConvertUtf8Long)
     {
         RawRtn();
     }
+}
+
+TEST(KauaiStringTests, HexEncoding)
+{
+    PCSZ pszEncoded = "49276c6c2074726164652061206d6167696320747269636b20666f72206120766173652100";
+    PCSZ pszExpected = "I'll trade a magic trick for a vase!";
+    SZ szEncoded;
+    size_t cbData = 0;
+    uint8_t rgbData[256];
+
+    ClearPb(rgbData, SIZEOF(rgbData));
+
+    // Test calculating just the size
+    ASSERT_TRUE(FRgbFromHexString(pszEncoded, pvNil, 0, &cbData));
+    ASSERT_EQ(cbData, CchSz(pszExpected) + 1);
+
+    // Test decoding an invalid string
+    ASSERT_FALSE(FRgbFromHexString(pszExpected, rgbData, SIZEOF(rgbData), &cbData));
+
+    // Test decoding a string
+    ASSERT_TRUE(FRgbFromHexString(pszEncoded, rgbData, SIZEOF(rgbData), &cbData));
+    ASSERT_STREQ(pszExpected, (PCSZ)rgbData);
+
+    // Test encoding a string
+    ClearPb(szEncoded, SIZEOF(szEncoded));
+    ASSERT_TRUE(FHexStringFromRgb(rgbData, cbData, szEncoded, kcchMaxSz));
+    ASSERT_STREQ(szEncoded, pszEncoded);
 }

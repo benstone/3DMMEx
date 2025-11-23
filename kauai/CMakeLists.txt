@@ -64,6 +64,7 @@ add_library(KauaiBase
     "${PROJECT_SOURCE_DIR}/kauai/src/utilmem.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/utilrnd.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/utilstr.cpp"
+    "${PROJECT_SOURCE_DIR}/kauai/src/utilhex.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/mssio.cpp"
 
     # Windows implementations
