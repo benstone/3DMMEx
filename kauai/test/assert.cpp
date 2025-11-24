@@ -2,8 +2,8 @@
  * @brief Kauai assert procedures
  **/
 
-#include "util.h"
 #include <gtest/gtest.h>
+#include "util.h"
 
 /**
  * @brief Kauai assertion handler that causes a Google Test failure on assert
