@@ -1519,10 +1519,9 @@ bool APP::_FReadTitlesFromReg(PGST *ppgst)
 
     SZ szSid;
     STN stnSid;
-    DWORD cchSid = kcchMaxSz;
+
     SZ szTitle;
     STN stnTitle;
-    DWORD cchTitle = kcchMaxSz;
     PGST pgst;
     int32_t sid;
 
@@ -1533,6 +1532,11 @@ bool APP::_FReadTitlesFromReg(PGST *ppgst)
     HKEY hkey;
     DWORD dwDisposition;
     DWORD iValue;
+    DWORD cchSid;
+    DWORD cchTitle;
+
+    cchSid = kcchMaxSz;
+    cchTitle = kcchMaxSz;
 
     if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, kszProductsKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &hkey,
                        &dwDisposition) == ERROR_SUCCESS)
