@@ -942,7 +942,7 @@ bool APP::_FInitOS(void)
     int32_t dypWindow;
     int32_t xpWindow;
     int32_t ypWindow;
-    DWORD dwStyle = 0;
+    uint32_t dwStyle = 0;
     STN stnWindowTitle;
 
     if (_fMainWindowCreated) // If someone else called _FInitOS already,
@@ -1004,7 +1004,7 @@ bool APP::_FInitOS(void)
     should pass in the current dwStyle if the window already exists.  If
     the window does not already exist, pass in 0.
 ***************************************************************************/
-void APP::_GetWindowProps(int32_t *pxp, int32_t *pyp, int32_t *pdxp, int32_t *pdyp, DWORD *pdwStyle)
+void APP::_GetWindowProps(int32_t *pxp, int32_t *pyp, int32_t *pdxp, int32_t *pdyp, uint32_t *pdwStyle)
 {
     AssertBaseThis(0);
     AssertVarMem(pxp);
@@ -1065,7 +1065,7 @@ void APP::_RebuildMainWindow(void)
     int32_t dypWindow;
     int32_t xpWindow;
     int32_t ypWindow;
-    DWORD dwStyle;
+    uint32_t dwStyle;
 
     dwStyle = GetWindowLong(vwig.hwndApp, GWL_STYLE);
     _GetWindowProps(&xpWindow, &ypWindow, &dxpWindow, &dypWindow, &dwStyle);
