@@ -49,6 +49,11 @@ extern void GetExecutableName(char *psz, int cchMax);
     Get environment variable
 ****************************************/
 extern uint32_t GetEnvironmentVariable(const char *pcszName, char *pszValue, uint32_t cchMax);
+
+/****************************************
+    Current username
+****************************************/
+extern bool GetUserName(char *psz, int cchMax);
 #endif
 
 #endif //! PLATFORM_H

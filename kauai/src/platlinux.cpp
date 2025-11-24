@@ -123,3 +123,19 @@ uint32_t GetEnvironmentVariable(const char *pcszName, char *pszValue, uint32_t c
     pszValue[ilen] = '\0';
     return ilen;
 }
+
+/****************************************
+    Current username
+****************************************/
+bool GetUserName(char *psz, int cchMax)
+{
+    int ires;
+
+    ires = getlogin_r(psz, cchMax);
+    if (ires != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
