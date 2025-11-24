@@ -528,6 +528,16 @@ bool FNI::FDelete(void)
 }
 
 /***************************************************************************
+    Return whether the fni is read-only.
+***************************************************************************/
+bool FNI::FIsReadOnly(void)
+{
+    AssertThis(ffniFile);
+
+    return (FILE_ATTRIBUTE_READONLY & GetFileAttributes(_stnFile.Psz()));
+}
+
+/***************************************************************************
     Renames the file indicated by this to *pfni.
 ***************************************************************************/
 bool FNI::FRename(FNI *pfni)
@@ -535,8 +545,7 @@ bool FNI::FRename(FNI *pfni)
     AssertThis(ffniFile);
     AssertPo(pfni, ffniFile);
 
-    if (!(FILE_ATTRIBUTE_READONLY & GetFileAttributes(_stnFile.Psz())) &&
-        MoveFile(_stnFile.Psz(), pfni->_stnFile.Psz()))
+    if (!FIsReadOnly() && MoveFile(_stnFile.Psz(), pfni->_stnFile.Psz()))
     {
         return fTrue;
     }
