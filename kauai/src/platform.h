@@ -44,6 +44,11 @@ extern uint32_t DtsCaret(void);
     Current executable name
 ****************************************/
 extern void GetExecutableName(char *psz, int cchMax);
+
+/****************************************
+    Get environment variable
+****************************************/
+extern uint32_t GetEnvironmentVariable(const char *pcszName, char *pszValue, uint32_t cchMax);
 #endif
 
 #endif //! PLATFORM_H
