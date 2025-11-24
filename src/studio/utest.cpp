@@ -114,11 +114,19 @@ void APP::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
         grfapp |= fappStereoSound;
     }
 
+#ifdef WIN
     __try
     {
         APP_PAR::Run(grfapp, grfgob, ginDef);
     }
     __except (UnhandledExceptionFilter(GetExceptionInformation()))
+#else
+    try
+    {
+        APP_PAR::Run(grfapp, grfgob, ginDef);
+    }
+    catch (...)
+#endif
     {
         PDLG pdlg;
 
