@@ -541,7 +541,7 @@ void BRWM::_ApplySelection(int32_t thumSelect, int32_t sid)
     PGOK pgok;
     PMVU pmvu;
     TAG tag;
-    BOOL fClick = fTrue;
+    bool fClick = fTrue;
 
     pmvu = (PMVU)(_pstdio->Pmvie()->PddgGet(0));
     AssertPo(pmvu, 0);
