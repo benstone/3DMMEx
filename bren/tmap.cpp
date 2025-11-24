@@ -255,7 +255,7 @@ PTMAP TMAP::PtmapReadNative(FNI *pfni, PGL pglclr)
                         pglCache->Put(prgb[iprgb], &iclrBest);
                     }
 
-                    prgb[iprgb] = (BYTE)iclrBest;
+                    prgb[iprgb] = (uint8_t)iclrBest;
                 }
             }
 
