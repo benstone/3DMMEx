@@ -1321,10 +1321,14 @@ bool APP::_FGetUserName(void)
     Assert(!fRet || _stnUser.Cch() > 0, "Bug in _FGetUserName");
     return fRet;
 #else  // WIN
-    Bug("FIXME: Implement APP::_FGetUserName");
+    char username[kcchMaxSz];
 
-    // Set a default user name
-    _stnUser = PszLit("User");
+    if (GetUserName(username, kcchMaxSz))
+        _stnUser.SetSz(username);
+    else
+        _stnUser = PszLit("User"); // Set a default user name
+
+    Assert(_stnUser.Cch() > 0, "Bug in _FGetUserName");
     return fTrue;
 #endif // !WIN
 }
