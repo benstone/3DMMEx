@@ -1317,9 +1317,24 @@ uint32_t FcmpCompareUserRgch(const achar *prgch1, int32_t cch1, const achar *prg
         return FcmpCompareRgch(prgch1, cch1, prgch2, cch2);
     }
 #else  //! WIN
-    // REVIEW shonk: Mac: implement for real
-    RawRtn();
-    return FcmpCompareRgch(prgch1, cch1, prgch2, cch2);
+    int res;
+
+    if (grfstn & fstnIgnoreCase)
+        res = strncasecmp(prgch1, prgch2, kcbMax);
+    else
+        res = strncmp(prgch1, prgch2, kcbMax);
+
+    if (res == 0)
+        return fcmpEq;
+    else if (res < 0)
+        return fcmpLt;
+    else if (res > 0)
+        return fcmpGt;
+    else
+    {
+        Bug("why did the string comparison fail?");
+        return FcmpCompareRgch(prgch1, cch1, prgch2, cch2);
+    }
 #endif //! WIN
 }
 
