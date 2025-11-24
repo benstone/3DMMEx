@@ -158,7 +158,7 @@ bool TMAP::FWrite(PBLCK pblck)
     return fTrue;
 }
 
-#ifdef WIN
+#ifndef MAC
 
 #define CALCDIST(bRed1, bGreen1, bBlue1, bRed2, bGreen2, bBlue2)                                                       \
     (((bRed1) - (bRed2)) * ((bRed1) - (bRed2)) + ((bGreen1) - (bGreen2)) * ((bGreen1) - (bGreen2)) +                   \
@@ -269,9 +269,7 @@ PTMAP TMAP::PtmapReadNative(FNI *pfni, PGL pglclr)
 
     return ptmap;
 }
-#endif // WIN
-
-#ifdef MAC
+#else  // !MAC
 PTMAP TMAP::PtmapReadNative(FNI *pfni)
 {
     RawRtn(); // REVIEW peted: NYI
