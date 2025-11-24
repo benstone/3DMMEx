@@ -38,11 +38,13 @@ ON_CID_ME(cidAlarm, &MSQ::FCmdAlarm, pvNil)
 END_CMD_MAP_NIL()
 
 // default sound import format
+#ifdef WIN
 const WORD knSamplesPerSec = 11025;
 const WORD knAvgBytesPerSec = 11025;
 const WORD kwBitsPerSample = 8;
 const WORD knChannels = 1;
 const WORD knBlockAlign = 1;
+#endif
 
 /***************************************************************************
 
