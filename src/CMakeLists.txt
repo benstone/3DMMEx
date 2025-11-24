@@ -6,9 +6,10 @@ target_sources(bren
     "${PROJECT_SOURCE_DIR}/bren/bwld.cpp"
     "${PROJECT_SOURCE_DIR}/bren/stderr.c"
     "${PROJECT_SOURCE_DIR}/bren/stdfile.c"
-    "${PROJECT_SOURCE_DIR}/bren/stdmem.c"
     "${PROJECT_SOURCE_DIR}/bren/tmap.cpp"
     "${PROJECT_SOURCE_DIR}/bren/zbmp.cpp"
+
+    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/bren/stdmemwin.c>
 )
 target_include_directories(bren PUBLIC "${PROJECT_SOURCE_DIR}/bren/inc")
 target_link_libraries(bren
