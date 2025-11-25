@@ -10,12 +10,12 @@
 // the following are the file names of the project movies loaded into the workspace
 // localize at will...
 
-#define PROJECT1_MOVIENAME "DIALOGUE.3mm"
-#define PROJECT2_MOVIENAME "JOG.3mm"
-#define PROJECT3_MOVIENAME "SURPRISE.3mm"
-#define PROJECT4_MOVIENAME "MUMMY.3mm"
-#define PROJECT5_MOVIENAME "BONGO.3mm"
-#define PROJECT6_MOVIENAME "BRIDGE.3mm"
+#define PROJECT1_MOVIENAME "dialogue.3mm"
+#define PROJECT2_MOVIENAME "jog.3mm"
+#define PROJECT3_MOVIENAME "surprise.3mm"
+#define PROJECT4_MOVIENAME "mummy.3mm"
+#define PROJECT5_MOVIENAME "bongo.3mm"
+#define PROJECT6_MOVIENAME "bridge.3mm"
 
 // gadget objects
 #define kidGadgetPersistent 0x00003030
