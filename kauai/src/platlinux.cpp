@@ -4,6 +4,7 @@
 
 #include "platform.h"
 #include <cstdlib>
+#include <cstring>
 #include <stdint.h>
 #include <pthread.h>
 #include <signal.h>
@@ -97,4 +98,44 @@ void GetExecutableName(char *psz, int cchMax)
 
     len = ::readlink("/proc/self/exe", psz, cchMax - 1);
     psz[len] = '\0';
+}
+
+/****************************************
+    Get environment variable
+****************************************/
+uint32_t GetEnvironmentVariable(const char *pcszName, char *pszValue, uint32_t cchMax)
+{
+    char *psz = getenv(pcszName);
+    size_t ilen;
+
+    if (psz == NULL)
+    {
+        return 0;
+    }
+
+    ilen = strlen(psz);
+    if (ilen > cchMax)
+    {
+        ilen = cchMax;
+    }
+
+    memcpy(pszValue, psz, ilen);
+    pszValue[ilen] = '\0';
+    return ilen;
+}
+
+/****************************************
+    Current username
+****************************************/
+bool GetUserName(char *psz, int cchMax)
+{
+    int ires;
+
+    ires = getlogin_r(psz, cchMax);
+    if (ires != 0)
+    {
+        return false;
+    }
+
+    return true;
 }

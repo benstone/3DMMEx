@@ -1,5 +1,5 @@
-#include "resources.h"
 #include <gtest/gtest.h>
+#include "resources.h"
 
 ASSERTNAME
 

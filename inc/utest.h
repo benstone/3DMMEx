@@ -213,7 +213,7 @@ class APP : public APP_PAR
     bool _FInitBuilding(void);
     bool _FInitStudio(PFNI pfniUserDoc, bool fFailIfDocOpenFailed = fTrue);
     bool _FInitAcceleratorTable(void);
-    void _GetWindowProps(int32_t *pxp, int32_t *pyp, int32_t *pdxp, int32_t *pdyp, DWORD *pdwStyle);
+    void _GetWindowProps(int32_t *pxp, int32_t *pyp, int32_t *pdxp, int32_t *pdyp, uint32_t *pdwStyle);
     void _RebuildMainWindow(void);
     bool _FSwitch640480(bool fTo640480);
     bool _FDisplayIs640480(void);

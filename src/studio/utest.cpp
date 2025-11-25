@@ -114,11 +114,19 @@ void APP::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
         grfapp |= fappStereoSound;
     }
 
+#ifdef WIN
     __try
     {
         APP_PAR::Run(grfapp, grfgob, ginDef);
     }
     __except (UnhandledExceptionFilter(GetExceptionInformation()))
+#else
+    try
+    {
+        APP_PAR::Run(grfapp, grfgob, ginDef);
+    }
+    catch (...)
+#endif
     {
         PDLG pdlg;
 
@@ -942,7 +950,7 @@ bool APP::_FInitOS(void)
     int32_t dypWindow;
     int32_t xpWindow;
     int32_t ypWindow;
-    DWORD dwStyle = 0;
+    uint32_t dwStyle = 0;
     STN stnWindowTitle;
 
     if (_fMainWindowCreated) // If someone else called _FInitOS already,
@@ -1004,7 +1012,7 @@ bool APP::_FInitOS(void)
     should pass in the current dwStyle if the window already exists.  If
     the window does not already exist, pass in 0.
 ***************************************************************************/
-void APP::_GetWindowProps(int32_t *pxp, int32_t *pyp, int32_t *pdxp, int32_t *pdyp, DWORD *pdwStyle)
+void APP::_GetWindowProps(int32_t *pxp, int32_t *pyp, int32_t *pdxp, int32_t *pdyp, uint32_t *pdwStyle)
 {
     AssertBaseThis(0);
     AssertVarMem(pxp);
@@ -1065,7 +1073,7 @@ void APP::_RebuildMainWindow(void)
     int32_t dypWindow;
     int32_t xpWindow;
     int32_t ypWindow;
-    DWORD dwStyle;
+    uint32_t dwStyle;
 
     dwStyle = GetWindowLong(vwig.hwndApp, GWL_STYLE);
     _GetWindowProps(&xpWindow, &ypWindow, &dxpWindow, &dypWindow, &dwStyle);
@@ -1313,10 +1321,14 @@ bool APP::_FGetUserName(void)
     Assert(!fRet || _stnUser.Cch() > 0, "Bug in _FGetUserName");
     return fRet;
 #else  // WIN
-    Bug("FIXME: Implement APP::_FGetUserName");
+    char username[kcchMaxSz];
 
-    // Set a default user name
-    _stnUser = PszLit("User");
+    if (GetUserName(username, kcchMaxSz))
+        _stnUser.SetSz(username);
+    else
+        _stnUser = PszLit("User"); // Set a default user name
+
+    Assert(_stnUser.Cch() > 0, "Bug in _FGetUserName");
     return fTrue;
 #endif // !WIN
 }
@@ -1511,10 +1523,9 @@ bool APP::_FReadTitlesFromReg(PGST *ppgst)
 
     SZ szSid;
     STN stnSid;
-    DWORD cchSid = kcchMaxSz;
+
     SZ szTitle;
     STN stnTitle;
-    DWORD cchTitle = kcchMaxSz;
     PGST pgst;
     int32_t sid;
 
@@ -1525,6 +1536,11 @@ bool APP::_FReadTitlesFromReg(PGST *ppgst)
     HKEY hkey;
     DWORD dwDisposition;
     DWORD iValue;
+    DWORD cchSid;
+    DWORD cchTitle;
+
+    cchSid = kcchMaxSz;
+    cchTitle = kcchMaxSz;
 
     if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, kszProductsKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_READ, NULL, &hkey,
                        &dwDisposition) == ERROR_SUCCESS)

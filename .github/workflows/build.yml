@@ -151,3 +151,38 @@ jobs:
           name: 3DMMEx Windows x64
           path: |
             dist/x64-clangcl-relwithdebinfo
+
+  compile-gcc-x86_64-linux-release:
+    name: Linux gcc x86_64 Debug
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Packages
+        run: |
+          sudo apt-get update &&
+          sudo apt-get install -y g++ cmake libsdl2-dev libsdl2-ttf-dev libgtk-3-dev zenity ninja-build
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: CMake Generate
+        run: |
+          cmake --preset sdl-x86_64-gcc-linux-debug
+      - name: CMake Build
+        run: |
+          cmake --build build/sdl-x86_64-gcc-linux-debug --target tools studio tests
+      - name: Run tests
+        run: |
+          ctest --test-dir build/sdl-x86_64-gcc-linux-debug --output-on-failure --timeout 60
+      - name: CMake Install
+        run: |
+          cmake --install build/sdl-x86_64-gcc-linux-debug --prefix dist/sdl-x86_64-gcc-linux-debug
+      - name: Upload debug files
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3DMMEx Linux gcc x86_64 debug files
+          path: |
+            build/sdl-x86_64-gcc-linux-debug/src/chomp/studio/*.i
+      - name: Upload Debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3DMMEx Linux gcc x86_64 Debug
+          path: |
+            dist/sdl-x86_64-gcc-linux-debug

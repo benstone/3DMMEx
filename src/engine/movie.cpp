@@ -241,10 +241,10 @@ bool MVIE::_FSetPfilSave(PFNI pfni)
         the FIL, since if we didn't, we'll prompt for a new filename later
         anyway */
     pfni->GetStnPath(&stnFile);
-#ifdef WIN
-    _fReadOnly = (((lAttrib = GetFileAttributes(stnFile.Psz())) != 0xFFFFFFFF) && (lAttrib & FILE_ATTRIBUTE_READONLY));
-#else // MAC
+#ifdef MAC // MAC
     RawRtn();
+#else
+    _fReadOnly = pfni->FIsReadOnly();
 #endif
     return fTrue;
 }

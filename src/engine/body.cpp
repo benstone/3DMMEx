@@ -669,7 +669,7 @@ void BODY::SetHiliteColor(int32_t iclr)
 {
     if (_pbmtlHilite != pvNil)
     {
-        _pbmtlHilite->index_base = (UCHAR)iclr;
+        _pbmtlHilite->index_base = (uint8_t)iclr;
     }
 }
 

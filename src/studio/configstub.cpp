@@ -30,16 +30,16 @@ typedef struct StaticConfigItem_t
 const StaticConfigItem_t _rgconfig[] = {
 
     // Enable better quality rendering
-    {kszBetterSpeedValue, 0, pvNil, pvNil, 0},
+    {kszBetterSpeedValue, "0", pvNil, pvNil, 0},
 
     // Play the startup sound
-    {kszStartupSoundValue, 1, pvNil, pvNil, 0},
+    {kszStartupSoundValue, "1", pvNil, pvNil, 0},
 
     // Enable stereo sound
-    {kszStereoSound, 1, pvNil, pvNil, 0},
+    {kszStereoSound, "1", pvNil, pvNil, 0},
 
     // Enable high quality sound import
-    {kszHighQualitySoundImport, 1, pvNil, pvNil},
+    {kszHighQualitySoundImport, "1", pvNil, pvNil},
 
 };
 

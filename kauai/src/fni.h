@@ -127,6 +127,7 @@ class FNI : public FNI_PAR
 
     tribool TExists(void);
     bool FDelete(void);
+    bool FIsReadOnly(void);
     bool FRename(PFNI pfniNew);
     bool FEqual(PFNI pfni);
 

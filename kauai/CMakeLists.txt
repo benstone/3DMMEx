@@ -617,7 +617,10 @@ if (BUILD_TESTS)
     target_link_libraries(
         KauaiGuiTest
         PUBLIC
+        KauaiBase
+        KauaiFile
         KauaiTestLib
+        KauaiGroup
         KauaiGui
         KauaiRichText
         GTest::gtest_main

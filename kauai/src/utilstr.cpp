@@ -13,6 +13,7 @@
 #include "util.h"
 #if !defined(MAC) && !defined(WIN)
 #include <ctype.h>
+#include <iconv.h>
 #endif
 
 ASSERTNAME
@@ -168,9 +169,27 @@ void STN::SetUtf8Sz(PU8SZ pu8szSrc)
 #endif // UNICODE
 
 #else  // !WIN
-    // TODO: Set STN from UTF-8 string
-    RawRtn();
-    SetNil();
+    int32_t cb;
+    iconv_t ic;
+    char szT[kcchMaxSz];
+    size_t cch, cchLeft;
+    char *in_ptr, *out_ptr;
+
+    cch = strlen(pu8szSrc);
+    cchLeft = kcchMaxSz;
+
+    in_ptr = pu8szSrc;
+    out_ptr = szT;
+
+    ic = iconv_open("CP1252", "UTF-8");
+    iconv(ic, &in_ptr, &cch, &out_ptr, &cchLeft);
+    iconv_close(ic);
+
+    cb = kcchMaxSz - cchLeft;
+    Assert(cb != 0, "iconv failed to convert characters");
+    szT[cb] = 0;
+
+    SetSz(szT);
 #endif // WIN
 }
 
@@ -607,21 +626,21 @@ void STN::GetSzs(PSZS pszs)
 /***************************************************************************
     Get a zero terminated UTF-8 string from this string.
 ***************************************************************************/
-void STN::GetUtf8Sz(U8SZ pu8sz)
+void STN::GetUtf8Sz(PU8SZ pu8sz)
 {
     AssertThis(0);
     AssertPvCb(pu8sz, kcchTotUtf8Sz);
-
-#ifdef WIN32
-    int32_t cch;
-    int32_t cb;
-    const wchar *pwcsT;
 
     if (Cch() == 0)
     {
         pu8sz[0] = 0;
         return;
     }
+
+#ifdef WIN32
+    int32_t cch;
+    int32_t cb;
+    const wchar *pwcsT;
 
 #ifdef UNICODE
     // The string is already Unicode, so we can convert it directly to UTF-8
@@ -647,9 +666,26 @@ void STN::GetUtf8Sz(U8SZ pu8sz)
     pu8sz[cb] = 0;
 
 #else  // !WIN32
-    // TODO: convert STN to UTF-8
-    RawRtn();
-    pu8sz[0] = 0;
+    int32_t cb;
+    iconv_t ic;
+    char *pT;
+    size_t cch, cchLeft;
+    char *in_ptr, *out_ptr;
+
+    pT = Psz();
+    cch = Cch();
+    cchLeft = kcchMaxUtf8Sz;
+
+    in_ptr = pT;
+    out_ptr = pu8sz;
+
+    ic = iconv_open("UTF-8", "CP1252");
+    iconv(ic, &in_ptr, &cch, &out_ptr, &cchLeft);
+    iconv_close(ic);
+
+    cb = kcchMaxUtf8Sz - cchLeft;
+    Assert(cb != 0, "iconv failed to convert characters");
+    pu8sz[cb] = 0;
 #endif // WIN32
 }
 
@@ -1281,9 +1317,24 @@ uint32_t FcmpCompareUserRgch(const achar *prgch1, int32_t cch1, const achar *prg
         return FcmpCompareRgch(prgch1, cch1, prgch2, cch2);
     }
 #else  //! WIN
-    // REVIEW shonk: Mac: implement for real
-    RawRtn();
-    return FcmpCompareRgch(prgch1, cch1, prgch2, cch2);
+    int res;
+
+    if (grfstn & fstnIgnoreCase)
+        res = strncasecmp(prgch1, prgch2, kcbMax);
+    else
+        res = strncmp(prgch1, prgch2, kcbMax);
+
+    if (res == 0)
+        return fcmpEq;
+    else if (res < 0)
+        return fcmpLt;
+    else if (res > 0)
+        return fcmpGt;
+    else
+    {
+        Bug("why did the string comparison fail?");
+        return FcmpCompareRgch(prgch1, cch1, prgch2, cch2);
+    }
 #endif //! WIN
 }
 
