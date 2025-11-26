@@ -599,3 +599,41 @@ TEST(KauaiTests, TestCrf)
 
     ReleasePpo(&pcrf);
 }
+
+TEST(KauaiTests, TestGst)
+{
+    PGST pgst = pvNil;
+    int32_t lwValue = 0, istn = 0;
+    STN stnName;
+
+    if (pvNil == (pgst = GST::PgstNew(SIZEOF(int32_t))))
+    {
+        FAIL() << "Could not allocate GST";
+    }
+
+    // Add some items
+    lwValue = 1;
+    stnName = PszLit("One");
+    EXPECT_TRUE(pgst->FAddStn(&stnName, &lwValue, pvNil));
+    lwValue = 2;
+    stnName = PszLit("Two");
+    EXPECT_TRUE(pgst->FAddStn(&stnName, &lwValue, pvNil));
+    lwValue = 3;
+    stnName = PszLit("Three");
+    EXPECT_TRUE(pgst->FAddStn(&stnName, &lwValue, pvNil));
+
+    // Find an item by name
+    stnName = PszLit("Two");
+    ASSERT_TRUE(pgst->FFindStn(&stnName, &istn, fgstUserSorted));
+    ASSERT_EQ(istn, 1);
+    pgst->GetExtra(istn, &lwValue);
+    ASSERT_EQ(2, lwValue);
+
+    // Find an item by value
+    lwValue = 3;
+    ASSERT_TRUE(pgst->FFindExtra(&lwValue, &stnName, &istn));
+    ASSERT_EQ(istn, 2);
+    ASSERT_TRUE(stnName.FEqualSz(PszLit("Three")));
+
+    ReleasePpo(&pgst);
+}
