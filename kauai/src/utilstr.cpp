@@ -1319,10 +1319,11 @@ uint32_t FcmpCompareUserRgch(const achar *prgch1, int32_t cch1, const achar *prg
 #else  //! WIN
     int res;
 
+    int32_t cch = LwMin(cch1, cch2);
     if (grfstn & fstnIgnoreCase)
-        res = strncasecmp(prgch1, prgch2, kcbMax);
+        res = strncasecmp(prgch1, prgch2, cch);
     else
-        res = strncmp(prgch1, prgch2, kcbMax);
+        res = strncmp(prgch1, prgch2, cch);
 
     if (res == 0)
         return fcmpEq;
