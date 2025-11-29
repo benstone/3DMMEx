@@ -5,6 +5,7 @@
 #include "platform.h"
 #include <cstdlib>
 #include <cstring>
+#include <cstdio>
 #include <stdint.h>
 #include <pthread.h>
 #include <signal.h>
@@ -133,6 +134,30 @@ bool GetUserName(char *psz, int cchMax)
 
     ires = getlogin_r(psz, cchMax);
     if (ires != 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool FGetAppConfigDir(char *psz, int32_t cchMax)
+{
+    // Try XDG_CONFIG_HOME first
+    if (GetEnvironmentVariable("XDG_CONFIG_HOME", psz, cchMax) != 0)
+    {
+        return true;
+    }
+
+    // Use "$HOME/.config" instead
+    const char *homedir = getenv("HOME");
+    if (homedir == NULL || strlen(homedir) == 0)
+    {
+        return false;
+    }
+
+    int written = snprintf(psz, cchMax, "%s/.config", homedir);
+    if (written == 0 || written == cchMax)
     {
         return false;
     }

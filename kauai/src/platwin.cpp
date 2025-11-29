@@ -3,6 +3,7 @@
  */
 
 #include <windows.h>
+#include <shlobj.h>
 #include "platform.h"
 #if defined(KAUAI_SDL)
 #include <SDL.h>
@@ -82,4 +83,28 @@ uint32_t DtsCaret(void)
     RawRtn();
     return 0;
 #endif
+}
+
+bool FGetAppConfigDir(char *psz, int32_t cchMax)
+{
+    HRESULT hr;
+    char szPath[MAX_PATH];
+    size_t cchPath;
+
+    if (cchMax <= 0)
+        return false;
+
+    psz[0] = 0;
+
+    // Get the path to the roaming AppData directory
+    hr = SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, szPath);
+    if (FAILED(hr))
+        return false;
+
+    cchPath = strlen(szPath);
+    if (cchPath >= cchMax)
+        return false;
+
+    memcpy(psz, szPath, cchPath + 1);
+    return true;
 }

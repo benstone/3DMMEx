@@ -39,6 +39,11 @@ extern const uint32_t kdtsSecond;
 extern uint32_t TsCurrentSystem(void);
 extern uint32_t DtsCaret(void);
 
+/***************************************************************************
+    Return a path to a directory to store configuration files
+***************************************************************************/
+extern bool FGetAppConfigDir(char *psz, int32_t cchMax);
+
 #ifndef WIN
 /****************************************
     Current executable name

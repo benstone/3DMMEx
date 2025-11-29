@@ -90,12 +90,6 @@ target_sources(studio
 
     # Windows
     $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/src/studio/mminstal.cpp>
-    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/src/studio/configwin.cpp>
-
-    # non-Windows
-
-    # TODO: replace with a module that saves settings to a file
-    $<$<NOT:$<PLATFORM_ID:Windows>>:${PROJECT_SOURCE_DIR}/src/studio/configstub.cpp>
 )
 
 if(3DMM_GUI STREQUAL "SDL")
@@ -103,6 +97,13 @@ if(3DMM_GUI STREQUAL "SDL")
         studio
         PRIVATE
         "${PROJECT_SOURCE_DIR}/src/studio/dlgsdl.cpp"
+        "${PROJECT_SOURCE_DIR}/src/studio/configini.cpp"
+    )
+
+    target_link_libraries(
+        studio
+        PRIVATE
+        iniparser-static
     )
 
     # Select portfolio
@@ -133,6 +134,7 @@ elseif(3DMM_GUI STREQUAL "Win32")
         studio
         PRIVATE
         "${PROJECT_SOURCE_DIR}/src/studio/portfwin.cpp"
+        "${PROJECT_SOURCE_DIR}/src/studio/configwin.cpp"
     )
 endif()
 
