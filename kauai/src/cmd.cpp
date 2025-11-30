@@ -692,14 +692,17 @@ void CEX::BuryCmh(PCMH pcmh)
             ReleaseCapture();
         _hwndCapture = hNil;
 #elif defined(KAUAI_SDL)
-        int ret = SDL_CaptureMouse(SDL_FALSE);
-        if (ret == 0)
+        if (_fTrackingMouse)
         {
-            _fTrackingMouse = fFalse;
-        }
-        else
-        {
-            Bug(SDL_GetError());
+            int ret = SDL_CaptureMouse(SDL_FALSE);
+            if (ret == 0)
+            {
+                _fTrackingMouse = fFalse;
+            }
+            else
+            {
+                Bug(SDL_GetError());
+            }
         }
 #endif // KAUAI_WIN32
         _pgobTrack = pvNil;
