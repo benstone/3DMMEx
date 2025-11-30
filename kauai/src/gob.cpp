@@ -1093,8 +1093,8 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
     int xpWnd, ypWnd;
     SDL_GetWindowPosition((SDL_Window *)vwig.hwndApp, &xpWnd, &ypWnd);
 
-    pts.xp -= xpWnd;
-    pts.yp -= ypWnd;
+    pts.xp = xp - xpWnd;
+    pts.yp = yp - ypWnd;
 
     pgob = PgobScreen();
 #else
