@@ -69,6 +69,8 @@ bool FPortDisplayWithIds(FNI *pfni, bool fOpen, int32_t lFilterLabel, int32_t lF
     const int32_t cfilteritem = 1;
     nfdu8filteritem_t rgfilteritem[cfilteritem];
 
+    vpcex->Suspend(fTrue);
+
     // Get initial directory
     if (pfniInitialDir != pvNil)
     {
@@ -152,6 +154,7 @@ bool FPortDisplayWithIds(FNI *pfni, bool fOpen, int32_t lFilterLabel, int32_t lF
 LDone:
     vpsndm->StopAll(sqnNil, sclNil);
     vapp.SetFInPortfolio(fFalse);
+    vpcex->Suspend(fFalse);
 
     // Notify scripts that the portfolio was closed
     vpcex->EnqueueCid(cidPortfolioClosed, 0, 0, fRet);
