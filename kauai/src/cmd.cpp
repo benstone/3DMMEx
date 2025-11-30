@@ -1261,7 +1261,7 @@ void CEX::Suspend(bool fSuspend)
         ReleaseCapture();
     else if (!fSuspend && GetCapture() != _hwndCapture)
         SetCapture(_hwndCapture);
-#elif defined(KAUAI_WIN32)
+#elif defined(KAUAI_SDL)
     if (_fTrackingMouse)
     {
         if (fSuspend)
