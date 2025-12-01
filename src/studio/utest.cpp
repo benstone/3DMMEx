@@ -23,6 +23,10 @@
 #include "mminstal.h"
 #endif // KAUAI_WIN32
 
+#ifdef KAUAI_SDL
+#include <cstdio>
+#endif // KAUAI_SDL
+
 ASSERTNAME
 
 // If the following value is defined, 3DMM displays the dlidDesktopResizing
@@ -3103,6 +3107,11 @@ bool APP::FGetOnn(PSTN pstn, int32_t *ponn)
 
     if (!vntl.FGetOnn(pstn, ponn))
     {
+
+#ifdef KAUAI_SDL
+        fprintf(stderr, "Could not find font: %s\n", pstn->Psz());
+#endif // KAUAI_SDL
+
         if (!_fFontError)
         {
             PushErc(ercSocNoDefaultFont);
