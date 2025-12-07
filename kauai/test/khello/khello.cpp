@@ -371,7 +371,26 @@ bool MessageLogGob::FCmdRollOff(PCMD cmd)
 bool MessageLogGob::FCmdTrackMouse(PCMD_MOUSE pcmd)
 {
     STN stnCmd;
-    stnCmd.FFormatSz(PszLit("cidTrackMouse: xp: %d yp: %d cact: %d grfcust: %d"), pcmd->xp, pcmd->yp, pcmd->cact,
+    STN stnCmdType;
+
+    if (pcmd->cid == cidMouseDown)
+    {
+        stnCmdType = PszLit("cidMouseDown");
+    }
+    else if (pcmd->cid == cidTrackMouse)
+    {
+        stnCmdType = PszLit("cidTrackMouse");
+    }
+    else if (pcmd->cid == cidMouseMove)
+    {
+        stnCmdType = PszLit("cidMouseMove");
+    }
+    else
+    {
+        stnCmdType.FFormatSz(PszLit("cid=%d"), pcmd->cid);
+    }
+
+    stnCmd.FFormatSz(PszLit("%s: xp: %d yp: %d cact: %d grfcust: %d"), &stnCmdType, pcmd->xp, pcmd->yp, pcmd->cact,
                      pcmd->grfcust);
 
     for (int32_t ibit = 0; ibit < 4; ibit++)
@@ -384,6 +403,22 @@ bool MessageLogGob::FCmdTrackMouse(PCMD_MOUSE pcmd)
     }
 
     AddCmd(stnCmd);
+
+    switch (pcmd->cid)
+    {
+    case cidMouseDown:
+        vpcex->TrackMouse(this);
+        break;
+    case cidTrackMouse:
+        if ((pcmd->grfcust & fcustMouse) == 0)
+        {
+            vpcex->EndMouseTracking();
+        }
+        break;
+    default:
+        break;
+    }
+
     return fFalse;
 }
 
