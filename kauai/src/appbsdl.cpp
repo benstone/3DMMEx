@@ -201,6 +201,7 @@ void APPB::_DispatchEvt(PEVT pevt)
     PGOB pgob;
     int xp, yp;
     PT pt;
+    int32_t grfcust;
 
     switch (pevt->type)
     {
@@ -271,40 +272,61 @@ void APPB::_DispatchEvt(PEVT pevt)
         xp = pevt->button.x;
         yp = pevt->button.y;
 
-        // Find GOB at this point
-        // note: we only support one window in SDL
-        pgob = GOB::PgobScreen()->PgobFromPt(xp, yp, &pt);
+        // GrfcustCur() may not always have fcustMouse set when the message is processed.
+        grfcust = GrfcustCur();
+        grfcust |= fcustMouse;
 
-        if (pvNil != pgob)
+        pgob = vpcex->PgobTracking();
+        if (pgob != pvNil)
         {
-            int32_t ts;
+            // A GOB is tracking the mouse.
+            // Send a cidTrackMouse message instead of a cidMouseDown message.
 
-            // compute the multiplicity of the click - don't use Windows'
-            // guess, since it can be wrong for our GOBs. It's even wrong
-            // at the HWND level! (Try double-clicking the maximize button).
-            ts = pevt->common.timestamp;
-            if (_pgobMouse == pgob && FIn(ts - _tsMouse, 0, kdtsDoubleClick))
-            {
-                _cactMouse++;
-            }
-            else
-                _cactMouse = 1;
-            _tsMouse = ts;
-            if (_pgobMouse != pgob && pvNil != _pgobMouse)
-            {
-                AssertPo(_pgobMouse, 0);
-                vpcex->EnqueueCid(cidRollOff, _pgobMouse);
-            }
-            _pgobMouse = pgob;
-            _xpMouse = klwMax;
+            CMD_MOUSE cmd;
+            cmd.pcmh = pgob;
+            cmd.pgg = pvNil;
+            cmd.cid = cidTrackMouse;
+            cmd.xp = xp;
+            cmd.yp = yp;
+            cmd.grfcust = grfcust;
+            cmd.cact = 1;
 
-            // GrfcustCur() may not always have fcustMouse set when the message is processed.
-            int32_t grfcust = GrfcustCur();
-            grfcust |= fcustMouse;
-            pgob->MouseDown(pt.xp, pt.yp, _cactMouse, grfcust);
+            vpcex->EnqueueCmd((PCMD)&cmd);
         }
         else
-            _pgobMouse = pvNil;
+        {
+            // Find GOB at this point
+            // note: we only support one window in SDL
+            pgob = GOB::PgobScreen()->PgobFromPt(xp, yp, &pt);
+
+            if (pvNil != pgob)
+            {
+                int32_t ts;
+
+                // compute the multiplicity of the click - don't use Windows'
+                // guess, since it can be wrong for our GOBs. It's even wrong
+                // at the HWND level! (Try double-clicking the maximize button).
+                ts = pevt->common.timestamp;
+                if (_pgobMouse == pgob && FIn(ts - _tsMouse, 0, kdtsDoubleClick))
+                {
+                    _cactMouse++;
+                }
+                else
+                    _cactMouse = 1;
+                _tsMouse = ts;
+                if (_pgobMouse != pgob && pvNil != _pgobMouse)
+                {
+                    AssertPo(_pgobMouse, 0);
+                    vpcex->EnqueueCid(cidRollOff, _pgobMouse);
+                }
+                _pgobMouse = pgob;
+                _xpMouse = klwMax;
+
+                pgob->MouseDown(pt.xp, pt.yp, _cactMouse, grfcust);
+            }
+            else
+                _pgobMouse = pvNil;
+        }
         break;
     default:
         // ignore event
