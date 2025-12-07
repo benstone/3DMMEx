@@ -512,7 +512,7 @@ void SDLSoundDevice::OnChannelFinished(int channel)
     evt.type = SDL_USEREVENT_SOUND_FINISHED;
     evt.user.code = channel;
 
-    Assert(SDL_PushEvent(&evt) == 1, SDL_GetError());
+    AssertDo(SDL_PushEvent(&evt) > 0, SDL_GetError());
 }
 
 PSDLSoundDevice SDLSoundDevice::PsdlsdNew()
