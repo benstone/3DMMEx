@@ -36,6 +36,9 @@ RTCLASS(CEX)
 
 int32_t CMH::_hidLast;
 
+// Number of milliseconds to wait between repeat cidTrackMouse commands
+const int32_t kdtsTrackMouse = 10;
+
 #ifdef DEBUG
 /***************************************************************************
     Assert the validity of a CMD.
@@ -934,6 +937,20 @@ tribool CEX::_TGetNextCmd(void)
             else
                 pcmd->grfcust &= ~fcustMouse;
         }
+
+        // Check if we need to dispatch this message
+        int32_t tsNow = TsCurrentSystem();
+        bool fEqualLastTrack = FEqualRgb(&_cmdCur, &_cmdLastTrack, SIZEOF(_cmdLastTrack));
+        if (fEqualLastTrack && ((tsNow - _tsLastTrack) < kdtsTrackMouse))
+        {
+            return tNo;
+        }
+
+        _tsLastTrack = tsNow;
+        if (!fEqualLastTrack)
+        {
+            _cmdLastTrack = _cmdCur;
+        }
     }
     AssertPo(&_cmdCur, 0);
 
@@ -1205,6 +1222,9 @@ void CEX::TrackMouse(PGOB pgob)
         Warn(SDL_GetError());
     }
 #endif // KAUAI_WIN32
+
+    _tsLastTrack = 0;
+    _cmdLastTrack.cid = 0;
 }
 
 /***************************************************************************

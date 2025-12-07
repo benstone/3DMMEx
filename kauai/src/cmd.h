@@ -258,8 +258,10 @@ class CEX : public CEX_PAR
     int32_t _icmheNext; // next command handler to dispatch to
     PGOB _pgobTrack;    // the gob that is tracking the mouse
 #ifdef KAUAI_WIN32
-    HWND _hwndCapture; // the hwnd that we captured the mouse with
-#endif                 // KAUAI_WIN32
+    HWND _hwndCapture;    // the hwnd that we captured the mouse with
+#endif                    // KAUAI_WIN32
+    CMD _cmdLastTrack;    // Last cidTrackMouse command
+    int32_t _tsLastTrack; // Time since last cidTrackMouse command
 
 #ifdef KAUAI_SDL
     bool _fTrackingMouse;
