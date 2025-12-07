@@ -8664,6 +8664,7 @@ void MVU::MarkMem(void)
     AssertThis(0);
     MVU_PAR::MarkMem();
     MarkMemObj(Pmvie());
+    MarkMemObj(_paund);
 }
 #endif // DEBUG
 
