@@ -709,6 +709,13 @@ bool APPB::_FCommonWndProc(HWND hwnd, UINT wm, WPARAM wParam, LPARAM lw, int32_t
 
     case WM_LBUTTONDOWN:
     case WM_LBUTTONDBLCLK:
+
+        // Avoid duplicate mouse messages if a GOB is tracking the mouse
+        if (vpcex->PgobTracking() != pvNil)
+        {
+            break;
+        }
+
         ResetToolTip();
         if (pvNil != (pgob = GOB::PgobFromHwnd(hwnd)) && pvNil != (pgob = pgob->PgobFromPt(SwLow(lw), SwHigh(lw), &pt)))
         {
