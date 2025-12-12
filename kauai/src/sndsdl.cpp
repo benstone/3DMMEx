@@ -591,3 +591,28 @@ void SDLSoundDevice::AssertValid(uint32_t grf)
     SDLSoundDevice_PAR::AssertValid(0);
 }
 #endif // DEBUG
+
+bool FValidSoundFile(PFNI pfniSoundFile)
+{
+    AssertPo(pfniSoundFile, 0);
+
+    bool fRet = fFalse;
+    STN stnFilePath;
+    Mix_Chunk *pchunk = pvNil;
+
+    pfniSoundFile->GetStnPath(&stnFilePath);
+
+    pchunk = Mix_LoadWAV(stnFilePath.Psz());
+    if (pchunk != pvNil)
+    {
+        fRet = fTrue;
+        Mix_FreeChunk(pchunk);
+        pchunk = pvNil;
+    }
+    else
+    {
+        Bug(Mix_GetError());
+    }
+
+    return fRet;
+}
