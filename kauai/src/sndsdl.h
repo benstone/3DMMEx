@@ -64,4 +64,7 @@ class SDLSoundDevice : public SDLSoundDevice_PAR
     void NotifyChannelFinished(int channel);
 };
 
+// Return true if this sound can be loaded by SDL_Mixer
+bool FValidSoundFile(PFNI pfniSoundFile);
+
 #endif // SNDSDL_H
