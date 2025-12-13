@@ -1,25 +1,46 @@
 # 3DMMEx
 
-3DMMEx is a fork of [Microsoft 3D Movie Maker](https://github.com/microsoft/Microsoft-3D-Movie-Maker) that aims to preserve the classic 3D Movie Maker experience while adding minor enhancements for an improved user experience.
+3DMMEx is a source port of [Microsoft 3D Movie Maker](https://github.com/microsoft/Microsoft-3D-Movie-Maker) that aims to preserve the classic 3D Movie Maker experience while adding minor enhancements for an improved user experience.
 
-![3D Movie Maker](img/3dmovie.jpg?raw=true)
+3DMMEx builds upon the amazing work of the [3DMMForever](https://github.com/foone/3DMMForever) project.
 
-3DMMEx builds upon the amazing work of the [3DMMForever](https://github.com/foone/3DMMForever) project. It is designed to maintain compatibility with 3DMMForever, with many of the changes designed to be contributed back upstream whenever possible.
+## Features
+
+* Cross-platform support (in progress)
+  * SDL2 graphics/input support
+  * Linux platform support
+* Portability improvements
+  * Supports compiling with Visual Studio 2022, Clang and GCC
+  * Inline assembly language code replaced with portable C++
+  * Unit tests
+* Usability improvements
+  * Improved mouse input handling
+  * New keyboard shortcuts for scrolling in browser dialogs
+  * High-quality sound import
 
 ## Build
 
 ### Requirements
 
-* Visual Studio 2022
-  * Desktop development with C++ workload
-  * Clang (optional)
-* Ninja
 * CMake 3.22+
-* WiX (optional: required to build MSI packages)
+* Ninja build
+* Windows:
+  * Visual Studio 2022
+    * Desktop development with C++ workload
+    * Clang (optional)
+* Linux:
+  * GCC
+  * Development libraries for SDL2, SDL2_ttf, SDL2_mixer, GTK3, iconv and Fontconfig
+  * Zenity (optional: used for dialog boxes)
+  * [Comic Sans MS font](https://corefonts.sourceforge.net/) (optional but strongly recommended!)
+  * Installing dependencies:
+    * Ubuntu: `sudo apt install g++ cmake ninja-build libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev libgtk-3-dev libfontconfig-dev zenity`
 
 ### Building
 
 Use CMake to build the project. The project includes a CMakePresets.json file that specifies [build presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html).
+
+#### Building on Windows
 
 * Open the Developer Command Prompt for Visual Studio 2022 (or use a tool such as [VCVars](https://github.com/bruxisma/VCVars) to add the build tools to your path)
 * Run `cmake --preset <preset-name>`:
@@ -34,6 +55,14 @@ Use CMake to build the project. The project includes a CMakePresets.json file th
 * To build a release package, run `cmake --build build\<preset-name> --target dist`
   * A ZIP archive containing a portable install is created in the build directory.
   * If WiX is installed, an MSI package is also created.
+
+#### Building on Linux
+
+* Run `cmake --preset <preset-name>`
+  * The recommended preset is `sdl-x86_64-gcc-linux-debug`
+* Run `cmake --build build/<preset-name> --target install`
+* To run tests, run `ctest --test-dir build/<preset-name>`
+* To run 3DMM, run `dist/<preset-name>/3dmovie`
 
 ## Legal stuff
 
