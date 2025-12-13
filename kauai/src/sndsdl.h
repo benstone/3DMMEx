@@ -13,6 +13,11 @@
 // Custom SDL message used for notifications
 #define SDL_USEREVENT_SOUND_FINISHED (SDL_USEREVENT + 1)
 
+typedef int SDLChannelId;
+
+// Channel ID reserved for MIDI playback
+extern const SDLChannelId kSDLChannelIdMidi;
+
 typedef class SDLSoundDevice *PSDLSoundDevice;
 
 #define SDLSoundDevice_PAR SNDMQ

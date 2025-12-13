@@ -13,11 +13,12 @@ ASSERTNAME
 
 #define AssertDoMix(x) AssertDo(x >= 0, Mix_GetError());
 
-typedef int SDLChannelId;
-
 // Maximum number of SDL channels that will be allocated
 const SDLChannelId kSDLChannelIdMac = 32;
 const SDLChannelId kSDLChannelIdInvalid = -1;
+
+// Channel ID reserved for MIDI playback
+const SDLChannelId kSDLChannelIdMidi = 0;
 
 // Number of milliseconds after playing a new sound that pause will be ignored.
 // This is a hack to work around a difference in behaviour in AudioMan.
@@ -425,6 +426,9 @@ PSNQUE SDLSoundDevice::_PsnqueNew(void)
     bool rgfAllocated[kSDLChannelIdMac];
     ClearPb(rgfAllocated, SIZEOF(rgfAllocated));
 
+    // Reserve channel for MIDI playback
+    rgfAllocated[kSDLChannelIdMidi] = fTrue;
+
     for (int32_t iqueue = 0; iqueue < _pglsnqd->IvMac(); iqueue++)
     {
         SNQD snqd;
@@ -438,6 +442,7 @@ PSNQUE SDLSoundDevice::_PsnqueNew(void)
 
         if (ichannel >= 0 && ichannel < CvFromRgv(rgfAllocated))
         {
+            Assert(!rgfAllocated[ichannel], "Mixer channel used by multiple sound queues");
             rgfAllocated[ichannel] = fTrue;
         }
         else
