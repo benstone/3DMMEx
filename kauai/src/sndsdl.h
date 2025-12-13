@@ -13,6 +13,11 @@
 // Kauai command ID used to indicate that a sound finished playing
 #define cidSDLSoundChannelFinished 110001
 
+typedef int SDLChannelId;
+
+// Channel ID reserved for MIDI playback
+extern const SDLChannelId kSDLChannelIdMidi;
+
 typedef class SDLSoundDevice *PSDLSoundDevice;
 typedef class SDLSoundNotifier *PSDLSoundNotifier;
 
