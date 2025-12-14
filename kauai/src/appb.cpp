@@ -296,6 +296,11 @@ bool APPB::FCmdIdle(PCMD pcmd)
 
     if ((_cactIdle & 0x0F) == 1 && pvNil != (pgob = GOB::PgobScreen()))
     {
+        // Skip mouse move events if a GOB is tracking the mouse
+        bool fTrackingMouse = vpcex->PgobTracking() != pvNil;
+        if (fTrackingMouse)
+            return fTrue;
+
         // check to see if the mouse moved
         PT pt;
         bool fDown;
