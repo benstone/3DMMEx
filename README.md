@@ -11,6 +11,7 @@
   * Linux platform support
 * Portability improvements
   * Supports compiling with Visual Studio 2022, Clang and GCC
+  * 64-bit support: supports compiling for x64 and ARM64
   * Inline assembly language code replaced with portable C++
   * Unit tests
 * Usability improvements
