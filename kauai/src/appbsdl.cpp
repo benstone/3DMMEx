@@ -29,6 +29,17 @@ const uint32_t kdypWindow = 480;
 static SDL_Cursor *vpsdlcursWait = pvNil;
 static SDL_Cursor *vpsdlcursArrow = pvNil;
 
+// SDL Event number used for sending Kauai commands from other threads
+static uint32_t _sdlevttypeEnqueueCmd = 0;
+
+// SDL_Event extension to support sending a Kauai command
+typedef struct SDL_Event_KauaiCmd_t
+{
+    SDL_CommonEvent common;
+    CMD cmd;
+} SDL_Event_KauaiCmd;
+static_assert(SIZEOF(SDL_Event_KauaiCmd) < SIZEOF(SDL_Event), "Event extension does not fit in SDL_Event");
+
 /*
  * Create debug console window and wire up std streams
  */
@@ -81,6 +92,14 @@ bool APPB::_FInitOS(void)
     if (ret < 0)
     {
         Warn(SDL_GetError());
+        return fFalse;
+    }
+
+    // Register a custom SDL event to allow other threads to send commands
+    _sdlevttypeEnqueueCmd = SDL_RegisterEvents(1);
+    if (_sdlevttypeEnqueueCmd == ((uint32_t)-1))
+    {
+        Bug(SDL_GetError());
         return fFalse;
     }
 
@@ -329,6 +348,13 @@ void APPB::_DispatchEvt(PEVT pevt)
         }
         break;
     default:
+
+        if (pevt->type == _sdlevttypeEnqueueCmd)
+        {
+            SDL_Event_KauaiCmd *pevtKauaiCmd = (SDL_Event_KauaiCmd *)pevt;
+            vpcex->EnqueueCmd(&pevtKauaiCmd->cmd);
+        }
+
         // ignore event
         break;
     }
@@ -858,4 +884,21 @@ int32_t APPB::Win32VkFromVk(int32_t vk)
     }
 
     return vk;
+}
+
+/***************************************************************************
+    Enqueue a Kauai command using the SDL Event queue.
+***************************************************************************/
+void SDLEnqueueCmd(PCMD pcmd)
+{
+    AssertPo(pcmd, 0);
+
+    SDL_Event evt;
+    ClearPb(&evt, SIZEOF(evt));
+
+    SDL_Event_KauaiCmd *pevt = (SDL_Event_KauaiCmd *)&evt;
+    pevt->common.type = _sdlevttypeEnqueueCmd;
+    pevt->cmd = *pcmd;
+
+    AssertDo(SDL_PushEvent(&evt) > 0, SDL_GetError());
 }

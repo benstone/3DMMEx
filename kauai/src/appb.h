@@ -375,4 +375,9 @@ enum
     cokStop,        // inform the user that we can't do that
 };
 
+#ifdef KAUAI_SDL
+// Enqueue a Kauai command using the SDL Event queue.
+void SDLEnqueueCmd(PCMD pcmd);
+#endif // KAUAI_SDL
+
 #endif //! APPB_H
