@@ -152,6 +152,45 @@ jobs:
           path: |
             dist/x64-clangcl-relwithdebinfo
 
+  compile-msvc-arm64-release:
+    name: Windows MSVC ARM64 Release
+    runs-on: windows-11-arm
+    if: github.event.repository.visibility == 'public'
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: CMake Generate
+        shell: cmd
+        run: |
+          call "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" arm64
+          cmake --preset arm64-msvc-relwithdebinfo -D3DMM_PACKAGE_WIX=OFF
+      - name: CMake Build
+        shell: cmd
+        run: |
+          call "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" arm64
+          cmake --build build/arm64-msvc-relwithdebinfo --target tools studio tests
+      - name: Run tests
+        shell: cmd
+        run: |
+          ctest --test-dir build/arm64-msvc-relwithdebinfo --output-on-failure --timeout 60
+      - name: CMake Install
+        shell: cmd
+        run: |
+          cmake --install build/arm64-msvc-relwithdebinfo --prefix dist/arm64-msvc-relwithdebinfo
+      - name: Upload debug symbols
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3DMMEx Windows ARM64 debug symbols
+          path: |
+            build/arm64-msvc-relwithdebinfo/src/3dmovie.pdb
+            build/arm64-msvc-relwithdebinfo/src/chomp/studio/*.i
+      - name: Upload Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3DMMEx Windows ARM64
+          path: |
+            dist/arm64-msvc-relwithdebinfo
+
   compile-gcc-x86_64-linux-release:
     name: Linux gcc x86_64 Debug
     runs-on: ubuntu-latest
