@@ -143,6 +143,31 @@
             }
         },
         {
+            "name": "msvc-arm64-base",
+            "inherits": "msvc-base",
+            "hidden": true,
+            "architecture": {
+                "value": "arm64",
+                "strategy": "external"
+            }
+        },
+        {
+            "displayName": "MSVC ARM64 Debug",
+            "name": "arm64-msvc-debug",
+            "inherits": "msvc-arm64-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "displayName": "MSVC ARM64 RelWithDebInfo",
+            "name": "arm64-msvc-relwithdebinfo",
+            "inherits": "msvc-arm64-base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
             "name": "clangcl:x64:base",
             "inherits": "clangcl:base",
             "hidden": true,
