@@ -5,9 +5,9 @@ jobs:
     name: Formatting Check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Run clang-format style check for C/C++/Protobuf programs.
-      uses: jidicula/clang-format-action@v4.13.0
-      with:
-        clang-format-version: '14'
-        check-path: '.'
+    - name: Check out repository code
+      uses: actions/checkout@v4
+    - name: Run clang-format
+      run: find . -iname '*.cpp' -o -iname '*.c' -o -iname '*.h' | xargs pipx run "clang-format>=14,<15" --style=file -i
+    - name: Check code is formatted
+      run: git diff --exit-code || (echo "Code is not formatted correctly. Please run clang-format or manually apply the changes above."; exit 1)
