@@ -503,6 +503,9 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
             plw = (int32_t *)*plw;
         }
     }
+#else
+    ClearPb(rglw, SIZEOF(rglw));
+#endif // WIN && IN_80386
 
     for (cact = 0; cact < 2; cact++)
     {
@@ -542,12 +545,18 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
 
         if (cact == 0)
         {
-            pv = rglw;
-            cb = size(rglw);
-            stn1 = stn2;
+            if (rglw[0] != 0)
+            {
+                pv = rglw;
+                cb = SIZEOF(rglw);
+                stn1 = stn2;
+            }
+            else
+            {
+                break;
+            }
         }
     }
-#endif // WIN && IN_80386
 
 #ifdef WIN
     OutputDebugString(stn0.Psz());
