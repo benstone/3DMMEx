@@ -467,43 +467,6 @@ bool APPB::_FInit(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
 }
 
 /***************************************************************************
-    Initialize the sound manager.  Default is to return true whether or not
-    we could create the sound manager.
-***************************************************************************/
-bool APPB::_FInitSound(int32_t wav)
-{
-    AssertBaseThis(0);
-    PSNDV psndv;
-
-    if (pvNil != vpsndm)
-        return fTrue;
-
-    // create the Sound manager
-    if (pvNil == (vpsndm = SNDM::PsndmNew()))
-        return fTrue;
-
-#if defined(KAUAI_WIN32)
-
-#if defined(HAS_AUDIOMAN)
-    if (pvNil != (psndv = SDAM::PsdamNew(wav)))
-    {
-        vpsndm->FAddDevice(kctgWave, psndv);
-        ReleasePpo(&psndv);
-    }
-#endif // HAS_AUDIOMAN
-
-    // create the midi playback device - use the stream one
-    if (pvNil != (psndv = MDPS::PmdpsNew()))
-    {
-        vpsndm->FAddDevice(kctgMidi, psndv);
-        ReleasePpo(&psndv);
-    }
-#endif // KAUAI_WIN32
-
-    return fTrue;
-}
-
-/***************************************************************************
     Standard menu initialization.  Just loads menu number 128.
 ***************************************************************************/
 bool APPB::_FInitMenu(void)

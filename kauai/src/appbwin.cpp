@@ -104,6 +104,40 @@ bool APPB::_FInitOS(void)
 }
 
 /***************************************************************************
+    Initialize the sound manager.  Default is to return true whether or not
+    we could create the sound manager.
+***************************************************************************/
+bool APPB::_FInitSound(int32_t wav)
+{
+    AssertBaseThis(0);
+    PSNDV psndv;
+
+    if (pvNil != vpsndm)
+        return fTrue;
+
+    // create the Sound manager
+    if (pvNil == (vpsndm = SNDM::PsndmNew()))
+        return fTrue;
+
+#if defined(HAS_AUDIOMAN)
+    if (pvNil != (psndv = SDAM::PsdamNew(wav)))
+    {
+        vpsndm->FAddDevice(kctgWave, psndv);
+        ReleasePpo(&psndv);
+    }
+#endif // HAS_AUDIOMAN
+
+    // create the midi playback device - use the stream one
+    if (pvNil != (psndv = MDPS::PmdpsNew()))
+    {
+        vpsndm->FAddDevice(kctgMidi, psndv);
+        ReleasePpo(&psndv);
+    }
+
+    return fTrue;
+}
+
+/***************************************************************************
     Get the next event from the OS event queue. Return true iff it's a
     real event (not just an idle type event).
 ***************************************************************************/
