@@ -44,6 +44,11 @@ extern uint32_t DtsCaret(void);
 ***************************************************************************/
 extern bool FGetAppConfigDir(char *psz, int32_t cchMax);
 
+/***************************************************************************
+    Return a path to a directory to store documents
+***************************************************************************/
+extern bool FGetDocumentsDir(char *psz, int32_t cchMax);
+
 #ifndef WIN
 /****************************************
     Current executable name

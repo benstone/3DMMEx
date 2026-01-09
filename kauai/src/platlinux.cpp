@@ -164,3 +164,13 @@ bool FGetAppConfigDir(char *psz, int32_t cchMax)
 
     return true;
 }
+
+bool FGetDocumentsDir(char *psz, int32_t cchMax)
+{
+    if (GetEnvironmentVariable("HOME", psz, cchMax) != 0)
+    {
+        return true;
+    }
+
+    return false;
+}

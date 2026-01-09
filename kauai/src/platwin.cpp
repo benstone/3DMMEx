@@ -85,7 +85,7 @@ uint32_t DtsCaret(void)
 #endif
 }
 
-bool FGetAppConfigDir(char *psz, int32_t cchMax)
+static bool FFindSpecialDir(int32_t csidl, char *psz, int32_t cchMax)
 {
     HRESULT hr;
     char szPath[MAX_PATH];
@@ -96,8 +96,7 @@ bool FGetAppConfigDir(char *psz, int32_t cchMax)
 
     psz[0] = 0;
 
-    // Get the path to the roaming AppData directory
-    hr = SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, szPath);
+    hr = SHGetFolderPathA(NULL, csidl, NULL, 0, szPath);
     if (FAILED(hr))
         return false;
 
@@ -107,4 +106,16 @@ bool FGetAppConfigDir(char *psz, int32_t cchMax)
 
     memcpy(psz, szPath, cchPath + 1);
     return true;
+}
+
+bool FGetAppConfigDir(char *psz, int32_t cchMax)
+{
+    // Get the path to the roaming AppData directory
+    return FFindSpecialDir(CSIDL_APPDATA, psz, cchMax);
+}
+
+bool FGetDocumentsDir(char *psz, int32_t cchMax)
+{
+    // Get the path to the user's documents directory
+    return FFindSpecialDir(CSIDL_PERSONAL, psz, cchMax);
 }
