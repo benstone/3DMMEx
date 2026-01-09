@@ -10,6 +10,7 @@
 #include "frame.h"
 #include "fcntl.h"
 #include "stdio.h"
+#include "sndma.h"
 
 ASSERTNAME
 
@@ -142,7 +143,12 @@ bool APPB::_FInitSound(int32_t wav)
     if (pvNil == (vpsndm = SNDM::PsndmNew()))
         return fTrue;
 
-    // TODO: Add sound devices
+    // Add Miniaudio sound device
+    if (pvNil != (psndv = MiniaudioDevice::PmadevNew()))
+    {
+        vpsndm->FAddDevice(kctgWave, psndv);
+        ReleasePpo(&psndv);
+    }
 
     return fTrue;
 }
