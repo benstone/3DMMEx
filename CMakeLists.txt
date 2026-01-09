@@ -95,6 +95,8 @@ elseif("${3DMM_GUI}" STREQUAL "SDL")
     find_package(SDL2 CONFIG REQUIRED)
     find_package(SDL2_ttf CONFIG REQUIRED)
 
+    include(FetchMiniaudio)
+
     # TODO: Find libiniparser if installed
     include(FetchIniParser)
 
