@@ -308,6 +308,21 @@ else()
     message(WARNING "Sound playback disabled")
 endif()
 
+# Miniaudio sound device
+if(3DMM_GUI STREQUAL "SDL")
+    target_sources(
+        KauaiSound
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/sndmasound.cpp"
+        "${PROJECT_SOURCE_DIR}/kauai/src/sndmadevice.cpp"
+    )
+    target_link_libraries(
+        KauaiSound
+        PUBLIC
+        miniaudio
+    )
+endif()
+
 # Pic: vector graphics support
 add_library(KauaiPic
     "${PROJECT_SOURCE_DIR}/kauai/src/pic.cpp"
