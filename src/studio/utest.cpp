@@ -1227,24 +1227,29 @@ bool APP::_FGetUserDirectories(void)
     }
     AssertPo(&_fniMelanieDir, ffniDir);
 
-    fFirstTimeUser = fFalse;
+    // Get the user's home directory from settings
     szDir[0] = chNil;
-    if (!FGetSetRegKey(kszHomeDirValue, szDir, SIZEOF(szDir), fregSetDefault | fregString))
+    if (FGetSetRegKey(kszHomeDirValue, szDir, SIZEOF(szDir), fregString))
     {
-        return fFalse;
+        fFirstTimeUser = fFalse;
     }
+    else
+    {
+        fFirstTimeUser = fTrue;
+    }
+
     stn.SetSz(szDir);
     if (stn.Cch() == 0 || !_fniUserDir.FBuildFromPath(&stn, kftgDir) || tYes != _fniUserDir.TExists())
     {
-        // Need to (find or create) and go to user's directory
-        fFirstTimeUser = fTrue;
-        _fniUserDir = _fniUsersDir;
+        // Find the user's documents directory
+        szDir[0] = chNil;
+        AssertDo(FGetDocumentsDir(szDir, SIZEOF(szDir)), "Could not get documents directory");
+        stn.SetSz(szDir);
 
-        // Ensure that user's root directory exists
-        if (!_fniUserDir.FDownDir(&_stnUser, ffniMoveToDir))
+        if (!_fniUserDir.FBuildFromPath(&stn, kftgDir) || tYes != _fniUserDir.TExists())
         {
-            if (!_fniUserDir.FDownDir(&_stnUser, ffniCreateDir | ffniMoveToDir))
-                return fFalse;
+            Bug("Documents directory is invalid");
+            return fFalse;
         }
 
         // Try to write path to user dir to the registry
