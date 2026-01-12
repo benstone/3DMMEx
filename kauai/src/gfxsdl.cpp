@@ -351,7 +351,27 @@ void GPT::DrawRcs(RCS *prcs, GDD *pgdd)
     AssertVarMem(pgdd);
 
     ACR acrFore = pgdd->acrFore;
-    if (acrFore == kacrClear)
+
+    // If there is a pattern, check if it is solid
+    bool fSolid = fTrue;
+    if (pgdd->grfgdd & fgddPattern)
+    {
+        if (pgdd->apt.FSolidFore())
+        {
+            // Solid foreground: fill the rectangle with the foreground color
+        }
+        else if (pgdd->apt.FSolidBack())
+        {
+            // Solid background: fill the rectangle with the background color
+            acrFore = pgdd->acrBack;
+        }
+        else
+        {
+            fSolid = fFalse;
+        }
+    }
+
+    if (fSolid && (acrFore == kacrClear))
     {
         // clear: do nothing
         return;
@@ -359,6 +379,7 @@ void GPT::DrawRcs(RCS *prcs, GDD *pgdd)
     else if (acrFore == kacrInvert)
     {
         // Invert the rectangle instead
+        Assert(fSolid, "inverting a pattern is not supported");
         HiliteRcs(prcs, pgdd);
         return;
     }
@@ -375,11 +396,8 @@ void GPT::DrawRcs(RCS *prcs, GDD *pgdd)
     // Convert color to SDL color
     SDL_Color clrFore = acrFore._SDLColor();
 
-    if ((pgdd->grfgdd & fgddPattern))
-    {
-        // TODO: support fgddPattern
-    }
-    else
+    // TODO: Support fgddPattern
+    if (fSolid)
     {
         Uint32 sdlclr = SDL_MapRGB(_surface->format, clrFore.r, clrFore.g, clrFore.b);
 
