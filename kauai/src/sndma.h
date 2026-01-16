@@ -12,11 +12,20 @@
 
 typedef class MiniaudioCachedSound *PMiniaudioCachedSound;
 
+// Size of block read cache
+#define kcbCache 4096
+
 // Decoder callbacks to read data from a BLCK
 struct BLCKReadContext
 {
     BLCK *pblck;
     int32_t ib;
+    int32_t cb;
+
+    // Read cache
+    int32_t ibCache;
+    int32_t cbCache;
+    uint8_t rgbCache[kcbCache];
 };
 
 struct MiniaudioSoundInstance
