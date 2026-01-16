@@ -12,6 +12,9 @@ ASSERTNAME
 
 #include "sndmapri.h"
 
+// Sound files smaller than this size will be stored in memory
+const int32_t kcbSoundMax = 64 * 1024;
+
 RTCLASS(MiniaudioCachedSound);
 
 MiniaudioCachedSound::MiniaudioCachedSound()
@@ -68,7 +71,20 @@ PMiniaudioCachedSound MiniaudioCachedSound::PMiniaudioCachedSoundNew(PFLO pflo, 
     }
     else
     {
+
         pmacsound->_blckData.Set(pflo);
+
+        // Cache the data in memory if it's small enough
+        if (pmacsound->_blckData.Cb() < kcbSoundMax)
+        {
+            HQ hqSound = hqNil;
+            if (pmacsound->_blckData.FReadHq(&hqSound))
+            {
+                // Block takes ownership of the HQ
+                pmacsound->_blckData.SetHq(&hqSound);
+            }
+            FreePhq(&hqSound);
+        }
     }
 
     // Cleanup
