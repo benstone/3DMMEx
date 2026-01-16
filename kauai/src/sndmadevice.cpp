@@ -7,6 +7,7 @@
 
 ***************************************************************************/
 #include "frame.h"
+#include <climits>
 ASSERTNAME
 
 #define AssertMaSuccess(var, msg) AssertVar(var == MA_SUCCESS, msg, &var)
@@ -32,38 +33,61 @@ const int32_t kdtsDebounce = 100;
 ***************************************************************************/
 static ma_result BlockRead(ma_decoder *pdecoder, void *pvBufferOut, size_t cbRead, size_t *pcbBytesRead)
 {
-    Assert(pdecoder != pvNil, "no decoder");
-    Assert(pvBufferOut != pvNil, "no buffer");
-    Assert(pcbBytesRead != pvNil, "no bytes read");
+    Assert(pdecoder != pvNil, "nil decoder");
+    Assert(pvBufferOut != pvNil, "nil buffer");
+    Assert(pcbBytesRead != pvNil, "nil bytes read");
+    Assert(cbRead < INT_MAX, "cannot read more than INT_MAX");
 
     ma_result result = MA_SUCCESS;
     BLCKReadContext *pcontext = pvNil;
 
-    if (pdecoder == pvNil || pdecoder->pUserData == pvNil || pcbBytesRead == pvNil)
+    if (pdecoder == pvNil || pdecoder->pUserData == pvNil || pcbBytesRead == pvNil || cbRead >= INT_MAX)
     {
         return MA_IO_ERROR;
     }
 
     pcontext = (BLCKReadContext *)pdecoder->pUserData;
-    Assert(pcontext != pvNil, "no context");
-    AssertPo(pcontext->pblck, 0);
-
-    size_t cbRemaining = pcontext->pblck->Cb() - pcontext->ib;
-    if (cbRemaining < cbRead)
+    Assert(pcontext != pvNil, "nil context");
+    Assert(pcontext->ib <= pcontext->cb, "Read position is past the end of the block");
+    if (pcontext->ib > pcontext->cb)
     {
-        cbRead = cbRemaining;
+        *pcbBytesRead = 0;
+        return MA_SUCCESS;
     }
 
-    if (pcontext->pblck->FReadRgb(pvBufferOut, cbRead, pcontext->ib, fFalse))
+    // Limit read size to remaining data in the block
+    int32_t cbRemaining = pcontext->cb - pcontext->ib;
+    cbRead = LwMin(cbRead, cbRemaining);
+
+    // Check if we need to fill the cache
+    if (pcontext->cbCache == 0 ||
+        (pcontext->ib < pcontext->ibCache || pcontext->ib >= (pcontext->ibCache + pcontext->cbCache)))
     {
-        pcontext->ib += cbRead;
-    }
-    else
-    {
-        cbRead = 0;
-        result = MA_IO_ERROR;
+        // Read a chunk of the sound into the cache
+        int32_t ibToCache = pcontext->ib;
+        int32_t cbToCache = LwMax(cbRead, SIZEOF(pcontext->rgbCache));
+        cbToCache = LwMin(cbToCache, pcontext->cb - pcontext->ib);
+
+        AssertPo(pcontext->pblck, 0);
+        Assert(pcontext->pblck->Cb() == pcontext->cb, "Block size changed since initialising reader");
+        if (!pcontext->pblck->FReadRgb(pcontext->rgbCache, cbToCache, ibToCache))
+        {
+            return MA_IO_ERROR;
+        }
+
+        pcontext->ibCache = ibToCache;
+        pcontext->cbCache = cbToCache;
     }
 
+    int32_t ibCacheRead = pcontext->ib - pcontext->ibCache;
+    cbRead = LwMin(cbRead, pcontext->cbCache - ibCacheRead);
+
+    Assert(pcontext->ib >= pcontext->ibCache, "Requested data is not inside cache data");
+    Assert(pcontext->ib + cbRead <= (pcontext->ibCache + SIZEOF(pcontext->rgbCache)),
+           "Reading past the end of the cache buffer");
+
+    CopyPb(pcontext->rgbCache + ibCacheRead, pvBufferOut, cbRead);
+    pcontext->ib += cbRead;
     *pcbBytesRead = cbRead;
     return result;
 }
@@ -78,7 +102,6 @@ static ma_result BlockSeek(ma_decoder *pdecoder, ma_int64 ib, ma_seek_origin ori
     BLCKReadContext *pcontext = (BLCKReadContext *)pdecoder->pUserData;
     Assert(pcontext != pvNil, "no context");
     AssertPo(pcontext->pblck, 0);
-    int32_t cb = pcontext->pblck->Cb();
 
     switch (origin)
     {
@@ -88,18 +111,18 @@ static ma_result BlockSeek(ma_decoder *pdecoder, ma_int64 ib, ma_seek_origin ori
         ib += pcontext->ib;
         break;
     case ma_seek_origin_end:
-        ib = cb - ib;
+        ib = pcontext->cb - ib;
         break;
     default:
         Bug("invalid ma_seek_origin");
         break;
     }
 
-    AssertIn(ib, 0, cb + 1);
+    AssertIn(ib, 0, pcontext->cb + 1);
     if (ib < 0)
         ib = 0;
-    if (ib > cb)
-        ib = cb;
+    if (ib > pcontext->cb)
+        ib = pcontext->cb;
     pcontext->ib = ib;
 
     return MA_SUCCESS;
@@ -211,8 +234,9 @@ bool MiniaudioDevice::FLoadSoundFromBlock(PBLCK pblck, BLCKReadContext *preadctx
     ma_result result;
 
     // Initialise block reader context structure
+    ClearPb(preadctx, SIZEOF(*preadctx));
     preadctx->pblck = pblck;
-    preadctx->ib = 0;
+    preadctx->cb = pblck->Cb();
 
     // Initialise the decoder.
     // The decoder reads the sound data from a block.
