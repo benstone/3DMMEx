@@ -308,11 +308,18 @@ bool MSND::FCopyWave(PFIL pfilSrc, PCFL pcflDest, int32_t sty, CNO *pcno, PSTN p
     Assert(sty != styMidi, "Illegal sty argument");
     AssertNilOrPo(pstn, 0);
 
-#if defined(KAUAI_WIN32) && defined(HAS_AUDIOMAN)
-
     FNI fniSrc;
     STN stnName; // sound name
     STN stn;     // src file path name
+
+    pfilSrc->GetFni(&fniSrc);
+    if (pvNil == pstn)
+        fniSrc.GetLeaf(&stnName);
+    else
+        stnName = *pstn;
+    fniSrc.GetStnPath(&stn);
+
+#if defined(KAUAI_WIN32) && defined(HAS_AUDIOMAN)
     WAVEFORMATEX wfxSrc;
     LPSOUND psnd = pvNil;
     LPSOUND psndTemp = pvNil;
@@ -335,13 +342,6 @@ bool MSND::FCopyWave(PFIL pfilSrc, PCFL pcflDest, int32_t sty, CNO *pcno, PSTN p
     FP fpNew;
     bool fCompress = fTrue;
     int32_t lwProp = 0;
-
-    pfilSrc->GetFni(&fniSrc);
-    if (pvNil == pstn)
-        fniSrc.GetLeaf(&stnName);
-    else
-        stnName = *pstn;
-    fniSrc.GetStnPath(&stn);
 
     if (!fniNew.FGetTemp())
         goto LFail;
@@ -575,9 +575,10 @@ LFail:
     return fFalse;
 
 #else
-    // TODO: implement sound import without AudioMan
-    RawRtn();
-    return fFalse;
+
+    // FUTURE: Check that this is a valid sound file
+    return MSND::FWriteWave(pfilSrc, pcflDest, sty, &stnName, pcno);
+
 #endif // KAUAI_WIN32 && HAS_AUDIOMAN
 }
 
