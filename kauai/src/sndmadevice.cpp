@@ -169,11 +169,22 @@ bool MiniaudioDevice::_FInit()
     AssertBaseThis(0);
     ma_result result;
 
-    // Initialise miniaudio
-    ma_engine_config config = ma_engine_config_init();
+    _pmanager = MiniaudioManager::Pmanager();
 
-    result = ma_engine_init(&config, &_engine);
-    AssertMaSuccess(result, "ma_engine_init failed");
+    if (_pmanager == pvNil)
+    {
+        return fFalse;
+    }
+
+    if (_pmanager->Pengine() == pvNil)
+    {
+        return fFalse;
+    }
+
+    _pmanager->AddRef();
+
+    result = ma_sound_group_init(_pmanager->Pengine(), 0, pvNil, &_soundgroup);
+    AssertMaSuccess(result, "Failed to initialise sound group");
     if (result != MA_SUCCESS)
     {
         return fFalse;
@@ -191,18 +202,20 @@ MiniaudioDevice::~MiniaudioDevice()
 {
     if (_fInitialised)
     {
-        ma_engine_stop(&_engine);
-
-        // Free all sounds
+        // Stop and free all sounds
         for (int32_t isndin = 0; isndin < CvFromRgv(_rgsndin); isndin++)
         {
             _rgsndin[isndin].cactPlay = 0;
+            ma_sound_stop(&_rgsndin[isndin].sound);
         }
         Flush();
 
-        ma_engine_uninit(&_engine);
         _fInitialised = fFalse;
+
+        ma_sound_group_uninit(&_soundgroup);
     }
+
+    ReleasePpo(&_pmanager);
 }
 
 void MiniaudioDevice::Lock()
@@ -243,7 +256,7 @@ bool MiniaudioDevice::FLoadSoundFromBlock(PBLCK pblck, BLCKReadContext *preadctx
     if (result == MA_SUCCESS)
     {
         // Initialise the sound that reads from the decoder
-        result = ma_sound_init_from_data_source(&_engine, pdecoder, 0, pvNil, psound);
+        result = ma_sound_init_from_data_source(_pmanager->Pengine(), pdecoder, 0, &_soundgroup, psound);
         AssertMaSuccess(result, "ma_sound_init_from_data_source failed");
 
         if (MA_SUCCESS != result)
@@ -281,13 +294,13 @@ void MiniaudioDevice::Activate(bool fActive)
 
     if (_cactSuspend == 0)
     {
-        result = ma_engine_start(&_engine);
-        AssertMaSuccess(result, "ma_engine_start failed");
+        result = ma_sound_group_start(&_soundgroup);
+        AssertMaSuccess(result, "ma_sound_group_start failed");
     }
     else if (_cactSuspend == 1)
     {
-        result = ma_engine_stop(&_engine);
-        AssertMaSuccess(result, "ma_engine_stop failed");
+        result = ma_sound_group_stop(&_soundgroup);
+        AssertMaSuccess(result, "ma_sound_group_stop failed");
     }
 }
 
@@ -325,8 +338,7 @@ void MiniaudioDevice::SetVlm(int32_t vlm)
     if (_vlm != vlm)
     {
         _vlm = vlm;
-        ma_result result = ma_engine_set_volume(&_engine, ScaleVlm(vlm));
-        AssertMaSuccess(result, "ma_engine_set_volume failed");
+        ma_sound_group_set_volume(&_soundgroup, ScaleVlm(vlm));
     }
 }
 
@@ -674,6 +686,7 @@ void MiniaudioDevice::MarkMem()
 {
     MiniaudioDevice_PAR::MarkMem();
 
+    MarkMemObj(_pmanager);
     for (int32_t isndin = 0; isndin < CvFromRgv(_rgsndin); isndin++)
     {
         MarkMemObj(_rgsndin[isndin].pbaco);

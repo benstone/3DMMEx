@@ -313,6 +313,7 @@ if(3DMM_GUI STREQUAL "SDL")
     target_sources(
         KauaiSound
         PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/sndmamanager.cpp"
         "${PROJECT_SOURCE_DIR}/kauai/src/sndmasound.cpp"
         "${PROJECT_SOURCE_DIR}/kauai/src/sndmadevice.cpp"
     )

@@ -10,6 +10,31 @@
 
 #include <miniaudio.h>
 
+// Manages a single instance of the miniaudio engine
+typedef class MiniaudioManager *PMiniaudioManager;
+#define MiniaudioManager_PAR BASE
+#define kclsMiniaudioManager KLCONST4('m', 'a', 'm', 'a')
+class MiniaudioManager : public MiniaudioManager_PAR
+{
+    RTCLASS_DEC
+    NOCOPY(MiniaudioManager)
+
+  public:
+    MiniaudioManager();
+    virtual ~MiniaudioManager();
+
+    // Get the Miniaudio engine
+    ma_engine *Pengine();
+
+    static PMiniaudioManager Pmanager();
+
+  protected:
+    ma_engine _engine;
+    bool _fInit;
+
+    MUTX _mutxInit;
+};
+
 typedef class MiniaudioCachedSound *PMiniaudioCachedSound;
 
 // Size of block read cache
@@ -68,7 +93,8 @@ class MiniaudioDevice : public MiniaudioDevice_PAR
     int32_t _vlm = 0;
     MUTX _mutx;
 
-    ma_engine _engine;
+    PMiniaudioManager _pmanager = pvNil;
+    ma_sound_group _soundgroup;
 
     // TODO: Replace with a dynamic array?
     MiniaudioSoundInstance _rgsndin[32] = {0};
