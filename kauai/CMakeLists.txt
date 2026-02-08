@@ -314,6 +314,7 @@ if(3DMM_GUI STREQUAL "SDL")
         KauaiSound
         PRIVATE
         "${PROJECT_SOURCE_DIR}/kauai/src/sndmamanager.cpp"
+        "${PROJECT_SOURCE_DIR}/kauai/src/sndmastream.cpp"
         "${PROJECT_SOURCE_DIR}/kauai/src/sndmasound.cpp"
         "${PROJECT_SOURCE_DIR}/kauai/src/sndmadevice.cpp"
     )
