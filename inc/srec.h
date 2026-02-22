@@ -18,6 +18,10 @@
 #include "audioman.h"
 #endif // HAS_AUDIOMAN
 
+#ifdef KAUAI_SDL
+#include <miniaudio.h>
+#endif // KAUAI_SDL
+
 /****************************************
     RIFF Header helper class
 ****************************************/
@@ -122,6 +126,31 @@ class SREC : public SREC_PAR
     bool _FCloseRecord();
     static void _WaveInProc(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 #endif // KAUAI_WIN32
+
+#ifdef KAUAI_SDL
+
+    ma_format _format;
+
+    bool _fInitDevice = fFalse;
+    ma_device _device;
+
+    // This buffer holds recorded PCM audio frames
+    HQ _hqBuffer = hqNil;
+    int32_t _ibBuffer = 0;
+
+    ma_uint32 _cFrame;    // Number of frames recorded
+    ma_uint32 _cFrameMac; // Maximum number of frames to record
+
+    bool _fInitPlaybackBuffer = fFalse;
+    ma_audio_buffer _playbackBuffer;
+
+    bool _fInitPlaybackSound = fFalse;
+    ma_sound _sound;
+
+    // Called when new audio frames are available
+    static void OnDataProc(ma_device *pDevice, void *pOutput, const void *pInput, ma_uint32 frameCount);
+
+#endif // KAUAI_SDL
 
   protected:
     bool _FInit(int32_t csampSec, int32_t cchan, int32_t cbSample, uint32_t dtsMax);
