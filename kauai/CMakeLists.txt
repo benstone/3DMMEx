@@ -254,6 +254,7 @@ add_library(
     KauaiSound
     "${PROJECT_SOURCE_DIR}/kauai/src/sndm.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/midi.cpp"
+    "${PROJECT_SOURCE_DIR}/kauai/src/mididev2.cpp"
 )
 target_link_libraries(
     KauaiSound
@@ -295,8 +296,8 @@ if (3DMM_GUI STREQUAL "Win32")
     target_sources(
         KauaiSound
         PRIVATE
-        "${PROJECT_SOURCE_DIR}/kauai/src/mididev.cpp"
-        "${PROJECT_SOURCE_DIR}/kauai/src/mididev2.cpp"
+        "${PROJECT_SOURCE_DIR}/kauai/src/midistreamwin95.cpp"
+        "${PROJECT_SOURCE_DIR}/kauai/src/midistreamwinnt.cpp"
     )
     target_link_libraries(
         KauaiSound
