@@ -669,7 +669,7 @@ void MSMIX::_StopStream(void)
     _mutx.Leave();
 
     while (_cpvOut > 0)
-        Sleep(0);
+        std::this_thread::yield();
 
     _mutx.Enter();
     _fWaiting = fFalse;
