@@ -296,6 +296,7 @@ if (3DMM_GUI STREQUAL "Win32")
     target_sources(
         KauaiSound
         PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/midistreamwin.cpp"
         "${PROJECT_SOURCE_DIR}/kauai/src/midistreamwin95.cpp"
         "${PROJECT_SOURCE_DIR}/kauai/src/midistreamwinnt.cpp"
     )

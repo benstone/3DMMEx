@@ -21,7 +21,7 @@ const int32_t kdtsMinSlip = kdtsSecond / 30;
 /***************************************************************************
     Constructor for our own midi stream api implementation.
 ***************************************************************************/
-OMS::OMS(PFNMIDI pfn, uintptr_t luUser) : MISI(pfn, luUser)
+OMS::OMS(PFNMIDI pfn, uintptr_t luUser) : WMSB(pfn, luUser)
 {
 }
 

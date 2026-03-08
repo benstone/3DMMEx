@@ -13,6 +13,8 @@
 #ifndef MIDISTREAMWIN95_H
 #define MIDISTREAMWIN95_H
 
+#include "midistreamwin.h"
+
 // This corresponds to the Win95 MIDIHDR structure.
 // We're using the older headers, so need to define our own.
 struct MH
@@ -46,7 +48,7 @@ typedef MIDIHDR *PMHO;
     The real midi stream interface.
 ***************************************************************************/
 typedef class WMS *PWMS;
-#define WMS_PAR MISI
+#define WMS_PAR WMSB
 #define kclsWMS KLCONST3('W', 'M', 'S')
 class WMS : public WMS_PAR
 {

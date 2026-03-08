@@ -13,11 +13,13 @@
 #ifndef MIDISTREAMWINNT_H
 #define MIDISTREAMWINNT_H
 
+#include "midistreamwin.h"
+
 /***************************************************************************
     Our fake midi stream class.
 ***************************************************************************/
 typedef class OMS *POMS;
-#define OMS_PAR MISI
+#define OMS_PAR WMSB
 #define kclsOMS KLCONST3('O', 'M', 'S')
 class OMS : public OMS_PAR
 {
