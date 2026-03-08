@@ -26,9 +26,6 @@ struct MEV
 };
 typedef MEV *PMEV;
 
-// A midi stream handle can be used as a midi out handle.
-typedef HMIDIOUT HMS;
-
 /***************************************************************************
     This is the midi stream cached object.
 ***************************************************************************/
@@ -186,40 +183,17 @@ class MSMIX : public MSMIX_PAR
 ***************************************************************************/
 typedef void (*PFNMIDI)(uintptr_t luUser, void *pvData, uintptr_t luData);
 
-typedef class MISI *PMISI;
 #define MISI_PAR BASE
 #define kclsMISI KLCONST4('M', 'I', 'S', 'I')
 class MISI : public MISI_PAR
 {
     RTCLASS_DEC
-
-  protected:
-    HMS _hms;          // the midi stream handle
-    PFNMIDI _pfnCall;  // call back function
-    uintptr_t _luUser; // user data to send back
-
-    // system volume level - to be saved and restored. The volume we set
-    // is always relative to this
-    tribool _tBogusDriver; // to indicate whether midiOutGetVolume really works
-    DWORD _luVolSys;
-    int32_t _vlmBase; // our current volume relative to _luVolSys.
-
-    MISI(PFNMIDI pfn, uintptr_t luUser);
-
-    virtual bool _FOpen(void) = 0;
-    virtual bool _FClose(void) = 0;
-
-    void _Reset(void);
-    void _GetSysVol(void);
-    void _SetSysVol(uint32_t luVol);
-    void _SetSysVlm(void);
-
   public:
-    virtual void SetVlm(int32_t vlm);
-    virtual int32_t VlmCur(void);
+    virtual void SetVlm(int32_t vlm) = 0;
+    virtual int32_t VlmCur(void) = 0;
 
-    virtual bool FActive(void);
-    virtual bool FActivate(bool fActivate);
+    virtual bool FActive(void) = 0;
+    virtual bool FActivate(bool fActivate) = 0;
 
     virtual bool FQueueBuffer(void *pvData, int32_t cb, int32_t ibStart, int32_t cactPlay, uintptr_t luData) = 0;
     virtual void StopPlaying(void) = 0;

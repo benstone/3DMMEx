@@ -22,7 +22,7 @@ const int32_t kcbMaxWmsBuffer = 0x0000FFFF / SIZEOF(MEV) * SIZEOF(MEV);
 /***************************************************************************
     Constructor for the Win95 Midi stream class.
 ***************************************************************************/
-WMS::WMS(PFNMIDI pfn, uintptr_t luUser) : MISI(pfn, luUser)
+WMS::WMS(PFNMIDI pfn, uintptr_t luUser) : WMSB(pfn, luUser)
 {
 }
 
