@@ -42,9 +42,9 @@ class OMS : public OMS_PAR
     HN _hevt; // event to notify the thread that the stream data has changed
     HN _hth;  // thread to play the stream data
 
-    bool _fChanged : 1; // the event has been signalled
-    bool _fStop : 1;    // tells the aux thread to stop all buffers
-    bool _fDone : 1;    // tells the aux thread to return
+    std::atomic<bool> _fChanged; // the event has been signalled
+    std::atomic<bool> _fStop;    // tells the aux thread to stop all buffers
+    std::atomic<bool> _fDone;    // tells the aux thread to return
 
     int32_t _imsbCur;
     PGL _pglmsb;

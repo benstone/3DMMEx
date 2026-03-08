@@ -81,9 +81,10 @@ class WMS : public WMS_PAR
     HN _hth;  // thread to do callbacks and cleanup after a notify
 
 #ifdef STREAM_BUG
-    bool _fActive : 1;
-#endif               // STREAM_BUG
-    bool _fDone : 1; // tells the aux thread to terminate
+    std::atomic<bool> _fActive;
+#endif // STREAM_BUG
+
+    std::atomic<bool> _fDone; // tells the aux thread to terminate
 
     MMRESULT(WINAPI *_pfnOpen)
     (HMS *phms, LPUINT puDeviceID, DWORD cMidi, DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD fdwOpen);

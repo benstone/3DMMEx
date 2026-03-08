@@ -17,6 +17,7 @@
 #define MDEV2PRI_H
 
 #include <thread>
+#include <atomic>
 
 // This corresponds to the Win95 MIDIEVENT structure (with no optional data).
 // We're using the older headers, so need to define our own.
@@ -133,14 +134,15 @@ class MSMIX : public MSMIX_PAR
 
     std::thread _thrdCleanup; // thread to terminate non-playing sounds
 
-    PMISI _pmisi;    // the midi stream interface
-    PGL _pglmsos;    // the list of current sounds, in priority order
-    int32_t _cpvOut; // number of buffers submitted (0, 1, or 2)
+    PMISI _pmisi;                 // the midi stream interface
+    PGL _pglmsos;                 // the list of current sounds, in priority order
+    std::atomic<int32_t> _cpvOut; // number of buffers submitted (0, 1, or 2)
 
-    PGL _pglmevKey;     // to accumulate state events for seeking
-    bool _fPlaying : 1; // whether we're currently playing the first stream
-    bool _fWaiting : 1; // we're waiting for our buffers to get returned
-    bool _fDone : 1;    // tells the aux thread to terminate
+    PGL _pglmevKey; // to accumulate state events for seeking
+
+    std::atomic<bool> _fPlaying; // whether we're currently playing the first stream
+    std::atomic<bool> _fWaiting; // we're waiting for our buffers to get returned
+    std::atomic<bool> _fDone;    // tells the aux thread to terminate
 
     int32_t _vlmBase;  // the base device volume
     int32_t _vlmSound; // the volume for the current sound
