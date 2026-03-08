@@ -534,12 +534,9 @@ MSMIX::~MSMIX(void)
     {
         // tell the thread to end and wait for it to finish
         _fDone = fTrue;
-        SetEvent(_hevt);
+        _sgnlChanged.Set();
         _thrdCleanup.join();
     }
-
-    if (hNil != _hevt)
-        CloseHandle(_hevt);
 
     if (pvNil != _pglmsos)
     {
@@ -595,9 +592,6 @@ bool MSMIX::_FInit(void)
         return fFalse;
     }
 
-    if (hNil == (_hevt = CreateEvent(pvNil, fFalse, fFalse, pvNil)))
-        return fFalse;
-
     // create the thread
     _thrdCleanup = std::thread([this] { return this->_LuThread(); });
 
@@ -612,7 +606,6 @@ void MSMIX::AssertValid(uint32_t grf)
 {
     MSMIX_PAR::AssertValid(0);
     _mutx.Enter();
-    Assert(hNil != _hevt, "nil event");
     AssertPo(_pglmsos, 0);
     AssertPo(_pmisi, 0);
     AssertNilOrPo(_pglmevKey, 0);
@@ -810,7 +803,7 @@ void MSMIX::_Restart(bool fNew)
     }
 
     // signal the aux thread that the list changed
-    SetEvent(_hevt);
+    _sgnlChanged.Set();
 }
 
 /***************************************************************************
@@ -1156,7 +1149,7 @@ uint32_t MSMIX::_LuThread(void)
 
     for (;;)
     {
-        WaitForSingleObject(_hevt, dtsNextStop);
+        _sgnlChanged.Wait(dtsNextStop);
 
         if (_fDone)
             return 0;
