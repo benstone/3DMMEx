@@ -23,9 +23,9 @@
 // We're using the older headers, so need to define our own.
 struct MEV
 {
-    DWORD dwDeltaTime; // midi ticks between this and previous event
-    DWORD dwStreamID;  // reserved - must be zero
-    DWORD dwEvent;
+    uint32_t dwDeltaTime; // midi ticks between this and previous event
+    uint32_t dwStreamID;  // reserved - must be zero
+    uint32_t dwEvent;
 };
 typedef MEV *PMEV;
 
@@ -174,9 +174,9 @@ class MSMIX : public MSMIX_PAR
 
 // Define these so we can use old (msvc 2.1) header files
 #ifndef MEVT_SHORTMSG
-#define MEVT_SHORTMSG ((BYTE)0x00) // parm = shortmsg for midiOutShortMsg
-#define MEVT_TEMPO ((BYTE)0x01)    // parm = new tempo in microsec/qn
-#define MEVT_NOP ((BYTE)0x02)      // parm = unused; does nothing
+#define MEVT_SHORTMSG ((uint8_t)0x00) // parm = shortmsg for midiOutShortMsg
+#define MEVT_TEMPO ((uint8_t)0x01)    // parm = new tempo in microsec/qn
+#define MEVT_NOP ((uint8_t)0x02)      // parm = unused; does nothing
 #define MIDIPROP_SET 0x80000000L
 #define MIDIPROP_GET 0x40000000L
 #define MIDIPROP_TIMEDIV 0x00000001L
