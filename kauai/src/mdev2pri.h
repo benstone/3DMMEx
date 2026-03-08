@@ -130,7 +130,7 @@ class MSMIX : public MSMIX_PAR
 
     // Mutex to protect our member variables
     MUTX _mutx;
-    HN _hevt; // to notify the thread that the sound list changed
+    Signal _sgnlChanged; // to notify the thread that the sound list changed
 
     std::thread _thrdCleanup; // thread to terminate non-playing sounds
 
