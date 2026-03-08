@@ -16,6 +16,8 @@
 #ifndef MDEV2PRI_H
 #define MDEV2PRI_H
 
+#include <thread>
+
 // This corresponds to the Win95 MIDIEVENT structure (with no optional data).
 // We're using the older headers, so need to define our own.
 struct MEV
@@ -128,7 +130,8 @@ class MSMIX : public MSMIX_PAR
     // Mutex to protect our member variables
     MUTX _mutx;
     HN _hevt; // to notify the thread that the sound list changed
-    HN _hth;  // thread to terminate non-playing sounds
+
+    std::thread _thrdCleanup; // thread to terminate non-playing sounds
 
     PMISI _pmisi;    // the midi stream interface
     PGL _pglmsos;    // the list of current sounds, in priority order
@@ -153,8 +156,7 @@ class MSMIX : public MSMIX_PAR
     static void _MidiProc(uintptr_t luUser, void *pvData, uintptr_t luData);
     void _Notify(void *pvData, PMDWS pmdws);
 
-    static DWORD __stdcall _ThreadProc(void *pv);
-    DWORD _LuThread(void);
+    uint32_t _LuThread(void);
 
   public:
     static PMSMIX PmsmixNew(void);

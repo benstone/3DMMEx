@@ -530,12 +530,12 @@ MSMIX::~MSMIX(void)
 {
     Assert(pvNil == _pmisi || !_pmisi->FActive(), "MISI still active!");
 
-    if (hNil != _hth)
+    if (_thrdCleanup.joinable())
     {
         // tell the thread to end and wait for it to finish
         _fDone = fTrue;
         SetEvent(_hevt);
-        WaitForSingleObject(_hth, INFINITE);
+        _thrdCleanup.join();
     }
 
     if (hNil != _hevt)
@@ -574,7 +574,6 @@ PMSMIX MSMIX::PmsmixNew(void)
 bool MSMIX::_FInit(void)
 {
     AssertBaseThis(0);
-    DWORD luThread;
 
     if (pvNil == (_pglmsos = GL::PglNew(SIZEOF(MSOS))))
         return fFalse;
@@ -600,10 +599,7 @@ bool MSMIX::_FInit(void)
         return fFalse;
 
     // create the thread
-    if (hNil == (_hth = CreateThread(pvNil, 1024, MSMIX::_ThreadProc, this, 0, &luThread)))
-    {
-        return fFalse;
-    }
+    _thrdCleanup = std::thread([this] { return this->_LuThread(); });
 
     return fTrue;
 }
@@ -617,7 +613,6 @@ void MSMIX::AssertValid(uint32_t grf)
     MSMIX_PAR::AssertValid(0);
     _mutx.Enter();
     Assert(hNil != _hevt, "nil event");
-    Assert(hNil != _hth, "nil thread");
     AssertPo(_pglmsos, 0);
     AssertPo(_pmisi, 0);
     AssertNilOrPo(_pglmevKey, 0);
@@ -1147,22 +1142,10 @@ void MSMIX::_Notify(void *pvData, PMDWS pmdws)
 }
 
 /***************************************************************************
-    AT: Static method. Thread function for the MSMIX object.
-***************************************************************************/
-DWORD __stdcall MSMIX::_ThreadProc(LPVOID pv)
-{
-    PMSMIX pmsmix = (PMSMIX)pv;
-
-    AssertPo(pmsmix, 0);
-
-    return pmsmix->_LuThread();
-}
-
-/***************************************************************************
     AT: This thread just sleeps until the next sound is due to expire, then
     wakes up and nukes any expired sounds.
 ***************************************************************************/
-DWORD MSMIX::_LuThread(void)
+uint32_t MSMIX::_LuThread(void)
 {
     AssertThis(0);
     uint32_t tsCur;
