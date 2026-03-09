@@ -228,6 +228,12 @@ add_subdirectory(kauai)
 
 add_subdirectory(src)
 
+# Add documentation to install package
+install(
+    FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/THIRD_PARTY_LICENSES.txt
+    DESTINATION .
+)
 
 # CPack must be included *last*, which is antithetical to how most CMake
 # Modules work. We can set all variables for all packaging regardless of
