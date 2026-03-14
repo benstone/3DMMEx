@@ -975,7 +975,7 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
         OutputDebugString(PszLit("\n"));
     }
 
-    if (LwThreadCur() != vwig.lwThreadMain)
+    if (std::this_thread::get_id() != vwig.tidMain)
     {
         // can't use a dialog - it may cause grid - lock
         int32_t sid;

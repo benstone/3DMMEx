@@ -46,9 +46,9 @@ struct WIG
 
     int wShow;
     HDC hdcApp;
-    HACCEL haccel;        // main accelerator table
-    KWND hwndNextViewer;  // next clipboard viewer
-    int32_t lwThreadMain; // main thread
+    HACCEL haccel;           // main accelerator table
+    KWND hwndNextViewer;     // next clipboard viewer
+    std::thread::id tidMain; // main thread
 
 #endif // WIN
 };

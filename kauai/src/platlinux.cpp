@@ -15,14 +15,6 @@ void Debugger(void)
     raise(SIGTRAP);
 }
 
-/****************************************
-    Current thread id
-****************************************/
-uint32_t LwThreadCur(void)
-{
-    return (uint32_t)pthread_self();
-}
-
 /***************************************************************************
     Universal scalable application clock and other time stuff
 ***************************************************************************/

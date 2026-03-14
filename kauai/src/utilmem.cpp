@@ -19,6 +19,8 @@
 #include "util.h"
 ASSERTNAME
 
+#include <thread>
+
 #ifdef DEBUG
 const int32_t kclwStackMbh = 5;
 
@@ -28,7 +30,7 @@ struct MBH
     int32_t cb;                      // size of block, including header and footer
     PSZS pszsFile;                   // source file that allocation request is coming from
     int32_t lwLine;                  // line in file that allocation request is coming from
-    int32_t lwThread;                // thread id
+    std::thread::id tid;             // thread id
     MBH *pmbhPrev;                   // previous allocated block (in doubly linked list)
     MBH *pmbhNext;                   // next allocated block
     int32_t rglwStack[kclwStackMbh]; // the EBP/A6 chain
@@ -199,7 +201,7 @@ bool FAllocPv(void **ppv, int32_t cb, uint32_t grfmem, int32_t mpr)
     pmbh->swMagic = kswMagicMem;
     pmbh->pszsFile = pszsFile;
     pmbh->lwLine = lwLine;
-    pmbh->lwThread = LwThreadCur();
+    pmbh->tid = std::this_thread::get_id();
 
 #if defined(WIN) && defined(IN_80386)
     // follow the EBP chain....
@@ -502,7 +504,7 @@ void AssertPvAlloced(void *pv, int32_t cb)
 void AssertUnmarkedMem(void)
 {
     MBH *pmbh;
-    int32_t lwThread = LwThreadCur();
+    auto tid = std::this_thread::get_id();
 
     // enter the critical section
     vmutxMem.Enter();
@@ -510,7 +512,7 @@ void AssertUnmarkedMem(void)
     for (pmbh = _pmbhFirst; pmbh != pvNil; pmbh = pmbh->pmbhNext)
     {
         _AssertMbh(pmbh);
-        if (pmbh->cactRef == 0 && pmbh->lwThread == lwThread)
+        if (pmbh->cactRef == 0 && pmbh->tid == tid)
         {
             STN stn;
             SZS szs;
@@ -537,7 +539,7 @@ void AssertUnmarkedMem(void)
 void UnmarkAllMem(void)
 {
     MBH *pmbh;
-    int32_t lwThread = LwThreadCur();
+    auto tid = std::this_thread::get_id();
 
     // enter the critical section
     vmutxMem.Enter();
@@ -545,7 +547,7 @@ void UnmarkAllMem(void)
     for (pmbh = _pmbhFirst; pmbh != pvNil; pmbh = pmbh->pmbhNext)
     {
         _AssertMbh(pmbh);
-        if (pmbh->lwThread == lwThread)
+        if (pmbh->tid == tid)
             pmbh->cactRef = 0;
     }
 #ifdef MAC

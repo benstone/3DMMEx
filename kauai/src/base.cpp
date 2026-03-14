@@ -14,6 +14,8 @@
 #include "util.h"
 ASSERTNAME
 
+#include <thread>
+
 #ifdef DEBUG
 int32_t vcactSuspendAssertValid = 0;
 int32_t vcactAVSave = 0;
@@ -31,7 +33,7 @@ struct DOI
     PSZS pszsFile;         // file NewObj appears in
     int32_t lwLine;        // line NewObj appears on
     int32_t cbTot;         // total size of the block, including the DOI
-    int32_t lwThread;      // thread that allocated this
+    std::thread::id tid;   // thread that allocated this
     int32_t rglwStack[10]; // what we get from following the EBP/A6 chain
     DOI *pdoiNext;         // singly linked list
     DOI **ppdoiPrev;
@@ -220,7 +222,7 @@ void *BASE::operator new(size_t cb) noexcept
         pdoi->pszsFile = pszsFile;
         pdoi->lwLine = lwLine;
         pdoi->cbTot = cb + kcbBaseDebug;
-        pdoi->lwThread = LwThreadCur();
+        pdoi->tid = std::this_thread::get_id();
         pdoi->ppdoiPrev = pvNil;
         _LinkDoi(pdoi, &_pdoiFirstRaw);
         pv = _PbaseFromDoi(pdoi);
@@ -332,7 +334,7 @@ void BASE::MarkMemStub(void)
     }
 
     DOI *pdoi = _PdoiFromBase(this);
-    if (pdoi->cactRef == 0 && pdoi->lwThread == LwThreadCur())
+    if (pdoi->cactRef == 0 && pdoi->tid == std::this_thread::get_id())
         MarkMem();
 }
 
@@ -445,7 +447,7 @@ void AssertUnmarkedObjs(void)
     DOI *pdoiLast;
     bool fAssert;
     int32_t cdoiLost = 0;
-    int32_t lwThread = LwThreadCur();
+    auto tid = std::this_thread::get_id();
 
     Assert(_pdoiFirstRaw == pvNil, "Raw list is not empty!");
 
@@ -455,7 +457,7 @@ void AssertUnmarkedObjs(void)
     for (pdoi = _pdoiFirst; pvNil != pdoi; pdoi = pdoi->pdoiNext)
     {
         pdoiLast = pdoi;
-        if (pdoi->cactRef == 0 && pdoi->lwThread == lwThread)
+        if (pdoi->cactRef == 0 && pdoi->tid == tid)
             cdoiLost++;
     }
 
@@ -474,7 +476,7 @@ void AssertUnmarkedObjs(void)
         pbase = _PbaseFromDoi(pdoi);
         AssertPo(pbase, fobjAllocated);
 
-        if (pdoi->cactRef == 0 && pdoi->lwThread == lwThread)
+        if (pdoi->cactRef == 0 && pdoi->tid == tid)
         {
             if (fAssert)
             {
@@ -512,7 +514,7 @@ void UnmarkAllObjs(void)
 
     BASE *pbase;
     DOI *pdoi;
-    int32_t lwThread = LwThreadCur();
+    auto tid = std::this_thread::get_id();
 
     Assert(_pdoiFirstRaw == pvNil, "Raw list is not empty!");
     for (pdoi = _pdoiFirst; pvNil != pdoi; pdoi = pdoi->pdoiNext)
@@ -520,7 +522,7 @@ void UnmarkAllObjs(void)
         pbase = _PbaseFromDoi(pdoi);
         AssertPo(pbase, fobjAllocated);
 
-        if (pdoi->lwThread == lwThread)
+        if (pdoi->tid == tid)
             pdoi->cactRef = 0;
     }
 

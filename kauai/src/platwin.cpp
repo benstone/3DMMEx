@@ -9,14 +9,6 @@
 #include <SDL.h>
 #endif
 
-/****************************************
-    Current thread id
-****************************************/
-uint32_t LwThreadCur(void)
-{
-    return GetCurrentThreadId();
-}
-
 /***************************************************************************
     Universal scalable application clock and other time stuff
 ***************************************************************************/

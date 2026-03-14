@@ -25,7 +25,7 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
     vwig.hinstPrev = hinstPrev;
     vwig.pszCmdLine = GetCommandLine();
     vwig.wShow = wShow;
-    vwig.lwThreadMain = LwThreadCur();
+    vwig.tidMain = std::this_thread::get_id();
 #ifdef DEBUG
     APPB::CreateConsole();
 #endif
