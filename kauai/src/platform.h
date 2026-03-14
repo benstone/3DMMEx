@@ -15,17 +15,17 @@
 ****************************************/
 typedef class MUTX *PMUTX;
 
-class MUTX
+class MUTX : public std::recursive_mutex
 {
-  protected:
-    void *opaque;
-
   public:
-    MUTX(void);
-    ~MUTX(void);
-
-    void Enter(void);
-    void Leave(void);
+    void Enter(void)
+    {
+        lock();
+    }
+    void Leave(void)
+    {
+        unlock();
+    }
 };
 
 /****************************************

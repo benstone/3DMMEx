@@ -16,45 +16,6 @@ void Debugger(void)
 }
 
 /****************************************
-    Mutex (critical section) object
-****************************************/
-
-MUTX::MUTX(void)
-{
-    pthread_mutexattr_t ma;
-    pthread_mutex_t *mutx;
-
-    opaque = malloc(sizeof(pthread_mutex_t));
-    mutx = (pthread_mutex_t *)opaque;
-
-    pthread_mutexattr_init(&ma);
-    pthread_mutexattr_settype(&ma, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(mutx, &ma);
-}
-
-MUTX::~MUTX(void)
-{
-    pthread_mutex_t *mutx = (pthread_mutex_t *)opaque;
-
-    pthread_mutex_unlock(mutx);
-    free(mutx);
-}
-
-void MUTX::Enter(void)
-{
-    pthread_mutex_t *mutx = (pthread_mutex_t *)opaque;
-
-    pthread_mutex_lock(mutx);
-}
-
-void MUTX::Leave(void)
-{
-    pthread_mutex_t *mutx = (pthread_mutex_t *)opaque;
-
-    pthread_mutex_unlock(mutx);
-}
-
-/****************************************
     Current thread id
 ****************************************/
 uint32_t LwThreadCur(void)
