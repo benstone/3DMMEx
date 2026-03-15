@@ -2169,15 +2169,11 @@ void APP::_ParseCommandLine(void)
     AssertDo(_fniCurrentDir.FGetCwd(), "Bad current directory?");
     AssertDo(_fniExe.FGetExe(), "Bad module filename?");
 
-    // FIXME: Parse command-line arguments on non-Windows
-#ifdef WIN
-    pch = vwig.pszCmdLine;
-    // first argument (app name) is useless...skip it
-    _SkipToSpace(&pch);
-    _SkipSpace(&pch);
-
-    while (*pch != chNil)
+    // Skip first argument
+    for (int32_t ipsz = 1; ipsz < _cpszArgv; ipsz++)
     {
+        pch = _rgpszArgv[ipsz];
+
         // Look for /options or -options
         if (*pch == ChLit('/') || *pch == ChLit('-'))
         {
@@ -2218,55 +2214,23 @@ void APP::_ParseCommandLine(void)
                 Warn("Bad command-line switch");
                 break;
             }
-            _SkipToSpace(&pch);
-            _SkipSpace(&pch);
         }
         else // try to parse as fni string
         {
-            // get to end of string
-            pchT = pch + CchSz(pch);
-
-            // skip quotes since FBuildFromPath can't deal
-            if (*pch == ChLit('"'))
-                pch++;
-
-            // move pchT to begginning of file name itself
-            while ((*pchT != '\\') && (pchT != pch))
-                pchT--;
-            // pchT now points to last'\', move it forward one (only if not pch)
-            if (*pchT == '\\')
-                pchT++;
-
-            // set STN to the path, which is the string up to the last '\'
-            stn.SetRgch(pch, pchT - pch);
-
-            // try to map to long file name if we can
-            HANDLE hFile = pvNil;
-            WIN32_FIND_DATA W32FindData;
-
-            hFile = FindFirstFile(pch, &W32FindData);
-            if (INVALID_HANDLE_VALUE != hFile)
-            {
-                // append the longfile name returned...
-                stn.FAppendSz(W32FindData.cFileName);
-                FindClose(hFile);
-            }
-            else
-                // just use what was passed orginally...
-                stn.SetSz(pch);
+            stn.SetSz(pch);
 
             // remove ending quotes since FBuildFromPath can't deal
             if (stn.Psz()[stn.Cch() - 1] == ChLit('\"'))
                 stn.Delete(stn.Cch() - 1, 1);
+            if (stn.Psz()[0] == ChLit('\"'))
+                stn.Delete(0, 1);
+
             if (fniT.FBuildFromPath(&stn))
             {
                 SetPortfolioDoc(&fniT);
             }
-            // move to end of string, we now assume that everything past options is the document name
-            pch += CchSz(pch);
         }
     }
-#endif // WIN
 }
 
 /***************************************************************************
