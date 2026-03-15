@@ -1525,6 +1525,22 @@ bool APPB::FAllowScreenSaver(void)
     return fTrue;
 }
 
+/***************************************************************************
+    Set command-line arguments for this app
+***************************************************************************/
+void APPB::SetArgv(PSZ *rgpszArgv, int32_t cpszArgv)
+{
+    AssertThis(0);
+
+    if (rgpszArgv != pvNil)
+    {
+        Assert(cpszArgv >= 1, "argv must have at least one argument");
+    }
+
+    _rgpszArgv = rgpszArgv;
+    _cpszArgv = cpszArgv;
+}
+
 #ifdef DEBUG
 /***************************************************************************
     Assert the validity of a APPB.

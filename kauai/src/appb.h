@@ -152,6 +152,9 @@ class APPB : public APPB_PAR
     int32_t _lwModal;   // Return value from modal loop
     int32_t _cactModal; // how deep we are in application loops
 
+    PSZ *_rgpszArgv = pvNil; // Command-line arguments
+    int32_t _cpszArgv = 0;   // Number of command-line arguments
+
     // initialization, running and clean up
     virtual bool _FInit(uint32_t grfapp, uint32_t grfgob, int32_t ginDef);
 #ifdef DEBUG
@@ -246,6 +249,7 @@ class APPB : public APPB_PAR
     virtual void Quit(bool fForce);
     virtual void Abort(void);
     virtual void TopOfLoop(void);
+    void SetArgv(PSZ *rgpszArgv, int32_t cpszArgv);
 
     // look for the next key event in the system event queue
     virtual bool FGetNextKeyFromOsQueue(PCMD_KEY pcmd);

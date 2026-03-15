@@ -29,6 +29,16 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
 #ifdef DEBUG
     APPB::CreateConsole();
 #endif
+
+    // Get argc/argv from MSVC CRT globals
+#ifdef _MSC_VER
+#ifdef UNICODE
+    vpappb->SetArgv(__wargv, __argc);
+#else  // !UNICODE
+    vpappb->SetArgv(__argv, __argc);
+#endif // UNICODE
+#endif // _MSC_VER
+
     FrameMain();
     SDL_Quit();
     return 0;
@@ -45,6 +55,7 @@ int main(int argc, char *argv[])
 #ifdef DEBUG
     APPB::CreateConsole();
 #endif
+    vpappb->SetArgv(argv, argc);
     FrameMain();
     SDL_Quit();
     return 0;
