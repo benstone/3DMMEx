@@ -61,6 +61,11 @@ const PCSZ kpszOpenFile = PszLit("3DMMOpen.tmp");
 
 const int32_t klwOpenDoc = 0x12123434; // arbitrary wParam for WM_USER
 
+#ifdef KAUAI_SDL
+extern const uint8_t vrgbAppIcon48x48[];
+extern const int32_t vcbAppIcon48x48;
+#endif // KAUAI_SDL
+
 BEGIN_CMD_MAP(APP, APPB)
 ON_CID_GEN(cidInfo, &APP::FCmdInfo, pvNil)
 ON_CID_GEN(cidLoadStudio, &APP::FCmdLoadStudio, pvNil)
@@ -301,6 +306,10 @@ bool APP::_FInit(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
         _fDontReportInitFailure = fTrue;
         goto LFail;
     }
+
+#ifdef KAUAI_SDL
+    AssertDo(FSetWindowIcon(vrgbAppIcon48x48, vcbAppIcon48x48), "Couldn't set application icon");
+#endif // KAUAI_SDL
 
     if (!_FInitAcceleratorTable())
     {
