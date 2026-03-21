@@ -938,3 +938,24 @@ void SDLEnqueueCmd(PCMD pcmd)
 
     AssertDo(SDL_PushEvent(&evt) > 0, SDL_GetError());
 }
+
+/***************************************************************************
+    Set the application window's icon
+***************************************************************************/
+bool APPB::FSetWindowIcon(const uint8_t *prgb, int32_t cb)
+{
+    AssertThis(0);
+    AssertPvCb(prgb, cb);
+
+    Assert(vwig.hwndApp != pvNil, "Window not created yet");
+
+    SDL_Surface *psur = SDL_LoadBMP_RW(SDL_RWFromConstMem(prgb, cb), 1);
+    if (psur != pvNil)
+    {
+        SDL_SetWindowIcon((SDL_Window *)vwig.hwndApp, psur);
+        SDL_FreeSurface(psur);
+        return fTrue;
+    }
+
+    return fFalse;
+}

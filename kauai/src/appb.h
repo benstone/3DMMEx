@@ -250,6 +250,7 @@ class APPB : public APPB_PAR
     virtual void Abort(void);
     virtual void TopOfLoop(void);
     void SetArgv(PSZ *rgpszArgv, int32_t cpszArgv);
+    bool FSetWindowIcon(const uint8_t *prgb, int32_t cb);
 
     // look for the next key event in the system event queue
     virtual bool FGetNextKeyFromOsQueue(PCMD_KEY pcmd);

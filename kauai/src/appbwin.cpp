@@ -1293,3 +1293,15 @@ int32_t APPB::Win32VkFromVk(int32_t vk)
     // No translation required
     return vk;
 }
+
+/***************************************************************************
+    Set the application window's icon
+***************************************************************************/
+bool APPB::FSetWindowIcon(const uint8_t *prgb, int32_t cb)
+{
+    AssertThis(0);
+    AssertPvCb(prgb, cb);
+
+    // Not required on Windows: the icon is loaded from the resource section
+    return fTrue;
+}
