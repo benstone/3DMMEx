@@ -84,6 +84,7 @@ add_executable(studio WIN32)
 target_sources(studio
     PRIVATE
     "${PROJECT_SOURCE_DIR}/src/studio/ape.cpp"
+    "${PROJECT_SOURCE_DIR}/src/studio/appicon.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/browser.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/esl.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/popup.cpp"
