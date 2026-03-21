@@ -224,14 +224,6 @@ bool GVDW::_FInit(PFNI pfni, PGOB pgobBase)
 
     _pgobBase = pgobBase;
 
-    // Show video playback error only once
-    static bool _fShowError = fTrue;
-    if (_fShowError)
-    {
-        PushErc(ercCantOpenVideo);
-        _fShowError = fFalse;
-    }
-
     return fFalse;
 }
 
