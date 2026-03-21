@@ -306,12 +306,8 @@ if (3DMM_GUI STREQUAL "Win32")
         winmm
     )
 
-else()
-    message(WARNING "Sound playback disabled")
-endif()
-
-# Miniaudio sound device
-if(3DMM_GUI STREQUAL "SDL")
+elseif(3DMM_GUI STREQUAL "SDL")
+    # SDL: Use miniaudio for wave sounds
     target_sources(
         KauaiSound
         PRIVATE
@@ -325,6 +321,8 @@ if(3DMM_GUI STREQUAL "SDL")
         PUBLIC
         miniaudio
     )
+else()
+    message(WARNING "Sound playback disabled")
 endif()
 
 # Pic: vector graphics support
