@@ -90,6 +90,13 @@ bool MiniaudioStream::FWriteAudio(const void *pvframe, int32_t cframe)
     return (iframe == cframe);
 }
 
+int MiniaudioStream::GetPendingFrames()
+{
+    AssertThis(0);
+
+    return ma_pcm_rb_pointer_distance(&_buffer);
+}
+
 MiniaudioStream::MiniaudioStream()
 {
     _fInit = fFalse;
