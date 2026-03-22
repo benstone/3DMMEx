@@ -1448,7 +1448,7 @@ int32_t CchTranslateRgb(const void *pvSrc, int32_t cbSrc, int16_t oskSrc, achar 
     AssertPvCb(prgchDst, cchMaxDst * SIZEOF(achar));
     int32_t cchT;
 
-#ifdef WIN
+#if defined(WIN)
 #ifdef UNICODE
 
     switch (oskSrc)
@@ -1520,9 +1520,8 @@ int32_t CchTranslateRgb(const void *pvSrc, int32_t cbSrc, int16_t oskSrc, achar 
     }
 
 #endif //! UNICODE
-#endif // WIN
 
-#ifdef MAC
+#elif defined(MAC)
 #ifdef UNICODE
 
     int32_t cchDst;
@@ -1611,7 +1610,11 @@ int32_t CchTranslateRgb(const void *pvSrc, int32_t cbSrc, int16_t oskSrc, achar 
     }
 
 #endif //! UNICODE
-#endif // MAC
+#else  // !WIN && !MAC
+    // FIXME: Implement CchTranslateRgb for non-Windows platforms
+    RawRtn();
+    return 0;
+#endif
 }
 
 /***************************************************************************
