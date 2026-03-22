@@ -150,6 +150,13 @@ bool APPB::_FInitSound(int32_t wav)
         ReleasePpo(&psndv);
     }
 
+    // create the midi playback device - use the stream one
+    if (pvNil != (psndv = MDPS::PmdpsNew()))
+    {
+        vpsndm->FAddDevice(kctgMidi, psndv);
+        ReleasePpo(&psndv);
+    }
+
     return fTrue;
 }
 
