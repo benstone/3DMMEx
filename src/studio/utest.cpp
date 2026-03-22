@@ -3311,13 +3311,6 @@ bool APP::FCmdInfo(PCMD pcmd)
     int32_t lwValue = 0;
     bool fValue = fFalse;
 
-    pmvie = _Pmvie();
-
-    pdlg = DLG::PdlgNew(dlidInfo, pvNil, pvNil);
-    if (pvNil == pdlg)
-        return fTrue;
-    pdlg->PutRadio(iditRenderModeInfo, _fSlowCPU ? 1 : 0);
-
     stn = PszLit("3DMMEx");
 #ifdef DEBUG
     stn.FAppendSz(PszLit(" (Debug)"));
@@ -3325,6 +3318,16 @@ bool APP::FCmdInfo(PCMD pcmd)
     stnGitTag.SetSzs(szsT);
     stnT.FFormatSz(PszLit(" %d.%d.%d (%s)"), rmj, rmm, rup, &stnGitTag);
     stn.FAppendStn(&stnT);
+
+#if defined(KAUAI_WIN32)
+
+    pmvie = _Pmvie();
+
+    pdlg = DLG::PdlgNew(dlidInfo, pvNil, pvNil);
+    if (pvNil == pdlg)
+        return fTrue;
+    pdlg->PutRadio(iditRenderModeInfo, _fSlowCPU ? 1 : 0);
+
     pdlg->FPutStn(iditProductNameInfo, &stn);
 
 #ifdef DEBUG
@@ -3478,6 +3481,13 @@ bool APP::FCmdInfo(PCMD pcmd)
     ReleasePpo(&pdlg);
 
     return fTrue;
+
+#else  // !KAUAI_WIN32
+    // FUTURE: Add complete SDL dialog support
+    stn.FAppendSz(PszLit("\n\nSettings dialog not implemented yet.\nYou can change settings by editing 3dmovie.ini."));
+    (void)TGiveAlertSz(stn.Psz(), bkOk, cokInformation);
+    return fTrue;
+#endif // KAUAI_WIN32
 }
 
 #ifdef WIN
