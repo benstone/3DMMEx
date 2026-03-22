@@ -434,7 +434,7 @@ bool STN::FSetData(void *pv, int32_t cbMax, int32_t *pcbRead)
         CopyPb(PvAddBv(pv, ibT), &chw, SIZEOF(wchar));
         ibT += SIZEOF(wchar);
 
-        if (osk == koskUni)
+        if (osk != koskUni)
             SwapBytesRgsw(&chw, 1);
         cch = (int32_t)(uint16_t)chw;
 
@@ -546,7 +546,7 @@ bool STN::FRead(PBLCK pblck, int32_t ib, int32_t *pcbRead)
         }
         ibT += SIZEOF(wchar);
 
-        if (osk == koskUni)
+        if (osk != koskUni)
             SwapBytesRgsw(&chw, 1);
         cch = (int32_t)(uint16_t)chw;
 
