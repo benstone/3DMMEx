@@ -16,6 +16,8 @@ ASSERTNAME
 #ifdef KAUAI_WIN32
 #include "midistreamwin95.h"
 #include "midistreamwinnt.h"
+#else
+#include "midistreamfluidsynth.h"
 #endif // KAUAI_WIN32
 
 RTCLASS(MDWS)
@@ -583,7 +585,10 @@ bool MSMIX::_FInit(void)
         return fFalse;
     }
 #elif defined(KAUAI_SDL)
-    // TODO
+    if (pvNil == (_pmisi = FMS::PfmsNew(_MidiProc, (uintptr_t)this)))
+    {
+        return fFalse;
+    }
 #endif
 
     if (_pmisi == pvNil)
