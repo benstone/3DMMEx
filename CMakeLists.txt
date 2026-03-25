@@ -90,12 +90,16 @@ elseif("${3DMM_GUI}" STREQUAL "SDL")
 
     if (WIN32)
         include(FetchSDL2)
+        include(FetchFluidSynth)
     endif()
 
     find_package(SDL2 CONFIG REQUIRED)
     find_package(SDL2_ttf CONFIG REQUIRED)
 
     include(FetchMiniaudio)
+
+    include(FindFluidSynth)
+    find_package(FluidSynth CONFIG REQUIRED)
 
     # TODO: Find libiniparser if installed
     include(FetchIniParser)

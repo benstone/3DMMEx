@@ -285,4 +285,9 @@ if (WIN32 AND 3DMM_GUI STREQUAL "SDL")
     # Install SDL DLLs
     install(FILES $<TARGET_FILE:SDL2::SDL2> $<TARGET_FILE:SDL2_ttf::SDL2_ttf>
         DESTINATION .)
+    # Install FluidSynth DLLs and SoundFont
+    install(DIRECTORY "${FluidSynth_ROOT}/bin/" DESTINATION .
+        PATTERN "*.exe" EXCLUDE)
+    install(DIRECTORY "${SoundFont_ROOT}/"
+        DESTINATION .)
 endif()

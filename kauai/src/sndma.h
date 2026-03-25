@@ -55,6 +55,9 @@ class MiniaudioStream : public MiniaudioStream_PAR
     bool FPlay();
     bool FStop();
 
+    // Return the number of frames queued in the ringbuffer
+    int GetPendingFrames();
+
     // Write audio into the ring buffer
     // NOTE: the input data needs to be the same format as the ma_engine uses for playback
     bool FWriteAudio(const void *pvframe, int32_t cframe);
