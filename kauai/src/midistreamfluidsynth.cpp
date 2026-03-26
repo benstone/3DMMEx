@@ -407,7 +407,7 @@ uint32_t FMS::_LuThread(void)
 
     for (;;)
     {
-        fChanged = (dtsWait > 0 && _hevt.Wait(dtsWait == klwInfinite ? 0xffffffff : dtsWait));
+        fChanged = (dtsWait > 0 && _hevt.Wait(dtsWait == klwInfinite ? KSIGNAL_INFINITE : dtsWait));
 
         if (_fDone)
             return 0;
