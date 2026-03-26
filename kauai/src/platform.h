@@ -31,6 +31,9 @@ class MUTX : public std::recursive_mutex
 /****************************************
     Signal - simulates a Win32 Event
 ****************************************/
+
+#define KSIGNAL_INFINITE 0xffffffff
+
 class Signal
 {
   public:
@@ -46,11 +49,11 @@ class Signal
     }
 
     // Wait for the event to be signalled
-    bool Wait(uint32_t dtsTime = 0xFFFFFFFF)
+    bool Wait(uint32_t dtsTime = KSIGNAL_INFINITE)
     {
         std::unique_lock<std::mutex> lock(_mutx);
 
-        if (dtsTime == 0xFFFFFFFF)
+        if (dtsTime == KSIGNAL_INFINITE)
         {
             // Wait forever
             _cv.wait(lock, [&] { return _fSignaled; });

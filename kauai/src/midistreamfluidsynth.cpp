@@ -284,7 +284,7 @@ void FMS::_Reset(void)
 {
     Assert(_fOpen == fTrue, 0);
 
-    fluid_synth_all_notes_off(_flsynth, -1);
+    fluid_synth_system_reset(_flsynth);
 }
 
 /***************************************************************************
@@ -407,7 +407,7 @@ uint32_t FMS::_LuThread(void)
 
     for (;;)
     {
-        fChanged = (dtsWait > 0 && _hevt.Wait(dtsWait == klwInfinite ? 0xffffffff : dtsWait));
+        fChanged = (dtsWait > 0 && _hevt.Wait(dtsWait == klwInfinite ? KSIGNAL_INFINITE : dtsWait));
 
         if (_fDone)
             return 0;
