@@ -146,6 +146,9 @@ bool FNI::FBuildFromPath(PSTN pstn, FTG ftgDef)
     }
 
     fullpath = pstn->Psz();
+    if (!fullpath.is_absolute())
+        fullpath = fs::current_path() / fullpath;
+
     sz = fullpath.c_str();
     cch = strlen(sz);
     if (cch > kcchMaxSz)
@@ -249,7 +252,7 @@ bool FNI::FGetCwd()
 {
     AssertThis(0);
 
-    STN stnCurrentDir = PszLit(".");
+    STN stnCurrentDir = PszLit("");
     return FBuildFromPath(&stnCurrentDir, kftgDir);
 }
 
