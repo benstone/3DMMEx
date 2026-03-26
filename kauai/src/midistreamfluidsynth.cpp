@@ -284,7 +284,7 @@ void FMS::_Reset(void)
 {
     Assert(_fOpen == fTrue, 0);
 
-    fluid_synth_all_notes_off(_flsynth, -1);
+    fluid_synth_system_reset(_flsynth);
 }
 
 /***************************************************************************
