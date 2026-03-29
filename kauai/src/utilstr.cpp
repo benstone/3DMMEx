@@ -1611,8 +1611,36 @@ int32_t CchTranslateRgb(const void *pvSrc, int32_t cbSrc, int16_t oskSrc, achar 
 
 #endif //! UNICODE
 #else  // !WIN && !MAC
-    // FIXME: Implement CchTranslateRgb for non-Windows platforms
-    RawRtn();
+
+    // FIXME: Implement CchTranslateRgb properly for non-Windows platforms
+    const wchar *pwszSrc = pvNil;
+    int32_t cch = 0;
+
+    switch (oskSrc)
+    {
+    case koskUniWin:
+        pwszSrc = reinterpret_cast<const wchar *>(pvSrc);
+        cch = (cbSrc / SIZEOF(wchar));
+        if (cch > cchMaxDst)
+            return 0;
+
+        for (int32_t ich = 0; ich < cch; ich++)
+        {
+            if (pwszSrc[ich] < kschMax)
+            {
+                prgchDst[ich] = pwszSrc[ich];
+            }
+            else
+            {
+                prgchDst[ich] = ChLit('?');
+            }
+        }
+        return cch;
+    default:
+        RawRtn();
+        break;
+    }
+
     return 0;
 #endif
 }
