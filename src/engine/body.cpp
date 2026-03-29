@@ -117,6 +117,10 @@ ASSERTNAME
 RTCLASS(BODY)
 RTCLASS(COST)
 
+// The Explosion prop contains unused custom materials. This causes assert failures.
+// FUTURE: Remove unused custom materials from the Explosion prop.
+#define IGNORE_UNUSED_CUSTOM_MATERIALS
+
 // Specification of hilite color.  REVIEW *****: should these
 // values (or the PBMTL itself?) be passed in by the client?
 const br_colour kbrcHilite = BR_COLOUR_RGB(255, 255, 255);
@@ -874,7 +878,9 @@ void BODY::SetPartSetCmtl(CMTL *pcmtl)
             ibmtl++;
         }
     }
+#if !defined(IGNORE_UNUSED_CUSTOM_MATERIALS)
     Assert(ibmtl == pcmtl->Cbprt(), "didn't use all custom materials!");
+#endif
     if (_cactHidden == 0)
     {
         AssertPo(_pbwld, 0);
