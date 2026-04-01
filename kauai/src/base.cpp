@@ -41,7 +41,7 @@ struct DOI
 
 #define kcbBaseDebug SIZEOF(DOI)
 
-priv void _AssertDoi(DOI *pdoi, bool tLinked);
+kpriv void _AssertDoi(DOI *pdoi, bool tLinked);
 inline DOI *_PdoiFromBase(void *pv)
 {
     return (DOI *)PvSubBv(pv, kcbBaseDebug);
@@ -50,8 +50,8 @@ inline BASE *_PbaseFromDoi(DOI *pdoi)
 {
     return (BASE *)PvAddBv(pdoi, kcbBaseDebug);
 }
-priv void _LinkDoi(DOI *pdoi, DOI **ppdoiFirst);
-priv void _UnlinkDoi(DOI *pdoi);
+kpriv void _LinkDoi(DOI *pdoi, DOI **ppdoiFirst);
+kpriv void _UnlinkDoi(DOI *pdoi);
 
 DOI *_pdoiFirst;    // Head of linked list of all allocated objects.
 DOI *_pdoiFirstRaw; // Head of linked list of raw newly allocated objects.
@@ -383,7 +383,7 @@ void _AssertDoi(DOI *pdoi, bool tLinked)
 /***************************************************************************
     Link object into list.
 ***************************************************************************/
-priv void _LinkDoi(DOI *pdoi, DOI **ppdoiFirst)
+kpriv void _LinkDoi(DOI *pdoi, DOI **ppdoiFirst)
 {
     _Enter();
 
@@ -406,7 +406,7 @@ priv void _LinkDoi(DOI *pdoi, DOI **ppdoiFirst)
 /***************************************************************************
     Unlink object from list.
 ***************************************************************************/
-priv void _UnlinkDoi(DOI *pdoi)
+kpriv void _UnlinkDoi(DOI *pdoi)
 {
     _Enter();
 

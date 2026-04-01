@@ -357,7 +357,7 @@ void FIL::AssertValid(uint32_t grf)
 /***************************************************************************
     Determine if the given range is within cbTot.
 ***************************************************************************/
-priv bool _FRangeIn(int32_t cbTot, int32_t cb, int32_t ib)
+kpriv bool _FRangeIn(int32_t cbTot, int32_t cb, int32_t ib)
 {
     return FIn(ib, 0, cbTot + 1) && FIn(cb, 0, cbTot - ib + 1);
 }
