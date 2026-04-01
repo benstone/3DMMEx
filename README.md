@@ -31,11 +31,12 @@
     * Clang (optional)
 * Linux:
   * GCC
-  * Development libraries for SDL2, SDL2_ttf, SDL2_mixer, GTK3, iconv and Fontconfig
+  * Development libraries for SDL2, SDL2_ttf, gstreamer, GTK3, iconv and Fontconfig
   * Zenity (optional: used for dialog boxes)
   * [Comic Sans MS font](https://corefonts.sourceforge.net/) (optional but strongly recommended!)
+  * gstreamer
   * Installing dependencies:
-    * Ubuntu: `sudo apt install g++ cmake ninja-build libsdl2-dev libsdl2-ttf-dev libsdl2-mixer-dev libgtk-3-dev libfontconfig-dev zenity`
+    * Ubuntu: `sudo apt install g++ cmake ninja-build libsdl2-dev libsdl2-ttf-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgtk-3-dev libfontconfig-dev zenity`
 
 ### Building
 
