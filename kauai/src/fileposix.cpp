@@ -20,7 +20,7 @@ const ulong kfpError = 0xFFFFFFFF;
     Open or create the file by calling CreateFile.  Returns hBadWin on
     failure.
 ***************************************************************************/
-priv FILE *_HfileOpen(PSZ psz, uint32_t grffil)
+kpriv FILE *_HfileOpen(PSZ psz, uint32_t grffil)
 {
     const char *mode = (grffil & ffilWriteEnable) ? "wb+" : "rb";
 
