@@ -513,6 +513,10 @@ class GNV : public GNV_PAR
     // this gross API is for AVI playback
     void DrawDib(HDRAWDIB hdd, BITMAPINFOHEADER *pbi, RC *prc);
 #endif // KAUAI_WIN32
+#ifdef KAUAI_SDL
+    // this gross API is for AVI playback
+    void DrawSurface(SDL_Surface *surface, RC *prc);
+#endif
 
     void SetPenSize(int32_t dxp, int32_t dyp);
 
@@ -795,6 +799,8 @@ class GPT : public GPT_PAR
     // Save contents of this GPT to a bitmap for debugging
     void DumpBitmap(STN *stnBmp);
 
+    // this gross API is for AVI playback
+    void DrawSurface(SDL_Surface *surface, RCS *prcs, GDD *pgdd);
 #endif // KAUAI_SDL
 #ifdef MAC
     static PGPT PgptNew(PPRT pprt, HGD hgd = hNil);
