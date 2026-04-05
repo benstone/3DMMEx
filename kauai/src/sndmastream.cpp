@@ -19,6 +19,7 @@ MiniaudioStream::~MiniaudioStream()
     if (_fInit)
     {
         ma_sound_uninit(&_sound);
+        ma_pcm_rb_uninit(&_buffer);
         _fInit = fFalse;
     }
 
