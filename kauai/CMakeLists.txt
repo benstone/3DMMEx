@@ -361,6 +361,22 @@ if (3DMM_GUI STREQUAL "Win32")
         KauaiGui
         $<$<PLATFORM_ID:Windows>:Vfw32>
     )
+elseif(3DMM_GUI STREQUAL "SDL" AND GST_FOUND)
+    # Use GStreamer video player
+    add_library(KauaiVideo
+        "${PROJECT_SOURCE_DIR}/kauai/src/videosdl.cpp"
+    )
+    target_include_directories (
+        KauaiVideo
+        PUBLIC
+        "${GST_INCLUDE_DIRS}"
+    )
+    target_link_libraries(
+        KauaiVideo
+        PUBLIC
+        KauaiGui
+        "${GST_LIBRARIES}"
+    )
 else()
     message(WARNING "Video playback not implemented on GUI platform: ${3DMM_GUI}")
 
