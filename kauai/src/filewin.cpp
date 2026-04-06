@@ -14,13 +14,13 @@
 ASSERTNAME
 
 const uint32_t kfpError = 0xFFFFFFFF;
-priv HANDLE _HfileOpen(PSZ pszFile, bool fCreate, uint32_t grffil);
+kpriv HANDLE _HfileOpen(PSZ pszFile, bool fCreate, uint32_t grffil);
 
 /***************************************************************************
     Open or create the file by calling CreateFile.  Returns hBadWin on
     failure.
 ***************************************************************************/
-priv HANDLE _HfileOpen(PSZ psz, bool fCreate, uint32_t grffil)
+kpriv HANDLE _HfileOpen(PSZ psz, bool fCreate, uint32_t grffil)
 {
     uint32_t luAccess = GENERIC_READ;
     uint32_t luShare = 0;
