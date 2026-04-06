@@ -66,6 +66,12 @@ Use CMake to build the project. The project includes a CMakePresets.json file th
 * To run tests, run `ctest --test-dir build/<preset-name>`
 * To run 3DMM, run `dist/<preset-name>/3dmovie`
 
+## Contributing
+
+See [CONTRIBUTING.MD](CONTRIBUTING.md) for information on how to contribute to 3DMMEx.
+
+If you have questions, please create a GitHub issue or post in the project's [Discussions page](https://github.com/benstone/3DMMEx/discussions).
+
 ## Legal stuff
 
 The following sections have been carried over from the original 3D Movie Maker [GitHub repository](https://github.com/microsoft/Microsoft-3D-Movie-Maker) released by Microsoft in May 2022.
