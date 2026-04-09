@@ -86,8 +86,6 @@ if ("${3DMM_GUI}" STREQUAL "Win32")
 
 elseif("${3DMM_GUI}" STREQUAL "SDL")
 
-    message(WARNING "SDL support does not work yet!")
-
     find_package(PkgConfig)
 
     if (WIN32)
