@@ -1547,6 +1547,18 @@ bool APP::_FReadTitlesFromReg(PGST *ppgst)
     PGST pgst;
     int32_t sid;
 
+    // List of expansion pack titles to configure
+    const struct ExpansionTitles_t
+    {
+        int32_t sid;
+        PCSZ pszTitle;
+    } vrgExpansionTitles[] = {
+        // Source IDs were chosen by the developers of the expansion packs
+        {3, PszLit("N3DMM EXPANSION/N3DMMExp")},        // Nickelodeon 3D Movie Maker expansion pack (unofficial)
+        {4, PszLit("Doraemon Character Kit/DORAEMON")}, // Doraemon Character Kit
+        {5, PszLit("Expansions/EXPANSIONS")},           // 3DMM Expansion Pack (unofficial)
+    };
+
     if ((pgst = GST::PgstNew(SIZEOF(int32_t))) == pvNil)
         goto LFail;
 
@@ -1589,6 +1601,7 @@ bool APP::_FReadTitlesFromReg(PGST *ppgst)
 
 #endif // WIN
 
+    // Add main title if not already set
     if (pgst->IvMac() == 0)
     {
         stnTitle.SetSz(PszLit("3D Movie Maker/3DMovie"));
@@ -1597,6 +1610,21 @@ bool APP::_FReadTitlesFromReg(PGST *ppgst)
         {
             Warn("Failed to add fallback Title!");
             goto LFail;
+        }
+    }
+
+    // Add optional expansion pack titles
+    for (int32_t ititle = 0; ititle < CvFromRgv(vrgExpansionTitles); ititle++)
+    {
+        stnTitle.SetSz(vrgExpansionTitles[ititle].pszTitle);
+        sid = vrgExpansionTitles[ititle].sid;
+        if (!pgst->FFindExtra(&sid))
+        {
+            if (!pgst->FAddStn(&stnTitle, &sid))
+            {
+                Warn("Failed to add expansion title");
+                goto LFail;
+            }
         }
     }
 
