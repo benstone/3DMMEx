@@ -229,12 +229,18 @@ void APPB::_DispatchEvt(PEVT pevt)
             vpcex->EnqueueCmd(&cmd);
         ResetToolTip();
         break;
-
+    case WM_SYSKEYDOWN:
+        // fall thru
+    case WM_SYSCHAR:
+        if (_FTranslateKeyEvt(pevt, (PCMD_KEY)&cmd) && pvNil != vpcex)
+        {
+            vpcex->EnqueueCmd(&cmd);
+        }
+        // Fall through to ensure system key down events are still dispatched
+        // Otherwise we will break system hotkeys like Alt-Space.
     case WM_KEYUP:
     case WM_DEADCHAR:
-    case WM_SYSKEYDOWN:
     case WM_SYSKEYUP:
-    case WM_SYSCHAR:
     case WM_SYSDEADCHAR:
         ResetToolTip();
         // fall thru
@@ -256,17 +262,27 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
     AssertVarMem(pcmd);
 
     EVT evt;
+    UINT wmChar = 0;
 
     ClearPb(pcmd, SIZEOF(*pcmd));
     pcmd->cid = cidKey;
 
     if (pevt->message == WM_KEYDOWN)
     {
+        wmChar = WM_CHAR;
+    }
+    else if (pevt->message == WM_SYSKEYDOWN)
+    {
+        wmChar = WM_SYSCHAR;
+    }
+
+    if (wmChar != 0)
+    {
         TranslateMessage(pevt);
-        if (PeekMessage(&evt, pevt->hwnd, 0, 0, PM_NOREMOVE) && WM_CHAR == evt.message &&
-            PeekMessage(&evt, pevt->hwnd, WM_CHAR, WM_CHAR, PM_REMOVE))
+        if (PeekMessage(&evt, pevt->hwnd, 0, 0, PM_NOREMOVE) &&
+            (wmChar == evt.message && PeekMessage(&evt, pevt->hwnd, wmChar, wmChar, PM_REMOVE)))
         {
-            Assert(evt.message == WM_CHAR, 0);
+            Assert(evt.message == wmChar, 0);
             pcmd->ch = evt.wParam;
         }
         else
