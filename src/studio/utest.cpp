@@ -79,6 +79,7 @@ ON_CID_GEN(cidEnableAccel, &APP::FCmdEnableAccel, pvNil)
 ON_CID_GEN(cidInvokeSplot, &APP::FCmdInvokeSplot, pvNil)
 ON_CID_GEN(cidExitStudio, &APP::FCmdExitStudio, pvNil)
 ON_CID_GEN(cidDeactivate, &APP::FCmdDeactivate, pvNil)
+ON_CID_GEN(cidToggleFullscreen, &APP::FCmdToggleFullscreen, pvNil)
 END_CMD_MAP_NIL()
 
 APP vapp;
@@ -2049,6 +2050,7 @@ bool APP::_FInitAcceleratorTable(void)
     // Register global keyboard accelerators
     AssertDo(_patblGlobal->FAddCmdKey(VK_FROM_ALPHA('I'), fcustCmd | fcustShift, cidInfo), "Could not add hotkey");
     AssertDo(_patblGlobal->FAddCmdKey(VK_FROM_ALPHA('Q'), fcustCmd, cidQuit), "Could not add hotkey");
+    AssertDo(_patblGlobal->FAddCmdKey(kvkReturn, fcustOption, cidToggleFullscreen), "Could not add hotkey");
 
     // Create main accelerator table
     _patblMain = ATBL::PatblNew(HidUnique(), vpcex);
@@ -4552,6 +4554,26 @@ bool APP::FCmdInvokeSplot(PCMD pcmd)
     if (psplot == pvNil)
         PushErc(ercSocCantInitSplot);
 
+    return fTrue;
+}
+
+/***************************************************************************
+ *
+ * Handle toggle fullscreen command
+ *
+ * Parameters:
+ *  pcmd - Pointer to the command to process.
+ *
+ * Returns:
+ *  fTrue if it handled the command, else fFalse.
+ *
+ **************************************************************************/
+bool APP::FCmdToggleFullscreen(PCMD pcmd)
+{
+    AssertThis(0);
+    AssertVarMem(pcmd);
+
+    AssertDo(_FSetRunInWindow(FPure(!_fRunInWindow)), "Could not toggle fullscreen");
     return fTrue;
 }
 

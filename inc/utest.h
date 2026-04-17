@@ -282,6 +282,7 @@ class APP : public APP_PAR
     bool FCmdInvokeSplot(PCMD pcmd);
     bool FCmdExitStudio(PCMD pcmd);
     bool FCmdDeactivate(PCMD pcmd);
+    bool FCmdToggleFullscreen(PCMD pcmd);
 
     static bool FInsertCD(PSTN pstnTitle);
     void DisplayErrors(void);
