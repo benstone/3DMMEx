@@ -3577,7 +3577,7 @@ bool APP::_FSwitch640480(bool fTo640480)
 {
     AssertBaseThis(0);
 
-#ifdef WIN
+#ifdef KAUAI_WIN32
 #ifdef BUG1920
     bool fSetMode = fFalse, fSetBbp = fTrue;
     DWORD iModeNum;
@@ -3665,7 +3665,7 @@ bool APP::_FSwitch640480(bool fTo640480)
 LFail:
     if (0 != hLibrary)
         FreeLibrary(hLibrary);
-#endif // WIN
+#endif // KAUAI_WIN32
     return fFalse;
 }
 
