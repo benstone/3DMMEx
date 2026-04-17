@@ -217,6 +217,7 @@ class APP : public APP_PAR
     void _RebuildMainWindow(void);
     bool _FSwitch640480(bool fTo640480);
     bool _FDisplayIs640480(void);
+    bool _FSetRunInWindow(bool fRunInWindow);
     bool _FShowSplashScreen(void);
     bool _FPlaySplashSound(void);
     PMVIE _Pmvie(void);

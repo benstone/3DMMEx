@@ -3404,43 +3404,8 @@ bool APP::FCmdInfo(PCMD pcmd)
     }
 
     fRunInWindowNew = pdlg->LwGetRadio(iditWindowModeInfo);
-    if (FPure(_fRunInWindow) != FPure(fRunInWindowNew))
-    {
-        if (!fRunInWindowNew)
-        {
-            // user wants to be fullscreen
-            if (_FDisplaySwitchSupported())
-            {
-                _fRunInWindow = fFalse;
-                _RebuildMainWindow();
-                if (!_FSwitch640480(fTrue))
-                {
-                    _fRunInWindow = fTrue;
-                    _RebuildMainWindow();
-                }
-            }
-        }
-        else
-        {
-            // user wants to run in a window.
-            // Don't allow user to run in a window at 640x480 resolution.
-            if (!_FDisplayIs640480() || _fSwitchedResolution)
-            {
-                _fRunInWindow = fTrue;
-                _RebuildMainWindow();
-                if (_FSwitch640480(fFalse))
-                {
-                    _fSwitchedResolution = fFalse;
-                }
-                else
-                {
-                    // back to fullscreen
-                    _fRunInWindow = fFalse;
-                    _RebuildMainWindow();
-                }
-            }
-        }
-    }
+    AssertDo(_FSetRunInWindow(fRunInWindowNew), "Could not change window mode");
+
     if (fSaveChanges)
     {
         int32_t fSwitchRes = !_fRunInWindow;
@@ -3667,6 +3632,51 @@ LFail:
         FreeLibrary(hLibrary);
 #endif // KAUAI_WIN32
     return fFalse;
+}
+
+bool APP::_FSetRunInWindow(bool fRunInWindowNew)
+{
+    AssertThis(0);
+
+    if (FPure(_fRunInWindow) != FPure(fRunInWindowNew))
+    {
+        if (!fRunInWindowNew)
+        {
+            // user wants to be fullscreen
+            if (_FDisplaySwitchSupported())
+            {
+                _fRunInWindow = fFalse;
+                _RebuildMainWindow();
+                if (!_FSwitch640480(fTrue))
+                {
+                    _fRunInWindow = fTrue;
+                    _RebuildMainWindow();
+                }
+            }
+        }
+        else
+        {
+            // user wants to run in a window.
+            // Don't allow user to run in a window at 640x480 resolution.
+            if (!_FDisplayIs640480() || _fSwitchedResolution)
+            {
+                _fRunInWindow = fTrue;
+                _RebuildMainWindow();
+                if (_FSwitch640480(fFalse))
+                {
+                    _fSwitchedResolution = fFalse;
+                }
+                else
+                {
+                    // back to fullscreen
+                    _fRunInWindow = fFalse;
+                    _RebuildMainWindow();
+                }
+            }
+        }
+    }
+
+    return FPure(_fRunInWindow) == FPure(fRunInWindowNew);
 }
 
 /***************************************************************************
