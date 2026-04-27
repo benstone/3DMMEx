@@ -48,12 +48,12 @@
 
 #define ASSERT(f)						\
 	If (!(f));							\
-		AlertStr("Assertion failed: ", __FILE__, ", line ", NumToStr(__LINE__,""));	\
+		AlertStr("Assertion failed: ", #f);	\
 	End
 
 #define VERIFY(f)						\
 	If (!(f));							\
-		AlertStr("Assertion failed: ", __FILE__, ", line ", NumToStr(__LINE__,""));	\
+		AlertStr("Assertion failed: ", #f);	\
 	End
 
 #define DEBUGCMD(cmd) cmd
