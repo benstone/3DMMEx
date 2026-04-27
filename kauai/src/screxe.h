@@ -66,6 +66,7 @@ class SCPT : public SCPT_PAR
     ~SCPT(void);
 
     bool FSaveToChunk(PCFL pcfl, CTG ctg, CNO cno, bool fPack = fFalse);
+    bool FGetSourceLine(int32_t ilw, PSTN pstnSourceLine);
 };
 
 /***************************************************************************

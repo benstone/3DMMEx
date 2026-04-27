@@ -1102,7 +1102,14 @@ void SCEG::_DoAlert(int32_t op)
         return;
     }
 
-    stn1.FFormatSz(PszLit("Script Message ('%f', 0x%x, %d): "), _pscpt->Ctg(), _pscpt->Cno(), _ilwCur);
+    if (_pscpt->FGetSourceLine(_ilwCur, &stn2))
+    {
+        stn1.FFormatSz(PszLit("%s: "), &stn2);
+    }
+    else
+    {
+        stn1.FFormatSz(PszLit("Script Message ('%f', 0x%x, %d): "), _pscpt->Ctg(), _pscpt->Cno(), _ilwCur);
+    }
 
     while (clw-- > 0)
     {

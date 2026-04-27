@@ -1565,6 +1565,20 @@ bool SCPT::FSaveToChunk(PCFL pcfl, CTG ctg, CNO cno, bool fPack)
     return fTrue;
 }
 
+/***************************************************************************
+    Get source line information for a given position in a script
+***************************************************************************/
+bool SCPT::FGetSourceLine(int32_t ilw, PSTN pstnSourceLine)
+{
+    AssertThis(0);
+    AssertPo(pstnSourceLine, 0);
+
+    if (_pgstSrcLines == pvNil)
+        return fFalse;
+
+    return _pgstSrcLines->FFindExtra(&ilw, pstnSourceLine);
+}
+
 #ifdef DEBUG
 /***************************************************************************
     Assert the validity of a SCPT.
