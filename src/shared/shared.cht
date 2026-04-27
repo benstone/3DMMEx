@@ -24,7 +24,6 @@
 *****************************************************************************/
 
 // Include and initialized chunky macros.
-#define PACKALL
 #include "kidgs.chh"
 STARTCHUNKY
 

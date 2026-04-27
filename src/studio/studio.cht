@@ -46,9 +46,6 @@
 // Useful macros
 //
 
-// Uncomment the following line to pack the studio chunks
-#define PACKALL
-
 #include "kidgs.chh"
 
 //
