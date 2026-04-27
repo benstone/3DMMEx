@@ -24,6 +24,8 @@ int main(int cpszs, char *prgpszs[])
     bool fCompile = fTrue;
     bool fSearchPath = fFalse;
     PSZS pszSearchPath = pvNil;
+    uint32_t tsStart;
+    uint32_t dts;
 
 #ifdef UNICODE
     fprintf(stderr, "\nMicrosoft (R) Chunky File Compiler (Unicode; " Debug("Debug; ") __DATE__ "; " __TIME__ ")\n");
@@ -140,7 +142,20 @@ int main(int cpszs, char *prgpszs[])
             }
         }
 
+        tsStart = TsCurrentSystem();
         pcfl = chcm.PcflCompile(&fniSrc, &fniDst, &mssioError);
+        dts = TsCurrentSystem() - tsStart;
+        if (pcfl != pvNil && dts != 0)
+        {
+            STN stnFile;
+            U8SZ u8szFile;
+            ClearPb(u8szFile, SIZEOF(u8szFile));
+
+            fniDst.GetStnPath(&stnFile);
+            stnFile.GetUtf8Sz(u8szFile);
+            fprintf(stderr, "Compiled %s in %.3f seconds\n", u8szFile, ((float)dts / kdtsSecond));
+        }
+
         FIL::ShutDown();
         return pvNil == pcfl;
     }
