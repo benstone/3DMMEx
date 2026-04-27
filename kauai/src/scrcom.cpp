@@ -376,6 +376,13 @@ bool SCCB::_FInit(PLEXB plexb, bool fInFix, PMSNK pmsnk)
     else
         _pscpt->_pgllw->SetMinGrow(100);
 
+#ifdef DEBUG
+    if (pvNil != _pscpt && pvNil == (_pscpt->_pgstSrcLines = GST::PgstNew(SIZEOF(int32_t))))
+    {
+        ReleasePpo(&_pscpt);
+    }
+#endif // DEBUG
+
     // code starts at slot 1 because the version numbers are in slot 0.
     _ilwOpLast = 1;
 
@@ -634,6 +641,18 @@ void SCCB::_PushOp(int32_t op)
     if (!_pscpt->_pgllw->FPush(&lw))
         _ReportError(_pszOom);
     _fForceOp = fFalse;
+
+    // Add source line info
+    if (_pscpt->_pgstSrcLines != pvNil)
+    {
+        STN stnFile;
+        STN stnSrcLoc;
+        int32_t ilwOpCur = _pscpt->_pgllw->IvMac();
+
+        _plexb->GetStnFile(&stnFile);
+        stnSrcLoc.FFormatSz(PszLit("%s(%d)"), &stnFile, _plexb->LwLine());
+        AssertDo(_pscpt->_pgstSrcLines->FAddStn(&stnSrcLoc, &ilwOpCur), "Could not add source line info");
+    }
 }
 
 /***************************************************************************

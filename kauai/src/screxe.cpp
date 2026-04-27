@@ -1402,6 +1402,7 @@ PSCPT SCPT::PscptRead(PCFL pcfl, CTG ctg, CNO cno)
     PSCPT pscpt = pvNil;
     PGL pgllw = pvNil;
     PGST pgst = pvNil;
+    PGST pgstSrcLines = pvNil;
 
     if (!pcfl->FFind(ctg, cno, &blck))
         goto LFail;
@@ -1417,9 +1418,22 @@ PSCPT SCPT::PscptRead(PCFL pcfl, CTG ctg, CNO cno)
             goto LFail;
         }
     }
+
+#ifdef DEBUG
+    // Load source line information if available
+    if (pcfl->FGetKidChidCtg(ctg, cno, 0, kctgScriptSourceLines, &kid))
+    {
+        if (!pcfl->FFind(kid.cki.ctg, kid.cki.cno, &blck) || pvNil == (pgstSrcLines = GST::PgstRead(&blck)))
+        {
+            goto LFail;
+        }
+    }
+#endif // DEBUG
+
     if (pvNil == (pscpt = NewObj SCPT))
     {
     LFail:
+        ReleasePpo(&pgstSrcLines);
         ReleasePpo(&pgllw);
         ReleasePpo(&pgst);
         return pvNil;
@@ -1443,6 +1457,7 @@ PSCPT SCPT::PscptRead(PCFL pcfl, CTG ctg, CNO cno)
         SwapBytesRglw(pgllw->QvGet(0), pgllw->IvMac());
     pscpt->_pgllw = pgllw;
     pscpt->_pgstLiterals = pgst;
+    pscpt->_pgstSrcLines = pgstSrcLines;
     return pscpt;
 }
 
@@ -1454,6 +1469,7 @@ SCPT::~SCPT(void)
     AssertBaseThis(0);
     ReleasePpo(&_pgllw);
     ReleasePpo(&_pgstLiterals);
+    ReleasePpo(&_pgstSrcLines);
 }
 
 /***************************************************************************
@@ -1508,6 +1524,36 @@ bool SCPT::FSaveToChunk(PCFL pcfl, CTG ctg, CNO cno, bool fPack)
         }
     }
 
+#ifdef DEBUG
+
+    // Add source line information for debugging
+    if (pvNil != _pgstSrcLines)
+    {
+        cb = _pgstSrcLines->CbOnFile();
+        AssertDo(blck.FSetTemp(cb), "Could not create temp block");
+        if (_pgstSrcLines->FWrite(&blck))
+        {
+            if (pcfl->FAddBlck(&blck, kctgScriptSourceLines, &cnoStrs))
+            {
+                if (!pcfl->FAdoptChild(ctg, cnoT, kctgScriptSourceLines, cnoStrs))
+                {
+                    Bug("Could not add source line info chunk to script chunk");
+                    pcfl->Delete(kctgScriptSourceLines, cnoStrs);
+                }
+            }
+            else
+            {
+                Bug("Could not add source line info block");
+            }
+        }
+        else
+        {
+            Bug("Could not serialise GST");
+        }
+    }
+
+#endif // DEBUG
+
     // swap the data and children of the temporary chunk and the destination
     if (cno != cnoT)
     {
@@ -1528,6 +1574,7 @@ void SCPT::AssertValid(uint32_t grf)
     SCPT_PAR::AssertValid(0);
     AssertPo(_pgllw, 0);
     AssertNilOrPo(_pgstLiterals, 0);
+    AssertNilOrPo(_pgstSrcLines, 0);
 }
 
 /***************************************************************************
@@ -1539,6 +1586,7 @@ void SCPT::MarkMem(void)
     SCPT_PAR::MarkMem();
     MarkMemObj(_pgllw);
     MarkMemObj(_pgstLiterals);
+    MarkMemObj(_pgstSrcLines);
 }
 #endif // DEBUG
 

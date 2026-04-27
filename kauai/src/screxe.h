@@ -45,6 +45,7 @@ class SCPT : public SCPT_PAR
   protected:
     PGL _pgllw;
     PGST _pgstLiterals;
+    PGST _pgstSrcLines = pvNil; // Mapping of instruction pointer to source line number
 
     SCPT(void)
     {
