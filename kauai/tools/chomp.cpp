@@ -32,6 +32,21 @@ int main(int cpszs, char *prgpszs[])
 #endif //! UNICODE
     fprintf(stderr, "Copyright (C) Microsoft Corp 1995. All rights reserved.\n\n");
 
+#ifdef DEBUG
+    // Override cactAV for faster builds
+    SZ szCactAv;
+    FillPb(szCactAv, SIZEOF(szCactAv), 0);
+    if (GetEnvironmentVariable(PszLit("CHOMP_CACTAV"), szCactAv, CvFromRgv(szCactAv)) != 0)
+    {
+        STN stnT;
+        stnT.SetSz(szCactAv);
+        if (stnT.FGetLw(&vcactAV))
+        {
+            fprintf(stderr, "chomp: warning: Overriding vcactAV=%d\n", vcactAV);
+        }
+    }
+#endif // DEBUG
+
     for (prgpszs++; --cpszs > 0; prgpszs++)
     {
         pszs = *prgpszs;
