@@ -103,14 +103,14 @@ target_sources(studio
     "${PROJECT_SOURCE_DIR}/src/studio/tatr.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/tgob.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/utest.cpp"
-    "${PROJECT_SOURCE_DIR}/src/studio/utest.rc"
-    "${PROJECT_SOURCE_DIR}/src/studio/utest.rc2"
 )
 if (WIN32)
     target_sources(
         studio
         PRIVATE
-        ${PROJECT_SOURCE_DIR}/src/studio/mminstal.cpp
+        "${PROJECT_SOURCE_DIR}/src/studio/mminstal.cpp"
+        "${PROJECT_SOURCE_DIR}/src/studio/utest.rc"
+        "${PROJECT_SOURCE_DIR}/src/studio/utest.rc2"
     )
 endif()
 

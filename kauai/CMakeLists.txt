@@ -743,7 +743,6 @@ add_executable(khello WIN32)
 target_sources(khello
     PRIVATE
     "${PROJECT_SOURCE_DIR}/kauai/test/khello/khello.cpp"
-    "${PROJECT_SOURCE_DIR}/kauai/test/khello/khello.rc"
 )
 target_link_libraries(
     khello
@@ -754,6 +753,12 @@ target_link_libraries(
     KauaiDoc # TODO: should this be a dependency of KauaiGui?
     KauaiRichText
 )
+if(WIN32)
+    target_sources(khello
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/test/khello/khello.rc"
+    )
+endif()
 
 if (WIN32 AND 3DMM_GUI STREQUAL "SDL")
     add_custom_command(
