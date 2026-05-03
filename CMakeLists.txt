@@ -86,8 +86,9 @@ if ("${3DMM_GUI}" STREQUAL "Win32")
 
 elseif("${3DMM_GUI}" STREQUAL "SDL")
 
-    find_package(PkgConfig)
+    find_package(PkgConfig QUIET)
 
+    # Download binaries for SDL2 and FluidSynth when building for Windows
     if (WIN32)
         include(FetchSDL2)
         include(FetchFluidSynth)
@@ -103,7 +104,7 @@ elseif("${3DMM_GUI}" STREQUAL "SDL")
     # TODO: Find libiniparser if installed
     include(FetchIniParser)
 
-    find_package(PkgConfig QUIET)
+    # Find GStreamer
     if (PkgConfig_FOUND)
         pkg_check_modules(GST gstreamer-1.0 gstreamer-app-1.0)
     endif()
