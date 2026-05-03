@@ -125,11 +125,12 @@ endif()
 #  get_property(CMAKE_CXX_CLANG_TIDY TARGET Clang::Tidy PROPERTY IMPORTED_LOCATION)
 #endif()
 
-# Local Tooling
 add_compile_definitions(
-  $<$<PLATFORM_ID:Windows>:WIN>
   $<$<CONFIG:Debug>:DEBUG>
 )
+if (WIN32)
+    add_compile_definitions(WIN)
+endif()
 
 option(ENABLE_ASM_X86 "Use original optimized assembly for Intel x86" OFF)
 if (ENABLE_ASM_X86)

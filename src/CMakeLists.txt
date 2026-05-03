@@ -8,9 +8,16 @@ target_sources(bren
     "${PROJECT_SOURCE_DIR}/bren/stdfile.c"
     "${PROJECT_SOURCE_DIR}/bren/tmap.cpp"
     "${PROJECT_SOURCE_DIR}/bren/zbmp.cpp"
-
-    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/bren/stdmemwin.c>
 )
+
+if (WIN32)
+    target_sources(
+        bren
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/bren/stdmemwin.c"
+    )
+endif()
+
 target_include_directories(bren PUBLIC "${PROJECT_SOURCE_DIR}/bren/inc")
 target_link_libraries(bren
     PUBLIC
@@ -98,10 +105,14 @@ target_sources(studio
     "${PROJECT_SOURCE_DIR}/src/studio/utest.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/utest.rc"
     "${PROJECT_SOURCE_DIR}/src/studio/utest.rc2"
-
-    # Windows
-    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/src/studio/mminstal.cpp>
 )
+if (WIN32)
+    target_sources(
+        studio
+        PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/studio/mminstal.cpp
+    )
+endif()
 
 if(3DMM_GUI STREQUAL "SDL")
     target_sources(
@@ -185,11 +196,15 @@ target_link_libraries(studio
     KauaiKid
     KauaiDlg
     engine
-
-    $<$<PLATFORM_ID:Windows>:mpr> # Required for WNetGetUser()
-    $<$<PLATFORM_ID:Windows>:vfw32> # Required for ICInfo in _wHaveICMCodec
-    $<$<PLATFORM_ID:Windows>:msacm32> # Required for acmFormatTagDetailsA in _wHaveACMCodec
 )
+if (WIN32)
+    target_link_libraries(studio
+        PUBLIC
+        mpr     # Required for WNetGetUser()
+        vfw32   # Required for ICInfo in _wHaveICMCodec
+        msacm32 # Required for acmFormatTagDetailsA in _wHaveACMCodec
+    )
+endif()
 
 set_property(TARGET studio PROPERTY OUTPUT_NAME 3dmovie)
 

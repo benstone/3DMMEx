@@ -66,25 +66,13 @@ add_library(KauaiBase
     "${PROJECT_SOURCE_DIR}/kauai/src/utilstr.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/utilhex.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/mssio.cpp"
-
-    # Windows implementations
-    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/memwin.cpp>
-    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/platwin.cpp>
-
-    # Linux implementations
-    $<$<PLATFORM_ID:Linux>:${PROJECT_SOURCE_DIR}/kauai/src/memwin.cpp>
-    $<$<PLATFORM_ID:Linux>:${PROJECT_SOURCE_DIR}/kauai/src/platlinux.cpp>
+    "${PROJECT_SOURCE_DIR}/kauai/src/memwin.cpp"
 )
 target_include_directories(
     KauaiBase
     PUBLIC
     "${PROJECT_SOURCE_DIR}/kauai/src"
     "${PROJECT_BINARY_DIR}/generated/kauai/src"
-)
-target_link_libraries(
-    KauaiBase
-    PUBLIC
-    $<$<PLATFORM_ID:Windows>:winmm>
 )
 target_compile_definitions(
     KauaiBase
@@ -93,6 +81,25 @@ target_compile_definitions(
     STRICT
 )
 add_dependencies(KauaiBase GenerateChunkTags)
+
+if(WIN32)
+    target_sources(KauaiBase
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/platwin.cpp"
+    )
+    target_link_libraries(
+        KauaiBase
+        PUBLIC
+        winmm
+    )
+elseif(UNIX)
+    target_sources(KauaiBase
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/platlinux.cpp"
+    )
+else()
+    message(FATAL_ERROR "TODO: Select a platform module")
+endif()
 
 if (3DMM_GUI STREQUAL "Win32")
     target_compile_definitions(
@@ -135,15 +142,23 @@ add_library(KauaiFile
     "${PROJECT_SOURCE_DIR}/kauai/src/codkauai.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/crf.cpp"
     "${PROJECT_SOURCE_DIR}/kauai/src/file.cpp"
-
-    # Windows implementations
-    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/filewin.cpp>
-    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/fniwin.cpp>
-
-    # Linux implementations
-    $<$<PLATFORM_ID:Linux>:${PROJECT_SOURCE_DIR}/kauai/src/fileposix.cpp>
-    $<$<PLATFORM_ID:Linux>:${PROJECT_SOURCE_DIR}/kauai/src/fniposix.cpp>
 )
+if(WIN32)
+    target_sources(KauaiFile
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/filewin.cpp"
+        "${PROJECT_SOURCE_DIR}/kauai/src/fniwin.cpp"
+    )
+elseif(UNIX)
+    target_sources(KauaiFile
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/kauai/src/fileposix.cpp"
+        "${PROJECT_SOURCE_DIR}/kauai/src/fniposix.cpp"
+    )
+else()
+    message(FATAL_ERROR "TODO: Select file system implementation")
+endif()
+
 if (ENABLE_ASM_X86)
     target_sources(
         KauaiFile
@@ -347,12 +362,16 @@ else()
     message(WARNING "Sound playback disabled")
 endif()
 
-# Pic: vector graphics support
+# Pic: vector graphics support (not used by 3DMM)
 add_library(KauaiPic
     "${PROJECT_SOURCE_DIR}/kauai/src/pic.cpp"
-    $<$<PLATFORM_ID:Windows>:${PROJECT_SOURCE_DIR}/kauai/src/picwin.cpp>
-    $<$<NOT:$<PLATFORM_ID:Windows>>:${PROJECT_SOURCE_DIR}/kauai/src/picstub.cpp>
 )
+if(WIN32)
+    target_sources(KauaiPic PRIVATE "${PROJECT_SOURCE_DIR}/kauai/src/picwin.cpp")
+else()
+    target_sources(KauaiPic PRIVATE "${PROJECT_SOURCE_DIR}/kauai/src/picstub.cpp")
+endif()
+
 target_link_libraries(
     KauaiPic
     PUBLIC
@@ -379,7 +398,7 @@ if (3DMM_GUI STREQUAL "Win32")
         KauaiVideo
         PUBLIC
         KauaiGui
-        $<$<PLATFORM_ID:Windows>:Vfw32>
+        Vfw32
     )
 elseif(3DMM_GUI STREQUAL "SDL" AND GST_FOUND)
     # Use GStreamer video player
