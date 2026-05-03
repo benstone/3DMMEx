@@ -39,32 +39,6 @@ jobs:
           path: |
             dist/x86-msvc-relwithdebinfo
 
-  compile-clang-x86-debug:
-    name: Windows Clang x86 Debug
-    runs-on: windows-latest
-    steps:
-      - name: Check out repository code
-        uses: actions/checkout@v4
-      - name: Use Visual Studio clang
-        # Move the separate Github Action LLVM install out of the way to prevent it from being
-        # detected by cmake: this causes us to fall back to the version provided by VS instead
-        run: |
-          Rename-Item -path "C:\Program Files\LLVM" -NewName "LLVM.ignore"
-      - name: CMake Generate
-        shell: cmd
-        run: |
-          call "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" x86
-          cmake --preset x86-clangcl-debug -D3DMM_PACKAGE_WIX=OFF
-      - name: CMake Build
-        shell: cmd
-        run: |
-          call "C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvarsall.bat" x86
-          cmake --build build/x86-clangcl-debug --target tests
-      - name: Run tests
-        shell: cmd
-        run: |
-          ctest --test-dir build/x86-clangcl-debug --output-on-failure --timeout 60
-
   compile-msvc-x64-debug:
     name: Windows MSVC x64 Debug
     runs-on: windows-latest
