@@ -315,14 +315,34 @@ elseif(3DMM_GUI STREQUAL "SDL")
         "${PROJECT_SOURCE_DIR}/kauai/src/sndmastream.cpp"
         "${PROJECT_SOURCE_DIR}/kauai/src/sndmasound.cpp"
         "${PROJECT_SOURCE_DIR}/kauai/src/sndmadevice.cpp"
-        "${PROJECT_SOURCE_DIR}/kauai/src/midistreamfluidsynth.cpp"
     )
     target_link_libraries(
         KauaiSound
         PUBLIC
         miniaudio
-        FluidSynth::libfluidsynth
     )
+
+    # Use FluidSynth player if available
+    if (FluidSynth_FOUND)
+        target_sources(
+            KauaiSound
+            PRIVATE
+            "${PROJECT_SOURCE_DIR}/kauai/src/midistreamfluidsynth.cpp"
+        )
+        target_link_libraries(
+            KauaiSound
+            PUBLIC
+            FluidSynth::libfluidsynth
+        )
+        target_compile_definitions(
+            KauaiSound
+            PUBLIC
+            KAUAI_MIDI_FLUIDSYNTH
+        )
+    else()
+        message(WARNING "MIDI playback disabled")
+    endif()
+
 else()
     message(WARNING "Sound playback disabled")
 endif()

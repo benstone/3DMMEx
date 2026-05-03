@@ -13,11 +13,13 @@
 #include "mdev2pri.h"
 ASSERTNAME
 
-#ifdef KAUAI_WIN32
+#if defined(KAUAI_WIN32)
 #include "midistreamwin95.h"
 #include "midistreamwinnt.h"
-#else
+#elif defined(KAUAI_SDL)
+#ifdef KAUAI_MIDI_FLUIDSYNTH
 #include "midistreamfluidsynth.h"
+#endif // KAUAI_MIDI_FLUIDSYNTH
 #endif // KAUAI_WIN32
 
 RTCLASS(MDWS)
@@ -585,10 +587,17 @@ bool MSMIX::_FInit(void)
         return fFalse;
     }
 #elif defined(KAUAI_SDL)
+
+#if defined(KAUAI_MIDI_FLUIDSYNTH)
     if (pvNil == (_pmisi = FMS::PfmsNew(_MidiProc, (uintptr_t)this)))
     {
         return fFalse;
     }
+#else
+    Warn("No MIDI player available");
+    return fFalse;
+#endif // KAUAI_MIDI_FLUIDSYNTH
+
 #endif
 
     if (_pmisi == pvNil)
