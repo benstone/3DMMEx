@@ -211,8 +211,8 @@
             }
         },
         {
-            "displayName": "SDL Linux gcc x64_64 Debug",
-            "name": "sdl-x86_64-gcc-linux-debug",
+            "displayName": "SDL Debug",
+            "name": "sdl-debug",
             "inherits": "base",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug",
@@ -220,11 +220,11 @@
             }
         },
         {
-            "displayName": "SDL Linux gcc x64_64 Release",
-            "name": "sdl-x86_64-gcc-linux-release",
+            "displayName": "SDL RelWithDebInfo",
+            "name": "sdl-relwithdebinfo",
             "inherits": "base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
                 "3DMM_GUI": "SDL"
             }
         }

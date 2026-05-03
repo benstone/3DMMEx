@@ -191,7 +191,7 @@ jobs:
           path: |
             dist/arm64-msvc-relwithdebinfo
 
-  compile-gcc-x86_64-linux-release:
+  compile-gcc-x86_64-linux-debug:
     name: Linux gcc x86_64 Debug
     runs-on: ubuntu-latest
     steps:
@@ -203,25 +203,25 @@ jobs:
         uses: actions/checkout@v4
       - name: CMake Generate
         run: |
-          cmake --preset sdl-x86_64-gcc-linux-debug
+          cmake --preset sdl-debug
       - name: CMake Build
         run: |
-          cmake --build build/sdl-x86_64-gcc-linux-debug --target tools studio tests
+          cmake --build build/sdl-debug --target tools studio tests
       - name: Run tests
         run: |
-          ctest --test-dir build/sdl-x86_64-gcc-linux-debug --output-on-failure --timeout 60
+          ctest --test-dir build/sdl-debug --output-on-failure --timeout 60
       - name: CMake Install
         run: |
-          cmake --install build/sdl-x86_64-gcc-linux-debug --prefix dist/sdl-x86_64-gcc-linux-debug
+          cmake --install build/sdl-debug --prefix dist/sdl-debug
       - name: Upload debug files
         uses: actions/upload-artifact@v4
         with:
           name: 3DMMEx Linux gcc x86_64 debug files
           path: |
-            build/sdl-x86_64-gcc-linux-debug/src/chomp/studio/*.i
+            build/sdl-debug/src/chomp/studio/*.i
       - name: Upload Debug
         uses: actions/upload-artifact@v4
         with:
           name: 3DMMEx Linux gcc x86_64 Debug
           path: |
-            dist/sdl-x86_64-gcc-linux-debug
+            dist/sdl-debug

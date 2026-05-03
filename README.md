@@ -58,10 +58,10 @@ Use CMake to build the project. The project includes a CMakePresets.json file th
   * A ZIP archive containing a portable install is created in the build directory.
   * If WiX is installed, an MSI package is also created.
 
-#### Building on Linux
+#### Building on other platforms
 
 * Run `cmake --preset <preset-name>`
-  * The recommended preset is `sdl-x86_64-gcc-linux-debug`
+  * The recommended preset is `sdl-debug` for local development, or `sdl-relwithdebinfo` for release.
 * Run `cmake --build build/<preset-name> --target install`
 * To run tests, run `ctest --test-dir build/<preset-name>`
 * To run 3DMM, run `dist/<preset-name>/3dmovie`
