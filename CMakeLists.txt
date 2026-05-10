@@ -101,9 +101,6 @@ elseif("${3DMM_GUI}" STREQUAL "SDL")
 
     find_package(FluidSynth CONFIG)
 
-    # TODO: Find libiniparser if installed
-    include(FetchIniParser)
-
     # Find GStreamer
     if (PkgConfig_FOUND)
         pkg_check_modules(GST gstreamer-1.0 gstreamer-app-1.0)
@@ -225,6 +222,9 @@ endif()
 if (NOT "${3DMM_AUDIOMAN_LIBRARY}" STREQUAL "None")
     add_compile_definitions(HAS_AUDIOMAN)
 endif()
+
+# TODO: Find libiniparser if installed
+include(FetchIniParser)
 
 option(BUILD_TESTS "Enable building tests" ON)
 if (BUILD_TESTS)

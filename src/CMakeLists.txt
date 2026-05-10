@@ -93,6 +93,7 @@ target_sources(studio
     "${PROJECT_SOURCE_DIR}/src/studio/ape.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/appicon.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/browser.cpp"
+    "${PROJECT_SOURCE_DIR}/src/studio/configini.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/esl.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/popup.cpp"
     "${PROJECT_SOURCE_DIR}/src/studio/scnsort.cpp"
@@ -119,13 +120,6 @@ if(3DMM_GUI STREQUAL "SDL")
         studio
         PRIVATE
         "${PROJECT_SOURCE_DIR}/src/studio/dlgsdl.cpp"
-        "${PROJECT_SOURCE_DIR}/src/studio/configini.cpp"
-    )
-
-    target_link_libraries(
-        studio
-        PRIVATE
-        iniparser-static
     )
 
     # Select portfolio
@@ -156,7 +150,6 @@ elseif(3DMM_GUI STREQUAL "Win32")
         studio
         PRIVATE
         "${PROJECT_SOURCE_DIR}/src/studio/portfwin.cpp"
-        "${PROJECT_SOURCE_DIR}/src/studio/configwin.cpp"
     )
 endif()
 
@@ -196,6 +189,8 @@ target_link_libraries(studio
     KauaiKid
     KauaiDlg
     engine
+
+    iniparser-static
 )
 if (WIN32)
     target_link_libraries(studio
