@@ -31,6 +31,16 @@ FMS::FMS(PFNMIDI pfn, uintptr_t luUser)
 {
     _pfnCall = pfn;
     _luUser = luUser;
+    _fOpen = fFalse;
+    _flset = pvNil;
+    _flsynth = pvNil;
+    _pastream = pvNil;
+    _fChanged = fFalse;
+    _fStop = fFalse;
+    _fDone = fFalse;
+    _pglmsb = pvNil;
+    _pmev = pvNil;
+    _pmevLim = pvNil;
     _vlmBase = kvlmFull;
 }
 
@@ -39,8 +49,6 @@ FMS::FMS(PFNMIDI pfn, uintptr_t luUser)
 ***************************************************************************/
 FMS::~FMS(void)
 {
-    int is;
-
     if (_hth.joinable())
     {
         _fDone = fTrue;
@@ -56,16 +64,30 @@ FMS::~FMS(void)
     }
 
     Assert(_fOpen == fFalse, "Still open");
-    Assert(_pglmsb->IvMac() == 0, "Still have some buffers");
-    _pastream->FStop();
-    ReleasePpo(&_pastream);
-    ReleasePpo(&_pglmsb);
+
+    if (_pastream != pvNil)
+    {
+        _pastream->FStop();
+        ReleasePpo(&_pastream);
+    }
+
+    if (_pglmsb != pvNil)
+    {
+        Assert(_pglmsb->IvMac() == 0, "Still have some buffers");
+        ReleasePpo(&_pglmsb);
+    }
 
     if (_flsynth != pvNil)
+    {
         delete_fluid_synth(_flsynth);
+        _flsynth = pvNil;
+    }
 
     if (_flset != pvNil)
+    {
         delete_fluid_settings(_flset);
+        _flset = pvNil;
+    }
 
     _fOpen = fFalse;
 
@@ -185,10 +207,16 @@ bool FMS::_FInit(void)
 
 LFail:
     if (_flsynth != pvNil)
+    {
         delete_fluid_synth(_flsynth);
+        _flsynth = pvNil;
+    }
 
     if (_flset != pvNil)
+    {
         delete_fluid_settings(_flset);
+        _flset = pvNil;
+    }
 
     _mutx.Leave();
 
