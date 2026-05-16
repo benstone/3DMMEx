@@ -47,6 +47,11 @@ target_sources(engine
     "${PROJECT_SOURCE_DIR}/src/engine/tdt.cpp"
     "${PROJECT_SOURCE_DIR}/src/engine/tmpl.cpp"
 )
+target_link_libraries(
+    engine
+    PRIVATE
+    miniaudio
+)
 if (3DMM_GUI STREQUAL "Win32" AND NOT 3DMM_AUDIOMAN_LIBRARY STREQUAL "None")
     target_sources(engine
         PRIVATE
@@ -56,11 +61,6 @@ elseif(3DMM_GUI STREQUAL "SDL")
     target_sources(engine
         PRIVATE
         "${PROJECT_SOURCE_DIR}/src/engine/srecma.cpp"
-    )
-    target_link_libraries(
-        engine
-        PRIVATE
-        miniaudio
     )
 else()
     target_sources(engine

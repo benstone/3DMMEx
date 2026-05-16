@@ -97,8 +97,6 @@ elseif("${3DMM_GUI}" STREQUAL "SDL")
     find_package(SDL2 CONFIG REQUIRED)
     find_package(SDL2_ttf CONFIG REQUIRED)
 
-    include(FetchMiniaudio)
-
     find_package(FluidSynth CONFIG)
 
     # Find GStreamer
@@ -225,6 +223,8 @@ endif()
 
 # TODO: Find libiniparser if installed
 include(FetchIniParser)
+
+include(FetchMiniaudio)
 
 option(BUILD_TESTS "Enable building tests" ON)
 if (BUILD_TESTS)
