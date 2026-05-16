@@ -2231,6 +2231,7 @@ bool BRWM::FCmdFile(PCMD pcmd)
         cki.ctg = kctgMidi;
         break;
 
+    case kftgMP3:
     case kftgWave:
         Assert(_sty != styMidi, "Portfolio should filter out Midi for this browser");
         // The score browser does not import wave files

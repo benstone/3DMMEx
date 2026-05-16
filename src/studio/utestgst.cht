@@ -50,7 +50,7 @@ CHUNK (kcctgGst kcnoGstApp "Misc. App global strings")
 	ITEM "*.3mm" idsPortfMovieFilterExt
 	ITEM "Sound Files" idsPortfSoundFilterLabel
 	ITEM "*.mid;*.3mm" idsPortfSoundMidiFilterExt
-	ITEM "*.wav;*.3mm" idsPortfSoundWaveFilterExt
+	ITEM "*.wav;*.3mm;*.mp3" idsPortfSoundWaveFilterExt
 	ITEM "Bitmap Files" idsPortfTextureFilterLabel
 	ITEM "*.bmp" idsPortfTextureFilterExt
 	ITEM "Melanie" idsMelanie

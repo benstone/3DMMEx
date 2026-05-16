@@ -11,7 +11,7 @@ block()
     # Disable unused features
     set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
     set(MINIAUDIO_NO_FLAC ON)
-    set(MINIAUDIO_NO_MP3 ON)
+    set(MINIAUDIO_NO_MP3 OFF)
     set(MINIAUDIO_NO_LIBVORBIS ON)
     set(MINIAUDIO_NO_LIBOPUS ON)
     set(MINIAUDIO_NO_EXTRA_NODES ON)

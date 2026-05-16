@@ -25,6 +25,8 @@ const FTG kftgMidi = KLCONST3('m', 'i', 'd');
 const FTG kftgWave = KLCONST3('w', 'a', 'v');
 #endif
 
+const FTG kftgMP3 = KLCONST3('m', 'p', '3');
+
 /***************************************************************************
     Sound device - like audioman or our midi player.
 ***************************************************************************/
