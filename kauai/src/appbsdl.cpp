@@ -381,6 +381,16 @@ void APPB::_DispatchEvt(PEVT pevt)
                 _pgobMouse = pvNil;
         }
         break;
+    case SDL_WINDOWEVENT:
+        if (pevt->window.event == SDL_WINDOWEVENT_FOCUS_GAINED)
+        {
+            _Activate(fTrue);
+        }
+        else if (pevt->window.event == SDL_WINDOWEVENT_FOCUS_LOST)
+        {
+            _Activate(fFalse);
+        }
+        break;
     default:
 
         if (pevt->type == _sdlevttypeEnqueueCmd)
