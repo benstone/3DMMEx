@@ -23,7 +23,7 @@
 
 ### Requirements
 
-* CMake 3.22+
+* CMake 3.28+
 * Ninja build
 * Windows:
   * Visual Studio 2022
