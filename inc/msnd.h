@@ -79,7 +79,7 @@ struct MSNDF
     int16_t osk;
     int32_t sty;        // sound type
     int32_t vlmDefault; // default volume
-    bool fInvalid;      // Invalid flag
+    int32_t fInvalid;   // Invalid flag
 };
 VERIFY_STRUCT_SIZE(MSNDF, 16);
 const BOM kbomMsndf = 0x5FC00000;

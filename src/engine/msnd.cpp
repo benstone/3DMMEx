@@ -136,7 +136,7 @@ bool MSND::_FInit(PCFL pcfl, CTG ctg, CNO cno)
 
     _sty = msndf.sty;
     _vlm = msndf.vlmDefault;
-    _fInvalid = msndf.fInvalid;
+    _fInvalid = FPure(msndf.fInvalid);
     if (_fInvalid)
         return fTrue;
 
