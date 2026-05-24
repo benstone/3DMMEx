@@ -2517,10 +2517,10 @@ void APP::_Activate(bool fActive)
 {
     AssertBaseThis(0);
 
+    APP_PAR::_Activate(fActive);
+
 #ifdef WIN
     bool fIsIconic;
-
-    APP_PAR::_Activate(fActive);
 
     fIsIconic = IsIconic(vwig.hwndApp);
 

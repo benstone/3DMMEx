@@ -234,13 +234,6 @@ class APPB : public APPB_PAR
     }
     bool FForeground(void)
     {
-#ifdef KAUAI_SDL
-        // TODO: Set _fForeground properly
-        if (!_fForeground)
-        {
-            _fForeground = fTrue;
-        }
-#endif // KAUAI_SDL
         return _fForeground;
     }
 
