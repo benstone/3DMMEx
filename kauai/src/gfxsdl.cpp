@@ -150,8 +150,6 @@ PGPT GPT::PgptNew(SDL_Window *wnd, int cbitPixel, bool fOffscreen, int dxp, int 
         pgpt->_renderer = SDL_GetRenderer(wnd);
         Assert(pgpt->_renderer != pvNil, "no renderer");
 
-        AssertDoSDL(SDL_GetRendererOutputSize(pgpt->_renderer, &dxp, &dyp));
-
         // Create a texture that is used for rendering
         pgpt->_texture =
             SDL_CreateTexture(pgpt->_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, dxp, dyp);
@@ -188,8 +186,15 @@ PGPT GPT::PgptNewHwnd(KWND hwnd)
 {
     Assert(kwndNil != hwnd, "Null hwnd");
     Assert(pvNil != ((SDL_Window *)hwnd), "Not an SDL window");
+    SDL_Renderer *rdr;
+    int dxp, dyp;
     PGPT pgpt;
-    if (pvNil == (pgpt = PgptNew((SDL_Window *)hwnd, 32, fFalse, 0, 0)))
+
+    rdr = SDL_GetRenderer(hwnd);
+    Assert(rdr != pvNil, "no renderer");
+    AssertDoSDL(SDL_GetRendererOutputSize(rdr, &dxp, &dyp));
+
+    if (pvNil == (pgpt = PgptNew((SDL_Window *)hwnd, 32, fFalse, dxp, dyp)))
     {
         return pvNil;
     }
