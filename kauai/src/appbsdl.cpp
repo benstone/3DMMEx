@@ -111,12 +111,6 @@ bool APPB::_FInitOS(void)
         return fFalse;
     }
 
-    // Create a renderer
-    SDL_Renderer *rdr = SDL_CreateRenderer(wnd, -1, 0);
-    Assert(rdr != pvNil, "no renderer created from SDL_CreateRenderer");
-    AssertDo(SDL_RenderClear(rdr) == 0, SDL_GetError());
-    AssertDo(SDL_RenderSetLogicalSize(rdr, kdxpLogical, kdypLogical) == 0, SDL_GetError());
-
     vwig.hwndApp = wnd;
 
     // FUTURE: Turn this off when Win32 stuff is removed

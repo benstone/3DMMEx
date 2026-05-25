@@ -173,15 +173,9 @@ PGPT GPT::PgptNewHwnd(KWND hwnd)
 {
     Assert(kwndNil != hwnd, "Null hwnd");
     Assert(pvNil != ((SDL_Window *)hwnd), "Not an SDL window");
-    SDL_Renderer *rdr;
-    int dxp, dyp;
     PGPT pgpt;
 
-    rdr = SDL_GetRenderer(hwnd);
-    Assert(rdr != pvNil, "no renderer");
-    AssertDoSDL(SDL_GetRendererOutputSize(rdr, &dxp, &dyp));
-
-    if (pvNil == (pgpt = PgptNew((SDL_Window *)hwnd, 32, fFalse, dxp, dyp)))
+    if (pvNil == (pgpt = PgptNew((SDL_Window *)hwnd, 32, fFalse, kdxpLogical, kdypLogical)))
     {
         return pvNil;
     }
@@ -282,13 +276,9 @@ void GPT::UpdateTexture()
 
 void GPT::RebuildTexture(void)
 {
-    int dxp, dyp;
-
     // Free the existing texture
     if (_texture != pvNil)
         SDL_DestroyTexture(_texture);
-
-    AssertDoSDL(SDL_GetRendererOutputSize(_renderer, &dxp, &dyp));
 
     // Free the existing renderer
     if (_renderer != pvNil)
@@ -302,7 +292,7 @@ void GPT::RebuildTexture(void)
 
     // Create a new texture
     _texture =
-        SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, dxp, dyp);
+        SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, kdxpLogical, kdypLogical);
     Assert(_texture, "SDL_CreateTexture failed");
 
     InvalidateTexture();
