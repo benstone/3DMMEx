@@ -293,6 +293,35 @@ void GPT::UpdateTexture()
     }
 }
 
+void GPT::RebuildTexture(void)
+{
+    int dxp, dyp;
+
+    // Free the existing texture
+    if (_texture != pvNil)
+        SDL_DestroyTexture(_texture);
+
+    AssertDoSDL(SDL_GetRendererOutputSize(_renderer, &dxp, &dyp));
+
+    // Free the existing renderer
+    if (_renderer != pvNil)
+        SDL_DestroyRenderer(_renderer);
+
+    // Create a renderer
+    _renderer = SDL_CreateRenderer(_wnd, -1, 0);
+    Assert(_renderer != pvNil, "no renderer created from SDL_CreateRenderer");
+    AssertDoSDL(SDL_RenderClear(_renderer));
+    AssertDoSDL(SDL_RenderSetLogicalSize(_renderer, kdxpLogical, kdypLogical));
+
+    // Create a new texture
+    _texture =
+        SDL_CreateTexture(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, dxp, dyp);
+    Assert(_texture, "SDL_CreateTexture failed");
+
+    InvalidateTexture();
+    Flip();
+}
+
 void GPT::DumpBitmap(STN *stnBmp)
 {
     U8SZ u8szFilePath;

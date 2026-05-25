@@ -796,6 +796,8 @@ class GPT : public GPT_PAR
     void InvalidateTexture(void);
     // Copy contents of surface to texture
     void UpdateTexture(void);
+    // Rebuild texture e.g. due to a change in window size
+    void RebuildTexture(void);
     // Save contents of this GPT to a bitmap for debugging
     void DumpBitmap(STN *stnBmp);
 
