@@ -220,6 +220,11 @@ void APPB::TrackMouse(PGOB pgob, PT *ppt)
     {
         // No mouse move events: just get the current position instead
         int state = SDL_GetMouseState(&xp, &yp);
+        SDL_Renderer *rdr = SDL_GetRenderer((SDL_Window *)vwig.hwndApp);
+        float flx, fly;
+        SDL_RenderWindowToLogical(rdr, xp, yp, &flx, &fly);
+        xp = (int)flx;
+        yp = (int)fly;
         if (state & SDL_BUTTON(1))
         {
             grfcust |= fcustMouse;

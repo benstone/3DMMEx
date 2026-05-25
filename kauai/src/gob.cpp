@@ -1030,13 +1030,19 @@ KWND GOB::_HwndGetDptFromCoo(PT *pdpt, int32_t coo)
             ClientToScreen(hwnd, &pts);
 #elif defined(KAUAI_SDL)
             // FIXME MCA: is this correct?
+            SDL_Renderer *rdr;
+            float fxp, fyp;
             int xpWnd, ypWnd;
             PTS pts;
 
             Assert(hwnd == vwig.hwndApp, "We should only have one window");
 
             pts = *pdpt;
+            rdr = SDL_GetRenderer((SDL_Window *)hwnd);
             SDL_GetWindowPosition((SDL_Window *)hwnd, &xpWnd, &ypWnd);
+            SDL_RenderWindowToLogical(rdr, xpWnd, ypWnd, &fxp, &fyp);
+            xpWnd = (int)fxp;
+            ypWnd = (int)fyp;
             pts.xp += xpWnd;
             pts.yp += ypWnd;
 
@@ -1090,8 +1096,14 @@ PGOB GOB::PgobFromPtGlobal(int32_t xp, int32_t yp, PT *pptLocal)
     ScreenToClient(hwnd, &pts);
 #elif defined(KAUAI_SDL)
     PTS pts;
+    float fxp, fyp;
     int xpWnd, ypWnd;
+    SDL_Renderer *rdr = SDL_GetRenderer((SDL_Window *)vwig.hwndApp);
+
     SDL_GetWindowPosition((SDL_Window *)vwig.hwndApp, &xpWnd, &ypWnd);
+    SDL_RenderWindowToLogical(rdr, xpWnd, ypWnd, &fxp, &fyp);
+    xpWnd = (int)fxp;
+    ypWnd = (int)fyp;
 
     pts.xp = xp - xpWnd;
     pts.yp = yp - ypWnd;
@@ -1252,9 +1264,16 @@ void GOB::_SetRcCur(void)
             GetClientRect(pgob->_hwnd, &rcs);
             rc = rcs;
 #elif defined(KAUAI_SDL)
+            SDL_Renderer *rdr = SDL_GetRenderer((SDL_Window *)vwig.hwndApp);
             int dxpClient = 0, dypClient = 0;
+            float fxp, fyp;
+
             SDL_GetWindowSize((SDL_Window *)pgob->_hwnd, &dxpClient, &dypClient);
             Assert(dxpClient > 0 && dypClient > 0, "SDL_GetWindowSize failed?");
+            SDL_RenderWindowToLogical(rdr, dxpClient, dypClient, &fxp, &fyp);
+            dxpClient = (int)fxp;
+            dypClient = (int)fyp;
+
             rc.Set(0, 0, dxpClient, dypClient);
 #else
 #error not implemented

@@ -126,7 +126,12 @@ void GOB::GetPtMouse(PT *ppt, bool *pfDown)
     AssertThis(0);
 
     int xp = 0, yp = 0;
+    float fxp, fyp;
+    SDL_Renderer *rdr = SDL_GetRenderer((SDL_Window *)vwig.hwndApp);
     int mouseState = SDL_GetMouseState(&xp, &yp);
+    SDL_RenderWindowToLogical(rdr, xp, yp, &fxp, &fyp);
+    xp = (int)fxp;
+    yp = (int)fyp;
 
     if (ppt != pvNil)
     {
