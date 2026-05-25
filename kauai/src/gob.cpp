@@ -1264,17 +1264,9 @@ void GOB::_SetRcCur(void)
             GetClientRect(pgob->_hwnd, &rcs);
             rc = rcs;
 #elif defined(KAUAI_SDL)
-            SDL_Renderer *rdr = SDL_GetRenderer((SDL_Window *)vwig.hwndApp);
-            int dxpClient = 0, dypClient = 0;
-            float fxp, fyp;
-
-            SDL_GetWindowSize((SDL_Window *)pgob->_hwnd, &dxpClient, &dypClient);
-            Assert(dxpClient > 0 && dypClient > 0, "SDL_GetWindowSize failed?");
-            SDL_RenderWindowToLogical(rdr, dxpClient, dypClient, &fxp, &fyp);
-            dxpClient = (int)fxp;
-            dypClient = (int)fyp;
-
-            rc.Set(0, 0, dxpClient, dypClient);
+            // The rectangle is always the same as that of the logical application
+            // since logical coordinates are independent of window size
+            rc.Set(0, 0, kdxpLogical, kdypLogical);
 #else
 #error not implemented
 #endif
