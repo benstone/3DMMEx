@@ -939,7 +939,16 @@ bool APP::_FDisplayIs640480(void)
 #ifdef WIN
     return (GetSystemMetrics(SM_CXSCREEN) == 640 && GetSystemMetrics(SM_CYSCREEN) == 480);
 #else  // !WIN
-    return fFalse;
+    int w, h;
+
+    if (vwig.hwndApp == pvNil)
+        return fFalse;
+
+    SDL_GetWindowSize(vwig.hwndApp, &w, &h);
+
+    // This is actually correct, since on Windows the screen upscaling is done by switching
+    // the video controller into 640x480 mode to fill the screen.
+    return (w != kdxpLogical && h != kdypLogical);
 #endif // WIN
 }
 
@@ -3530,8 +3539,8 @@ bool APP::_FDisplaySwitchSupported(void)
     // We can no longer compile for Windows platforms that do not support screen resolution changes.
     return fTrue;
 #else
-    // OS doesn't support res-switching
-    return fFalse;
+    // SDL does support res-switching via upscaling
+    return fTrue;
 #endif // WIN
 }
 
@@ -3632,8 +3641,39 @@ bool APP::_FSwitch640480(bool fTo640480)
 LFail:
     if (0 != hLibrary)
         FreeLibrary(hLibrary);
+#else  // KAUAI_WIN32
+    PGOB pgobScreen = GOB::PgobScreen();
+    int32_t fSwitchRes = !_fRunInWindow;
+
+    if (fTo640480)
+    {
+        SDL_SetWindowFullscreen((SDL_Window *)vwig.hwndApp, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
+        if (pgobScreen != pvNil)
+        {
+            PGPT pgpt = pgobScreen->Pgpt();
+
+            pgpt->RebuildTexture();
+        }
+
+        _fSwitchedResolution = fTrue;
+    }
+    else
+    {
+        SDL_SetWindowFullscreen((SDL_Window *)vwig.hwndApp, 0);
+
+        if (pgobScreen != pvNil)
+        {
+            PGPT pgpt = pgobScreen->Pgpt();
+
+            pgpt->RebuildTexture();
+        }
+    }
+
+    FGetSetRegKey(kszSwitchResolutionValue, &fSwitchRes, SIZEOF(fSwitchRes), fregSetKey);
+
+    return fTrue;
 #endif // KAUAI_WIN32
-    return fFalse;
 }
 
 bool APP::_FSetRunInWindow(bool fRunInWindowNew)
