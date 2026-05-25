@@ -950,6 +950,9 @@ bool APP::_FInitOS(void)
 {
     AssertBaseThis(0);
 
+    if (_fMainWindowCreated) // If someone else called _FInitOS already,
+        return fTrue;        // we can leave
+
 #if defined(KAUAI_SDL)
 
     if (!(FPure(APP_PAR::_FInitOS())))
@@ -966,9 +969,6 @@ bool APP::_FInitOS(void)
     int32_t ypWindow;
     uint32_t dwStyle = 0;
     STN stnWindowTitle;
-
-    if (_fMainWindowCreated) // If someone else called _FInitOS already,
-        return fTrue;        // we can leave
 
     if (!FGetStnApp(idsWindowTitle, &stnWindowTitle))
         return fFalse;
