@@ -23,9 +23,9 @@ const uint32_t kdtsIdleTimer = 1;
 // FUTURE: Get this from the system
 const uint32_t kdtsDoubleClick = 500;
 
-// Window size
-const uint32_t kdxpWindow = 640;
-const uint32_t kdypWindow = 480;
+// Logical size
+const uint32_t kdxpLogical = 640;
+const uint32_t kdypLogical = 480;
 
 static SDL_Cursor *vpsdlcursWait = pvNil;
 static SDL_Cursor *vpsdlcursArrow = pvNil;
@@ -108,7 +108,7 @@ bool APPB::_FInitOS(void)
     stnApp.GetUtf8Sz(u8szApp);
     int32_t xpWindow = SDL_WINDOWPOS_UNDEFINED;
     int32_t ypWindow = SDL_WINDOWPOS_UNDEFINED;
-    SDL_Window *wnd = SDL_CreateWindow(u8szApp, xpWindow, ypWindow, kdxpWindow, kdypWindow, 0);
+    SDL_Window *wnd = SDL_CreateWindow(u8szApp, xpWindow, ypWindow, kdxpLogical, kdypLogical, 0);
     Assert(wnd != pvNil, "no window returned from SDL_CreateWindow");
     if (wnd == pvNil)
     {
