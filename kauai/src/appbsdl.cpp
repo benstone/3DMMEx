@@ -23,10 +23,6 @@ const uint32_t kdtsIdleTimer = 1;
 // FUTURE: Get this from the system
 const uint32_t kdtsDoubleClick = 500;
 
-// Logical size
-const uint32_t kdxpLogical = 640;
-const uint32_t kdypLogical = 480;
-
 static SDL_Cursor *vpsdlcursWait = pvNil;
 static SDL_Cursor *vpsdlcursArrow = pvNil;
 
