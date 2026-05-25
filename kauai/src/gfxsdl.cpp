@@ -142,14 +142,22 @@ PGPT GPT::PgptNew(SDL_Window *wnd, int cbitPixel, bool fOffscreen, int dxp, int 
         return pvNil;
 
     pgpt->_wnd = wnd;
-    pgpt->_renderer = SDL_GetRenderer(wnd);
-    Assert(pgpt->_renderer != pvNil, "no renderer");
     pgpt->_fOffscreen = fOffscreen;
 
     // get drawable size
     if (!fOffscreen)
     {
+        pgpt->_renderer = SDL_GetRenderer(wnd);
+        Assert(pgpt->_renderer != pvNil, "no renderer");
+
         AssertDoSDL(SDL_GetRendererOutputSize(pgpt->_renderer, &dxp, &dyp));
+
+        // Create a texture that is used for rendering
+        pgpt->_texture =
+            SDL_CreateTexture(pgpt->_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, dxp, dyp);
+        Assert(pgpt->_texture, "SDL_CreateTexture failed");
+
+        pgpt->InvalidateTexture();
     }
     Assert(dxp != 0, "dxp must be > 0");
     Assert(dyp != 0, "dyp must be > 0");
@@ -169,13 +177,6 @@ PGPT GPT::PgptNew(SDL_Window *wnd, int cbitPixel, bool fOffscreen, int dxp, int 
 
         AssertDoSDL(SDL_SetSurfacePalette(pgpt->_surface, _pal));
     }
-
-    // Create a texture that is used for rendering
-    pgpt->_texture =
-        SDL_CreateTexture(pgpt->_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, dxp, dyp);
-    Assert(pgpt->_texture, "SDL_CreateTexture failed");
-
-    pgpt->InvalidateTexture();
 
     return pgpt;
 }
