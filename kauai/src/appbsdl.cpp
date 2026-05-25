@@ -828,9 +828,20 @@ void APPB::ShowCurs(void)
 ***************************************************************************/
 void APPB::PositionCurs(int32_t xpScreen, int32_t ypScreen)
 {
-    AssertThis(0);
+    SDL_Renderer *rdr;
+    float flxp, flyp;
+    int xp, yp;
+    PT pt;
 
-    SDL_WarpMouseGlobal(xpScreen, ypScreen);
+    // Convert coordinates back from screen (global) coordinates to local (window)
+    // coordinates and use SDL_WarpMouseInWindow() instead of SDL_WarpMouseGlobal()
+    // so we can apply the logical to window coordinate transformation.
+    pt.xp = xpScreen;
+    pt.yp = ypScreen;
+    GOB::PgobScreen()->MapPt(&pt, cooGlobal, cooLocal);
+    rdr = SDL_GetRenderer((SDL_Window *)vwig.hwndApp);
+    SDL_RenderLogicalToWindow(rdr, (float)pt.xp, (float)pt.yp, &xp, &yp);
+    SDL_WarpMouseInWindow(vwig.hwndApp, xp, yp);
 
     if (_fFlushCursor)
     {
