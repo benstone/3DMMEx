@@ -54,6 +54,7 @@ bool GOB::FAttachHwnd(KWND hwnd)
     {
         if (pvNil == (_pgpt = GPT::PgptNewHwnd(hwnd)))
             return fFalse;
+        _pgpt->RebuildTexture();
         _hwnd = hwnd;
         SetRcFromHwnd();
     }
