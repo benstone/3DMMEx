@@ -1105,7 +1105,6 @@ void GPT::Flip()
     Assert(!_fOffscreen, "drawing an offscreen GPT to the screen?");
 
     // Paint the texture
-    AssertDoSDL(SDL_RenderClear(_renderer));
     AssertDoSDL(SDL_RenderCopy(_renderer, _texture, NULL, NULL));
     SDL_RenderPresent(_renderer);
 }

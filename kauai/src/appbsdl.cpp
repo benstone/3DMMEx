@@ -118,6 +118,7 @@ bool APPB::_FInitOS(void)
     // Create a renderer
     SDL_Renderer *rdr = SDL_CreateRenderer(wnd, -1, 0);
     Assert(rdr != pvNil, "no renderer created from SDL_CreateRenderer");
+    AssertDo(SDL_RenderClear(rdr) == 0, SDL_GetError());
 
     vwig.hwndApp = wnd;
 
@@ -841,7 +842,7 @@ void APPB::PositionCurs(int32_t xpScreen, int32_t ypScreen)
     GOB::PgobScreen()->MapPt(&pt, cooGlobal, cooLocal);
     rdr = SDL_GetRenderer((SDL_Window *)vwig.hwndApp);
     SDL_RenderLogicalToWindow(rdr, (float)pt.xp, (float)pt.yp, &xp, &yp);
-    SDL_WarpMouseInWindow(vwig.hwndApp, xp, yp);
+    SDL_WarpMouseInWindow((SDL_Window *)vwig.hwndApp, xp, yp);
 
     if (_fFlushCursor)
     {
