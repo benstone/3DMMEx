@@ -25,6 +25,10 @@ typedef MSG EVT;
 
 #ifdef KAUAI_SDL
 typedef SDL_Event EVT;
+
+// Logical size
+const uint32_t kdxpLogical = 640;
+const uint32_t kdypLogical = 480;
 #endif // KAUAI_SDL
 
 #ifdef MAC

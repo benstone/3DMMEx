@@ -23,10 +23,6 @@ const uint32_t kdtsIdleTimer = 1;
 // FUTURE: Get this from the system
 const uint32_t kdtsDoubleClick = 500;
 
-// Window size
-const uint32_t kdxpWindow = 640;
-const uint32_t kdypWindow = 480;
-
 static SDL_Cursor *vpsdlcursWait = pvNil;
 static SDL_Cursor *vpsdlcursArrow = pvNil;
 
@@ -108,16 +104,12 @@ bool APPB::_FInitOS(void)
     stnApp.GetUtf8Sz(u8szApp);
     int32_t xpWindow = SDL_WINDOWPOS_UNDEFINED;
     int32_t ypWindow = SDL_WINDOWPOS_UNDEFINED;
-    SDL_Window *wnd = SDL_CreateWindow(u8szApp, xpWindow, ypWindow, kdxpWindow, kdypWindow, 0);
+    SDL_Window *wnd = SDL_CreateWindow(u8szApp, xpWindow, ypWindow, kdxpLogical, kdypLogical, 0);
     Assert(wnd != pvNil, "no window returned from SDL_CreateWindow");
     if (wnd == pvNil)
     {
         return fFalse;
     }
-
-    // Create a renderer
-    SDL_Renderer *rdr = SDL_CreateRenderer(wnd, -1, 0);
-    Assert(rdr != pvNil, "no renderer created from SDL_CreateRenderer");
 
     vwig.hwndApp = wnd;
 
@@ -222,6 +214,11 @@ void APPB::TrackMouse(PGOB pgob, PT *ppt)
     {
         // No mouse move events: just get the current position instead
         int state = SDL_GetMouseState(&xp, &yp);
+        SDL_Renderer *rdr = SDL_GetRenderer((SDL_Window *)vwig.hwndApp);
+        float flx, fly;
+        SDL_RenderWindowToLogical(rdr, xp, yp, &flx, &fly);
+        xp = (int)flx;
+        yp = (int)fly;
         if (state & SDL_BUTTON(1))
         {
             grfcust |= fcustMouse;
@@ -828,9 +825,20 @@ void APPB::ShowCurs(void)
 ***************************************************************************/
 void APPB::PositionCurs(int32_t xpScreen, int32_t ypScreen)
 {
-    AssertThis(0);
+    SDL_Renderer *rdr;
+    float flxp, flyp;
+    int xp, yp;
+    PT pt;
 
-    SDL_WarpMouseGlobal(xpScreen, ypScreen);
+    // Convert coordinates back from screen (global) coordinates to local (window)
+    // coordinates and use SDL_WarpMouseInWindow() instead of SDL_WarpMouseGlobal()
+    // so we can apply the logical to window coordinate transformation.
+    pt.xp = xpScreen;
+    pt.yp = ypScreen;
+    GOB::PgobScreen()->MapPt(&pt, cooGlobal, cooLocal);
+    rdr = SDL_GetRenderer((SDL_Window *)vwig.hwndApp);
+    SDL_RenderLogicalToWindow(rdr, (float)pt.xp, (float)pt.yp, &xp, &yp);
+    SDL_WarpMouseInWindow((SDL_Window *)vwig.hwndApp, xp, yp);
 
     if (_fFlushCursor)
     {

@@ -220,6 +220,13 @@ bool FGetSetRegKey(PCSZ pszValueName, void *pvData, int32_t cbData, uint32_t grf
                 grfregNew &= ~fregSetDefault;
                 fRet = FGetSetRegKey(pszValueName, pvData, cbData, grfregNew, pfNoValue);
             }
+            else
+            {
+                /* If the caller gave us a way to differentiate a genuine registry
+                   failure from simply not having set the value yet, do so */
+                if (pfNoValue != pvNil)
+                    fRet = fTrue;
+            }
         }
 
         if (pfNoValue)
