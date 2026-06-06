@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
+cmake_policy(SET CMP0141 NEW)
 project(3DMMEx LANGUAGES CXX C VERSION 0.6.0)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
@@ -23,8 +24,7 @@ if(MSVC)
     set(CMAKE_EXE_LINKER_FLAGS "/SAFESEH:NO")
   else()
     # Generate debug information for Edit and Continue / Hot Reload
-    string(REPLACE "/Zi" "/ZI" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
-    string(REPLACE "/Zi" "/ZI" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<CONFIG:Debug>,EditAndContinue,ProgramDatabase>")
 
     # Remove unused functions from release binary
     set(CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO "${CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO} /OPT:REF")
