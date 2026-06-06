@@ -63,11 +63,12 @@ static ma_result BlockRead(ma_decoder *pdecoder, void *pvBufferOut, size_t cbRea
     {
         // Read a chunk of the sound into the cache
         int32_t ibToCache = pcontext->ib;
-        int32_t cbToCache = LwMax(cbRead, SIZEOF(pcontext->rgbCache));
-        cbToCache = LwMin(cbToCache, pcontext->cb - pcontext->ib);
+        int32_t cbToCache = LwMax(cbRead, pcontext->cb - pcontext->ib);
+        cbToCache = LwMin(cbToCache, SIZEOF(pcontext->rgbCache));
 
         AssertPo(pcontext->pblck, 0);
         Assert(pcontext->pblck->Cb() == pcontext->cb, "Block size changed since initialising reader");
+        Assert(cbToCache <= SIZEOF(pcontext->rgbCache), "Cannot read more than cache size");
         if (!pcontext->pblck->FReadRgb(pcontext->rgbCache, cbToCache, ibToCache))
         {
             return MA_IO_ERROR;
