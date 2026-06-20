@@ -319,6 +319,10 @@ void APPB::_DispatchEvt(PEVT pevt)
     case SDL_MOUSEBUTTONDOWN:
         ResetToolTip();
 
+        // Ignore other mouse buttons for now
+        if (pevt->button.button != SDL_BUTTON_LEFT)
+            break;
+
         xp = pevt->button.x;
         yp = pevt->button.y;
 
