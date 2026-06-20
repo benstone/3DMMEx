@@ -3,7 +3,7 @@ on: push
 jobs:
   compile-msvc-x86-release:
     name: Windows MSVC x86 Release
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
 
   compile-msvc-x64-debug:
     name: Windows MSVC x64 Debug
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -62,7 +62,7 @@ jobs:
 
   compile-sdl-msvc-x64-debug:
     name: Windows SDL MSVC x64 Debug
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -83,7 +83,7 @@ jobs:
 
   compile-clang-x64-release:
     name: Windows Clang x64 Release
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
