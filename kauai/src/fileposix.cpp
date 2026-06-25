@@ -14,7 +14,7 @@
 #include <cstdio>
 ASSERTNAME
 
-const ulong kfpError = 0xFFFFFFFF;
+const uint32_t kfpError = 0xFFFFFFFF;
 
 /***************************************************************************
     Open or create the file by calling CreateFile.  Returns hBadWin on
