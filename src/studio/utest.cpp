@@ -2328,15 +2328,18 @@ bool APP::_FFindMsKidsDir(void)
     SZ szMsKidsDir;
     STN stn;
     STN stnUsers;
+    FNI fniResourcesDir;
     FNI fniInstallDir;
     bool fFound = fFalse;
     PFNI rgpfniDir[3];
 
+    AssertDo(fniResourcesDir.FGetResourcesDir(), "Could not find resources directory");
+
     // Build list of paths to search for the Microsoft Kids directory
     ClearPb(rgpfniDir, SIZEOF(rgpfniDir));
-    rgpfniDir[0] = &_fniExe;        // Application directory
-    rgpfniDir[1] = pvNil;           // InstallDirectory from registry if present
-    rgpfniDir[2] = &_fniCurrentDir; // Current working directory
+    rgpfniDir[0] = &fniResourcesDir; // Application resources directory
+    rgpfniDir[1] = pvNil;            // InstallDirectory from registry if present
+    rgpfniDir[2] = &_fniCurrentDir;  // Current working directory
 
     // Read the install directory from the registry
     szMsKidsDir[0] = chNil;

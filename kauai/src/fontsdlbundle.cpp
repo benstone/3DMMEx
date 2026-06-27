@@ -37,9 +37,8 @@ bool NTL::_FLoadFontTable()
     PGL pglsdlfont = pvNil;
     FNI fniFontDir, fniDefaultFont;
 
-    // Fonts are loaded from a directory next to the executable file
-    AssertDo(fniFontDir.FGetExe(), "Could not get EXE path");
-    AssertDo(fniFontDir.FSetLeaf(pvNil, kftgDir), "No parent directory");
+    // Fonts are loaded from the 'fonts' subdirectory in the resources directory.
+    AssertDo(fniFontDir.FGetResourcesDir(), "Could not find resources directory");
     STN stnFontDir = PszLit("fonts");
     if (!fniFontDir.FDownDir(&stnFontDir, ffniMoveToDir))
     {

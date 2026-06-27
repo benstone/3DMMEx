@@ -327,6 +327,25 @@ bool FNI::FGetExe()
 }
 
 /***************************************************************************
+    Set the FNI to the directory containing application resources
+***************************************************************************/
+bool FNI::FGetResourcesDir()
+{
+    AssertThis(0);
+
+    // On Windows, this is the same directory as the executable.
+    if (FGetExe())
+    {
+        return FSetLeaf(pvNil, kftgDir);
+    }
+    else
+    {
+        Bug("Could not get EXE path");
+        return fFalse;
+    }
+}
+
+/***************************************************************************
     Return the file type of the fni.
 ***************************************************************************/
 FTG FNI::Ftg(void)

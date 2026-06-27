@@ -112,6 +112,12 @@ extern uint32_t GetEnvironmentVariable(const char *pcszName, char *pszValue, uin
     Current username
 ****************************************/
 extern bool GetUserName(char *psz, int cchMax);
+
+/****************************************
+    Directory containing app resources
+****************************************/
+extern bool FGetResourcesDir(char *psz, int32_t cchMax);
+
 #endif
 
 #endif //! PLATFORM_H

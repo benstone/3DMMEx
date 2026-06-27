@@ -128,3 +128,9 @@ bool FGetDocumentsDir(char *psz, int32_t cchMax)
 
     return false;
 }
+
+bool FGetResourcesDir(char *psz, int32_t cchMax)
+{
+    // not used
+    return false;
+}

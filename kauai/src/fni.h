@@ -114,6 +114,7 @@ class FNI : public FNI_PAR
     bool FGetUnique(FTG ftg);
     bool FGetCwd();
     bool FGetExe();
+    bool FGetResourcesDir();
     bool FGetTemp(void);
     void SetNil(void);
 

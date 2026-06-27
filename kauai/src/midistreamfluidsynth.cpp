@@ -161,8 +161,8 @@ bool FMS::_FInit(void)
         STN stnFileName = PszLit("soundfont.sf3");
         STN stnSoundFontPath;
 
-        // Try app directory
-        fniExe.FGetExe();
+        // Try app resources directory
+        AssertDo(fniExe.FGetResourcesDir(), "Could not find resources directory");
         fniExe.FSetLeaf(&stnFileName);
         fniExe.GetStnPath(&stnSoundFontPath);
 

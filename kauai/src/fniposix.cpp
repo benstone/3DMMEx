@@ -274,6 +274,35 @@ bool FNI::FGetExe()
 }
 
 /***************************************************************************
+    Set the FNI to the directory containing application resources
+***************************************************************************/
+bool FNI::FGetResourcesDir()
+{
+    AssertThis(0);
+
+    SZ szResourcesDir;
+    ClearPb(szResourcesDir, SIZEOF(szResourcesDir));
+
+    // Check if there is a platform-specific resources dir
+    if (::FGetResourcesDir(szResourcesDir, SIZEOF(szResourcesDir)))
+    {
+        STN stnT = szResourcesDir;
+        return FBuildFromPath(&stnT, kftgDir);
+    }
+
+    // Fall back to the application directory
+    if (FGetExe())
+    {
+        return FSetLeaf(pvNil, kftgDir);
+    }
+    else
+    {
+        Bug("Could not get EXE path");
+        return fFalse;
+    }
+}
+
+/***************************************************************************
     Return the file type of the fni.
 ***************************************************************************/
 FTG FNI::Ftg(void)
