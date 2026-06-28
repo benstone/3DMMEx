@@ -98,6 +98,9 @@ elseif("${3DMM_GUI}" STREQUAL "SDL")
     find_package(SDL2_ttf CONFIG REQUIRED)
 
     find_package(FluidSynth CONFIG)
+    if (FluidSynth_FOUND)
+        include(FetchSoundfont)
+    endif()
 
     # Find GStreamer
     if (PkgConfig_FOUND)

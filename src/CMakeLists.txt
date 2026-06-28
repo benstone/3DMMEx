@@ -297,10 +297,13 @@ if (WIN32 AND 3DMM_GUI STREQUAL "SDL")
         DESTINATION .)
 
     if (FluidSynth_FOUND)
-        # Install FluidSynth DLLs and SoundFont
+        # Install FluidSynth DLLs
         install(DIRECTORY "${FluidSynth_ROOT}/bin/" DESTINATION .
             PATTERN "*.exe" EXCLUDE)
-        install(DIRECTORY "${SoundFont_ROOT}/"
-            DESTINATION .)
     endif()
+endif()
+
+# Copy soundfont if required
+if(NOT "${3DMM_SOUNDFONT_PATH}" STREQUAL "")
+    install(FILES "${3DMM_SOUNDFONT_PATH}" DESTINATION .)
 endif()
