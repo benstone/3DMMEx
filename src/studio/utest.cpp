@@ -3644,7 +3644,8 @@ bool APP::_FSwitch640480(bool fTo640480)
 LFail:
     if (0 != hLibrary)
         FreeLibrary(hLibrary);
-#else  // KAUAI_WIN32
+    return fFalse;
+#elif defined(KAUAI_SDL)
     PGOB pgobScreen = GOB::PgobScreen();
     int32_t fSwitchRes = !_fRunInWindow;
 
