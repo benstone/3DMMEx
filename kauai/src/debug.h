@@ -21,6 +21,9 @@ inline void Debugger(void)
 {
     DebugBreak();
 }
+#elif defined(__APPLE__)
+/* This has to be extern "C" to avoid a collision in MacTypes.h */
+extern "C" void Debugger(void);
 #else
 /* Defer to platform implementation */
 extern void Debugger(void);

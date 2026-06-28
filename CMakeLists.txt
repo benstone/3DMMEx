@@ -31,6 +31,10 @@ if(MSVC)
   endif()
 endif()
 
+if(APPLE)
+    enable_language(OBJCXX)
+endif()
+
 include(CMakeDependentOption)
 include(FetchContent)
 include(TargetChompSources)
@@ -235,6 +239,11 @@ if (BUILD_TESTS)
     include(FetchGoogleTest)
     include(GoogleTest)
     add_custom_target(tests)
+
+    if (APPLE)
+        # We need to set this as otherwise Xcode will try to run the test binary for discovery before it is code signed.
+        set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
+    endif()
 endif()
 
 add_subdirectory(kauai)
