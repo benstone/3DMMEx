@@ -86,8 +86,7 @@ if (NOT "${3DMM_AUDIOMAN_LIBRARY}" STREQUAL "None")
     )
 endif()
 
-# On non-windows WIN32 is a no-op
-add_executable(studio WIN32)
+add_executable(studio)
 target_sources(studio
     PRIVATE
     "${PROJECT_SOURCE_DIR}/src/studio/ape.cpp"
@@ -106,6 +105,10 @@ target_sources(studio
     "${PROJECT_SOURCE_DIR}/src/studio/utest.cpp"
 )
 if (WIN32)
+    set_target_properties(
+        studio
+        PROPERTIES WIN32_EXECUTABLE ON
+    )
     target_sources(
         studio
         PRIVATE
@@ -222,6 +225,38 @@ if(MSVC)
     endif()
 endif()
 
+if (APPLE)
+    set(icon_name "app.icns")
+    set(icon_path "${PROJECT_SOURCE_DIR}/src/studio/macos/${icon_name}")
+    target_sources(
+        studio
+        PRIVATE
+        ${icon_path}
+    )
+
+    set_target_properties(
+        studio
+        PROPERTIES
+        OUTPUT_NAME "3D Movie Maker"
+        MACOSX_BUNDLE ON
+        MACOSX_BUNDLE_INFO_PLIST "${PROJECT_SOURCE_DIR}/src/studio/macos/Info.plist.in"
+        MACOSX_BUNDLE_EXECUTABLE_NAME "3D Movie Maker"
+        MACOSX_BUNDLE_BUNDLE_NAME "3DMMEx"
+        MACOSX_BUNDLE_GUI_IDENTIFIER "com.3dmmex.3dmovie"
+        MACOSX_BUNDLE_BUNDLE_VERSION "${GIT_VERSION}"
+        MACOSX_BUNDLE_ICON_FILE ${icon_name}
+        RESOURCE ${icon_path}
+    )
+
+    add_custom_command(
+        TARGET studio
+        POST_BUILD
+        COMMAND plutil -lint "$<TARGET_BUNDLE_CONTENT_DIR:studio>/Info.plist"
+        COMMENT "Validating generated plist"
+        VERBATIM
+    )
+endif()
+
 set_property(
     TARGET studio
     PROPERTY 3DMM_SAMPLES
@@ -301,7 +336,21 @@ set_property(
 
 # Please pay attention to the ending / in each DIRECTORY declaration. It
 # affects the destination!
-install(TARGETS studio RUNTIME DESTINATION .)
+
+if(APPLE)
+    set(resources_path "./3D Movie Maker.app/Contents/Resources")
+else()
+    set(resources_path ".")
+endif()
+set(mskids_path "${resources_path}/Microsoft Kids")
+set(mskids_3dmm_path "${mskids_path}/3D Movie Maker")
+set(mczee_path "${mskids_path}/Users/McZee")
+set(melanie_path "${mskids_path}/Users/Melanie")
+
+install(TARGETS studio
+    RUNTIME DESTINATION .
+    BUNDLE DESTINATION .
+)
 
 if (3DMM_PRECOMPILED_CHUNKY_PATH)
     set(chunky_files
@@ -317,24 +366,24 @@ if (3DMM_PRECOMPILED_CHUNKY_PATH)
     foreach(chunky_file ${chunky_files})
         install(
             FILES "${3DMM_PRECOMPILED_CHUNKY_PATH}/${chunky_file}"
-            DESTINATION "Microsoft Kids/3D Movie Maker"
+            DESTINATION "${mskids_3dmm_path}"
         )
     endforeach()
 else()
     # HACK(bruxisma): This is due to UTEST.CHT not generating 3DMOVIE.CHK
     #                 Renaming it to 3DMOVIE.CHT would resolve this.
     install(FILES $<FILTER:$<TARGET_PROPERTY:studio,CHOMPED_CHUNKS>,EXCLUDE,.+utest[.]chk$>
-      DESTINATION "Microsoft Kids/3D Movie Maker")
+      DESTINATION "${mskids_3dmm_path}")
     install(FILES $<FILTER:$<TARGET_PROPERTY:studio,CHOMPED_CHUNKS>,INCLUDE,.+utest[.]chk$>
       RENAME 3dmovie.chk
-      DESTINATION "Microsoft Kids/3D Movie Maker")
+      DESTINATION "${mskids_3dmm_path}")
 endif()
 install(FILES $<TARGET_PROPERTY:studio,3DMM_PROJECTS>
-  DESTINATION "Microsoft Kids/Users/Melanie")
+  DESTINATION "${melanie_path}")
 install(FILES $<TARGET_PROPERTY:studio,3DMM_SAMPLES>
-  DESTINATION "Microsoft Kids/Users/McZee")
+  DESTINATION "${mczee_path}")
 install(FILES $<TARGET_PROPERTY:studio,3DMM_CONTENT>
-  DESTINATION "Microsoft Kids/3D Movie Maker")
+  DESTINATION "${mskids_3dmm_path}")
 
 if(KAUAI_HAS_VIDEO)
     install(
@@ -356,7 +405,7 @@ else()
         install(
             FILES "${placeholder_avi}"
             RENAME "${cutscene_name}"
-            DESTINATION "Microsoft Kids/3D Movie Maker"
+            DESTINATION "${mskids_3dmm_path}"
         )
     endforeach()
 
@@ -365,16 +414,40 @@ endif()
 if (WIN32 AND 3DMM_GUI STREQUAL "SDL")
     # Install SDL DLLs
     install(FILES $<TARGET_FILE:SDL2::SDL2> $<TARGET_FILE:SDL2_ttf::SDL2_ttf>
-        DESTINATION .)
+        DESTINATION ${resources_path})
 
     if (FluidSynth_FOUND)
         # Install FluidSynth DLLs
-        install(DIRECTORY "${FluidSynth_ROOT}/bin/" DESTINATION .
+        install(DIRECTORY "${FluidSynth_ROOT}/bin/" DESTINATION ${resources_path}
             PATTERN "*.exe" EXCLUDE)
     endif()
 endif()
 
 # Copy soundfont if required
 if(NOT "${3DMM_SOUNDFONT_PATH}" STREQUAL "")
-    install(FILES "${3DMM_SOUNDFONT_PATH}" DESTINATION .)
+    install(FILES "${3DMM_SOUNDFONT_PATH}" DESTINATION ${resources_path})
+endif()
+
+if (APPLE)
+
+    set(MACOSX_CODESIGNING_IDENTITY "-" CACHE STRING "Code signing identity used for signing bundle")
+    if (MACOSX_CODESIGNING_IDENTITY STREQUAL "-")
+        message("Using ad-hoc signing for bundle")
+    endif()
+
+    install(CODE "
+        include(BundleUtilities)
+
+        get_filename_component(install_prefix \"\${CMAKE_INSTALL_PREFIX}\" ABSOLUTE)
+        fixup_bundle(
+            \"\${install_prefix}/3D Movie Maker.app\"
+            \"\"
+            \"${DOWNLOADED_FRAMEWORKS_PATH}\"
+        )
+
+        execute_process(
+            COMMAND codesign --force --deep --sign \"${MACOSX_CODESIGNING_IDENTITY}\" \"\${install_prefix}/3D Movie Maker.app\"
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+    ")
 endif()

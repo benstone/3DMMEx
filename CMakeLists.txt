@@ -98,6 +98,11 @@ elseif("${3DMM_GUI}" STREQUAL "SDL")
         include(FetchFluidSynth)
     endif()
 
+    # Download SDL2 frameworks when building for Mac
+    if (APPLE)
+        include(FetchSDL2)
+    endif()
+
     find_package(SDL2 CONFIG REQUIRED)
     find_package(SDL2_ttf CONFIG REQUIRED)
 
@@ -275,5 +280,6 @@ if (BUILD_PACKAGES)
       list(APPEND CPACK_GENERATOR ${generator})
     endif()
   endforeach()
+
   include(CPack)
 endif()
