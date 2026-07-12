@@ -199,3 +199,32 @@ jobs:
           name: 3DMMEx Linux gcc x86_64 Debug
           path: |
             dist/sdl-debug
+
+  compile-macos-release:
+    name: macOS arm64 Release
+    runs-on: macos-latest
+    steps:
+      - name: Install dependencies with homebrew
+        run: |
+          brew update
+          brew install fontconfig fluidsynth
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: CMake Generate
+        run: |
+          cmake --preset sdl-relwithdebinfo
+      - name: CMake Build
+        run: |
+          cmake --build build/sdl-relwithdebinfo --target tools studio tests
+      - name: Run tests
+        run: |
+          ctest --test-dir build/sdl-relwithdebinfo --output-on-failure --timeout 60
+      - name: CMake Install
+        run: |
+          cmake --install build/sdl-relwithdebinfo --prefix dist/sdl-relwithdebinfo
+      - name: Upload Release
+        uses: actions/upload-artifact@v4
+        with:
+          name: 3DMMEx macOS arm64 Release
+          path: |
+            dist/sdl-relwithdebinfo
