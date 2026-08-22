@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 cmake_policy(SET CMP0141 NEW)
-project(3DMMEx LANGUAGES CXX C VERSION 0.6.0)
+project(3DMMEx LANGUAGES CXX C VERSION 0.7.0)
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
