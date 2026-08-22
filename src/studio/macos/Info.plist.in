@@ -30,5 +30,7 @@
         <true/>
         <key>NSHumanReadableCopyright</key>
         <string>${MACOSX_BUNDLE_COPYRIGHT}</string>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>3D Movie Maker needs your microphone to record speech and sound effects.</string>
 </dict>
 </plist>
