@@ -6,9 +6,9 @@
 
 ## Features
 
-* Cross-platform support (in progress)
+* Cross-platform support
   * SDL2 graphics/input support
-  * Linux platform support
+  * Linux and macOS platform support
 * Portability improvements
   * Supports compiling with Visual Studio 2022, Clang and GCC
   * 64-bit support: supports compiling for x64 and ARM64
@@ -37,6 +37,11 @@
   * gstreamer
   * Installing dependencies:
     * Ubuntu: `sudo apt install g++ cmake ninja-build libsdl2-dev libsdl2-ttf-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgtk-3-dev libfontconfig-dev zenity`
+* macOS:
+  * Xcode tools
+  * Development libraries for fontconfig and FluidSynth
+  * Installing dependencies:
+    * `brew install fontconfig fluidsynth`
 
 ### Building
 
@@ -65,6 +70,7 @@ Use CMake to build the project. The project includes a CMakePresets.json file th
 * Run `cmake --build build/<preset-name> --target install`
 * To run tests, run `ctest --test-dir build/<preset-name>`
 * To run 3DMM, run `dist/<preset-name>/3dmovie`
+  * On macOS, run `dist/<preset-name>/3D Movie Maker.app`
 
 ## Contributing
 
