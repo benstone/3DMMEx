@@ -342,6 +342,8 @@ if(APPLE)
 else()
     set(resources_path ".")
 endif()
+set(resources_path "$<PATH:NORMAL_PATH,${resources_path}>")
+
 set(mskids_path "${resources_path}/Microsoft Kids")
 set(mskids_3dmm_path "${mskids_path}/3D Movie Maker")
 set(mczee_path "${mskids_path}/Users/McZee")
