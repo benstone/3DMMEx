@@ -453,22 +453,5 @@
   "tboxvert.cur",
   "textback.cur"
  ],
- "movies": [
-  "BONGO.3MM",
-  "BOOOOOO.3MM",
-  "CITYTOUR.3MM",
-  "GRAVEYRD.3MM",
-  "HAUNTED.3MM",
-  "HOSPITAL.3MM",
-  "JUNGLE.3MM",
-  "MESSAGE.3MM",
-  "SPACE.3MM",
-  "SPROG.3MM",
-  "TERROR.3MM",
-  "THEBOOK.3MM",
-  "THELODGE.3MM",
-  "THETHIEF.3MM",
-  "VENUS31.3MM",
-  "WHERE.3MM"
- ]
+ "movies": []
 }

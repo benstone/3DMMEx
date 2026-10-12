@@ -10,7 +10,7 @@ export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 export const readFile = (rel) => new Uint8Array(fs.readFileSync(path.join(ROOT, rel)));
 
 export const movieFile = (name = 'WHERE.3MM') =>
-  new ChunkyFile(readFile(`public/movies/${name}`), name);
+  new ChunkyFile(readFile(`test/${name}`), name);
 
 /**
  * Byte-swap a CHN2 file's container (CFP header + CRP index) into a '2NHC'
@@ -57,7 +57,7 @@ export function swapContainer(bytes) {
 
 /** A big-endian-container variant of the fixture movie (the old test.3mm role). */
 export const movieFileBE = (name = 'WHERE.3MM') =>
-  new ChunkyFile(swapContainer(readFile(`public/movies/${name}`)), `${name} (2NHC)`);
+  new ChunkyFile(swapContainer(readFile(`test/${name}`)), `${name} (2NHC)`);
 
 export const contentLibrary = () =>
   new Library(CONTENT_FILES.map((n) => new ChunkyFile(readFile(`public/data/${n}`), n)));

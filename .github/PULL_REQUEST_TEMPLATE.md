@@ -13,7 +13,7 @@
 - [ ] Manually verified with `npm run dev`
 
 <!-- If the change affects .3mm parsing/playback, note which movie/content
-files you tested with (e.g. public/movies/*.3MM, public/data/*.3CN). -->
+files you tested with (e.g. test/WHERE.3MM, public/data/*.3CN). -->
 
 ## Related
 

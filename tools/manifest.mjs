@@ -3,8 +3,12 @@
 // menu lists. Run after adding/removing files under public/.
 import { readdirSync, writeFileSync } from 'node:fs';
 
-const ls = (dir, ext) => readdirSync(new URL(`../public/${dir}`, import.meta.url))
-  .filter((f) => f.toLowerCase().endsWith(ext)).sort();
+const ls = (dir, ext) => {
+  try {
+    return readdirSync(new URL(`../public/${dir}`, import.meta.url))
+      .filter((f) => f.toLowerCase().endsWith(ext)).sort();
+  } catch { return []; } // dir may not exist (e.g. no bundled movies)
+};
 
 const manifest = {
   textures: ls('textures', '.png'),

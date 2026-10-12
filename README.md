@@ -23,50 +23,120 @@ JavaScript port of the original 1995 engine behavior.
   artwork assets.
 - **Movie saving** — serializes edited movies back to a valid CHN2 `.3mm`
   file that the original game can open.
-- **Headless tools** — `tools/` scripts inspect, dump and step through
-  movies under Node without a browser.
+- **Modern rendering techniques** — an optional
+  [settings menu](#render-settings) layers smooth shading, filtered textures,
+  dynamic shadows, high-res rendering and antialiasing on top of the retro
+  software-renderer look:
+
+| Original-style rendering | With render settings enabled |
+| ------------------------ | ---------------------------- |
+| ![original look](.github/img_old.png) | ![modern look](.github/img_new.png) |
 
 ## Quick start
+
+The easiest way to try it is the hosted build — no install needed:
+
+**https://permpkin.github.io/3dmm-web/**
+
+### Self-hosting
 
 ```sh
 npm install
 npm run dev        # http://localhost:5173
 ```
 
-The app requires the original 3DMM data files in `public/` (the `.3CN`
-content libraries, `.3th` thumbnail files, `socpal.pal`, cursors and UI
-textures). These are copyrighted game assets — copy them from your own
-3DMM installation if they are missing.
+All game data files are bundled in the repo — clone and go.
 
-## URL parameters
+## Usage
 
-You can deep-link to a movie and control how it opens:
+The app is link-driven — which movie is loaded, how it's displayed and where
+playback starts all come from the URL, so any state you can reach is
+shareable as a link. All parameters combine freely.
+
+### Loading a movie
+
+`?3mm=` picks the movie:
+
+- **A bare filename** like `?3mm=MYMOVIE.3MM` resolves to `movies/MYMOVIE.3MM`
+  on the same site — drop your own `.3mm` files in a `movies/` folder next to
+  the app to link them by name.
+- **A path or full URL** loads a remote `.3mm` file. Relative paths resolve
+  against the site; absolute `https://` URLs need the remote host to allow
+  CORS — for example the sample movies in the
+  [3DMMEx](https://github.com/benstone/3DMMEx) repo:
+
+  ```
+  ?3mm=https://raw.githubusercontent.com/benstone/3DMMEx/main/samples/hospital.3mm
+  ```
+
+A successful load replaces the autosaved working doc; a failed link falls
+back to the normal boot and shows an error. With no `?3mm=`, your working
+doc opens as usual (or a blank movie on first run).
+
+### View modes
+
+`mode` chooses how the movie opens, and works with or without `?3mm=` — no
+movie param means your working doc is what plays:
+
+- `edit` (default) — the full studio editor: tool palettes, browsers, sound
+  studio, scene sorter.
+- `theatre` — the original's cinema view: theatre backdrop, lights that dim
+  on play, projector-lens play/rewind controls and a wall volume slider.
+  Autoplays. (The editor's book button opens the current movie in a theatre
+  tab the same way.)
+- `embed` — only the letterboxed movie screen with minimal floating
+  controls, for iframe embeds. Autoplays.
+
+In theatre and embed modes, `Space` toggles play/pause. `?play` starts
+playback immediately in the editor (screen modes already autoplay).
+
+### Recipes
+
+| Link | Opens |
+| ---- | ----- |
+| `?3mm=https://example.com/movie.3mm` | a remote `.3mm` in the editor |
+| `?3mm=https://example.com/movie.3mm&mode=theatre` | the same movie in the theatre |
+| `?3mm=MYMOVIE.3MM&mode=embed` | a file from your `movies/` folder, screen only |
+| `?mode=theatre` | your working doc in the theatre |
+| `?3mm=https://example.com/movie.3mm&scene=2&frame=30` | remote movie at scene index 2 / frame 30 |
+| `?3mm=https://example.com/movie.3mm&play&opts=fps24` | remote movie playing with smooth playback |
+
+### Parameter reference
 
 | Param | Description |
 | ----- | ----------- |
-| `3mm` | Movie to load. A bare name (e.g. `?3mm=WHERE.3MM`) loads a bundled sample from `movies/`; a path or full URL loads a remote `.3mm` file (the remote host must allow CORS). A successful load replaces the autosaved working doc; failures fall back to normal boot and show an error. |
-| `mode` | `edit` (default) opens the full studio editor. `theatre` recreates the original's cinema view — theatre backdrop, lights that dim on play, projector-lens play/rewind controls and a wall volume slider. `embed` shows only the movie screen (letterboxed) with minimal floating controls. Both screen modes autoplay; `Space` toggles play/pause. |
+| `3mm` | Movie to load — bare filename resolves to `movies/<name>` on the site, path or URL for a remote file. |
+| `mode` | `edit` (default), `theatre` or `embed` — see [view modes](#view-modes). |
 | `scene` | Scene index to open on (e.g. `?scene=2`). |
 | `frame` | Frame within the scene (e.g. `?frame=30`). |
 | `play` | Start playing immediately (`?play`). |
-| `opts` | Comma-separated renderer flags — `fps24`, `modernLighting`, `shadows`, `castOnOthers`, `selfShadow`, `smoothTex`, `smoothVerts`, `scale2x`, `aa`, `wireframe` (e.g. `?opts=fps24,shadows`). |
-| `menu` | Show the hidden options menu (`?menu`). |
+| `opts` | Comma-separated renderer flags — `fps24`, `modernLighting`, `shadows`, `castOnOthers`, `selfShadow`, `smoothTex`, `smoothVerts`, `scale2x`, `aa`, `wireframe` (e.g. `?opts=fps24,shadows`). See [render settings](#render-settings). |
+| `menu` | Open the render settings dialog on boot (`?menu`). |
 
-### Remote movies & samples
+## Render settings
 
-`?3mm=` accepts any same-origin or CORS-enabled URL, so you can link to
-movies hosted anywhere — for example the sample movies in the
-[3DMMEx](https://github.com/benstone/3DMMEx) / 3dmm-web repos:
+Click the **settings** link in the studio status bar (bottom edge, next to the
+version number) — or the small **settings** button top-left in theatre/embed
+modes — to open the render settings dialog. `?menu` opens it automatically on
+boot. The dialog is draggable by its title bar (position is remembered);
+closing it with `Esc` or canceling reverts everything changed since it was
+opened. All settings persist in `localStorage` across sessions, and the
+checkbox flags can also be pre-enabled for a link via `?opts=` (the slider and
+dropdown values can't — they're not boolean flags).
 
-```
-https://<host>/?3mm=https://raw.githubusercontent.com/permpkin/3dmm-web/main/samples/hospital.3mm
-```
-
-To watch it in the recreated theatre instead of the editor:
-
-```
-https://<host>/?3mm=https://raw.githubusercontent.com/permpkin/3dmm-web/main/samples/hospital.3mm&mode=theatre
-```
+| Option | Flag | Description |
+| ------ | ---- | ----------- |
+| smooth playback (24 fps) | `fps24` | Renders interpolated in-between frames instead of stepping at the engine's fixed tick rate |
+| modern lighting (smooth shading) | `modernLighting` | Smooth-shaded actor lighting; enables an `intensity` slider (0–200%) |
+| shadow opacity | `selfShadowOp` | Darkness slider shared by all shadow effects |
+| ground shadows | `shadows` | Shadow-mapped shadows cast onto the ground/background |
+| cast on others | `castOnOthers` | Actors cast shadows onto other actors/props (shadow map) |
+| self shadows | `selfShadow` | Actors cast shadows onto themselves |
+| smooth textures | `smoothTex` | Bilinear texture filtering instead of the original's chunky nearest-pixel look |
+| vertex smoothing | `smoothVerts` | Averages vertex normals so actor meshes shade continuously instead of faceted |
+| 2x render resolution | `scale2x` | Renders the 640×480 screen at 2× internally, then downscales |
+| antialiasing | `aa` | Smooths jagged edges; `mode` dropdown picks `msaa 2x/4x/8x` or `fsaa (2x supersample)` |
+| wireframe | `wireframe` | Draws mesh edges only |
 
 ## Commands
 
@@ -79,9 +149,9 @@ https://<host>/?3mm=https://raw.githubusercontent.com/permpkin/3dmm-web/main/sam
 Tools (run with `node`, files relative to repo root):
 
 ```sh
-node tools/dump.mjs public/movies/WHERE.3MM [CTG]   # chunky index / chunk listing
-node tools/inspect.mjs public/movies/WHERE.3MM      # movie/scene/actor event dump
-node tools/play.mjs public/movies/WHERE.3MM         # headless playthrough
+node tools/dump.mjs test/WHERE.3MM [CTG]   # chunky index / chunk listing
+node tools/inspect.mjs test/WHERE.3MM      # movie/scene/actor event dump
+node tools/play.mjs test/WHERE.3MM         # headless playthrough
 node tools/calib.mjs                 # calibration helper
 node tools/manifest.mjs              # regenerate public/manifest.json (boot preloader)
 ```
@@ -116,7 +186,7 @@ src/render/    three.js renderer + canvas textbox layout
 src/main.js    app entry: player controls + studio editor chrome
 tools/         node CLI helpers for inspecting .3mm/.3cn files
 test/          node:test suite (unit + headless MoviePlayer integration)
-public/        game data files (content libs, thumbnails, UI art, sample movies)
+public/        game data files (content libs, thumbnails, UI art)
 ```
 
 ## Credits & references
@@ -142,8 +212,8 @@ This project exists thanks to the people who made, released and preserved
 ## License & legal
 
 Code is ISC (see `package.json`). The 3DMM data files under `public/`
-(sounds, textures, cursors, thumbnails, `.3CN` libraries and sample movies)
-are **Microsoft copyrighted game assets from 1995**, bundled here for
-preservation/interoperability purposes only — they are *not* covered by the
-code license. Distribute them at your own discretion; replace them with your
-own install's files when in doubt.
+(sounds, textures, cursors, thumbnails, `.3CN` libraries) and the
+`test/WHERE.3MM` fixture are **Microsoft copyrighted game assets from
+1995**, bundled here for preservation/interoperability purposes only — they
+are *not* covered by the code license. Distribute them at your own
+discretion; replace them with your own install's files when in doubt.
