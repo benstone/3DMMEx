@@ -1,4 +1,0 @@
-// Create a chunk containing this script
-CHUNK ('CSRC', 1, "search_path.cht")
-    FILE "search_path.cht"
-ENDCHUNK

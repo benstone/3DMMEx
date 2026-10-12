@@ -1,9 +1,0 @@
-/* Copyright (c) Microsoft Corporation.
-   Licensed under the MIT License. */
-
-#define rmj @PROJECT_VERSION_MAJOR@
-#define rmm @PROJECT_VERSION_MINOR@
-#define rup @PROJECT_VERSION_PATCH@
-#define szGitTag "@GIT_VERSION@"
-#define szVerName ""
-#define szVerUser "SHEILA"

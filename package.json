@@ -1,0 +1,28 @@
+{
+  "name": "3dmm-web",
+  "version": "0.1.0",
+  "description": "Web-based player and studio for Microsoft 3D Movie Maker (.3mm) movies — parses the original Kauai chunky file format and renders scenes with three.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test 'test/*.test.js'"
+  },
+  "keywords": [
+    "3dmm",
+    "3d-movie-maker",
+    "kauai",
+    "chunky",
+    "vite",
+    "threejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}
