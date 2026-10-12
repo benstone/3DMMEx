@@ -5,10 +5,5 @@ out/
 .vs/
 dist/
 build/
-
-
-# Files generated during build, so they're ignored to keep them out of git
-elib/wind/bren.lib
-elib/wins/bren.lib
-kauai/src/kcd2_386.h
-kauai/src/kcdc_386.h
+node_modules/
+dist/

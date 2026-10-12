@@ -49,7 +49,7 @@ You can deep-link to a movie and control how it opens:
 | `scene` | Scene index to open on (e.g. `?scene=2`). |
 | `frame` | Frame within the scene (e.g. `?frame=30`). |
 | `play` | Start playing immediately (`?play`). |
-| `opts` | Comma-separated renderer flags — `fps24`, `modernLighting`, `shadows`, `castOnOthers`, `selfShadow`, `smoothTex`, `smoothVerts`, `scale2x`, `aa`, `mute`, `wireframe` (e.g. `?opts=fps24,shadows`). |
+| `opts` | Comma-separated renderer flags — `fps24`, `modernLighting`, `shadows`, `castOnOthers`, `selfShadow`, `smoothTex`, `smoothVerts`, `scale2x`, `aa`, `wireframe` (e.g. `?opts=fps24,shadows`). |
 | `menu` | Show the hidden options menu (`?menu`). |
 
 ### Remote movies & samples

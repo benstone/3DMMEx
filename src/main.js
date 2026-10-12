@@ -705,8 +705,8 @@ function draw() {
 }
 
 // --- options ---------------------------------------------------------------
-const opts = { fps24: false, modernLighting: false, shadows: false, castOnOthers: false, selfShadow: false, smoothTex: false, smoothVerts: false, scale2x: false, aa: false, aaMode: 4, mute: false, wireframe: false, lightInt: 1, selfShadowOp: 0.65 };
-try { Object.assign(opts, JSON.parse(localStorage.getItem('opts3dmm') || '{}')); } catch { /* bad saved opts */ }
+const opts = { fps24: false, modernLighting: false, shadows: false, castOnOthers: false, selfShadow: false, smoothTex: false, smoothVerts: false, scale2x: false, aa: false, aaMode: 4, wireframe: false, lightInt: 1, selfShadowOp: 0.65 };
+try { Object.assign(opts, JSON.parse(localStorage.getItem('opts3dmm') || '{}')); delete opts.mute; } catch { /* bad saved opts */ }
 if (opts.aa && typeof opts.aa !== 'boolean') { opts.aaMode = opts.aa; opts.aa = true; } // migrate old numeric aa value
 
 let raf = null, acc = 0, last = 0;
@@ -740,7 +740,6 @@ function setPlaying(p) {
 const OPT_DEFS = [
   ['playback', [
     ['fps24', 'smooth playback (24 fps)'],
-    ['mute', 'mute'],
   ]],
   ['lighting', [
     ['modernLighting', 'modern lighting (smooth shading)', [['lightInt', 'intensity', 0, 200]]],
@@ -761,32 +760,15 @@ const OPT_DEFS = [
     ['wireframe', 'wireframe'],
   ]],
 ];
-const optCbs = {};
+const optCbs = {}, optInputs = []; // checkboxes + range/select controls, resynced on dialog revert
+const optSync = () => {
+  for (const [k, cb] of Object.entries(optCbs)) { cb.checked = !!opts[k]; if (cb._sub) cb._sub.hidden = !cb.checked; }
+  for (const [k, el] of optInputs) el.value = el.type === 'range' ? Math.round(opts[k] * 100) : String(opts[k]);
+};
+const optsPanel = document.createElement('div'); // render-settings controls — shown in the book button's dialog
+optsPanel.className = 'optPanel'; optsPanel.hidden = true;
 {
-  const menu = document.createElement('div');
-  menu.id = 'optsMenu'; menu.hidden = true;
-  document.body.appendChild(menu); // dev options panel — shown via ?menu=1 (no debug-bar chrome anymore)
-  let savedAll = null; // enabled set remembered by "toggle all"
-  const toggleAll = document.createElement('button');
-  toggleAll.className = 'optToggleAll';
-  toggleAll.textContent = 'toggle all';
-  toggleAll.onclick = () => {
-    const keys = Object.keys(opts).filter((k) => typeof opts[k] === 'boolean');
-    if (keys.some((k) => opts[k])) {
-      savedAll = keys.filter((k) => opts[k]);
-      for (const k of keys) opts[k] = false;
-    } else {
-      for (const k of savedAll || keys) opts[k] = true; // all off: restore remembered set, else enable all
-      savedAll = null;
-    }
-    for (const [k, cb] of Object.entries(optCbs)) { cb.checked = !!opts[k]; if (cb._sub) cb._sub.hidden = !cb.checked; }
-    localStorage.setItem('opts3dmm', JSON.stringify(opts));
-    sounds.setMuted(opts.mute, playing);
-    renderer.setOpts(opts);
-    if (playing) setPlaying(true); // restart loop if fps24 changed
-    draw();
-  };
-  menu.appendChild(toggleAll);
+  const menu = optsPanel;
   for (const [cat, defs] of OPT_DEFS) {
     const h = document.createElement('div');
     h.className = 'optCat'; h.textContent = cat;
@@ -798,6 +780,7 @@ const optCbs = {};
         const r = document.createElement('input');
         r.type = 'range'; r.min = selOpts[0]; r.max = selOpts[1]; r.value = Math.round(opts[key] * 100);
         r.oninput = () => { opts[key] = +r.value / 100; localStorage.setItem('opts3dmm', JSON.stringify(opts)); renderer.setOpts(opts); draw(); };
+        optInputs.push([key, r]);
         l.append(label, r);
         menu.appendChild(l);
         continue;
@@ -826,11 +809,13 @@ const optCbs = {};
             for (const [v, t] of max) { const o = document.createElement('option'); o.value = String(v); o.textContent = t; sel.appendChild(o); }
             sel.value = String(opts[skey]);
             sel.onchange = () => { opts[skey] = isNaN(+sel.value) ? sel.value : +sel.value; localStorage.setItem('opts3dmm', JSON.stringify(opts)); renderer.setOpts(opts); draw(); };
+            optInputs.push([skey, sel]);
             sl.append(slabel, sel);
           } else {
             const r = document.createElement('input');
             r.type = 'range'; r.min = min; r.max = max; r.value = Math.round(opts[skey] * 100);
             r.oninput = () => { opts[skey] = +r.value / 100; localStorage.setItem('opts3dmm', JSON.stringify(opts)); renderer.setOpts(opts); draw(); };
+            optInputs.push([skey, r]);
             sl.append(slabel, r);
           }
           sub.appendChild(sl);
@@ -842,8 +827,7 @@ const optCbs = {};
         opts[key] = cb.checked;
         localStorage.setItem('opts3dmm', JSON.stringify(opts));
         if (sub) sub.hidden = !cb.checked;
-        if (key === 'mute') sounds.setMuted(opts.mute, playing);
-        else renderer.setOpts(opts);
+        renderer.setOpts(opts);
         if (key === 'fps24' && playing) setPlaying(true); // restart the loop in the new mode
         draw();
       };
@@ -851,7 +835,6 @@ const optCbs = {};
   }
 }
 renderer.setOpts(opts);
-sounds.muted = opts.mute;
 let saveHandle = null; // FileSystemFileHandle for cidSave (FGetFniSave result)
 function open(buffer, name, cacheDoc = true) {
   setPlaying(false);
@@ -1049,7 +1032,7 @@ const TIP_TEXT = { // stb id or tool bmp -> 'Title\nDescription' verbatim from s
   undo: 'Undo/Redo\nUndo the last thing you did!  Redo what you undid!',
   ccp: 'Cut, Copy, & Paste Tools\nGet rid of, copy, paste, or move things from one place to another.',
   port: 'Portfolio\nStart a new movie, open an existing movie, and save your work!',
-  book: '3D Movie Maker\nCheck out the source code for the original Microsoft© 3D Movie Maker™ on Github.',
+  book: 'Play in Theatre\nWatch your movie in the theatre!',
   map: 'Source Code\nView the source code for this project on Github.',
   '1back': 'Scene Choices\nChoose from many different scenes!', // kidSettingsBrowser
   '1view': 'Camera Angles\nChoose a different camera view of the current scene.',
@@ -1573,10 +1556,9 @@ const stSliders = []; // {th, axis, min, span, get}
     const ver = document.createElement('div');
     ver.className = 'stVer'; ver.textContent = 'v' + version;
     studio.appendChild(ver); place(ver, 584, 466, 51, 14);
-    const a = document.createElement('a'); // preview the working doc in the theatre
-    a.id = 'stTheatre'; a.className = 'stLink'; a.textContent = 'play in theatre';
-    const u = new URL(location.href); u.searchParams.set('mode', 'theatre');
-    a.href = u.href; a.target = '_blank'; a.rel = 'noopener';
+    const a = document.createElement('a'); // render-settings modal toggle
+    a.id = 'stOpts'; a.className = 'stLink'; a.textContent = 'settings';
+    a.onclick = (e) => { e.preventDefault(); showOptsDlg(); };
     studio.appendChild(a); place(a, 470, 466, 108, 14);
   }
   { // the original's kidName is display-only (title comes from the saved file's
@@ -1643,7 +1625,7 @@ const stSliders = []; // {th, axis, min, span, get}
     undo: () => { const b = $('stb_undo'); if (!b._en) return; (hist.mode === 'u' ? histUndo : histRedo)(); draw(); },
     ccp: () => toggleCcp(), // kidCutCopyPaste dropdown (popups.cht)
     port: () => togglePort(), // kidPortfolio briefcase (studio.cht)
-    book: () => window.open('https://github.com/microsoft/Microsoft-3D-Movie-Maker', '_blank'),
+    book: () => { const u = new URL(location.href); u.searchParams.set('mode', 'theatre'); window.open(u.href, '_blank'); },
     map: () => window.open('https://github.com/permpkin/3dmm-web', '_blank'),
   };
   for (const [id, up, dn, x, y, w, h] of STUDIO_BTNS) {
@@ -2431,6 +2413,51 @@ function brwsShell() { // shared: overlay div + % placement helper
   };
   return { place, mkImg, mkBtn };
 }
+let optDlg = null, optSnap = null;
+function showOptsDlg() { // book button + theatre/embed settings link -> render settings modal
+  if (optDlg) { closeOptsDlg(true); return; } // it's a toggle — second call commits
+  optSnap = structuredClone(opts);
+  const ov = optDlg = document.createElement('div');
+  ov.className = 'optModal';
+  const box = document.createElement('div');
+  box.className = 'optBox'; ov.appendChild(box);
+  const bar = document.createElement('div');
+  bar.className = 'optBar'; box.appendChild(bar);
+  const ttl = document.createElement('span');
+  ttl.textContent = 'render settings'; bar.appendChild(ttl);
+  const x = document.createElement('button');
+  x.className = 'optX'; x.textContent = '×'; x.onclick = () => closeOptsDlg(true); bar.appendChild(x);
+  optsPanel.hidden = false; box.appendChild(optsPanel);
+  const pos = JSON.parse(localStorage.getItem('optdlgpos') || 'null');
+  if (pos) { box.style.position = 'fixed'; box.style.left = pos.x + 'px'; box.style.top = pos.y + 'px'; }
+  bar.onpointerdown = (e) => { // drag the modal by its titlebar
+    if (e.target === x) return;
+    e.preventDefault();
+    const r = box.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
+    box.style.position = 'fixed'; box.style.left = r.left + 'px'; box.style.top = r.top + 'px';
+    const mv = (e2) => {
+      box.style.left = Math.min(Math.max(e2.clientX - dx, 0), innerWidth - 60) + 'px';
+      box.style.top = Math.min(Math.max(e2.clientY - dy, 0), innerHeight - 40) + 'px';
+    };
+    const up = () => {
+      removeEventListener('pointermove', mv); removeEventListener('pointerup', up);
+      const r2 = box.getBoundingClientRect();
+      localStorage.setItem('optdlgpos', JSON.stringify({ x: r2.left, y: r2.top }));
+    };
+    addEventListener('pointermove', mv); addEventListener('pointerup', up);
+  };
+  document.body.appendChild(ov);
+}
+function closeOptsDlg(keep) { // OK commits; Cancel/Esc reverts the session's changes
+  if (!optDlg) return;
+  optDlg.remove(); optDlg = null; optsPanel.hidden = true;
+  if (keep) return;
+  Object.assign(opts, optSnap);
+  optSync(); localStorage.setItem('opts3dmm', JSON.stringify(opts));
+  renderer.setOpts(opts);
+  if (playing) setPlaying(true); draw();
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && optDlg) closeOptsDlg(false); });
 function showBrowser(kind, importItems = null) {
   if (kind === 'splt') return showSpletter();
   if (kind === 'words') return showWords();
@@ -3459,6 +3486,11 @@ const thRewind = () => { // kgobRewindButton: rewind then play
   if (!player?.movie.scenes.length) return;
   player.loadScene(0); player.gotoFrame(player.scene.nfrmFirst); setPlaying(true);
 };
+const mkSetLink = (parent) => { // small settings link, top-left — toggles the render modal
+  const s = document.createElement('button');
+  s.className = 'thSet'; s.textContent = 'settings';
+  s.onclick = showOptsDlg; parent.appendChild(s);
+};
 const mkVol = () => { // kgobTheaterVolume slidepath + thumb
   const vpath = document.createElement('div');
   vpath.className = 'thVol';
@@ -3504,7 +3536,7 @@ function enterTheatre() {
   const rewB = mkThBtn('threw', 'threwc', thRewind);
   th.appendChild(rewB.b); place(rewB.b, 293, 7, 24, 51);
   const vpath = mkVol(); th.appendChild(vpath); place(vpath, 9, 110, 12, 74);
-  studio.appendChild(th);
+  studio.appendChild(th); mkSetLink(th);
   modeSync = () => { // lights dim while the movie rolls (kst3 -> the1dark)
     bg.src = `${B}textures/${playing ? 'the1dark' : 'theatre1'}.png`;
     playB.im.src = `${B}textures/${playing ? 'thstop' : 'thplay'}.png`;
@@ -3527,7 +3559,7 @@ function enterEmbed() { // bare movie screen — controls float above the corner
   rewB.b.classList.add('emRew'); em.appendChild(rewB.b);
   const playB = mkThBtn(() => playing ? 'thstop' : 'thplay', null, () => setPlaying(!playing));
   playB.b.classList.add('emPlay'); em.appendChild(playB.b);
-  studio.appendChild(em);
+  studio.appendChild(em); mkSetLink(em);
   modeSync = () => { playB.im.src = `${B}textures/${playing ? 'thstop' : 'thplay'}.png`; };
   modeSync();
 }
@@ -3540,8 +3572,8 @@ document.addEventListener('keydown', (e) => { // Space = play/pause in theatre/e
 });
 
 const qs = new URLSearchParams(location.search);
-if (qs.get('opts')) { for (const k of qs.get('opts').split(',')) if (typeof opts[k] === 'boolean') { opts[k] = true; if (optCbs[k]) { optCbs[k].checked = true; if (optCbs[k]._sub) optCbs[k]._sub.hidden = false; } } renderer.setOpts(opts); sounds.muted = opts.mute; }
-if (qs.has('menu')) $('optsMenu').hidden = false;
+if (qs.get('opts')) { for (const k of qs.get('opts').split(',')) if (typeof opts[k] === 'boolean') { opts[k] = true; if (optCbs[k]) { optCbs[k].checked = true; if (optCbs[k]._sub) optCbs[k]._sub.hidden = false; } } renderer.setOpts(opts); }
+if (qs.has('menu')) setTimeout(showOptsDlg, 600);
 // startup mirrors the original: GetPortfolioDoc -> FLoadMovie(pfniUserDoc) — the
 // autosaved working doc opens straight into the studio; no doc -> FLoadMovie()
 // blank doc. ?3mm=url loads a remote movie, replacing the working doc on success;
