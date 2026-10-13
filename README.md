@@ -38,6 +38,13 @@ The easiest way to try it is the hosted build — no install needed:
 
 **https://permpkin.github.io/3dmm-web/**
 
+Or jump straight into a movie — this loads `hospital.3mm` from the
+[3DMMEx](https://github.com/benstone/3DMMEx) samples:
+
+```
+https://permpkin.github.io/3dmm-web/?3mm=https://raw.githubusercontent.com/benstone/3DMMEx/main/samples/hospital.3mm
+```
+
 ### Self-hosting
 
 ```sh
