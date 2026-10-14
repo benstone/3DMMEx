@@ -29,6 +29,24 @@ const mkVol = (x, y, w, h) => { // kgobTheaterVolume slidepath + thumb
   return s;
 };
 
+// --- portrait phones can't fit the 640-wide stage — ask to rotate -----------
+let rotMsg = null, rotQ = null;
+const rotSync = () => rotMsg?.classList.toggle('show', rotQ?.matches ?? false);
+function rotWatch(on) {
+  if (on && !rotMsg) {
+    rotMsg = document.createElement('div');
+    rotMsg.id = 'rotMsg';
+    rotMsg.textContent = t('ui.rotateDevice');
+    document.body.appendChild(rotMsg);
+    rotQ = matchMedia('(orientation: portrait) and (pointer: coarse) and (max-width: 679px)');
+    rotQ.addEventListener('change', rotSync);
+    rotSync();
+  } else if (!on && rotMsg) {
+    rotQ.removeEventListener('change', rotSync); rotQ = null;
+    rotMsg.remove(); rotMsg = null;
+  }
+}
+
 export class TheatreView extends View {
   constructor() {
     super();
@@ -51,7 +69,8 @@ export class TheatreView extends View {
     });
     modeSync?.();
   }
-  onExit() { setModeSync(null); }
+  onEnter() { rotWatch(true); }
+  onExit() { setModeSync(null); rotWatch(false); }
 }
 
 export class EmbedView extends View {

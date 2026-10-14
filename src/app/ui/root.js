@@ -146,6 +146,7 @@ export class UiRoot extends Element {
   _bindInput() {
     const c = this.canvas;
     c.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch') e.preventDefault(); // no compat-mouse / dbl-tap-zoom side effects
       const p = this._toVirtual(e);
       const hit = this.topView?.hitTest(p.x, p.y);
       this.captured = hit;

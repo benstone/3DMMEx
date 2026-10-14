@@ -24,7 +24,8 @@
     "version": "v{version}",
     "pageNum": "{page} / {total}",
     "bioPage": "Page {n}",
-    "frameDash": "–"
+    "frameDash": "–",
+    "rotateDevice": "Rotate your device to watch the movie"
   },
   "opt": {
     "catPlayback": "playback",

@@ -176,6 +176,25 @@ function hitInTip(e) { // pointer inside the balloon doesn't dismiss it
   return vx >= ax && vy >= ay && vx < ax + tipEl.w && vy < ay + tipEl.h;
 }
 document.addEventListener('pointerdown', tipDismiss, true);
+// Touch has no hover — a ~700ms press-and-hold on a tipped control is its dwell.
+let /** @type {any} */ lpTimer = 0, lpX = 0, lpY = 0, lpEl = null;
+document.addEventListener('pointerdown', (e) => {
+  if (e.pointerType !== 'touch' || e.target !== ui.canvas) return;
+  const r = ui.canvas.getBoundingClientRect();
+  const hit = ui.topView?.hitTest((e.clientX - r.left) / r.width * UI_W, (e.clientY - r.top) / r.height * UI_H);
+  lpEl = null;
+  for (let n = hit; n; n = n.parent) if (n.tip) { lpEl = n; break; }
+  lpX = e.clientX; lpY = e.clientY;
+  clearTimeout(lpTimer);
+  if (lpEl) lpTimer = setTimeout(() => { if (lpEl && !playing) tipShow(lpEl); }, 700);
+}, true);
+const lpCancel = (e) => {
+  if (e.type === 'pointermove' && Math.hypot(e.clientX - lpX, e.clientY - lpY) < 12) return; // still held
+  clearTimeout(lpTimer); lpEl = null;
+};
+document.addEventListener('pointerup', lpCancel, true);
+document.addEventListener('pointercancel', lpCancel, true);
+document.addEventListener('pointermove', lpCancel, true);
 export function guideTip() { // first-boot guide — the original's CO tip for the scenes cover
   const b = { x: 18, y: 1, w: 62, h: 40 }; // 1back insert button rect (logical)
   coblnReady.then(() => { if (tipEl || player?.movie.scenes.length) return;
