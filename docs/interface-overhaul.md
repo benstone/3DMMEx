@@ -155,7 +155,12 @@ synchronously after `renderer.render()` in the same frame (or set
 `preserveDrawingBuffer`) — a WebGL canvas is only guaranteed blit-able within
 its render task.
 
-Core pieces:
+Core pieces — **class-first, decided:** the framework is a class hierarchy,
+not a bag of constructor functions. Behavior lives in methods on named
+classes so it's inheritable and discoverable; ad-hoc `el.draw = …` /
+`el.onPointerDown = …` closures are a port-time convenience to be collapsed
+into named subclasses, not the end state (see the class refactor in
+Phase 5 / milestone 10).
 
 - `UiRoot` — owns the 640×480 canvas, maps client coords → virtual coords,
   RAF-driven render loop that only repaints dirty regions (the UI is mostly
@@ -165,15 +170,26 @@ Core pieces:
   `useEd`/`useUi` selectors mark their element's rect dirty on change, so a
   selChid change repaints just the roll-call strip and the status bar
   instead of today's whole-UI `syncStudio()` pass.
-- `View` — a screen (studio / theatre / browser / easel / boot). View stack
-  with push/pop/replace = the "routing" (modal dialogs push, back pops).
-  The stack itself lives in the `useUi` store — view transitions and any
-  "is a dialog open" checks are just selectors over it.
-- `Element` tree — retained-mode widgets: panel, image, button, label, grid,
-  text input. Rect layout in absolute 640×480 coords, straight from the
-  original `.cht` positions — no % anywhere.
+- `View` — a screen (studio / theatre / browser / easel / boot). Every
+  surface is a `View` **subclass**: the constructor builds the element
+  tree, lifecycle lives in `onEnter`/`onExit`/`onFrame`, and view-local
+  helpers become private methods. View stack with push/pop/replace = the
+  "routing" (modal dialogs push, back pops). The stack itself lives in the
+  `useUi` store — view transitions and any "is a dialog open" checks are
+  just selectors over it.
+- `ModalView` (a `View` subclass) — shared modal semantics: the `brwsView`
+  slot, Escape routing (`_onEsc` → method), DOM-overlay teardown, dimming.
+  `EaselView` and `BrowserView` both extend it.
+- `Element` tree — retained-mode widgets. Rect layout in absolute 640×480
+  coords, straight from the original `.cht` positions — no % anywhere.
+  Element classes are **subclassed for behavior**: press-state faces,
+  sliders, paging grids, custom-drawn plates each get a named class
+  (`Img`, `StBtn`, `VSlider`, `Txt`, `MovieScreen`, `Toast`, `Balloon`,
+  `SorterCell`, `PopupMenu`, `ScrollBar`…). If two call sites override the
+  same hooks, that's a missing subclass — extract it, don't copy the
+  closure.
 - `Input` — normalized pointer events → hit-test → focus/capture model.
-  One dispatcher; keyboard focus for text entry.
+  One dispatcher on `UiRoot`; keyboard focus for text entry.
 - `Animator` — tween engine (position/opacity/scale, easing). API:
   `view.show({ in: 'fade' })`, `el.animate('out', { ms: 200 })`. Views get
   in/out transitions; transient elements (tooltips, callouts, toasts) get
@@ -197,6 +213,16 @@ Order by risk/value: boot → theatre/embed (smallest) → studio chrome →
 browsers/grids → easels → talent book → callouts. No DOM-UI fallback flag —
 the port is all-or-nothing per surface, git history is the escape hatch.
 Delete `app/ui-dom/` files as each is replaced.
+
+Port convention: each surface lands as **one file exporting one `View`
+subclass** (e.g. `studio.js` → `StudioView`, `easels.js` → `SorterEasel`,
+`ListenerEasel`, `SpletterEasel`, `CostumeEasel`… each a small class, not
+one 800-line function). The `showFoo()` free functions remain as thin
+exported factories (`showX = () => ui.push(new FooView())`) so call sites
+don't churn — but the surface's state, children, and handlers live on the
+class. When porting a second easel reveals the same pattern (paged grid,
+scroll buttons, preview panel), that pattern becomes a shared subclass in
+`widgets.js`/`easel.js` rather than a copy-paste.
 
 ## Phase 6 — Touch
 
@@ -284,6 +310,7 @@ pages; Chrome tab-mirroring casts everything. To cast "only the movie":
 | 7 | Touch pass + rotate-to-view | 4 |
 | 8 | Cast receiver entry (same repo, second Vite entry) + sender button | 4, needs Cast dev account |
 | 9 | Build perf + AGENTS.md/docs finalized | all |
+| 10 | **Class refactor pass** — easels/studio/browser internals currently build elements ad-hoc inside big functions (`el.draw = …`, `_idx`/`_yp` fields). Collapse them into named `Element`/`View` subclasses (`SorterCell`, `ScrollPair`, `PopupMenu`, `RecorderEasel`…); one `View` subclass per surface; factories stay thin | 6 |
 
 ## Decisions (locked)
 
@@ -305,3 +332,8 @@ pages; Chrome tab-mirroring casts everything. To cast "only the movie":
    `useApp` (engine singletons), `useEd` (editor state), `useUi` (view stack/
    playback/dialogs). Selector subscriptions drive canvas dirty-region
    invalidation; per-frame simulation state stays out of the store.
+7. **Class-first UI code** — interface elements and views are named classes
+   with behavior in methods, so shared logic is inherited/overridden rather
+   than duplicated. Free functions are only thin factories/wiring
+   (`showX()`), boot orchestration, or pure utilities; new UI code should
+   add or extend a class, not grow a function body.

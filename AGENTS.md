@@ -49,6 +49,12 @@ src/render/            three.js renderer (renders into #view)
 - **View stack.** `ui.push(view, 'none'|'fade')`, `ui.pop()`, `ui.replace()`.
   `onEnter`/`onExit` fire on cover/uncover AND push/pop — check
   `ui.stack.includes(this)` to distinguish.
+- **Class-first UI.** Views and elements are named classes with behavior in
+  methods — subclass `View`/`Element`/`StBtn` instead of assigning
+  `el.draw = …`/`el.onPointerDown = …` closures or growing a function body.
+  Free functions are thin factories (`showX()`), boot wiring, or pure
+  utilities. If two sites need the same custom element, it's a missing
+  widget subclass — add it to `widgets.js`/`easel.js`.
 - **Modal slot.** `brwsView`/`brwsCleanup` in browser.js is the single
   browser-or-easel slot; `showEasel()` closes whatever is up; Escape routes
   through `brwsView._onEsc || closeBrowser`.
