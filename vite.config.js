@@ -12,6 +12,14 @@ export default {
     target: 'es2022',
     rollupOptions: { // second entry: the Chromecast CAF receiver page
       input: { main: resolve('index.html'), receiver: resolve('receiver.html') },
+      output: {
+        manualChunks(id) { // split heavy deps into cacheable chunks
+          if (!id.includes('node_modules')) return;
+          if (id.includes('three')) return 'three';
+          if (id.includes('spessasynth')) return 'synth';
+          return 'vendor';
+        },
+      },
     },
   },
   esbuild: { target: 'es2022' },

@@ -118,6 +118,20 @@ movie param means your working doc is what plays:
 In theatre and embed modes, `Space` toggles play/pause. `?play` starts
 playback immediately in the editor (screen modes already autoplay).
 
+### Casting
+
+In theatre mode the **cast** link (top left, next to settings) hands the
+movie off to a Chromecast: the TV plays it while this window stays as the
+remote — the editor/theatre chrome never leaves your screen. Two caveats:
+
+- The movie must be **URL-loadable** — casting works with `?3mm=` movies,
+  not locally edited/autosaved docs (there's nothing for the TV to fetch).
+- It needs a registered CAF receiver application id. Register one at
+  [cast.google.com/publish](https://cast.google.com/publish), then pass it
+  via `?castid=` (or `localStorage.castAppId`). The receiver is
+  `receiver.html` in this repo — publish your deployment's URL in the
+  console. `receiver.html?3mm=...` also runs standalone for testing.
+
 ### Recipes
 
 | Link | Opens |
@@ -181,6 +195,7 @@ pack somewhere CORS-enabled and use its URL instead.)
 | `packs` | Comma-separated `assets.json` URLs (or directories containing one) — imports [asset packs](#asset-packs) (e.g. `?packs=/expansions/NICK3D` locally, or a remote URL). |
 | `sf` | Sound bank URL for MIDI music (`.sf2`/`.sf3`/`.dls`) — overrides [auto-detection](#midi-sound). |
 | `lang` | UI language code (e.g. `?lang=fr`, or `auto` for the browser language) — loads `lang/<code>.json` over the bundled English strings; missing keys fall back to English. Drop additional `<code>.json` files into `public/lang/` to add a language (see `lang/en.json` for the key format). |
+| `castid` | Chromecast CAF receiver application id — overrides the built-in default for the **cast** link in theatre mode (see [casting](#casting)). |
 
 ## Render settings
 
@@ -252,9 +267,14 @@ Tests run on every PR and push via `.github/workflows/ci.yml`.
 src/format/    pure-JS Kauai format ports (chunky, movie, content, kcdc, wav, mids)
 src/engine/    scene/actor playback state, content library, sound queue, mat34
 src/render/    three.js renderer + canvas textbox layout
-src/main.js    app entry: player controls + studio editor chrome
+src/main.js    app entry: boot orchestrator — everything else lives in app/
+src/receiver.js Chromecast CAF receiver entry (receiver.html)
+src/app/       state (zustand), res, undo, boot, packs, thumbs, doc, loop,
+               opts, sndsrc, cast, i18n + edit/ (movie/sound/tbox mutations)
+src/app/ui/    the canvas UI — the only UI layer: UiRoot view stack, Element,
+               widgets, studio chrome, browsers, easels, bio, tips, theatre
 tools/         node CLI helpers for inspecting .3mm/.3cn files
-test/          node:test suite (unit + headless MoviePlayer integration)
+test/          vitest suite (unit + headless MoviePlayer integration)
 public/        game data files (content libs, thumbnails, UI art)
 ```
 
