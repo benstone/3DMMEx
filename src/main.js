@@ -1,4 +1,4 @@
-import { ChunkyFile } from './format/chunky.js';
+import { ChunkyFile, readGL } from './format/chunky.js';
 import { Reader } from './format/binary.js';
 import { SEVT, AET, parseMovie, serializeMovie } from './format/movie.js';
 import { decodeWavAdpcm } from './format/wav.js';
@@ -14,6 +14,9 @@ import * as THREE from 'three';
 import { version } from '../package.json';
 
 const B = import.meta.env.BASE_URL; // vite base ('/' dev, './' pages build)
+const packTex = new Map(); // asset-pack overrides: 'name.png'/'name.cur' -> blob URL (?packs=)
+const texUrl = (n) => packTex.get(`${n}.png`) || `${B}textures/${n}.png`;
+const curUrl = (n) => packTex.get(`${n}.cur`) || `${B}cur/${n}.cur`;
 const $ = (id) => document.getElementById(id);
 let player = null, playing = false, timer = null;
 
@@ -31,7 +34,7 @@ const bootBar = document.createElement('div'); bootBar.className = 'bootBar'; bo
 const bootFill = document.createElement('div'); bootFill.className = 'bootFill'; bootBar.appendChild(bootFill);
 const bootCap = document.createElement('div'); bootCap.className = 'bootCap';
 bootScr?.append(bootImg, bootBar, bootCap);
-const bootShow = (n) => { bootImg.src = `${B}textures/${n}.png`; };
+const bootShow = (n) => { bootImg.src = texUrl(`${n}`); };
 const bootDone = () => { bootEl?.classList.add('gone'); setTimeout(() => bootEl?.remove(), 400); };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const bootSegs = [];
@@ -46,6 +49,21 @@ const bootSeg = (w) => { // one weighted slice of the bar; cb updates its fracti
   };
 };
 const manifestP = fetch(`${B}manifest.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+// ?packs=url[,url...] — each entry is an assets.json URL (or a directory ending
+// in assets.json). Fetch manifests up front; the files are applied below once
+// the content library + thumbnail structures exist.
+const packsP = Promise.all(((new URLSearchParams(location.search).get('packs') || '').match(/[^,]+/g) || [])
+  .map(async (spec) => {
+    const url = /\.json([?#]|$)/i.test(spec) ? spec : `${spec.replace(/\/*$/, '/')}assets.json`;
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error(`${r.status}`);
+      const m = await r.json();
+      const files = Array.isArray(m) ? m : m?.files;
+      if (!Array.isArray(files)) throw new Error('no files array');
+      return { url: new URL(url, location.href).href, files };
+    } catch (e) { console.warn(`pack ${spec}: ${e.message}`); return null; }
+  }));
 // warm the UI bitmaps + cursors while the content files stream in (they'd
 // otherwise lazy-load through <img>/css and pop in on first open)
 const warmSeg = bootSeg(0.18);
@@ -75,7 +93,7 @@ const lib = await Library.load(`${B}data`, (n, got, tot) => {
 });
 const miscSeg = bootSeg(0.08);
 let miscN = 0;
-const miscTick = (cap) => miscSeg(++miscN / 7, cap); // pal + 6 thumbnail-file fetches
+const miscTick = (cap) => miscSeg(++miscN / 6, cap); // pal + 5 thumbnail-file fetches
 const pal = new Uint8Array(await (await fetch(`${B}data/socpal.pal`)).arrayBuffer());
 miscTick('loading palette');
 const renderer = new Renderer($('view'), pal);
@@ -85,56 +103,98 @@ const sounds = new SoundQueue(lib);
 const rcTmplThumbs = new Map();
 const brwsTmpls = { actor: [], prop: [], scene: [] }; // selector grids: {cno, name, mbmp} in .3th order
 const bkthCaths = new Map(); // bkgd cno -> Map(chid -> mbmp): camera-angle thumbs, social palette
-{
-  const tmplsCf = lib.content.find((cf) => cf.name === 'TMPLS.3CN');
-  const bkgdsCf = lib.content.find((cf) => cf.name === 'BKGDS.3CN');
-  for (const [file, ctg, kind] of [['actor.3th', 'TMTH', 'actor'], ['prop.3th', 'PRTH', 'prop'], ['bkgds.3th', 'BKTH', 'scene']]) {
-    try {
-      const th = new ChunkyFile(await (await fetch(`${B}data/${file}`)).arrayBuffer());
-      for (const t of th.ofType(ctg)) {
-        const d = th.data(ctg, t.cno);
-        const gk = t.kids.find((k) => k.ctg === 'GOKD');
-        const mk = gk && th.get('GOKD', gk.cno).kids.find((k) => k.ctg === 'MBMP');
-        if (mk && ctg === 'BKTH') { // BRWC browses the BKTH's CATH kids (chid = icam)
-          const m = new Map();
-          for (const k of t.kids) if (k.ctg === 'CATH') {
-            const g2 = th.get('CATH', k.cno)?.kids.find((x) => x.ctg === 'GOKD');
-            const m2 = g2 && th.get('GOKD', g2.cno).kids.find((x) => x.ctg === 'MBMP');
-            if (m2) m.set(k.chid, parseMbmp(th.data('MBMP', m2.cno)));
-          }
-          bkthCaths.set(t.cno, m);
-        }
-        if (mk) {
-          // TMTH/PRTH map via TFC @8; BKTH cno is the BKGD cno directly
-          const cno = ctg === 'BKTH' ? t.cno : new DataView(d.buffer, d.byteOffset).getUint32(8, true);
-          const mbmp = parseMbmp(th.data('MBMP', mk.cno));
-          if (ctg !== 'BKTH') rcTmplThumbs.set(cno, mbmp); // roll call only needs tmpl thumbs
-          brwsTmpls[kind].push({ cno, name: (ctg === 'BKTH' ? bkgdsCf?.get('BKGD', cno) : tmplsCf?.get('TMPL', cno))?.name || '', mbmp });
-        }
-      }
-    } catch (e) { console.warn(`${file}:`, e.message); }
-    miscTick(`loading ${file}`);
-  }
-}
 // spletter easel thumbs (easels.cht kctgTfth/kctgTsth/kctgMtth): the THD body is
 // bo+i16+ctg+i32 — TFTH/MTTH carry a content tag, TSTH carries '....' + the tdts
 const spltThumbs = { font: [], shape: [], mtrl: [] }; // {tag,mbmp} | {tdts,mbmp}
-{
-  for (const [file, ctg, kind] of [['actresl.3th', 'TFTH', 'font'], ['actresl.3th', 'TSTH', 'shape'], ['mtrl.3th', 'MTTH', 'mtrl']]) {
-    try {
-      const th = new ChunkyFile(await (await fetch(`${B}data/${file}`)).arrayBuffer());
-      for (const t of th.ofType(ctg)) {
-        const r = new Reader(th.data(ctg, t.cno)); r.bo(); r.i16();
-        const ctg2 = r.ctg(), cno = r.i32();
-        const gk = t.kids.find((k) => k.ctg === 'GOKD');
-        const mk = gk && th.get('GOKD', gk.cno).kids.find((k) => k.ctg === 'MBMP');
-        spltThumbs[kind].push(kind === 'shape'
-          ? { tdts: cno, mbmp: mk ? parseMbmp(th.data('MBMP', mk.cno)) : null }
-          : { tag: { sid: 2, ctg: ctg2, cno }, mbmp: mk ? parseMbmp(th.data('MBMP', mk.cno)) : null });
+const contentName = (ctg, cno) => // display name from whichever content file holds the chunk
+  lib.content.find((cf) => cf.has(ctg, cno))?.get(ctg, cno)?.name || '';
+function scanThumbFile(th, packPal = null) { // one .3th -> browser grids + easel thumbs (builtin data/ + asset packs); packPal = pack's 768-byte RGB palette (expansion thumbs index their own social palette)
+  const pm = (cno) => { const m = parseMbmp(th.data('MBMP', cno)); if (packPal) m.pal = packPal; return m; };
+  for (const [ctg, kind] of [['TMTH', 'actor'], ['PRTH', 'prop'], ['BKTH', 'scene']]) {
+    for (const t of th.ofType(ctg)) {
+      const d = th.data(ctg, t.cno);
+      const gk = t.kids.find((k) => k.ctg === 'GOKD');
+      const mk = gk && th.get('GOKD', gk.cno).kids.find((k) => k.ctg === 'MBMP');
+      if (mk && ctg === 'BKTH') { // BRWC browses the BKTH's CATH kids (chid = icam)
+        const m = new Map();
+        for (const k of t.kids) if (k.ctg === 'CATH') {
+          const g2 = th.get('CATH', k.cno)?.kids.find((x) => x.ctg === 'GOKD');
+          const m2 = g2 && th.get('GOKD', g2.cno).kids.find((x) => x.ctg === 'MBMP');
+          if (m2) m.set(k.chid, pm(m2.cno));
+        }
+        bkthCaths.set(t.cno, m);
       }
-    } catch (e) { console.warn(`${file}:`, e.message); }
-    miscTick(`loading ${file}`);
+      if (mk) {
+        // TMTH/PRTH map via TFC @8; BKTH cno is the BKGD cno directly
+        const cno = ctg === 'BKTH' ? t.cno : new DataView(d.buffer, d.byteOffset).getUint32(8, true);
+        const mbmp = pm(mk.cno);
+        if (ctg !== 'BKTH') rcTmplThumbs.set(cno, mbmp); // roll call only needs tmpl thumbs
+        brwsTmpls[kind].push({ cno, name: contentName(ctg === 'BKTH' ? 'BKGD' : 'TMPL', cno), mbmp });
+      }
+    }
   }
+  for (const [ctg, kind] of [['TFTH', 'font'], ['TSTH', 'shape'], ['MTTH', 'mtrl']]) {
+    for (const t of th.ofType(ctg)) {
+      const r = new Reader(th.data(ctg, t.cno)); r.bo(); r.i16();
+      const ctg2 = r.ctg(), cno = r.i32();
+      const gk = t.kids.find((k) => k.ctg === 'GOKD');
+      const mk = gk && th.get('GOKD', gk.cno).kids.find((k) => k.ctg === 'MBMP');
+      spltThumbs[kind].push(kind === 'shape'
+        ? { tdts: cno, mbmp: mk ? pm(mk.cno) : null }
+        : { tag: { sid: 2, ctg: ctg2, cno }, mbmp: mk ? pm(mk.cno) : null });
+    }
+  }
+}
+for (const file of ['actor.3th', 'prop.3th', 'bkgds.3th', 'actresl.3th', 'mtrl.3th']) {
+  try { scanThumbFile(new ChunkyFile(await (await fetch(`${B}data/${file}`)).arrayBuffer())); }
+  catch (e) { console.warn(`${file}:`, e.message); }
+  miscTick(`loading ${file}`);
+}
+// --- asset packs (?packs=) ---------------------------------------------------
+// Files are routed by extension: .3cn/.chk register a content library (actors,
+// props, backgrounds, materials, sounds; .chk files are the expansion's merge
+// patches — a 256-entry GLCR inside one is the pack's social palette for its
+// thumbnails), .3th/.nth append browser thumbnails, .png/.cur override UI
+// textures/cursors by basename. Pack chunks are purely additive (builtin
+// content wins cno collisions).
+const packNotes = []; // user-visible results, toasted after boot
+for (const pack of await packsP) {
+  const dir = pack ? new URL(pack.url).pathname.replace(/\/[^/]*$/, '').split('/').pop() : null;
+  if (!pack) { packNotes.push('asset pack failed to load'); continue; }
+  bootCap.textContent = 'loading asset pack';
+  try {
+    const items = await Promise.all(pack.files.map(async (rel) => {
+      try {
+        const base = decodeURIComponent(String(rel).split('/').pop());
+        const ext = (base.split('.').pop() || '').toLowerCase();
+        const r = await fetch(new URL(rel, pack.url).href);
+        if (!r.ok) throw new Error(`${r.status}`);
+        return { base, ext, blob: await r.blob() };
+      } catch (e) { console.warn(`pack ${rel}:`, e.message); return null; }
+    }));
+    const cfs = [], ths = [];
+    let packPal = null, loaded = 0;
+    for (const it of items) {
+      if (!it) continue;
+      if (it.ext === '3cn' || it.ext === 'chk' || it.ext === '3th' || it.ext === 'nth') {
+        const cf = new ChunkyFile(new Uint8Array(await it.blob.arrayBuffer()), it.base);
+        if (it.ext === '3cn' || it.ext === 'chk') {
+          cfs.push(cf);
+          if (!packPal) { // first 256-entry GLCR = the pack's social palette (CLR is b,g,r,0)
+            const gl = [...cf.ofType('GLCR')].map((c) => { try { return readGL(cf.data('GLCR', c.cno)); } catch { return null; } })
+              .find((g) => g && g.entries.length === 256);
+            if (gl) { packPal = new Uint8Array(768); gl.entries.forEach((e, i) => { packPal[i * 3] = e[2]; packPal[i * 3 + 1] = e[1]; packPal[i * 3 + 2] = e[0]; }); }
+          }
+        } else ths.push(cf);
+      } else if (it.ext === 'png' || it.ext === 'cur') {
+        packTex.set(it.base, URL.createObjectURL(it.blob));
+      } else { console.warn(`pack: skipped ${it.base}`); continue; }
+      loaded++;
+    }
+    lib.content.push(...cfs); // before the .3th scan so chunk names resolve
+    for (const th of ths) scanThumbFile(th, packPal);
+    packNotes.push(`${dir || 'pack'}: ${loaded}/${pack.files.length} assets loaded`);
+  } catch (e) { console.warn(`pack ${pack.url}:`, e.message); packNotes.push(`${dir || 'pack'} failed to load`); }
 }
 const rcThumbCache = new Map(); // tmpl cno (or 'a'+arid for TDT) -> 38x70 canvas
 function rcThumbFor(cno, actor) {
@@ -144,11 +204,12 @@ function rcThumbFor(cno, actor) {
     const m = rcTmplThumbs.get(cno);
     if (m) {
       const src = document.createElement('canvas'); src.width = m.width; src.height = m.height;
+      const P = m.pal || pal; // pack thumbs carry their own palette
       const x = src.getContext('2d'), im = x.createImageData(m.width, m.height);
       for (let i = 0; i < m.pixels.length; i++) {
         const p = m.pixels[i];
         if (p < 0) continue; // transparent run pixel
-        im.data[i * 4] = pal[p * 3]; im.data[i * 4 + 1] = pal[p * 3 + 1]; im.data[i * 4 + 2] = pal[p * 3 + 2]; im.data[i * 4 + 3] = 255;
+        im.data[i * 4] = P[p * 3]; im.data[i * 4 + 1] = P[p * 3 + 1]; im.data[i * 4 + 2] = P[p * 3 + 2]; im.data[i * 4 + 3] = 255;
       }
       x.putImageData(im, 0, 0);
       // original centers the bitmap in the 38x70 frame and clips (BRWR::_FSetThumFrame) — crop, don't stretch
@@ -200,7 +261,7 @@ function syncUndoBtn() {
   const b = $('stb_undo'); if (!b) return;
   const n = hist.mode === 'u' ? hist.undos.length : hist.redos.length;
   b._en = n > 0;
-  b.firstElementChild.src = `${B}textures/${n ? (hist.mode === 'u' ? 'undo' : 'undos') : 'undod'}.png`;
+  b.firstElementChild.src = texUrl(`${n ? (hist.mode === 'u' ? 'undo' : 'undos') : 'undod'}`);
 }
 
 // --- editor state (studio.cht kidBackground flags: fXYAxis/fRGround = fFalse) -
@@ -1438,33 +1499,33 @@ const stSliders = []; // {th, axis, min, span, get}
   view.addEventListener('pointercancel', endDrag);
   // FCmdMouseMove: armed tools show their cursor only while hovering an actor
   // (PactrFromPt), else the default cursor. cutactor/nukscen .cur hotspots (8,10)/(11,3).
-  const TOOL_CURS = { cut: `url(${B}cur/cutactor.cur) 8 10, auto`, nuke: `url(${B}cur/nukscen.cur) 11 3, auto`,
-    costume: `url(${B}cur/costume.cur) 0 6, auto`, rotx: `url(${B}cur/rotatex.cur) 8 15, auto`,
-    roty: `url(${B}cur/rotatey.cur) 14 7, auto`, rotz: `url(${B}cur/rotatez.cur) 10 15, auto`,
-    rotnorm: `url(${B}cur/normaliz.cur) 0 0, auto`,
-    sqsh: `url(${B}cur/squashst.cur) 7 7, auto`, size: `url(${B}cur/sizevenl.cur) 7 8, auto`,
-    sizenorm: `url(${B}cur/normaliz.cur) 0 0, auto`,
-    sooner: `url(${B}cur/squashst.cur) 7 7, auto`, // kcrsSoonerLater shares squashst.cur in the original
-    sounder: `url(${B}cur/cur00003.cur) 7 12, auto`, looper: `url(${B}cur/cur00002.cur) 5 10, auto`,
-    matcher: `url(${B}cur/cur00001.cur) 3 12, auto`, listener: `url(${B}cur/listen.cur) 4 4, auto`,
-    tbPaintText: `url(${B}cur/fontextc.cur) 0 3, auto`, tbFont: `url(${B}cur/fontextc.cur) 0 3, auto`,
-    tbSize: `url(${B}cur/fontextc.cur) 0 3, auto`, tbStyle: `url(${B}cur/fontextc.cur) 0 3, auto`,
-    tbFill: `url(${B}cur/textback.cur) 2 15, auto`, tbStory: `url(${B}cur/textback.cur) 2 15, auto`,
-    tbCredit: `url(${B}cur/textback.cur) 2 15, auto` };
+  const TOOL_CURS = { cut: `url(${curUrl('cutactor')}) 8 10, auto`, nuke: `url(${curUrl('nukscen')}) 11 3, auto`,
+    costume: `url(${curUrl('costume')}) 0 6, auto`, rotx: `url(${curUrl('rotatex')}) 8 15, auto`,
+    roty: `url(${curUrl('rotatey')}) 14 7, auto`, rotz: `url(${curUrl('rotatez')}) 10 15, auto`,
+    rotnorm: `url(${curUrl('normaliz')}) 0 0, auto`,
+    sqsh: `url(${curUrl('squashst')}) 7 7, auto`, size: `url(${curUrl('sizevenl')}) 7 8, auto`,
+    sizenorm: `url(${curUrl('normaliz')}) 0 0, auto`,
+    sooner: `url(${curUrl('squashst')}) 7 7, auto`, // kcrsSoonerLater shares squashst.cur in the original
+    sounder: `url(${curUrl('cur00003')}) 7 12, auto`, looper: `url(${curUrl('cur00002')}) 5 10, auto`,
+    matcher: `url(${curUrl('cur00001')}) 3 12, auto`, listener: `url(${curUrl('listen')}) 4 4, auto`,
+    tbPaintText: `url(${curUrl('fontextc')}) 0 3, auto`, tbFont: `url(${curUrl('fontextc')}) 0 3, auto`,
+    tbSize: `url(${curUrl('fontextc')}) 0 3, auto`, tbStyle: `url(${curUrl('fontextc')}) 0 3, auto`,
+    tbFill: `url(${curUrl('textback')}) 2 15, auto`, tbStory: `url(${curUrl('textback')}) 2 15, auto`,
+    tbCredit: `url(${curUrl('textback')}) 2 15, auto` };
   view.addEventListener('pointermove', (e) => {
     const [px, py] = lastViewPt = viewPx(e);
     if (tbAttach) { view.style.cursor = 'none'; return; }
     const cur = TOOL_CURS[ed.tool];
     if (TBX_TOOL[ed.tool] || (ed.tool === 'nuke' && pickTbox(px, py))) { // tbox tools cursor per TBXG/TBXB FCmdMouseMove
       const tb = pickTbox(px, py);
-      if (!tb) { view.style.cursor = ed.tool === 'tboxSel' ? `url(${B}cur/repositi.cur) 8 1, auto` : (cur || ''); return; }
+      if (!tb) { view.style.cursor = ed.tool === 'tboxSel' ? `url(${curUrl('repositi')}) 8 1, auto` : (cur || ''); return; }
       if (ed.tool === 'nuke') { view.style.cursor = TOOL_CURS.nuke; return; }
       const lx = px - tb.l, ly = py - tb.t, w = tb.r - tb.l, h = tb.b - tb.t;
       if (ed.tool === 'tboxSel') { // border anchor cursors; ibeam over the text
         if (inTboxBorder(lx, ly, w, h)) {
           const c = TB_ANCHOR_CURS[tbAnchor(lx, ly, w, h)];
-          view.style.cursor = `url(${B}cur/${c}.cur) ${TB_ANCHOR_HOT[c]}, auto`;
-        } else view.style.cursor = `url(${B}cur/ibeam.cur) 5 3, auto`;
+          view.style.cursor = `url(${curUrl(`${c}`)}) ${TB_ANCHOR_HOT[c]}, auto`;
+        } else view.style.cursor = `url(${curUrl('ibeam')}) 5 3, auto`;
         return;
       }
       view.style.cursor = cur || ''; // paint/fill/type tools show their cursor over the box
@@ -1543,7 +1604,7 @@ const stSliders = []; // {th, axis, min, span, get}
   });
   for (const [n, x, y, w, h] of STUDIO_IMGS) {
     const im = document.createElement('img');
-    im.src = `${B}textures/${n}.png`; im.className = 'stImg'; im.draggable = false;
+    im.src = texUrl(`${n}`); im.className = 'stImg'; im.draggable = false;
     studio.insertBefore(im, view); place(im, x, y, w, h);
   }
   for (const [id, x, y, w, h] of STUDIO_TXT) {
@@ -1589,7 +1650,7 @@ const stSliders = []; // {th, axis, min, span, get}
     const ov = document.createElement('div'); // transparent drag surface over the track
     ov.className = 'stSld'; studio.appendChild(ov); place(ov, x, y, w, h);
     const tim = document.createElement('img');
-    tim.src = `${B}textures/${img}.png`; tim.className = 'stImg stThumb'; tim.draggable = false;
+    tim.src = texUrl(`${img}`); tim.className = 'stImg stThumb'; tim.draggable = false;
     studio.appendChild(tim); place(tim, tx, ty, tw, th);
     stSliders.push({ th: tim, axis, min, span, get });
     ov.onpointerdown = (e) => {
@@ -1633,9 +1694,9 @@ const stSliders = []; // {th, axis, min, span, get}
     b.id = 'stb_' + id; b.className = 'stBtn';
     if (TIP_TEXT[id]) b.dataset.tip = TIP_TEXT[id]; // GOK's cnoTopic -> HBAL
     const im = document.createElement('img');
-    im.src = `${B}textures/${up}.png`; im.draggable = false;
+    im.src = texUrl(`${up}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, x, y, w, h);
-    b._sync = () => { im.src = `${B}textures/${b.classList.contains('on') || b.classList.contains('down') ? dn : up}.png`; };
+    b._sync = () => { im.src = texUrl(`${b.classList.contains('on') || b.classList.contains('down') ? dn : up}`); };
     b.onmousedown = () => { b.classList.add('down'); b._sync(); };
     b.onmouseup = b.onmouseleave = () => { b.classList.remove('down'); b._sync(); };
     if (ACTIONS[id]) b.onclick = () => ACTIONS[id]();
@@ -1661,13 +1722,13 @@ const stSliders = []; // {th, axis, min, span, get}
     const b = document.createElement('button');
     b.className = 'stBtn ccpCell';
     if (TIP_TEXT[bmp]) b.dataset.tip = TIP_TEXT[bmp]; // GOK's cnoTopic -> HBAL
-    const im = document.createElement('img'); im.src = `${B}textures/${bmp}.png`; im.draggable = false;
+    const im = document.createElement('img'); im.src = texUrl(`${bmp}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, 224 + x - 24, 354, 49, 52); // REP_MBMPREG kxpregCCP*=24: bitmaps draw gobpos-preg -> contiguous from bg left
     b.style.display = 'none';
     ccpCells.push(b);
     if (!tool) { im.style.opacity = '.35'; continue; }
     b._tool = tool; // pressed face (bmp+'c') also shows while the tool stays armed
-    b._sync = () => { im.src = `${B}textures/${bmp}${ed.tool === tool || b.classList.contains('down') ? 'c' : ''}.png`; };
+    b._sync = () => { im.src = texUrl(`${bmp}${ed.tool === tool || b.classList.contains('down') ? 'c' : ''}`); };
     b.onmousedown = () => { b.classList.add('down'); b._sync(); };
     b.onmouseup = b.onmouseleave = () => { b.classList.remove('down'); b._sync(); };
     b.onclick = () => { // CCP cell script: clear the actor tool (chttActor=chttNone), arm ours, close
@@ -1693,7 +1754,7 @@ const stSliders = []; // {th, axis, min, span, get}
   // portfolio popup (popups.cht kidPortsBackground): open rect (477,198)-(589,406);
   // children at child-y 52/104/156/208 with preg 52 -> 112x52 cells at y 198/250/302/354
   const portBg = document.createElement('img');
-  portBg.src = `${B}textures/p1par.png`; portBg.className = 'stImg'; portBg.draggable = false;
+  portBg.src = texUrl('p1par'); portBg.className = 'stImg'; portBg.draggable = false;
   studio.appendChild(portBg); place(portBg, 477, 198, 112, 208); portBg.style.display = 'none';
   const portCells = [];
   for (const [up, dn, y, fn] of [
@@ -1704,11 +1765,11 @@ const stSliders = []; // {th, axis, min, span, get}
   ]) {
     const b = document.createElement('button');
     b.className = 'stBtn';
-    const im = document.createElement('img'); im.src = `${B}textures/${up}.png`; im.draggable = false;
+    const im = document.createElement('img'); im.src = texUrl(`${up}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, 477, y, 112, 52);
     b.style.display = 'none';
     portCells.push(b);
-    b._sync = () => { im.src = `${B}textures/${b.classList.contains('down') ? dn : up}.png`; };
+    b._sync = () => { im.src = texUrl(`${b.classList.contains('down') ? dn : up}`); };
     b.onmousedown = () => { b.classList.add('down'); b._sync(); };
     b.onmouseup = b.onmouseleave = () => { b.classList.remove('down'); b._sync(); };
     b.onclick = () => { setPort(false); fn(); }; // child script: kstClosed, then EnqueueCid
@@ -1732,17 +1793,17 @@ const stSliders = []; // {th, axis, min, span, get}
   // rotate popup (popups.cht kidRotatePopup): p5par bg gobpos (293,271) preg (23,174)
   // -> tl (270,97) 46x176; cells child-x 46 preg (46,21) -> tl (270, 97/141/185/229) 46x44
   const rotBg = document.createElement('img');
-  rotBg.src = `${B}textures/p5par.png`; rotBg.className = 'stImg'; rotBg.draggable = false;
+  rotBg.src = texUrl('p5par'); rotBg.className = 'stImg'; rotBg.draggable = false;
   studio.appendChild(rotBg); place(rotBg, 270, 97, 46, 176); rotBg.style.display = 'none';
   const rotCells = [];
   for (const [bmp, y, tool] of [['p5rotx', 97, 'rotx'], ['p5roty', 141, 'roty'], ['p5rotz', 185, 'rotz'], ['p5norm', 229, 'rotnorm']]) {
     const b = document.createElement('button');
     b.className = 'stBtn ccpCell';
-    const im = document.createElement('img'); im.src = `${B}textures/${bmp}.png`; im.draggable = false;
+    const im = document.createElement('img'); im.src = texUrl(`${bmp}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, 270, y, 46, 44);
     b.style.display = 'none';
     rotCells.push(b);
-    b._sync = () => { im.src = `${B}textures/${bmp}${ed.tool === tool || b.classList.contains('down') ? 's' : ''}.png`; };
+    b._sync = () => { im.src = texUrl(`${bmp}${ed.tool === tool || b.classList.contains('down') ? 's' : ''}`); };
     b.onmousedown = () => { b.classList.add('down'); b._sync(); };
     b.onmouseup = b.onmouseleave = () => { b.classList.remove('down'); b._sync(); };
     b.onclick = () => { // cell script: deselect old tool, arm ours, select kidActorsRotate, close
@@ -1772,17 +1833,17 @@ const stSliders = []; // {th, axis, min, span, get}
   // preg (23,130) -> tl (437,97) 46x132; cells p4shrk/p4sqsh/p4norm preg (0,42)
   // -> tl (437, 97/141/185) 46x44 — order per pos3.chh is Shrink, Squash, Norm
   const trnBg = document.createElement('img');
-  trnBg.src = `${B}textures/p4par.png`; trnBg.className = 'stImg'; trnBg.draggable = false;
+  trnBg.src = texUrl('p4par'); trnBg.className = 'stImg'; trnBg.draggable = false;
   studio.appendChild(trnBg); place(trnBg, 437, 97, 46, 132); trnBg.style.display = 'none';
   const trnCells = [];
   for (const [bmp, y, tool] of [['p4shrk', 97, 'size'], ['p4sqsh', 141, 'sqsh'], ['p4norm', 185, 'sizenorm']]) {
     const b = document.createElement('button');
     b.className = 'stBtn ccpCell';
-    const im = document.createElement('img'); im.src = `${B}textures/${bmp}.png`; im.draggable = false;
+    const im = document.createElement('img'); im.src = texUrl(`${bmp}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, 437, y, 46, 44);
     b.style.display = 'none';
     trnCells.push(b);
-    b._sync = () => { im.src = `${B}textures/${bmp}${ed.tool === tool || b.classList.contains('down') ? 's' : ''}.png`; };
+    b._sync = () => { im.src = texUrl(`${bmp}${ed.tool === tool || b.classList.contains('down') ? 's' : ''}`); };
     b.onmousedown = () => { b.classList.add('down'); b._sync(); };
     b.onmouseup = b.onmouseleave = () => { b.classList.remove('down'); b._sync(); };
     b.onclick = () => { // cell script: deselect old tool, arm ours, select kidActorsTransform, close
@@ -1816,16 +1877,16 @@ const stSliders = []; // {th, axis, min, span, get}
   for (const [bmp, x, dn] of [['2sbtn', 247, -1], ['2lbtn', 320, 1]]) {
     const b = document.createElement('button');
     b.className = 'stBtn ccpCell';
-    const im = document.createElement('img'); im.src = `${B}textures/${bmp}.png`; im.draggable = false;
+    const im = document.createElement('img'); im.src = texUrl(`${bmp}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, x, 376, 73, 30);
     b.style.display = 'none';
     let rep = null, delay = 800;
-    const stop = () => { clearTimeout(rep); rep = null; delay = 800; b.classList.remove('down'); im.src = `${B}textures/${bmp}.png`; };
+    const stop = () => { clearTimeout(rep); rep = null; delay = 800; b.classList.remove('down'); im.src = texUrl(`${bmp}`); };
     const tick = () => { if (!sl) { stop(); return; } slTick(dn); if (sl) { delay = Math.max(400, delay - 100); rep = setTimeout(tick, delay); } }; // klwSLDelayMax->Min accel
     b.onpointerdown = (e) => {
       e.stopPropagation(); // the view's track-mouse would end the session
       if (!sl) { stop(); return; }
-      b.classList.add('down'); im.src = `${B}textures/${bmp}s.png`;
+      b.classList.add('down'); im.src = texUrl(`${bmp}s`);
       slTick(dn);
       rep = setTimeout(tick, delay);
     };
@@ -1870,17 +1931,17 @@ const stSliders = []; // {th, axis, min, span, get}
   // scroll-type popup (popups.cht kidScrollBackground): p7par (480,100) 46x88,
   // p7scrl (credits) -> chttTboxScroll/toolTboxCredit, p7nscr (story) -> toolTboxStory
   const scrlBg = document.createElement('img');
-  scrlBg.src = `${B}textures/p7par.png`; scrlBg.className = 'stImg'; scrlBg.draggable = false;
+  scrlBg.src = texUrl('p7par'); scrlBg.className = 'stImg'; scrlBg.draggable = false;
   studio.appendChild(scrlBg); place(scrlBg, 480, 100, 46, 88); scrlBg.style.display = 'none';
   const scrlCells = [];
   for (const [bmp, y, tool] of [['p7scrl', 100, 'tbCredit'], ['p7nscr', 144, 'tbStory']]) {
     const b = document.createElement('button');
     b.className = 'stBtn ccpCell';
-    const im = document.createElement('img'); im.src = `${B}textures/${bmp}.png`; im.draggable = false;
+    const im = document.createElement('img'); im.src = texUrl(`${bmp}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, 480, y, 46, 44);
     b.style.display = 'none';
     scrlCells.push(b);
-    b._sync = () => { im.src = `${B}textures/${bmp}${ed.tool === tool || b.classList.contains('down') ? 's' : ''}.png`; };
+    b._sync = () => { im.src = texUrl(`${bmp}${ed.tool === tool || b.classList.contains('down') ? 's' : ''}`); };
     b.onmousedown = () => { b.classList.add('down'); b._sync(); };
     b.onmouseup = b.onmouseleave = () => { b.classList.remove('down'); b._sync(); };
     b.onclick = () => { // cell script: SetTool, close the popup, keep 4scrl selected
@@ -1956,7 +2017,7 @@ const stSliders = []; // {th, axis, min, span, get}
     d.items.slice(tpop.pg * d.page, tpop.pg * d.page + d.page).forEach((it, i) => {
       const b = document.createElement('button');
       b.className = 'stBtn ccpCell';
-      const im = document.createElement('img'); im.src = `${B}textures/d8frm.png`; im.draggable = false;
+      const im = document.createElement('img'); im.src = texUrl('d8frm'); im.draggable = false;
       b.appendChild(im); studio.appendChild(b); place(b, d.x, d.y + i * d.fh, it.iscr !== undefined ? 102 : d.w, d.fh);
       const fill = document.createElement('div');
       b.appendChild(fill);
@@ -1974,8 +2035,8 @@ const stSliders = []; // {th, axis, min, span, get}
         sp.style.whiteSpace = 'nowrap';
         fill.appendChild(sp);
       }
-      b.onmouseenter = () => { im.src = `${B}textures/d8frmh.png`; };
-      b.onmouseleave = () => { im.src = `${B}textures/d8frm.png`; };
+      b.onmouseenter = () => { im.src = texUrl('d8frmh'); };
+      b.onmouseleave = () => { im.src = texUrl('d8frm'); };
       b.onclick = () => tpopPick(it);
       tpop.cells.push(b);
     });
@@ -1984,7 +2045,7 @@ const stSliders = []; // {th, axis, min, span, get}
       for (const [bmp, dn] of [['d8dn', 1], ['d8up', -1]]) {
         const b = document.createElement('button');
         b.className = 'stBtn ccpCell';
-        const im = document.createElement('img'); im.src = `${B}textures/${bmp}.png`; im.draggable = false;
+        const im = document.createElement('img'); im.src = texUrl(`${bmp}`); im.draggable = false;
         b.appendChild(im); studio.appendChild(b); place(b, d.x + (dn > 0 ? 0 : d.w / 2), d.y + d.page * d.fh, d.w / 2, 21);
         b.onclick = () => { tpop.pg = Math.max(0, Math.min(tpop.pg + dn, pages - 1)); buildTpopCells(); };
         tpop.cells.push(b);
@@ -2037,7 +2098,7 @@ const stSliders = []; // {th, axis, min, span, get}
       b.className = 'stBtn';
       const im = document.createElement('img'); im.draggable = false;
       b.appendChild(im); studio.appendChild(b); place(b, x, 394, w, 17);
-      const paint = () => { im.src = `${B}textures/${img}${b._en ? (b._dn ? 'c' : '') : 'd'}.png`; };
+      const paint = () => { im.src = texUrl(`${img}${b._en ? (b._dn ? 'c' : '') : 'd'}`); };
       b.onmousedown = () => { b._dn = true; paint(); };
       b.onmouseup = b.onmouseleave = () => { b._dn = false; paint(); };
       b.onclick = () => { if (b._en) { scroll(); L.sel = -1; syncRollCall(); } };
@@ -2085,9 +2146,9 @@ const stSliders = []; // {th, axis, min, span, get}
     b.className = 'stBtn';
     if (TIP_TEXT[up]) b.dataset.tip = TIP_TEXT[up]; // GOK's cnoTopic -> HBAL
     const im = document.createElement('img');
-    im.src = `${B}textures/${up}.png`; im.draggable = false;
+    im.src = texUrl(`${up}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, x, y, w, h);
-    b._sync = () => { im.src = `${B}textures/${b.classList.contains('on') || b.classList.contains('down') ? dn : up}.png`; };
+    b._sync = () => { im.src = texUrl(`${b.classList.contains('on') || b.classList.contains('down') ? dn : up}`); };
     b.onmousedown = () => { b.classList.add('down'); b._sync(); };
     b.onmouseup = b.onmouseleave = () => { b.classList.remove('down'); b._sync(); };
     b.onclick = onclick;
@@ -2102,25 +2163,25 @@ const stSliders = []; // {th, axis, min, span, get}
     t.rowEl.hidden = true;
     studio.appendChild(t.rowEl);
     const bg = document.createElement('img');
-    bg.src = `${B}textures/${t.row}.png`; bg.className = 'stImg'; bg.draggable = false;
+    bg.src = texUrl(`${t.row}`); bg.className = 'stImg'; bg.draggable = false;
     t.rowEl.appendChild(bg); place(bg, 0, 47, 640, 51);
     t.secBtns = {};
     for (const [bmp, x, w, act, anim] of t.sec) { // act: 'tog:key' toggle | string = browser | fn = command | none = radio tool; anim = cycling default-face cells
       const b = mkTbBtn(bmp, x, 48, w || 50, 48, null);
       if (anim) { // REP_ANIM default state (e.g. kidActorsActionBrowser: 2act01-06); on/down face is bmp
         b._anim = anim; b._ai = 0;
-        b._sync = () => { b.firstElementChild.src = `${B}textures/${b.classList.contains('on') || b.classList.contains('down') ? bmp : b._anim[b._ai]}.png`; };
+        b._sync = () => { b.firstElementChild.src = texUrl(`${b.classList.contains('on') || b.classList.contains('down') ? bmp : b._anim[b._ai]}`); };
         b._sync(); animBtns.push(b);
       }
       if (typeof act === 'string' && act.startsWith('tog:')) {
         if (act === 'tog:pause') { // kidPausesSound: open/closed faces by fpseDown, not a tool
-          b._sync = () => { b.firstElementChild.src = `${B}textures/${ed.pauseSnd ? '1notes' : '1note'}.png`;
+          b._sync = () => { b.firstElementChild.src = texUrl(`${ed.pauseSnd ? '1notes' : '1note'}`);
             b.firstElementChild.style.filter = b.classList.contains('down') ? 'brightness(.6)' : ''; };
           b.onclick = () => editPause(!ed.pauseSnd);
         } else {
           const key = act.slice(4); // faces per sectools.cht: xy on='2xys'/XZ off='2xy'; ground on='2zero'/off='2zeros'
           b._sync = () => { const on = ed[key];
-            b.firstElementChild.src = `${B}textures/${on === (key === 'ground') ? bmp : bmp + 's'}.png`;
+            b.firstElementChild.src = texUrl(`${on === (key === 'ground') ? bmp : bmp + 's'}`);
             b.firstElementChild.style.filter = b.classList.contains('down') ? 'brightness(.6)' : ''; };
           b.onclick = () => { ed[key] = !ed[key]; b._sync(); };
         }
@@ -2147,14 +2208,14 @@ const stSliders = []; // {th, axis, min, span, get}
     t.doorZone.className = 'stBtn doorZone';
     t.rowEl.appendChild(t.doorZone); place(t.doorZone, t.dx, 47, 640 - t.dx, 51);
     const paintDoor = () => {
-      t.doorEl.src = `${B}textures/door${t.all ? t.door - 4 : t.door}.png`; // door5-8 -> door1-4
+      t.doorEl.src = texUrl(`door${t.all ? t.door - 4 : t.door}`); // door5-8 -> door1-4
       t.doorZone.style.display = t.all ? 'none' : '';
     };
     t.doorZone.onclick = () => { if (!player?.scene) return; t.all = true; paintDoor(); }; // doors stay shut until tools are enabled
     paintDoor(); t.paintDoor = paintDoor;
     // cover tab — on top of the insert buttons; open = hidden (covr*o is transparent)
     t.covEl = document.createElement('img');
-    t.covEl.src = `${B}textures/${t.cov}c.png`; t.covEl.className = 'covImg'; t.covEl.draggable = false;
+    t.covEl.src = texUrl(`${t.cov}c`); t.covEl.className = 'covImg'; t.covEl.draggable = false;
     studio.appendChild(t.covEl); place(t.covEl, t.cx, 0, t.cov === 'covr1' ? 99 : t.cov === 'covr2' ? 223 : t.cov === 'covr3' ? 220 : 98, 43);
     t.covEl.onclick = () => { if (!t.locked) setCover(t.id); }; // kstDisabled face is inert
   }
@@ -2182,7 +2243,7 @@ const stSliders = []; // {th, axis, min, span, get}
   const stripLids = [];
   for (const [bmp, x, y, w, h] of [['door0', 0, 47, 640, 51], ['covr5c', 0, 410, 362, 56], ['covr7c', 364, 410, 110, 56]]) { // kidDoors kstDefault face (door0.bmp) + gob pos + preg -> drawn rects
     const im = document.createElement('img');
-    im.src = `${B}textures/${bmp}.png`; im.className = 'stImg'; im.draggable = false; im.style.display = 'none';
+    im.src = texUrl(`${bmp}`); im.className = 'stImg'; im.draggable = false; im.style.display = 'none';
     studio.appendChild(im); place(im, x, y, w, h);
     stripLids.push(im);
   }
@@ -2192,7 +2253,7 @@ const stSliders = []; // {th, axis, min, span, get}
     for (const t of TB) {
       if (t.id === 'scenes') continue;
       t.locked = noScene;
-      t.covEl.src = `${B}textures/${t.cov}${noScene ? 'd' : 'c'}.png`;
+      t.covEl.src = texUrl(`${t.cov}${noScene ? 'd' : 'c'}`);
       t.covEl.style.cursor = noScene ? 'default' : '';
     }
     if (noScene) {
@@ -2224,7 +2285,7 @@ function syncStudio() { // reflect player state into the studio bar (called from
       if (!snd) for (const a of player.actors.values())
         for (const ev of a.events || []) if (ev.nfrm === player.frame && ev.aet === AET.Snd) { snd = true; break; }
     }
-    const fth = stSliders[0]?.th, src = `${B}textures/fthm${snd ? 's' : ''}.png`;
+    const fth = stSliders[0]?.th, src = texUrl(`fthm${snd ? 's' : ''}`);
     if (fth && !fth.src.endsWith(`/fthm${snd ? 's' : ''}.png`)) fth.src = src;
   }
   syncRollCall();
@@ -2240,7 +2301,7 @@ function syncRollCall() { // actor + prop roll calls: 4 cells each + page arrows
     for (let i = 0; i < 4; i++) {
       const a = acts[L.off + i], cell = L.cells[i];
       const st = !a ? '' : L.off + i === L.sel ? 's' : 'e';
-      if (cell._st !== st) { cell.im.src = `${B}textures/${L.prefix}${i + 1}${st}.png`; cell._st = st; }
+      if (cell._st !== st) { cell.im.src = texUrl(`${L.prefix}${i + 1}${st}`); cell._st = st; }
       const ctx = cell.cv.getContext('2d');
       ctx.clearRect(0, 0, 38, 70);
       if (a) ctx.drawImage(rcThumbFor(a.data.tagTmpl?.cno, a), 0, 0);
@@ -2272,8 +2333,10 @@ const userSnds = []; // imported/recorded: {kind:'fx'|'speech'|'music', name, bu
 function getSndItems() { // MSNDs: WAVE kid = fx, MIDS kid = music; + user sounds tagged by browser
   if (!sndItems) {
     sndItems = { fx: [], music: [], speech: [] };
-    const cf = lib.content.find((c) => c.name === 'SNDS.3CN');
-    if (cf) for (const m of cf.ofType('MSND')) {
+    const seen = new Set(); // all content files (builtin + asset packs); first cf wins a cno, matching resolve()
+    for (const cf of lib.content) for (const m of cf.ofType('MSND')) {
+      if (seen.has(m.cno)) continue;
+      seen.add(m.cno);
       const kids = cf.kidsOf('MSND', m.cno).map((k) => k.ctg);
       sndItems[kids.includes('MIDS') ? 'music' : 'fx'].push({ cno: m.cno, name: m.name });
     }
@@ -2371,11 +2434,12 @@ function importSndFiles(kind) {
 function mbmpCanvas(m, w, h) { // draw an MBMP scaled into wxh — all baked thumbs index the social palette
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const src = document.createElement('canvas'); src.width = m.width; src.height = m.height;
+  const P = m.pal || pal; // asset-pack thumbs carry their own palette (e.g. NICK3D.CHK GLCR)
   const x = src.getContext('2d'), im = x.createImageData(m.width, m.height);
   for (let i = 0; i < m.pixels.length; i++) {
     const p = m.pixels[i];
     if (p < 0) continue;
-    im.data[i * 4] = pal[p * 3]; im.data[i * 4 + 1] = pal[p * 3 + 1]; im.data[i * 4 + 2] = pal[p * 3 + 2];
+    im.data[i * 4] = P[p * 3]; im.data[i * 4 + 1] = P[p * 3 + 1]; im.data[i * 4 + 2] = P[p * 3 + 2];
     im.data[i * 4 + 3] = 255;
   }
   x.putImageData(im, 0, 0);
@@ -2396,7 +2460,7 @@ function brwsShell() { // shared: overlay div + % placement helper
   };
   const mkImg = (n, x, y, w, h, cls = 'stImg') => {
     const im = document.createElement('img');
-    im.src = `${B}textures/${n}.png`; im.className = cls; im.draggable = false;
+    im.src = texUrl(`${n}`); im.className = cls; im.draggable = false;
     brwsEl.appendChild(im); place(im, x, y, w, h);
     return im;
   };
@@ -2404,10 +2468,10 @@ function brwsShell() { // shared: overlay div + % placement helper
     const b = document.createElement('button');
     b.className = 'stBtn';
     const im = document.createElement('img');
-    im.src = `${B}textures/${up}.png`; im.draggable = false;
+    im.src = texUrl(`${up}`); im.draggable = false;
     b.appendChild(im); brwsEl.appendChild(b); place(b, x, y, w, h);
-    b.onmousedown = () => { im.src = `${B}textures/${dn}.png`; };
-    b.onmouseup = b.onmouseleave = () => { im.src = `${B}textures/${up}.png`; };
+    b.onmousedown = () => { im.src = texUrl(`${dn}`); };
+    b.onmouseup = b.onmouseleave = () => { im.src = texUrl(`${up}`); };
     if (act) b.onclick = act;
     return b;
   };
@@ -2477,7 +2541,7 @@ function showBrowser(kind, importItems = null) {
   for (let c = 0; c < d.cols; c++) for (let r = 0; r < d.rows; r++) { // sound lists fill column-major
     const b = document.createElement('button');
     b.className = 'stBtn brwsCell';
-    const fim = document.createElement('img'); fim.src = `${B}textures/${d.fr}.png`; fim.draggable = false;
+    const fim = document.createElement('img'); fim.src = texUrl(`${d.fr}`); fim.draggable = false;
     b.appendChild(fim); brwsEl.appendChild(b);
     place(b, d.x + d.x0 + c * d.sx, d.y + d.y0 + r * d.sy, d.fw, d.fh);
     const cv = document.createElement('canvas');
@@ -2520,10 +2584,10 @@ function showBrowser(kind, importItems = null) {
         x.font = '10px "Comic Sans MS", cursive, sans-serif';
         x.fillText(it.name, cv.width / 2, cv.height / 2);
       }
-      b.onmousedown = () => { fim.src = `${B}textures/${d.fr}h.png`; };
-      b.onmouseup = b.onmouseleave = () => { fim.src = page * perPage + i === sel ? `${B}textures/${d.fr}h.png` : `${B}textures/${d.fr}.png`; };
+      b.onmousedown = () => { fim.src = texUrl(`${d.fr}h`); };
+      b.onmouseup = b.onmouseleave = () => { fim.src = page * perPage + i === sel ? texUrl(`${d.fr}h`) : texUrl(`${d.fr}`); };
       b.onclick = d.ok
-        ? () => { sel = page * perPage + i; for (const o of cells) o.fim.src = `${B}textures/${d.fr}.png`; fim.src = `${B}textures/${d.fr}h.png`; previewItem(it); }
+        ? () => { sel = page * perPage + i; for (const o of cells) o.fim.src = texUrl(`${d.fr}`); fim.src = texUrl(`${d.fr}h`); previewItem(it); }
         : () => {
             if (kind === 'bkgd') editBkgd(it.cno, it.name); // FSetBkgdCore: fill empty scene else insert new
             else if (kind === 'cam') editCam(it.icam); // kidBrwsCamera -> ChngCamera event
@@ -2595,8 +2659,8 @@ function showSceneSorter() {
     im.onmousedown = () => { tool = t; syncTools(); };
   }
   const syncTools = () => {
-    hand.src = `${B}textures/e3hand${tool === 'hand' ? 'c' : ''}.png`;
-    nuke.src = `${B}textures/e3rmsn${tool === 'nuke' ? 'c' : ''}.png`;
+    hand.src = texUrl(`e3hand${tool === 'hand' ? 'c' : ''}`);
+    nuke.src = texUrl(`e3rmsn${tool === 'nuke' ? 'c' : ''}`);
   };
   const sup = mkImg('e3up', PX + 580, PY + 2, 17, 19);       // kidSSorterScrollUp (hidden when disabled)
   const sdn = mkImg('e3down', PX + 580, PY + 273, 17, 19);   // kidSSorterScrollDn
@@ -2605,12 +2669,12 @@ function showSceneSorter() {
     const step = () => { top = Math.max(0, Math.min(items.length - 1, top + d * 3)); sync(); }; // FCmdScroll ±nxFrame
     el.style.cursor = 'pointer';
     el.onmousedown = () => {
-      el.src = `${B}textures/${dn}.png`; step();
+      el.src = texUrl(`${dn}`); step();
       let del = 250;
       const go = () => { step(); del = Math.max(80, del - 20); tm = setTimeout(go, del); };
       tm = setTimeout(go, del);
     };
-    el.onmouseup = el.onmouseleave = () => { el.src = `${B}textures/${el === sup ? 'e3up' : 'e3down'}.png`; clearTimeout(tm); };
+    el.onmouseup = el.onmouseleave = () => { el.src = texUrl(`${el === sup ? 'e3up' : 'e3down'}`); clearTimeout(tm); };
   }
 
   function sync() { // _FResetThumbnails + _EnableScroll
@@ -2619,9 +2683,9 @@ function showSceneSorter() {
       c.fim.style.display = c.cv.style.display = it ? '' : 'none';
       for (const t of c.tbs) t.style.display = it ? '' : 'none';
       if (!it) continue;
-      c.fim.src = `${B}textures/${top + i === cur ? 'e3frms' : 'e3frm'}.png`;
+      c.fim.src = texUrl(`${top + i === cur ? 'e3frms' : 'e3frm'}`);
       c.cv.getContext('2d').drawImage(thumbCv(it.scen), 0, 0);
-      c.tbs.forEach((t, j) => { t.src = `${B}textures/e3trn${j + 1}${it.trans === T4[j] ? 's' : ''}.png`; });
+      c.tbs.forEach((t, j) => { t.src = texUrl(`e3trn${j + 1}${it.trans === T4[j] ? 's' : ''}`); });
     }
     sup.style.display = top > 0 ? '' : 'none';
     sdn.style.display = top + 6 < items.length ? '' : 'none';
@@ -2649,7 +2713,7 @@ function showSceneSorter() {
     const g = document.createElement('div'); // idSelFrame — dragged ghost of the selected cell
     g.style.cssText = 'position:absolute;pointer-events:none;';
     const gf = document.createElement('img');
-    gf.src = `${B}textures/e3frms.png`; gf.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%';
+    gf.src = texUrl('e3frms'); gf.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%';
     const gv = document.createElement('canvas');
     gv.width = 143; gv.height = 80;
     gv.getContext('2d').drawImage(thumbCv(items[cur].scen), 0, 0);
@@ -2791,11 +2855,11 @@ function showRecorder(kind) {
   };
   const stopRec = () => { if (rec?.state === 'recording') rec.stop(); rec = null; };
   const mikeBtn = mkBtn('e5mike', 'e5mikes', 213, 269, 50, 48, async () => {
-    if (rec?.state === 'recording') { stopRec(); mikeBtn.querySelector('img').src = `${B}textures/e5mike.png`; }
+    if (rec?.state === 'recording') { stopRec(); mikeBtn.querySelector('img').src = texUrl('e5mike'); }
     else { sounds.ensure(); await startRec(); }
   });
   mikeBtn.onmouseup = mikeBtn.onmouseleave = () => {
-    mikeBtn.querySelector('img').src = `${B}textures/e5${rec?.state === 'recording' ? 'mikes' : 'mike'}.png`; // hold selected while recording
+    mikeBtn.querySelector('img').src = texUrl(`e5${rec?.state === 'recording' ? 'mikes' : 'mike'}`); // hold selected while recording
   };
   mkBtn('e5play', 'e5plays', 265, 269, 50, 48, () => { stopRec(); if (take?.buf) sounds.preview({ buf: take.buf }); });
   mkBtn('e5can', 'e5canc', 329, 269, 50, 48, () => done(false));
@@ -2839,19 +2903,19 @@ function showListenerEasel(a) {
     const nm = document.createElement('button'); // e4audit name plate (click = audition)
     nm.className = 'stBtn'; brwsEl.appendChild(nm); place(nm, X + ex, Y + 150, 122, 20);
     const nim = document.createElement('img');
-    nim.src = `${B}textures/e4audit.png`; nim.className = 'stImg'; nim.draggable = false;
+    nim.src = texUrl('e4audit'); nim.className = 'stImg'; nim.draggable = false;
     nm.appendChild(nim);
     const nmt = document.createElement('span');
     nmt.className = 'lisNameTxt'; nmt.textContent = sndName(q.tags);
     nm.appendChild(nmt);
-    nm.onmousedown = () => { nim.src = `${B}textures/e4auditc.png`; };
-    nm.onmouseup = nm.onmouseleave = () => { nim.src = `${B}textures/e4audit.png`; };
+    nm.onmousedown = () => { nim.src = texUrl('e4auditc'); };
+    nm.onmouseup = nm.onmouseleave = () => { nim.src = texUrl('e4audit'); };
     nm.onclick = audition;
     colEls.push(nm);
     const sld = document.createElement('div'); // volume track (l,20)-(r,138), thumb travels y 20..128
     sld.className = 'stSld'; brwsEl.appendChild(sld); place(sld, X + sl, Y + 20, sr - sl, 118);
     const th = document.createElement('img'); // e4vol1 thumb, MoveAbsGob(kxpSliderThumb=5, yPos)
-    th.src = `${B}textures/e4vol1.png`; th.className = 'stImg stThumb'; th.draggable = false;
+    th.src = texUrl('e4vol1'); th.className = 'stImg stThumb'; th.draggable = false;
     brwsEl.appendChild(th);
     const yPos0 = 100 - Math.round(q.vlm * 101); // yPos = yNuke - vlm*FullDisplay/kvlmFull
     const setY = (yp) => { sld._yp = yp; place(th, X + sl + 5, Y + 20 + yp, 21, 11); };
@@ -2973,7 +3037,7 @@ function showSpletter(editA) {
     items.slice(pop.pg * d.page, pop.pg * d.page + d.page).forEach((it, i) => {
       const idx = pop.pg * d.page + i, sel = idx === cur;
       const b = document.createElement('button'); b.className = 'stBtn ccpCell';
-      const fim = document.createElement('img'); fim.src = `${B}textures/d1frm${sel ? 'h' : ''}.png`; fim.draggable = false;
+      const fim = document.createElement('img'); fim.src = texUrl(`d1frm${sel ? 'h' : ''}`); fim.draggable = false;
       b.appendChild(fim); brwsEl.appendChild(b); place(b, d.x, d.y + i * d.fh, d.w, d.fh);
       const cv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;pointer-events:none;';
       b.appendChild(cv);
@@ -2984,18 +3048,18 @@ function showSpletter(editA) {
         cv.style.left = `calc(50% - ${cw / 2}px)`; cv.style.top = `calc(50% - ${ch / 2}px)`;
         cv.getContext('2d').drawImage(mbmpCanvas(it.mbmp, cw, ch), 0, 0);
       }
-      b.onmousedown = () => { fim.src = `${B}textures/d1frmh.png`; };
-      b.onmouseup = b.onmouseleave = () => { fim.src = `${B}textures/d1frm${sel ? 'h' : ''}.png`; };
+      b.onmousedown = () => { fim.src = texUrl('d1frmh'); };
+      b.onmouseup = b.onmouseleave = () => { fim.src = texUrl(`d1frm${sel ? 'h' : ''}`); };
       b.onclick = () => popPick(it);
       pop.cells.push(b);
     });
     const last = Math.ceil(items.length / d.page) - 1;
     for (const [bmp, off, pg] of [['d1up', 0, 0], ['d1dn', d.w / 2, last]]) { // up = first page, dn = last
       const b = document.createElement('button'); b.className = 'stBtn ccpCell';
-      const im = document.createElement('img'); im.src = `${B}textures/${bmp}.png`; im.draggable = false;
+      const im = document.createElement('img'); im.src = texUrl(`${bmp}`); im.draggable = false;
       b.appendChild(im); brwsEl.appendChild(b); place(b, d.x + off, d.y + d.ay, d.w / 2, d.h - d.ay);
-      b.onmousedown = () => { im.src = `${B}textures/${bmp}s.png`; };
-      b.onmouseup = b.onmouseleave = () => { im.src = `${B}textures/${bmp}.png`; };
+      b.onmousedown = () => { im.src = texUrl(`${bmp}s`); };
+      b.onmouseup = b.onmouseleave = () => { im.src = texUrl(`${bmp}`); };
       b.onclick = () => { if (pop.pg !== pg) { pop.pg = pg; popCells(); } };
       pop.cells.push(b);
     }
@@ -3117,7 +3181,7 @@ function showActionBrowser() {
   for (let c = 0; c < 2; c++) for (let r = 0; r < 10; r++) { // frame5 name cells at rel (15+143c, 32+28r)
     const b = document.createElement('button');
     b.className = 'stBtn brwsCell';
-    const fim = document.createElement('img'); fim.src = `${B}textures/frame5.png`; fim.draggable = false;
+    const fim = document.createElement('img'); fim.src = texUrl('frame5'); fim.draggable = false;
     b.appendChild(fim); brwsEl.appendChild(b); place(b, X + 15 + c * 143, Y + 32 + r * 28, 138, 25);
     const cv = document.createElement('canvas'); cv.className = 'brwsCv'; brwsEl.appendChild(cv);
     place(cv, X + 19 + c * 143, Y + 36 + r * 28, 130, 17);
@@ -3153,9 +3217,9 @@ function showActionBrowser() {
       x.fillStyle = '#222'; x.textAlign = 'center'; x.textBaseline = 'middle';
       x.font = '10px "Comic Sans MS", cursive, sans-serif';
       x.fillText(it.name, cv.width / 2, cv.height / 2);
-      b.onmousedown = () => { fim.src = `${B}textures/frame5h.png`; };
-      b.onmouseup = b.onmouseleave = () => { fim.src = sel === page * perPage + i ? `${B}textures/frame5h.png` : `${B}textures/frame5.png`; };
-      b.onclick = () => { sel = page * perPage + i; for (const o of cells) o.fim.src = `${B}textures/frame5.png`; fim.src = `${B}textures/frame5h.png`; setAnid(it.anid); };
+      b.onmousedown = () => { fim.src = texUrl('frame5h'); };
+      b.onmouseup = b.onmouseleave = () => { fim.src = sel === page * perPage + i ? texUrl('frame5h') : texUrl('frame5'); };
+      b.onclick = () => { sel = page * perPage + i; for (const o of cells) o.fim.src = texUrl('frame5'); fim.src = texUrl('frame5h'); setAnid(it.anid); };
     }
   }
   render();
@@ -3260,7 +3324,7 @@ function showCostumeEasel(a) {
   const modeBtn = (up, dn, x, f) => { // costumes/accessories are radio-selected (kstSelected face)
     const b = mkBtn(up, dn, x, 356, 50, 48, () => { fAcc = f; syncModes(); });
     b._mode = () => fAcc === f;
-    b._sync2 = () => { b.firstElementChild.src = `${B}textures/${b._mode() ? dn : up}.png`; };
+    b._sync2 = () => { b.firstElementChild.src = texUrl(`${b._mode() ? dn : up}`); };
     b.onmouseup = b.onmouseleave = () => b._sync2();
     return b;
   };
@@ -3322,7 +3386,7 @@ function showBio(bit = bioState.page) {
   const render = () => {
     bioState.page = bit; bioSave();
     const [l, t, w, h] = BIO_POS[bit] ?? [42, 60, 549, 359];
-    pageIm.src = `${B}textures/biopg${bit + 1}.png`; place(pageIm, l, t, w, h);
+    pageIm.src = texUrl(`biopg${bit + 1}`); place(pageIm, l, t, w, h);
     const ai = BIO_ACTOR[bit];
     const name = ai == null ? '' : (brwsTmpls.actor[ai]?.name || 'actor');
     txt.innerHTML = `<b>${name}</b>${BIO_BLURB[bit] ? '<br><br>' + name + ' ' + BIO_BLURB[bit] : ''}`;
@@ -3474,10 +3538,10 @@ const mkThBtn = (up, dn, act) => {
   const b = document.createElement('button');
   b.className = 'stBtn';
   const im = document.createElement('img');
-  const face = () => `${B}textures/${typeof up === 'function' ? up() : up}.png`;
+  const face = () => texUrl(`${typeof up === 'function' ? up() : up}`);
   im.src = face(); im.draggable = false;
   b.appendChild(im);
-  b.onmousedown = () => { if (dn) im.src = `${B}textures/${dn}.png`; };
+  b.onmousedown = () => { if (dn) im.src = texUrl(`${dn}`); };
   b.onmouseup = b.onmouseleave = () => { im.src = face(); };
   b.onclick = act;
   return { b, im };
@@ -3495,7 +3559,7 @@ const mkVol = () => { // kgobTheaterVolume slidepath + thumb
   const vpath = document.createElement('div');
   vpath.className = 'thVol';
   const vth = document.createElement('img');
-  vth.src = `${B}textures/thvol.png`; vth.className = 'stImg thVolT'; vth.draggable = false;
+  vth.src = texUrl('thvol'); vth.className = 'stImg thVolT'; vth.draggable = false;
   vpath.appendChild(vth);
   const setVol = (y) => { // _kdySlider: 62 units of travel on the 74-high path
     sounds.setVolume(1 - Math.max(0, Math.min(62, y)) / 62);
@@ -3523,7 +3587,7 @@ function enterTheatre() {
     el.style.width = (w / 6.4) + '%'; el.style.height = (h / 4.8) + '%';
   };
   const bg = document.createElement('img');
-  bg.className = 'stImg'; bg.src = `${B}textures/theatre1.png`; bg.draggable = false;
+  bg.className = 'stImg'; bg.src = texUrl('theatre1'); bg.draggable = false;
   th.appendChild(bg); place(bg, 0, 0, 640, 480);
   const scr = document.createElement('div'); // kgobMovie workspace
   scr.className = 'thScr'; th.appendChild(scr); place(scr, 48, 85, 544, 306);
@@ -3538,8 +3602,8 @@ function enterTheatre() {
   const vpath = mkVol(); th.appendChild(vpath); place(vpath, 9, 110, 12, 74);
   studio.appendChild(th); mkSetLink(th);
   modeSync = () => { // lights dim while the movie rolls (kst3 -> the1dark)
-    bg.src = `${B}textures/${playing ? 'the1dark' : 'theatre1'}.png`;
-    playB.im.src = `${B}textures/${playing ? 'thstop' : 'thplay'}.png`;
+    bg.src = texUrl(`${playing ? 'the1dark' : 'theatre1'}`);
+    playB.im.src = texUrl(`${playing ? 'thstop' : 'thplay'}`);
     vpath.hidden = !playing;
   };
   modeSync();
@@ -3560,7 +3624,7 @@ function enterEmbed() { // bare movie screen — controls float above the corner
   const playB = mkThBtn(() => playing ? 'thstop' : 'thplay', null, () => setPlaying(!playing));
   playB.b.classList.add('emPlay'); em.appendChild(playB.b);
   studio.appendChild(em); mkSetLink(em);
-  modeSync = () => { playB.im.src = `${B}textures/${playing ? 'thstop' : 'thplay'}.png`; };
+  modeSync = () => { playB.im.src = texUrl(`${playing ? 'thstop' : 'thplay'}`); };
   modeSync();
 }
 document.addEventListener('keydown', (e) => { // Space = play/pause in theatre/embed (editor owns Space for tbox typing)
@@ -3600,7 +3664,7 @@ if (!booted) {
 await sleep(Math.max(0, 500 - (performance.now() - splashT0))); // don't flash the splash on a warm cache (kdtsSplashScreen, scaled way down)
 if (!booted) newMovie(); // straight to the editor — no menu
 bootDone();
-if (bootErr) setTimeout(() => say(bootErr), 400); // toast after the splash fades
+[bootErr, ...packNotes].filter(Boolean).forEach((n, i) => setTimeout(() => say(n), 400 + i * 3400)); // toasts after the splash fades
 const bootMode = qs.get('mode');
 if (bootMode === 'theatre' || bootMode === 'embed') { // cinema/embed views instead of the editor (works for the autosaved doc too, so the studio's theatre link can open it)
   (bootMode === 'theatre' ? enterTheatre : enterEmbed)();
