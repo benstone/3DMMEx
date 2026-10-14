@@ -1,7 +1,6 @@
 import * as M from '../../engine/mat34.js';
 import * as THREE from 'three';
 import { Actor } from '../../engine/actor.js';
-import { $, texUrl } from '../res.js';
 import { FPS } from '../../engine/player.js';
 import { ChunkyFile } from '../../format/chunky.js';
 import { parseMbmp, STY, TDTS, makeTdtTemplate, templateCmtl } from '../../format/content.js';
@@ -16,8 +15,12 @@ import { addUserSnd, userSnds, decodeAudioBytes, sndName } from '../sndsrc.js';
 import { player, ed, setSelChid, selTbSels, sounds, renderer, lib, setPendPlace } from '../state.js';
 import { mbmpCanvas, spltThumbs } from '../thumbs.js';
 import { histClear, opExec } from '../undo.js';
-import { brwsShell, brwsEl, closeBrowser, showBrowser, brwsCleanup, setBrwsCleanup } from './browsers.js';
-import { syncRollCall } from '../ui/studio.js';
+import { closeBrowser, showBrowser, setBrwsCleanup } from './browser.js';
+import { EaselView, CvEl, offCv, showEasel } from './easel.js';
+import { Element } from './element.js';
+import { Img, StBtn, Txt } from './widgets.js';
+import { texImg, imgReady } from './img.js';
+import { syncRollCall } from './studio.js';
 import { t } from '../i18n.js';
 // --- scene sorter easel (easels.cht kidSSorter*; scnsort.cpp SCRT) -----------
 // e3par panel at (20,65) 600x350; 6 frame cells 185x126 at (10+c*193,12+r*141);
@@ -26,8 +29,8 @@ import { t } from '../i18n.js';
 // cancel discards. Sorter changes are not undoable (MVIE::ClearUndo on OK).
 export function showSceneSorter() {
   if (!player) return;
-  const { place, mkImg, mkBtn } = brwsShell();
-  mkImg('e3par', 20, 65, 600, 350);
+  const V = new EaselView();
+  V.mkImg('e3par', 20, 65, 600, 350);
   const PX = 20, PY = 65; // panel origin in studio coords
   const T4 = [0, 3, 1, 2]; // SCRT::_mplwtrans = {transCut, transDissolve, transFadeToBlack, transFadeToWhite}
   const items = player.movie.scenes.map((scen) => ({ scen, trans: scen.trans, batch: null }));
@@ -36,7 +39,7 @@ export function showSceneSorter() {
 
   const thumbCv = (scen) => {
     if (!scen._tcv) {
-      const c = document.createElement('canvas'); c.width = 143; c.height = 80;
+      const c = offCv(143, 80);
       const x = c.getContext('2d');
       if (scen.thumb) { try { x.drawImage(mbmpCanvas(parseMbmp(scen.thumb), 143, 80), 0, 0); } catch { x.fillStyle = '#111'; x.fillRect(0, 0, 143, 80); } }
       else { // no THUM stored — name placeholder (original renders via SCEN::PmbmpThumbnail)
@@ -49,71 +52,85 @@ export function showSceneSorter() {
     return scen._tcv;
   };
 
+  class SCell extends Element { // frame + thumb + 4 transition cells
+    constructor(i) {
+      const cx = PX + 10 + (i % 3) * 193, cy = PY + 12 + (i / 3 | 0) * 141;
+      super(cx, cy, 185, 126);
+      this.i = i; this.cursor = 'pointer';
+      /** @type {any} */ this._drag = null;
+      this.tbs = T4.map((tt, j) => {
+        const b = new StBtn(`e3trn${j + 1}`, `e3trn${j + 1}s`, cx + 156, cy + 11 + 22 * j, 20, 17,
+          () => { const it = items[top + i]; if (it) { it.trans = T4[j]; sync(); } }); // FCmdTransition
+        V.add(b);
+        return b;
+      });
+    }
+    it() { return items[top + this.i]; }
+    draw(ctx) {
+      const it = this.it();
+      if (!it) { this.visible = false; for (const b of this.tbs) b.visible = false; return; }
+      this.visible = true;
+      const fr = texImg(top + this.i === cur ? 'e3frms' : 'e3frm', () => this.dirty());
+      if (imgReady(fr)) { ctx.imageSmoothingEnabled = false; ctx.drawImage(fr, 0, 0, 185, 126); }
+      ctx.drawImage(thumbCv(it.scen), 8, 12, 143, 80);
+      for (const [j, b] of this.tbs.entries()) {
+        b.visible = true;
+        b.faceOverride = `e3trn${j + 1}${it.trans === T4[j] ? 's' : ''}`;
+      }
+    }
+    onPointerDown() { cellDown(this.i); }
+    onPointerMove(p) { if (this._drag) dragMove(this, p); }
+    onPointerUp() { if (this._drag) dragEnd(this); }
+  }
   const cells = [];
-  for (let i = 0; i < 6; i++) {
-    const cx = PX + 10 + (i % 3) * 193, cy = PY + 12 + (i / 3 | 0) * 141;
-    const fim = mkImg('e3frm', cx, cy, 185, 126);
-    const cv = document.createElement('canvas');
-    cv.width = 143; cv.height = 80; cv.className = 'brwsCv';
-    brwsEl.appendChild(cv); place(cv, cx + 8, cy + 12, 143, 80);
-    const tbs = T4.map((t, j) => {
-      const im = mkImg(`e3trn${j + 1}`, cx + 156, cy + 11 + 22 * j, 20, 17);
-      im.style.cursor = 'pointer';
-      im.onmousedown = (e) => e.stopPropagation();
-      im.onclick = () => { const it = items[top + i]; if (it) { it.trans = t; sync(); } }; // FCmdTransition
-      return im;
-    });
-    fim.style.cursor = 'pointer';
-    fim.onmousedown = (e) => cellDown(i, e);
-    cells.push({ fim, cv, tbs });
-  }
-  const bar = mkImg('ssbar', 0, 0, 250, 140); // drop-position indicator
-  bar.style.display = 'none'; bar.style.pointerEvents = 'none';
+  for (let i = 0; i < 6; i++) { const c = new SCell(i); cells.push(c); V.add(c); }
 
-  const hand = mkImg('e3hand', PX + 25, PY + 298, 50, 48);   // kidSSorterHand (default)
-  const nuke = mkImg('e3rmsn', PX + 80, PY + 298, 50, 48);   // kidSSorterNuke
-  /** @type {[HTMLImageElement, string][]} */
-  const sorterTools = [[hand, 'hand'], [nuke, 'nuke']];
-  for (const [im, t] of sorterTools) {
-    im.style.cursor = 'pointer';
-    im.onmousedown = () => { tool = t; syncTools(); };
-  }
-  const syncTools = () => {
-    hand.src = texUrl(`e3hand${tool === 'hand' ? 'c' : ''}`);
-    nuke.src = texUrl(`e3rmsn${tool === 'nuke' ? 'c' : ''}`);
+  const bar = V.mkImg('ssbar', 0, 0, 250, 140); // drop-position indicator
+  bar.visible = false;
+
+  // drag ghost (idSelFrame) — follows the pointer with the selected thumb
+  const ghost = new Element(0, 0, 185, 126);
+  ghost.pickable = false; ghost.visible = false;
+  ghost.draw = (ctx) => {
+    const fr = texImg('e3frms', () => ghost.dirty());
+    if (imgReady(fr)) ctx.drawImage(fr, 0, 0, 185, 126);
+    if (items[cur]) ctx.drawImage(thumbCv(items[cur].scen), 8, 12, 143, 80);
   };
-  const sup = mkImg('e3up', PX + 580, PY + 2, 17, 19);       // kidSSorterScrollUp (hidden when disabled)
-  const sdn = mkImg('e3down', PX + 580, PY + 273, 17, 19);   // kidSSorterScrollDn
-  /** @type {[HTMLImageElement, number, string][]} */
-  const scrollBtns = [[sup, -1, 'e3upc'], [sdn, 1, 'e3downc']];
-  for (const [el, d, dn] of scrollBtns) {
+  V.add(ghost);
+
+  const hand = new StBtn('e3hand', 'e3handc', PX + 25, PY + 298, 50, 48, () => { tool = 'hand'; syncTools(); });
+  const nuke = new StBtn('e3rmsn', 'e3rmsm', PX + 80, PY + 298, 50, 48, () => { tool = 'nuke'; syncTools(); });
+  V.add(hand); V.add(nuke);
+  const syncTools = () => {
+    hand.faceOverride = `e3hand${tool === 'hand' || hand.isDown ? 'c' : ''}`; hand.dirty();
+    nuke.faceOverride = `e3rmsn${tool === 'nuke' || nuke.isDown ? 'c' : ''}`; nuke.dirty();
+  };
+  const sup = new Element(PX + 580, PY + 2, 17, 19);
+  const sdn = new Element(PX + 580, PY + 273, 17, 19);
+  for (const [el, d, up] of /** @type {[Element & {_dn: boolean, _up: string}, number, string][]} */ ([[sup, -1, 'e3up'], [sdn, 1, 'e3down']])) {
+    el.cursor = 'pointer'; el._dn = false; el._up = up;
+    el.draw = (ctx) => { const im = texImg(`${el._up}${el._dn ? 'c' : ''}`, () => el.dirty()); if (imgReady(im)) ctx.drawImage(im, 0, 0, el.w, el.h); };
     let tm = null;
     const step = () => { top = Math.max(0, Math.min(items.length - 1, top + d * 3)); sync(); }; // FCmdScroll ±nxFrame
-    el.style.cursor = 'pointer';
-    el.onmousedown = () => {
-      el.src = texUrl(`${dn}`); step();
+    el.onPointerDown = () => {
+      el._dn = true; el.dirty(); step();
       let del = 250;
       const go = () => { step(); del = Math.max(80, del - 20); tm = setTimeout(go, del); };
       tm = setTimeout(go, del);
+      return true;
     };
-    el.onmouseup = el.onmouseleave = () => { el.src = texUrl(`${el === sup ? 'e3up' : 'e3down'}`); clearTimeout(tm); };
+    el.onPointerUp = el.onPointerLeave = () => { el._dn = false; el.dirty(); clearTimeout(tm); };
+    V.add(el);
   }
 
   function sync() { // _FResetThumbnails + _EnableScroll
-    for (let i = 0; i < 6; i++) {
-      const it = items[top + i], c = cells[i];
-      c.fim.style.display = c.cv.style.display = it ? '' : 'none';
-      for (const t of c.tbs) t.style.display = it ? '' : 'none';
-      if (!it) continue;
-      c.fim.src = texUrl(`${top + i === cur ? 'e3frms' : 'e3frm'}`);
-      c.cv.getContext('2d').drawImage(thumbCv(it.scen), 0, 0);
-      c.tbs.forEach((t, j) => { t.src = texUrl(`e3trn${j + 1}${it.trans === T4[j] ? 's' : ''}`); });
-    }
-    sup.style.display = top > 0 ? '' : 'none';
-    sdn.style.display = top + 6 < items.length ? '' : 'none';
+    sup.visible = top > 0;
+    sdn.visible = top + 6 < items.length;
+    for (const c of cells) c.dirty(); // draw() computes visibility/faces
+    V.invalidate();
   }
 
-  function cellDown(i, e) {
+  function cellDown(i) {
     const idx = top + i;
     if (idx >= items.length) return;
     if (tool === 'nuke') { // FCmdNuke: drop the scene, keep selection valid
@@ -125,54 +142,42 @@ export function showSceneSorter() {
       return;
     }
     if (idx !== cur) { cur = idx; sync(); return; } // FCmdSelect on mouse-down
-    dragStart(i, e); // mouse-down on the already-selected frame with hand -> drag
+    dragStart(i); // mouse-down on the already-selected frame with hand -> drag
   }
 
-  function dragStart(i, e) {
-    e.preventDefault();
-    const r = $('studio').getBoundingClientRect();
-    const toStudio = (ev) => ({ x: ((ev.clientX - r.left) / r.width) * 640, y: ((ev.clientY - r.top) / r.height) * 480 });
-    /** @type {HTMLDivElement & {_idx?: number}} */
-    const g = document.createElement('div'); // idSelFrame — dragged ghost of the selected cell
-    g.style.cssText = 'position:absolute;pointer-events:none;';
-    const gf = document.createElement('img');
-    gf.src = texUrl('e3frms'); gf.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%';
-    const gv = document.createElement('canvas');
-    gv.width = 143; gv.height = 80;
-    gv.getContext('2d').drawImage(thumbCv(items[cur].scen), 0, 0);
-    gv.style.cssText = 'position:absolute;left:4.3%;top:9.5%;width:77.3%;height:63.5%';
-    g.appendChild(gf); g.appendChild(gv); brwsEl.appendChild(g);
-    place(g, PX + 10 + (i % 3) * 193, PY + 12 + (i / 3 | 0) * 141, 185, 126);
-    const m0 = toStudio(e);
-    const grab = { x: m0.x - (PX + 10 + (i % 3) * 193), y: m0.y - (PY + 12 + (i / 3 | 0) * 141) };
-    let scrollTm = null;
-    bar.style.display = '';
-    const move = (ev) => {
-      const m = toStudio(ev);
-      const xn = Math.max(0, Math.min(405, m.x - PX - grab.x));  // xpFrameMax = dxpSSorter-dxpFrame+kdxpSSorterRight
-      const yn = Math.max(0, Math.min(141, m.y - PY - grab.y));  // ypFrameMax = dypSSorter-dypFrame
-      place(g, PX + xn, PY + yn, 185, 126);
-      const col = xn < 10 ? 0 : Math.min(3, 1 + (((xn - 11) / 193) | 0)); // xFrame from easels.cht
-      const row = (((yn + 70) / 141) | 0);                               // yFrame
-      g._idx = Math.min(items.length, row * 3 + col);
-      place(bar, PX + (xn < 10 ? 4 : 4 + 193 * (1 + (((xn - 11) / 193) | 0))), PY + 7 + 141 * row, 250, 140);
-      const my = m.y - PY; // drag past the grid scrolls one row (kdtimDragScroll)
-      clearTimeout(scrollTm);
-      if (my < 0 || my > 282) scrollTm = setTimeout(() => {
-        top = Math.max(0, Math.min(items.length - 1, top + (my < 0 ? -3 : 3))); sync();
-      }, 200);
-    };
-    const up = () => {
-      document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', up);
-      clearTimeout(scrollTm); bar.style.display = 'none'; g.remove();
-      const to = Math.min(g._idx ?? cur, items.length); // FCmdInsert: GL::Move(cur,to), ends at to-1 if to>cur
-      if (to !== cur) { const it = items.splice(cur, 1)[0]; const at = to > cur ? to - 1 : to; items.splice(at, 0, it); cur = at; }
-      sync();
-    };
-    document.addEventListener('mousemove', move); document.addEventListener('mouseup', up);
+  function dragStart(i) {
+    const cell = cells[i];
+    ghost.visible = true;
+    ghost.x = cell.x; ghost.y = cell.y; ghost.dirty();
+    bar.visible = true; bar.dirty();
+    cell._drag = { grabX: 0, grabY: 0, to: cur, scrollTm: null };
+  }
+  function dragMove(cell, m) {
+    const dr = cell._drag; if (!dr) return;
+    if (!dr.grabbed) { dr.grabX = m.x - cell.x; dr.grabY = m.y - cell.y; dr.grabbed = true; }
+    const xn = Math.max(0, Math.min(405, m.x - PX - dr.grabX));  // xpFrameMax = dxpSSorter-dxpFrame+kdxpSSorterRight
+    const yn = Math.max(0, Math.min(141, m.y - PY - dr.grabY));  // ypFrameMax = dypSSorter-dypFrame
+    ghost.x = PX + xn; ghost.y = PY + yn; ghost.dirty();
+    const col = xn < 10 ? 0 : Math.min(3, 1 + (((xn - 11) / 193) | 0)); // xFrame from easels.cht
+    const row = (((yn + 70) / 141) | 0);                               // yFrame
+    dr.to = Math.min(items.length, row * 3 + col);
+    bar.x = PX + (xn < 10 ? 4 : 4 + 193 * (1 + (((xn - 11) / 193) | 0)));
+    bar.y = PY + 7 + 141 * row; bar.dirty();
+    const my = m.y - PY; // drag past the grid scrolls one row (kdtimDragScroll)
+    clearTimeout(dr.scrollTm);
+    if (my < 0 || my > 282) dr.scrollTm = setTimeout(() => {
+      top = Math.max(0, Math.min(items.length - 1, top + (my < 0 ? -3 : 3))); sync();
+    }, 200);
+  }
+  function dragEnd(cell) {
+    const dr = cell._drag; cell._drag = null; if (!dr) return;
+    clearTimeout(dr.scrollTm); bar.visible = false; ghost.visible = false;
+    const tt = Math.min(dr.to, items.length); // FCmdInsert: GL::Move(cur,to), ends at to-1 if to>cur
+    if (tt !== cur) { const it = items.splice(cur, 1)[0]; const at = tt > cur ? tt - 1 : tt; items.splice(at, 0, it); cur = at; }
+    sync();
   }
 
-  mkBtn('e3port', 'e3portc', PX + 135, PY + 298, 50, 48, () => { // kidSSorterOpen -> FCmdPortfolio
+  V.mkBtn('e3port', 'e3portc', PX + 135, PY + 298, 50, 48, () => { // kidSSorterOpen -> FCmdPortfolio
     const inp = document.createElement('input');
     inp.type = 'file';
     inp.onchange = async () => {
@@ -193,9 +198,9 @@ export function showSceneSorter() {
     for (const b of Object.values(ed.toolBtns || {})) { b.classList.remove('on'); b._sync?.(); }
     closeBrowser();
   };
-  brwsEl._onEsc = dismiss; // cancel-button CHILD_SCRIPT maps Escape to cidSceneSortCancel
-  mkBtn('e3can', 'e3canc', PX + 465, PY + 298, 50, 48, dismiss);        // cidSceneSortCancel
-  mkBtn('e3okay', 'e3okayc', PX + 515, PY + 298, 50, 48, applySort);    // cidSceneSortOk -> FSetCmvi
+  V._onEsc = dismiss; // cancel-button CHILD_SCRIPT maps Escape to cidSceneSortCancel
+  V.mkBtn('e3can', 'e3canc', PX + 465, PY + 298, 50, 48, dismiss);        // cidSceneSortCancel
+  V.mkBtn('e3okay', 'e3okayc', PX + 515, PY + 298, 50, 48, applySort);    // cidSceneSortOk -> FSetCmvi
 
   function applySort() {
     const mv = player.movie;
@@ -203,18 +208,18 @@ export function showSceneSorter() {
       it.scen.trans = it.trans;
       if (!it.batch) continue;
       const { srcCf, srcRoll, remap, aridOff } = it.batch;
-      const fix = (t) => { // merge embedded (sid 0) chunks into this movie's cf (FClone + tag rewrite)
-        if (!t || t.sid !== 0) return;
-        if (!remap.has(t.cno)) {
-          const c = mv.cf?.adopt(srcCf, t.ctg, t.cno);
-          remap.set(t.cno, c ? c.cno : -1);
+      const fix = (tg) => { // merge embedded (sid 0) chunks into this movie's cf (FClone + tag rewrite)
+        if (!tg || tg.sid !== 0) return;
+        if (!remap.has(tg.cno)) {
+          const c = mv.cf?.adopt(srcCf, tg.ctg, tg.cno);
+          remap.set(tg.cno, c ? c.cno : -1);
         }
-        if (remap.get(t.cno) < 0) { t.sid = -1; return; }
-        t.cno = remap.get(t.cno);
+        if (remap.get(tg.cno) < 0) { tg.sid = -1; return; }
+        tg.cno = remap.get(tg.cno);
       };
       const s = it.scen;
       for (const e of [...s.startEvents, ...s.frameEvents]) {
-        if (e.data?.tags) for (const t of e.data.tags) fix(t);
+        if (e.data?.tags) for (const tg of e.data.tags) fix(tg);
         else if (e.data && typeof e.data === 'object' && 'ctg' in e.data) fix(e.data); // SetBkgd tag
       }
       for (const [, a] of s.actors) {
@@ -235,27 +240,32 @@ export function showSceneSorter() {
   }
 
   syncTools(); sync();
+  showEasel(V);
 }
 
 // record easel (easels.cht kidRecord*): e5par + length thermometer + name + mike/play/can/okay
 export function showRecorder(kind) {
-  const { place, mkImg, mkBtn } = brwsShell();
-  mkImg('e5par', 202, 154, 236, 172);
-  const therm = document.createElement('div'); // kidRecordSoundLength: fill (22,30)-(214,51) -> elapsed/10s
-  therm.className = 'recTherm'; brwsEl.appendChild(therm); place(therm, 224, 184, 193, 22);
-  const fill = document.createElement('div'); fill.className = 'recThermFill'; therm.appendChild(fill);
-  const inp = document.createElement('input'); // kidRecordSoundName (123,75)-(232,95)
-  inp.className = 'spltInp'; inp.maxLength = 40; inp.placeholder = t('easel.soundName');
-  brwsEl.appendChild(inp); place(inp, 325, 229, 110, 21);
+  const V = new EaselView();
+  V.mkImg('e5par', 202, 154, 236, 172);
+  const fillEl = /** @type {Element & {_f: number}} */ (new Element(224, 184, 193, 22)); // kidRecordSoundLength thermometer fill
+  fillEl.pickable = false; fillEl._f = 0;
+  fillEl.draw = (ctx) => {
+    ctx.fillStyle = '#cfe8ff'; ctx.fillRect(0, 0, fillEl.w, fillEl.h);
+    ctx.fillStyle = '#3465a4'; ctx.fillRect(0, 0, fillEl.w * Math.min(1, fillEl._f), fillEl.h);
+    ctx.strokeStyle = '#222'; ctx.strokeRect(0.5, 0.5, fillEl.w - 1, fillEl.h - 1);
+  };
+  V.add(fillEl);
+  const inp = V.domInp(325, 229, 110, 21); // kidRecordSoundName (123,75)-(232,95)
+  inp.maxLength = 40; inp.placeholder = t('easel.soundName');
   let stream = null, rec = null, chunks = [], take = null, t0 = 0, raf = 0, stopP = null;
-  const stopTracks = () => { stream?.getTracks().forEach((t) => t.stop()); stream = null; };
+  const stopTracks = () => { stream?.getTracks().forEach((tt) => tt.stop()); stream = null; };
   const done = async (save) => { // close easel -> back to the sound browser
     cancelAnimationFrame(raf); stopRec(); if (stopP) await stopP; stopTracks();
     if (save && take) await addUserSnd(kind, { name: inp.value.trim() || `recording ${userSnds.length + 1}`, buf: take.buf, bytes: take.bytes, mime: take.mime });
     showBrowser(kind);
   };
   const tick = () => {
-    fill.style.width = `${Math.min(100, ((performance.now() - t0) / 10000) * 100)}%`;
+    fillEl._f = ((performance.now() - t0) / 10000); fillEl.dirty();
     if (rec?.state === 'recording') raf = requestAnimationFrame(tick);
   };
   const startRec = async () => {
@@ -269,7 +279,7 @@ export function showRecorder(kind) {
       rec.onstop = async () => {
         const blob = new Blob(chunks, { type: mime }), bytes = await blob.arrayBuffer();
         take = { buf: await decodeAudioBytes(bytes), bytes, mime };
-        fill.style.width = `${Math.min(100, ((take.buf?.duration || 0) / 10) * 100)}%`;
+        fillEl._f = (take.buf?.duration || 0) / 10; fillEl.dirty();
         stopTracks(); res();
       };
     }));
@@ -277,17 +287,16 @@ export function showRecorder(kind) {
     setTimeout(() => { if (rec?.state === 'recording') stopRec(); }, 10000); // kdtsMaxRecord
   };
   const stopRec = () => { if (rec?.state === 'recording') rec.stop(); rec = null; };
-  const mikeBtn = mkBtn('e5mike', 'e5mikes', 213, 269, 50, 48, async () => {
-    if (rec?.state === 'recording') { stopRec(); mikeBtn.querySelector('img').src = texUrl('e5mike'); }
-    else { sounds.ensure(); await startRec(); }
+  const mikeBtn = V.mkBtn('e5mike', 'e5mikes', 213, 269, 50, 48, async () => {
+    if (rec?.state === 'recording') { stopRec(); mikeBtn._sync(); }
+    else { sounds.ensure(); await startRec(); mikeBtn._sync(); }
   });
-  mikeBtn.onmouseup = mikeBtn.onmouseleave = () => {
-    mikeBtn.querySelector('img').src = texUrl(`e5${rec?.state === 'recording' ? 'mikes' : 'mike'}`); // hold selected while recording
-  };
-  mkBtn('e5play', 'e5plays', 265, 269, 50, 48, () => { stopRec(); if (take?.buf) sounds.preview({ buf: take.buf }); });
-  mkBtn('e5can', 'e5canc', 329, 269, 50, 48, () => done(false));
-  mkBtn('e5okay', 'e5okayc', 379, 269, 50, 48, () => done(true));
+  mikeBtn._sync = () => { mikeBtn.faceOverride = `e5${rec?.state === 'recording' || mikeBtn.isDown ? 'mikes' : 'mike'}`; mikeBtn.dirty(); };
+  V.mkBtn('e5play', 'e5plays', 265, 269, 50, 48, () => { stopRec(); if (take?.buf) sounds.preview({ buf: take.buf }); });
+  V.mkBtn('e5can', 'e5canc', 329, 269, 50, 48, () => done(false));
+  V.mkBtn('e5okay', 'e5okayc', 379, 269, 50, 48, () => done(true));
   setTimeout(() => inp.focus(), 0);
+  showEasel(V);
 }
 // listener easel (easels.cht kidListenBackgroundBkgd/Actor): per-sty volume
 // sliders + nukes + name-plate audition for this frame's sounds. Clicking an
@@ -304,10 +313,10 @@ export function showListenerEasel(a) {
     else { s.frameEvents.length = 0; s.frameEvents.push(...structuredClone(evs0)); }
     player.gotoFrame(player.frame); draw();
   };
-  const { place, mkImg, mkBtn } = brwsShell();
+  const V = new EaselView();
   setBrwsCleanup(restore); // Esc/cancel closes via closeBrowser -> restores the snapshot
   const X = a ? 182 : 116, Y = 100; // e4parmm/e4par gob origins (pos3.chh)
-  mkImg(a ? 'e4parmm' : 'e4par', X, Y, a ? 277 : 408, 236);
+  V.mkImg(a ? 'e4parmm' : 'e4par', X, Y, a ? 277 : 408, 236);
   // columns: sty, slider left/right, icon x, nuke x, name-plate x
   const cols = a
     ? [[STY.Sfx, 70, 120, 13, 98, 10], [STY.Speech, 201, 251, 144, 229, 141]]
@@ -322,58 +331,54 @@ export function showListenerEasel(a) {
       sounds.stopAll();
       sounds.play({ scope: a ? 'actor' : 'scene', arid: a?.data.arid, data: { tags: q.tags, sty, vlm: q.vlm, fLoop: q.fLoop } });
     };
-    colEls.push(mkImg(mm ? 'e4mm' : q.tags.length > 1 ? 'e4queue' : q.fLoop ? 'e4loop' : 'e4snd', X + ix, Y + 117, 30, 30));
-    const nm = document.createElement('button'); // e4audit name plate (click = audition)
-    nm.className = 'stBtn'; brwsEl.appendChild(nm); place(nm, X + ex, Y + 150, 122, 20);
-    const nim = document.createElement('img');
-    nim.src = texUrl('e4audit'); nim.className = 'stImg'; nim.draggable = false;
-    nm.appendChild(nim);
-    const nmt = document.createElement('span');
-    nmt.className = 'lisNameTxt'; nmt.textContent = sndName(q.tags);
-    nm.appendChild(nmt);
-    nm.onmousedown = () => { nim.src = texUrl('e4auditc'); };
-    nm.onmouseup = nm.onmouseleave = () => { nim.src = texUrl('e4audit'); };
-    nm.onclick = audition;
-    colEls.push(nm);
-    /** @type {HTMLDivElement & {_yp?: number}} */
-    const sld = document.createElement('div'); // volume track (l,20)-(r,138), thumb travels y 20..128
-    sld.className = 'stSld'; brwsEl.appendChild(sld); place(sld, X + sl, Y + 20, sr - sl, 118);
-    const th = document.createElement('img'); // e4vol1 thumb, MoveAbsGob(kxpSliderThumb=5, yPos)
-    th.src = texUrl('e4vol1'); th.className = 'stImg stThumb'; th.draggable = false;
-    brwsEl.appendChild(th);
-    const yPos0 = 100 - Math.round(q.vlm * 101); // yPos = yNuke - vlm*FullDisplay/kvlmFull
-    const setY = (yp) => { sld._yp = yp; place(th, X + sl + 5, Y + 20 + yp, 21, 11); };
-    setY(yPos0);
-    sld.onpointerdown = (e) => {
-      sld.setPointerCapture(e.pointerId);
-      const r = sld.getBoundingClientRect();
-      const move = (ev) => setY(Math.max(0, Math.min(108, ((ev.clientY - r.top) / r.height) * 118)));
-      move(e);
-      sld.onpointermove = move;
-      sld.onpointerup = sld.onpointercancel = () => {
-        sld.onpointermove = null;
-        const yp = sld._yp ?? 0;
-        q.vlm = yp > 100 ? -1 : Math.max(0, (101 - yp) / 101); // below the nuke line -> vlmNil/silent
-        if (a) a.fSetVlmSnd(sty, mm, q.vlm); else setScenVlm(sty, q.vlm);
-        audition(); // slider-up enqueues cidEaselPlay too
-      };
+    colEls.push(V.mkImg(mm ? 'e4mm' : q.tags.length > 1 ? 'e4queue' : q.fLoop ? 'e4loop' : 'e4snd', X + ix, Y + 117, 30, 30));
+    const nm = new class extends Element { // e4audit name plate (click = audition)
+      constructor() { super(X + ex, Y + 150, 122, 20); this.cursor = 'pointer'; this._dn = false; }
+      draw(ctx) {
+        const im = texImg(`e4audit${this._dn ? 'c' : ''}`, () => this.dirty());
+        if (imgReady(im)) ctx.drawImage(im, 0, 0, this.w, this.h);
+        ctx.fillStyle = '#222'; ctx.font = "bold 9px 'Comic Sans MS', cursive, sans-serif";
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(sndName(q.tags), this.w / 2, this.h / 2, this.w - 6);
+      }
+      onPointerDown() { this._dn = true; this.dirty(); }
+      onPointerUp() { this._dn = false; this.dirty(); }
+      onPointerLeave() { this._dn = false; this.dirty(); }
+      onClick() { audition(); }
+    }();
+    V.add(nm); colEls.push(nm);
+    const sld = /** @type {Element & {_yp: number, _move: (p: any) => void}} */ (new Element(X + sl, Y + 20, sr - sl, 118)); // volume track, thumb travels y 0..108
+    sld.cursor = 'pointer'; sld._yp = 100 - Math.round(q.vlm * 101); // yPos = yNuke - vlm*FullDisplay/kvlmFull
+    const th = V.mkImg('e4vol1', X + sl + 5, Y + 20 + sld._yp, 21, 11); // MoveAbsGob(kxpSliderThumb=5, yPos)
+    sld.draw = () => {}; // track art is baked into the panel
+    sld.onPointerDown = (p) => { sld._move(p); return true; };
+    sld.onPointerMove = (p) => sld._move(p);
+    sld._move = (p) => { sld._yp = Math.max(0, Math.min(108, p.y - (Y + 20))); th.y = Y + 20 + sld._yp; th.dirty(); };
+    sld.onPointerUp = () => {
+      q.vlm = sld._yp > 100 ? -1 : Math.max(0, (101 - sld._yp) / 101); // below the nuke line -> vlmNil/silent
+      if (a) a.fSetVlmSnd(sty, mm, q.vlm); else setScenVlm(sty, q.vlm);
+      audition(); // slider-up enqueues cidEaselPlay too
     };
+    V.add(sld);
     colEls.push(sld, th);
-    colEls.push(mkBtn('e4nuke', 'e4nukec', X + nx, Y + 123, 21, 20, () => { // kidListenNuke*: delete + hide the column
+    colEls.push(V.mkBtn('e4nuke', 'e4nukec', X + nx, Y + 123, 21, 20, () => { // kidListenNuke*: delete + hide the column
       if (a) a.fDeleteSndCore(sty, mm); else remScenSnd(sty);
-      for (const el of colEls) el.style.display = 'none';
+      for (const el of colEls) { el.visible = false; el.dirty?.(); }
+      V.invalidate();
     }));
   }
-  mkBtn('e4can', 'e4canc', X + (a ? 149 : 280), Y + 183, 50, 48, () => closeBrowser());
-  mkBtn('e4okay', 'e4okayc', X + (a ? 199 : 330), Y + 183, 50, 48, () => { setBrwsCleanup(null); closeBrowser(); });
+  V.mkBtn('e4can', 'e4canc', X + (a ? 149 : 280), Y + 183, 50, 48, () => closeBrowser());
+  V.mkBtn('e4okay', 'e4okayc', X + (a ? 199 : 330), Y + 183, 50, 48, () => { setBrwsCleanup(null); closeBrowser(); });
+  showEasel(V);
 }
 // words create dialog (browser.cht kidBrwsTextCreate): book9 + story/scroll choices
 export function showWords() {
-  const { place, mkImg, mkBtn } = brwsShell();
-  mkImg('book9', 132, 48, 376, 209);
-  mkBtn('e6stor', 'e6stors', 174, 97, 136, 78, () => { closeBrowser(); insTbox(true); });   // cidCreateTbox fFalse -> story box
-  mkBtn('e6scr1', 'e6scr1s', 329, 96, 136, 78, () => { closeBrowser(); insTbox(false); }); // cidCreateTbox fTrue -> credits box
-  mkBtn('cancel', 'cancelc', 430, 205, 50, 48, closeBrowser);  // preg (0,48): bottom-left
+  const V = new EaselView();
+  V.mkImg('book9', 132, 48, 376, 209);
+  V.mkBtn('e6stor', 'e6stors', 174, 97, 136, 78, () => { closeBrowser(); insTbox(true); });   // cidCreateTbox fFalse -> story box
+  V.mkBtn('e6scr1', 'e6scr1s', 329, 96, 136, 78, () => { closeBrowser(); insTbox(false); }); // cidCreateTbox fTrue -> credits box
+  V.mkBtn('cancel', 'cancelc', 430, 205, 50, 48, closeBrowser);  // preg (0,48): bottom-left
+  showEasel(V);
 }
 // spletter easel (easels.cht kidSplt*, esl.cpp ESLT): e1par + APE preview + text
 // input + font/shape/texture popups + transmogrify/rotate. New TDTs place via
@@ -394,14 +399,13 @@ export function showSpletter(editA) {
     mtrlDirty: false, // FGetMaterial(ibset) only fires when the easel touched it
     iview: 0,         // APE::_iview — ChangeView cycles 5 preset orientations
   };
-  const { place, mkImg, mkBtn } = brwsShell();
-  mkImg('e1par', 61, 57, 518, 366);
-  const pv = document.createElement('canvas');
-  pv.className = 'brwsCv'; pv.width = 492; pv.height = 238;
-  brwsEl.appendChild(pv); place(pv, 74, 70, 492, 238);
-  const inp = document.createElement('input'); // kidSpltEditBox — SNE with all text selected
-  inp.className = 'spltInp'; inp.maxLength = 50; inp.value = st.text; inp.placeholder = 'type 3D text';
-  brwsEl.appendChild(inp); place(inp, 71, 379, 498, 34);
+  const V = new EaselView();
+  V.mkImg('e1par', 61, 57, 518, 366);
+  const pv = offCv(492, 238); // APE preview canvas
+  const pvEl = new CvEl(pv, 74, 70, 492, 238);
+  V.add(pvEl);
+  const inp = V.domInp(71, 379, 498, 34); // kidSpltEditBox — SNE with all text selected
+  inp.maxLength = 50; inp.value = st.text; inp.placeholder = 'type 3D text';
   // APE preview: a live Actor over a rebuilt TDT (FChangeTdt -> PtdtDup+AdjustBody)
   const pr = new THREE.WebGLRenderer({ canvas: pv });
   setBrwsCleanup(() => pr.dispose());
@@ -425,6 +429,7 @@ export function showSpletter(editA) {
       pcam.position.set(cV.x, cV.y + r * 1.4, cV.z + r * 3.2); pcam.lookAt(cV);
     }
     pr.render(pscene, pcam);
+    pvEl.dirty();
   };
   const VIEW_MATS = [M.identity(), M.rotY(Math.PI / 2), M.rotY(Math.PI), M.rotY(3 * Math.PI / 2), M.rotX(Math.PI / 2)]; // ChangeView's preset post-rotations
   const rebuild = () => { // APE::FChangeTdt — rebuild template+body from the working state
@@ -445,7 +450,7 @@ export function showSpletter(editA) {
   // --- popups (popdn.cht kidSpltsFont/Shape/Color): gray sizer panel + d1frm
   // cells + d1up/d1dn page arrows; click picks+closes, outside/Esc cancels ---
   let pop = null; // {kind, pg, bg, cells}
-  const closePop = () => { if (!pop) return; pop.bg.remove(); for (const c of pop.cells) c.remove(); pop = null; };
+  const closePop = () => { if (!pop) return; V.remove(pop.bg); for (const c of pop.cells) V.remove(c); pop = null; V.invalidate(); };
   const popPick = (it) => { // cidBrowserSelect+Ok: apply the pick and dismiss
     if (pop.kind === 'font') { if (it.tag.cno !== st.tagTdf?.cno) st.tagTdf = it.tag; }
     else if (pop.kind === 'shape') st.tdts = it.tdts;
@@ -453,60 +458,62 @@ export function showSpletter(editA) {
     closePop(); rebuild();
   };
   const popCells = () => {
-    for (const c of pop.cells) c.remove(); pop.cells = [];
+    for (const c of pop.cells) V.remove(c); pop.cells = [];
     const d = SPLT_POP[pop.kind], items = spltThumbs[pop.kind];
     const cur = pop.kind === 'font' ? items.findIndex((i) => i.tag.cno === st.tagTdf?.cno)
       : pop.kind === 'shape' ? items.findIndex((i) => i.tdts === st.tdts)
       : items.findIndex((i) => i.tag.cno === st.tagMtrl?.cno);
     items.slice(pop.pg * d.page, pop.pg * d.page + d.page).forEach((it, i) => {
       const idx = pop.pg * d.page + i, sel = idx === cur;
-      const b = document.createElement('button'); b.className = 'stBtn ccpCell';
-      const fim = document.createElement('img'); fim.src = texUrl(`d1frm${sel ? 'h' : ''}`); fim.draggable = false;
-      b.appendChild(fim); brwsEl.appendChild(b); place(b, d.x, d.y + i * d.fh, d.w, d.fh);
-      const cv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;pointer-events:none;';
-      b.appendChild(cv);
-      if (it.mbmp) { // thumb centered inside the frame border, aspect-preserved
-        const s = Math.min((d.w - 2 * d.bd) / it.mbmp.width, (d.fh - 2 * d.bd) / it.mbmp.height);
-        const cw = Math.max(1, Math.round(it.mbmp.width * s)), ch = Math.max(1, Math.round(it.mbmp.height * s));
-        cv.width = cw; cv.height = ch;
-        cv.style.left = `calc(50% - ${cw / 2}px)`; cv.style.top = `calc(50% - ${ch / 2}px)`;
-        cv.getContext('2d').drawImage(mbmpCanvas(it.mbmp, cw, ch), 0, 0);
-      }
-      b.onmousedown = () => { fim.src = texUrl('d1frmh'); };
-      b.onmouseup = b.onmouseleave = () => { fim.src = texUrl(`d1frm${sel ? 'h' : ''}`); };
-      b.onclick = () => popPick(it);
+      const b = new class extends Element {
+        constructor() { super(d.x, d.y + i * d.fh, d.w, d.fh); this.cursor = 'pointer'; this._hov = false; }
+        draw(ctx) {
+          const im = texImg(`d1frm${sel || this._hov ? 'h' : ''}`, () => this.dirty());
+          if (imgReady(im)) ctx.drawImage(im, 0, 0, this.w, this.h);
+          if (it.mbmp) { // thumb centered inside the frame border, aspect-preserved
+            const s = Math.min((d.w - 2 * d.bd) / it.mbmp.width, (d.fh - 2 * d.bd) / it.mbmp.height);
+            const cw = Math.max(1, Math.round(it.mbmp.width * s)), ch = Math.max(1, Math.round(it.mbmp.height * s));
+            ctx.drawImage(mbmpCanvas(it.mbmp, cw, ch), (this.w - cw) / 2, (this.h - ch) / 2);
+          }
+        }
+        onPointerEnter() { this._hov = true; this.dirty(); }
+        onPointerLeave() { this._hov = false; this.dirty(); }
+        onClick() { popPick(it); }
+      }();
+      V.add(b);
       pop.cells.push(b);
     });
     const last = Math.ceil(items.length / d.page) - 1;
     for (const [bmp, off, pg] of [['d1up', 0, 0], ['d1dn', d.w / 2, last]]) { // up = first page, dn = last
-      const b = document.createElement('button'); b.className = 'stBtn ccpCell';
-      const im = document.createElement('img'); im.src = texUrl(`${bmp}`); im.draggable = false;
-      b.appendChild(im); brwsEl.appendChild(b); place(b, d.x + off, d.y + d.ay, d.w / 2, d.h - d.ay);
-      b.onmousedown = () => { im.src = texUrl(`${bmp}s`); };
-      b.onmouseup = b.onmouseleave = () => { im.src = texUrl(`${bmp}`); };
-      b.onclick = () => { if (pop.pg !== pg) { pop.pg = pg; popCells(); } };
+      const b = new StBtn(bmp, bmp + 's', d.x + off, d.y + d.ay, d.w / 2, d.h - d.ay,
+        () => { if (pop.pg !== pg) { pop.pg = pg; popCells(); } });
+      V.add(b);
       pop.cells.push(b);
     }
+    V.invalidate();
   };
   const showPop = (kind) => {
     if (pop?.kind === kind) return closePop();
     closePop();
     if (!spltThumbs[kind].length) return;
     const d = SPLT_POP[kind];
-    pop = { kind, pg: 0, cells: [], bg: document.createElement('div') };
-    pop.bg.className = 'tbPopBg'; brwsEl.appendChild(pop.bg); place(pop.bg, d.x, d.y, d.w, d.h);
+    pop = { kind, pg: 0, cells: [], bg: new Element(d.x, d.y, d.w, d.h) };
+    pop.bg.pickable = false;
+    pop.bg.draw = (ctx) => { ctx.fillStyle = '#2b2b2b'; ctx.fillRect(0, 0, d.w, d.h); ctx.strokeStyle = '#111'; ctx.strokeRect(0.5, 0.5, d.w - 1, d.h - 1); };
+    V.add(pop.bg);
     popCells();
   };
-  brwsEl.addEventListener('pointerdown', (e) => { // outside the popup -> cidBrowserCancel
-    if (pop && !pop.bg.contains(e.target) && !pop.cells.some((c) => c.contains(e.target))) closePop();
-  });
+  V.onPointerDown = (e) => { // outside the popup -> cidBrowserCancel
+    const hit = V.hitTest(e.x, e.y);
+    if (pop && hit !== pop.bg && !pop.cells.includes(hit)) closePop();
+  };
   inp.oninput = () => { st.text = inp.value; rebuild(); }; // FTextChanged -> FChangeTdt(stn)
   // cidEaselFont/Shape/Texture -> FCmdStartPopup; transmogrify = SFL-shuffled
   // random shape+font+material; rotate = APE::ChangeView
-  mkBtn('e1font', 'e1fonts', 97, 322, 50, 48, () => showPop('font'));
-  mkBtn('e1shap', 'e1shaps', 147, 322, 50, 48, () => showPop('shape'));
-  mkBtn('e1text', 'e1texts', 197, 322, 50, 48, () => showPop('mtrl'));
-  mkBtn('e1tran', 'e1trans', 247, 322, 50, 48, () => { // FCmdTransmogrify — _psfl->LwNext picks
+  V.mkBtn('e1font', 'e1fonts', 97, 322, 50, 48, () => showPop('font'));
+  V.mkBtn('e1shap', 'e1shaps', 147, 322, 50, 48, () => showPop('shape'));
+  V.mkBtn('e1text', 'e1texts', 197, 322, 50, 48, () => showPop('mtrl'));
+  V.mkBtn('e1tran', 'e1trans', 247, 322, 50, 48, () => { // FCmdTransmogrify — _psfl->LwNext picks
     const rnd = (n, cur) => { let v = cur; while (n > 1 && v === cur) v = (Math.random() * n) | 0; return v; };
     st.tdts = rnd(10, st.tdts);
     const fi = spltThumbs.font.findIndex((f) => f.tag.cno === st.tagTdf?.cno);
@@ -515,9 +522,9 @@ export function showSpletter(editA) {
     if (spltThumbs.mtrl.length) { st.tagMtrl = spltThumbs.mtrl[rnd(spltThumbs.mtrl.length, mi)].tag; st.mtrlDirty = true; }
     rebuild();
   });
-  mkBtn('e1rot', 'e1rots', 320, 322, 50, 48, () => { st.iview = (st.iview + 1) % 5; rebuild(); }); // APE::ChangeView
-  mkBtn('e1can', 'e1canc', 443, 322, 50, 48, closeBrowser); // cidEaselCancel
-  mkBtn('e1okay', 'e1okayc', 493, 322, 50, 48, () => { // cidEaselOk -> _FAcceptChanges
+  V.mkBtn('e1rot', 'e1rots', 320, 322, 50, 48, () => { st.iview = (st.iview + 1) % 5; rebuild(); }); // APE::ChangeView
+  V.mkBtn('e1can', 'e1canc', 443, 322, 50, 48, closeBrowser); // cidEaselCancel
+  V.mkBtn('e1okay', 'e1okayc', 493, 322, 50, 48, () => { // cidEaselOk -> _FAcceptChanges
     const text = st.text;
     if (!/[^ ]/.test(text)) return closeBrowser(); // all-space text treated as cancel
     if (editing) { // FChangeActrTdt + costume on the live actor
@@ -549,6 +556,7 @@ export function showSpletter(editA) {
   });
   rebuild();
   setTimeout(() => { inp.focus(); inp.select(); }, 0); // SNE starts with all text selected
+  showEasel(V);
 }
 // action browser (browser.cht kidBrwsAction + pos3.chh): book5 at (62,100), 2x10 ACTN
 // name grid, live cel-cycling preview pane w/ cel fwd/back, OK applies an Actn event
@@ -560,15 +568,15 @@ export function showActionBrowser() {
   const tmpl = a.tmpl;
   const acts = tmpl.cf.kidsOf('TMPL', tmpl.cno, 'ACTN').map((k) => ({ anid: k.chid, name: tmpl.cf.get('ACTN', k.cno).name || `action ${k.chid}` }));
   if (!acts.length) return;
-  const { place, mkImg, mkBtn } = brwsShell();
+  const V = new EaselView();
   const X = 62, Y = 100; // book5 origin — child gob positions are relative to it
-  mkImg('book5', X, Y, 516, 372);
-  const num = document.createElement('div');
-  num.className = 'brwsNum'; brwsEl.appendChild(num); place(num, X + 123, Y + 330, 64, 29);
+  V.mkImg('book5', X, Y, 516, 372);
+  const num = new Txt('', X + 123, Y + 330, 64, 29, { size: 15 });
+  V.add(num);
   // APE preview pane (312,12)-(496,282): small second renderer posing the action
-  const pcv = document.createElement('canvas');
-  pcv.className = 'brwsCv'; pcv.width = 184; pcv.height = 270;
-  brwsEl.appendChild(pcv); place(pcv, X + 312, Y + 12, 184, 270);
+  const pcv = offCv(184, 270);
+  const pvEl = new CvEl(pcv, X + 312, Y + 12, 184, 270);
+  V.add(pvEl);
   const pr = new THREE.WebGLRenderer({ canvas: pcv });
   const pscene = new THREE.Scene(), pcam = new THREE.PerspectiveCamera(25, 184 / 270, 0.1, 10000);
   const pactr = new Actor({ cno: 0, arid: 0, nfrmFirst: 0, nfrmLast: 0, name: '', dxyzFullRte: { x: 0, y: 0, z: 0 },
@@ -596,28 +604,49 @@ export function showActionBrowser() {
       pcam.position.set(cV.x, cV.y + r * 2, cV.z + r * 3.6); pcam.lookAt(cV);
     }
     pr.render(pscene, pcam);
+    pvEl.dirty();
   };
   const setAnid = (an) => { anid = an; const act = pactr._actn(an); ccel = act ? act.cels.length : 1; celn = 0; celnStart = 0; cycling = true; pose(); };
   const step = (d) => { if (cycling) { cycling = false; celnStart = celn; } celnStart = (celnStart + d + ccel) % ccel; celn = celnStart; pose(); };
   const tick = setInterval(() => { if (cycling) { celn = (celn + 1) % ccel; pose(); } }, 1000 / FPS); // APE cycles cels
   setBrwsCleanup(() => { clearInterval(tick); pr.dispose(); });
   const perPage = 20, cells = [];
-  for (let c = 0; c < 2; c++) for (let r = 0; r < 10; r++) { // frame5 name cells at rel (15+143c, 32+28r)
-    const b = document.createElement('button');
-    b.className = 'stBtn brwsCell';
-    const fim = document.createElement('img'); fim.src = texUrl('frame5'); fim.draggable = false;
-    b.appendChild(fim); brwsEl.appendChild(b); place(b, X + 15 + c * 143, Y + 32 + r * 28, 138, 25);
-    const cv = document.createElement('canvas'); cv.className = 'brwsCv'; brwsEl.appendChild(cv);
-    place(cv, X + 19 + c * 143, Y + 36 + r * 28, 130, 17);
-    cells.push({ b, fim, cv });
+  for (let i = 0; i < perPage; i++) { // frame5 name cells at rel (15+143c, 32+28r)
+    const c = i % 2, r = Math.floor(i / 2);
+    const b = new class extends Element {
+      constructor() { super(X + 15 + c * 143, Y + 32 + r * 28, 138, 25); this.cursor = 'pointer'; this._hov = false; this._sel = false; this.it = null; this.idx = i; }
+      draw(ctx) {
+        if (!this.it) { this.visible = false; return; }
+        this.visible = true;
+        const im = texImg(`frame5${this._sel || this._hov ? 'h' : ''}`, () => this.dirty());
+        if (imgReady(im)) ctx.drawImage(im, 0, 0, this.w, this.h);
+        ctx.fillStyle = '#222'; ctx.font = "10px 'Comic Sans MS', cursive, sans-serif";
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(this.it.name, this.w / 2, this.h / 2, this.w - 8);
+      }
+      onPointerEnter() { this._hov = true; this.dirty(); }
+      onPointerLeave() { this._hov = false; this.dirty(); }
+      onClick() { pick(this); }
+    }();
+    V.add(b); cells.push(b);
   }
   let page = 0, sel = -1;
   const nPages = () => Math.max(1, Math.ceil(acts.length / perPage));
-  mkBtn('fwd', 'fwdc', X + 204, Y + 320, 59, 46, () => { page = Math.min(nPages() - 1, page + 1); render(); });
-  mkBtn('bback', 'bbackc', X + 54, Y + 320, 59, 46, () => { page = Math.max(0, page - 1); render(); });
-  mkBtn('b5celbk', 'b5celbks', X + 447, Y + 290, 27, 16, () => step(-1));
-  mkBtn('b5celfw', 'b5celfws', X + 475, Y + 290, 27, 16, () => step(1));
-  mkBtn('okay', 'okayc', X + 431, Y + 320, 50, 48, () => { // gob pos is bottom-left (preg 0,48)
+  function pick(b) {
+    sel = page * perPage + b.idx;
+    for (const o of cells) { o._sel = o === b; o.dirty(); }
+    setAnid(b.it.anid);
+  }
+  const render = () => {
+    num.textContent = t('ui.pageNum', { page: page + 1, total: nPages() });
+    cells.forEach((b, i) => { b.it = acts[page * perPage + i] || null; b._sel = page * perPage + i === sel; b.dirty(); });
+    V.invalidate();
+  };
+  V.mkBtn('fwd', 'fwdc', X + 204, Y + 320, 59, 46, () => { page = Math.min(nPages() - 1, page + 1); render(); });
+  V.mkBtn('bback', 'bbackc', X + 54, Y + 320, 59, 46, () => { page = Math.max(0, page - 1); render(); });
+  V.mkBtn('b5celbk', 'b5celbks', X + 447, Y + 290, 27, 16, () => step(-1));
+  V.mkBtn('b5celfw', 'b5celfws', X + 475, Y + 290, 27, 16, () => step(1));
+  V.mkBtn('okay', 'okayc', X + 431, Y + 320, 50, 48, () => { // gob pos is bottom-left (preg 0,48)
     if (sel >= 0) { // FSetAction(anid, celnStart, fFalse): Actn+Freeze(+Step) inserted at cursor, executed now
       const an = acts[sel].anid, cn = celnStart, d = a.data;
       const evs0 = structuredClone(d.events);
@@ -629,25 +658,10 @@ export function showActionBrowser() {
     }
     closeBrowser(); draw();
   });
-  mkBtn('cancel', 'cancelc', X + 381, Y + 320, 50, 48, closeBrowser);
-  function render() {
-    num.textContent = t('ui.pageNum', { page: page + 1, total: nPages() });
-    for (let i = 0; i < cells.length; i++) {
-      const it = acts[page * perPage + i], { b, fim, cv } = cells[i];
-      cv.width = 130; cv.height = 17;
-      cv.style.display = b.style.display = it ? '' : 'none';
-      if (!it) continue;
-      const x = cv.getContext('2d');
-      x.fillStyle = '#222'; x.textAlign = 'center'; x.textBaseline = 'middle';
-      x.font = '10px "Comic Sans MS", cursive, sans-serif';
-      x.fillText(it.name, cv.width / 2, cv.height / 2);
-      b.onmousedown = () => { fim.src = texUrl('frame5h'); };
-      b.onmouseup = b.onmouseleave = () => { fim.src = sel === page * perPage + i ? texUrl('frame5h') : texUrl('frame5'); };
-      b.onclick = () => { sel = page * perPage + i; for (const o of cells) o.fim.src = texUrl('frame5'); fim.src = texUrl('frame5h'); setAnid(it.anid); };
-    }
-  }
+  V.mkBtn('cancel', 'cancelc', X + 381, Y + 320, 50, 48, closeBrowser);
   render();
   setAnid(anid);
+  showEasel(V);
 }
 // costume easel (easels.cht kidCost*, ESLA): e2par bg at (102,100) 436x347;
 // preview (112,109)-(528,339); name edit (110,415); buttons costumes/accessories/
@@ -658,14 +672,14 @@ export function showCostumeEasel(a) {
   const tmpl = a.tmpl;
   if (tmpl.isTdt || !tmpl.cbset) return; // TDTs use the spletter easel; props without part sets do nothing
   setSelChid(chidOf(a)); syncRollCall(); draw();
-  const { place, mkImg, mkBtn } = brwsShell();
-  mkImg('e2par', 102, 100, 436, 347);
-  const pcv = document.createElement('canvas'); // preview frame (10,9)-(426,239) rel to bg
-  pcv.className = 'brwsCv'; pcv.width = 416; pcv.height = 230; pcv.style.pointerEvents = 'auto';
-  brwsEl.appendChild(pcv); place(pcv, 112, 109, 416, 230);
-  const inp = document.createElement('input'); // kidCostEditBox (8,315)-(427,339)
-  inp.className = 'spltInp'; inp.maxLength = 50; inp.value = a.data.name || '';
-  brwsEl.appendChild(inp); place(inp, 110, 415, 420, 24);
+  const V = new EaselView();
+  V.mkImg('e2par', 102, 100, 436, 347);
+  const pcv = offCv(416, 230); // preview frame (10,9)-(426,239) rel to bg
+  const pvEl = new CvEl(pcv, 112, 109, 416, 230);
+  pvEl.pickable = true; pvEl.cursor = 'pointer';
+  V.add(pvEl);
+  const inp = V.domInp(110, 415, 420, 24); // kidCostEditBox (8,315)-(427,339)
+  inp.maxLength = 50; inp.value = a.data.name || '';
   const pr = new THREE.WebGLRenderer({ canvas: pcv });
   const pscene = new THREE.Scene(), pcam = new THREE.PerspectiveCamera(25, 416 / 230, 0.1, 10000);
   const pactr = new Actor({ cno: 0, arid: 0, nfrmFirst: 0, nfrmLast: 0, name: '', dxyzFullRte: { x: 0, y: 0, z: 0 },
@@ -700,6 +714,7 @@ export function showCostumeEasel(a) {
       pcam.lookAt(cV);
     }
     pr.render(pscene, pcam);
+    pvEl.dirty();
   };
   // APE::_FIncCmtl helpers — which ibsets are accessory sets, and next-costume cycling
   const cmtlHasModel = (cmid) => { const c = templateCmtl(tmpl, cmid); return !!c && c.parts.some((p) => p.model); };
@@ -737,29 +752,25 @@ export function showCostumeEasel(a) {
     pose();
   };
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-  pcv.addEventListener('pointerdown', (e) => { // click a body part -> next costume for its ibset
-    const r = pcv.getBoundingClientRect();
-    ndc.set((e.clientX - r.left) / r.width * 2 - 1, 1 - (e.clientY - r.top) / r.height * 2);
+  pvEl.onPointerDown = (e) => { // click a body part -> next costume for its ibset
+    ndc.set((e.x - pvEl.x) / pvEl.w * 2 - 1, 1 - (e.y - pvEl.y) / pvEl.h * 2);
     ray.setFromCamera(ndc, pcam);
     const hit = ray.intersectObjects(meshes.filter(Boolean), false)[0];
     if (hit) incCmtl(tmpl.ibsets[hit.object.userData.ipar]);
-  });
+  };
   setBrwsCleanup(() => pr.dispose());
   const modeBtn = (up, dn, x, f) => { // costumes/accessories are radio-selected (kstSelected face)
-    /** @type {HTMLButtonElement & {_mode?: () => boolean, _sync2?: () => void}} */
-    const b = mkBtn(up, dn, x, 356, 50, 48, () => { fAcc = f; syncModes(); });
-    b._mode = () => fAcc === f;
-    b._sync2 = () => { (/** @type {HTMLImageElement} */ (b.firstElementChild)).src = texUrl(`${b._mode() ? dn : up}`); };
-    b.onmouseup = b.onmouseleave = () => b._sync2();
+    const b = V.mkBtn(up, dn, x, 356, 50, 48, () => { fAcc = f; syncModes(); });
+    /** @type {any} */ (b)._sync2 = () => { b.faceOverride = fAcc === f ? dn : up; b.dirty(); };
     return b;
   };
   const costB = modeBtn('e2cost', 'e2costs', 134, false);
   const accB = modeBtn('e2acc', 'e2accs', 218, true);
-  const syncModes = () => { costB._sync2(); accB._sync2(); };
+  const syncModes = () => { /** @type {any} */ (costB)._sync2(); /** @type {any} */ (accB)._sync2(); };
   syncModes();
-  mkBtn('e2rot', 'e2rots', 302, 356, 50, 48, () => { viewAng += Math.PI / 4; pose(); }); // kidCostRotate -> ChangeView
-  mkBtn('e2can', 'e2canc', 406, 356, 50, 48, closeBrowser); // cidEaselCancel (Esc also reaches this)
-  mkBtn('e2okay', 'e2okayc', 456, 356, 50, 48, () => { // cidEaselOk: commit costume events + name
+  V.mkBtn('e2rot', 'e2rots', 302, 356, 50, 48, () => { viewAng += Math.PI / 4; pose(); }); // kidCostRotate -> ChangeView
+  V.mkBtn('e2can', 'e2canc', 406, 356, 50, 48, closeBrowser); // cidEaselCancel (Esc also reaches this)
+  V.mkBtn('e2okay', 'e2okayc', 456, 356, 50, 48, () => { // cidEaselOk: commit costume events + name
     const changes = Object.values(pending), nameNew = inp.value.trim() || a.data.name;
     if (changes.length || nameNew !== a.data.name) {
       const evs0 = structuredClone(a.data.events), name0 = a.data.name;
@@ -773,4 +784,5 @@ export function showCostumeEasel(a) {
     closeBrowser(); draw();
   });
   pose();
+  showEasel(V);
 }

@@ -12,9 +12,10 @@ import { draw, setPlaying } from '../loop.js';
 import { version } from '../../../package.json';
 import { rcLists, rcActs, rcThumbFor } from '../thumbs.js';
 import { opExec, hist, histUndo, histRedo, syncUndoBtn } from '../undo.js';
-import { showBio } from '../ui-dom/bio.js';
-import { brwsEl, showOptsDlg, showBrowser } from '../ui-dom/browsers.js';
-import { showListenerEasel, showActionBrowser, showSpletter, showCostumeEasel, showSceneSorter } from '../ui-dom/easels.js';
+import { showBio } from './bio.js';
+import { brwsView, showBrowser } from './browser.js';
+import { showOptsDlg } from './optdlg.js';
+import { showListenerEasel, showActionBrowser, showSpletter, showCostumeEasel, showSceneSorter } from './easels.js';
 import { t } from '../i18n.js';
 import { View, ui, UI_W, UI_H } from './root.js';
 import { Element } from './element.js';
@@ -504,7 +505,7 @@ export function initStudio() {
   // edits the doc (keystrokes merge into one undo op via tbSnap)
   document.addEventListener('keydown', (e) => {
     const tb = focusTbox(); // keys go to the TBXG with focus — the last interior-clicked box
-    if (!tb || !tbSel || !TBX_TOOL[ed.tool] || playing || brwsEl) return;
+    if (!tb || !tbSel || !TBX_TOOL[ed.tool] || playing || brwsView) return;
     if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(/** @type {HTMLElement} */ (e.target).tagName)) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     const doc = tb.rtxt;

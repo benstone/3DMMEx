@@ -1,27 +1,7 @@
 html, body { margin: 0; height: 100%; background: #000; color: #ccc; font: 12px monospace; }
 body { display: flex; flex-direction: column; }
 #stage { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
-#studio { position: relative; aspect-ratio: 640 / 480; height: min(100%, 75vw); margin: auto; overflow: hidden; container-type: size; }
-#studio .stImg, #studio .stBtn, #studio #view { position: absolute; image-rendering: pixelated; }
-#studio .stBtn { padding: 0; border: 0; background: none; cursor: pointer; }
-#studio .stBtn img { width: 100%; height: 100%; display: block; image-rendering: pixelated; pointer-events: none; }
-#studio .stSld { position: absolute; cursor: pointer; touch-action: none; }
-#studio .stThumb { pointer-events: none; }
-#studio .rcThumb { position: absolute; pointer-events: none; image-rendering: auto; }
-#studio .stTxt { position: absolute; pointer-events: none; display: flex; align-items: center; justify-content: center; font: bold 2.1cqw 'Comic Sans MS', cursive, sans-serif; color: #333; }
-#studio .stVer { position: absolute; pointer-events: none; display: flex; align-items: center; justify-content: center; font: bold 1.5cqw 'Comic Sans MS', cursive, sans-serif; color: #555; }
-#studio .stLink { position: absolute; display: flex; align-items: center; justify-content: flex-end; font: bold 1.5cqw 'Comic Sans MS', cursive, sans-serif; color: #3465a4; text-decoration: none; cursor: pointer; }
-#studio .stLink:hover { text-decoration: underline; }
-#theatre { position: absolute; inset: 0; z-index: 20; }
-#theatre .thScr { position: absolute; }
-.thVeil { position: absolute; inset: 0; }
-#theatre .thVol, #embed .thVol { position: absolute; cursor: pointer; touch-action: none; }
-.thVolT { position: absolute; left: 0; width: 100%; height: auto; pointer-events: none; }
-#embed { position: absolute; inset: 0; z-index: 20; background: #000; display: flex; align-items: center; justify-content: center; }
-#embed .emScr { position: relative; aspect-ratio: 544 / 306; width: min(100%, 177.8cqh); }
-#embed .emVol { left: 2cqw; bottom: 4cqh; width: 2cqw; height: 14cqw; background: rgba(0,0,0,.45); border-radius: 1cqw; }
-#embed .emRew { right: 8cqw; bottom: 3cqh; width: 4.5cqw; height: 9.6cqw; }
-#embed .emPlay { right: 2cqw; bottom: 3cqh; width: 4.7cqw; height: 9.6cqw; }
+#studio { position: relative; touch-action: none; aspect-ratio: 640 / 480; height: min(100%, 75vw); margin: auto; overflow: hidden; container-type: size; }
 .optModal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .optBox { background: #1a1a1a; border: 1px solid #444; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;
   font: 12px monospace; color: #ccc; max-width: min(92vw, 420px); pointer-events: auto; }
@@ -41,26 +21,9 @@ body { display: flex; flex-direction: column; }
 .optPanel label.optRange { justify-content: space-between; }
 .optPanel label.optRange input[type=range] { width: 130px; }
 .optPanel .optSub input[type=range] { width: 110px; }
-.thSet { position: absolute; left: 1%; top: 1%; z-index: 25; background: none; border: 0;
-  color: #9ab; font: 12px monospace; text-decoration: underline; cursor: pointer; padding: 2px; }
-.thSet:hover { color: #cdf; }
-#studio #say { position: absolute; left: 1%; bottom: 1%; padding: .4em .8em; background: rgba(0,0,0,.75); border-radius: 4px;
-  color: #ddd; font: bold 2cqw 'Comic Sans MS', cursive, sans-serif; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 40; }
-#studio #say.show { opacity: 1; }
-#studio .covImg { position: absolute; image-rendering: pixelated; cursor: pointer; }
-#studio #brws { position: absolute; inset: 0; z-index: 56; /* above #ui canvas until easels are ported */ }
-#studio .brwsCv { position: absolute; pointer-events: none; image-rendering: auto; }
-#studio .brwsNum { position: absolute; display: flex; align-items: center; justify-content: center; font: bold 2.4cqw 'Comic Sans MS', cursive, sans-serif; color: #333; pointer-events: none; }
+#view { position: absolute; image-rendering: pixelated; }
 #studio .spltInp { position: absolute; box-sizing: border-box; background: #fff8dc; border: 2px inset #888; font: bold 3cqw 'Comic Sans MS', cursive, sans-serif; color: #222; padding: 0 1cqw; }
-#studio .bioTxt { position: absolute; font: 2.2cqw 'Comic Sans MS', cursive, sans-serif; color: #222; line-height: 1.35; pointer-events: none; }
-#studio .bioNum { font-size: 1.9cqw; z-index: 1; } /* paints over the sketch arrows' transparent edges */
 #studio .stNameInp { width: 100%; height: 100%; box-sizing: border-box; background: #cfe8ff; border: none; outline: none; font: bold 2cqw 'Comic Sans MS', cursive, sans-serif; color: #222; padding: 0 .4cqw; }
-#studio .lisNameTxt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: bold 2cqw 'Comic Sans MS', cursive, sans-serif; color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 1cqw; box-sizing: border-box; }
-#studio .recTherm { position: absolute; overflow: hidden; pointer-events: none; }
-#studio .ccpBg { position: absolute; background: #2b2b2b; border: 1px solid #111; z-index: 20; }
-#studio .tbPopBg { position: absolute; background: rgb(128,128,128); z-index: 20; pointer-events: none; }
-#studio .ccpCell { z-index: 21; }
-#studio .recThermFill { height: 100%; width: 0; background: #d23f3f; }
 #studio #selBox { display: none; } /* unused — selection is a 3D Box3Helper in-scene (BODY::_PrepareToRender) */
 
 /* --- boot splash (UTEST.CPP: homelogo -> splash during _FInitCrm) ----------- */
@@ -74,10 +37,4 @@ body { display: flex; flex-direction: column; }
 .bootFill { height: 100%; width: 0; background: #0a56c8; }
 .bootCap { position: absolute; left: 0; right: 0; top: 76.5%; text-align: center; color: #666; font: bold 2cqw 'Comic Sans MS', cursive, sans-serif; }
 /* --- callout tips (HBAL + GORT-tiled cobllnN.bmp skins, arrow baked in) ------ */
-.coBalloon { position: absolute; z-index: 95; }
-.coBalloon canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.coTxt { position: absolute; font: 2.1cqw 'Comic Sans MS', cursive, sans-serif; color: #1a1a1a; line-height: 1.15; white-space: pre-line; pointer-events: none; }
-.coTxt .t { font-weight: bold; }
-.coTxt .hot { color: #1332be; }
-.coX { position: absolute; cursor: pointer; image-rendering: pixelated; }
 

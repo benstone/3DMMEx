@@ -1,7 +1,7 @@
 import { ChunkyFile } from '../format/chunky.js';
 import { decodeWavAdpcm } from '../format/wav.js';
 import { lib, sounds } from './state.js';
-import { showBrowser } from './ui-dom/browsers.js';
+import { showBrowser } from './ui/browser.js';
 export const sndName = (tags) => { // first resolvable tag's name for the name plate
   for (const t of tags) {
     if (t.sid === 'usr') return userSnds.find((u) => u.key === t.cno)?.name || 'sound';

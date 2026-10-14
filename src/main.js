@@ -5,10 +5,10 @@ import { opts, optCbs } from './app/opts.js';
 import { applyPacks, packNotes } from './app/packs.js';
 import { loadUserSnds } from './app/sndsrc.js';
 import { loadBuiltinThumbs } from './app/thumbs.js';
-import { showOptsDlg } from './app/ui-dom/browsers.js';
-import { enterTheatre, enterEmbed } from './app/ui-dom/modes.js';
+import { showOptsDlg } from './app/ui/optdlg.js';
+import { enterTheatre, enterEmbed } from './app/ui/theatre.js';
 import { initStudio } from './app/ui/studio.js';
-import { guideTip } from './app/ui-dom/tips.js';
+import { guideTip } from './app/ui/tips.js';
 // 3DMM Web — boot orchestrator. Everything else lives in src/app/: state
 // (shared lets+setters), res (paths/DOM helpers), undo, boot (splash), packs
 // (?packs= expansions), thumbs (.3th scan), doc (open/save/autosave), loop

@@ -134,6 +134,27 @@ export class VSlider extends Element {
   onPointerUp() { this.dragging = false; }
 }
 
+/** Plain text element — font/color/align options; html-less lines via '\n'. */
+export class Txt extends Element {
+  constructor(text, x, y, w, h, { size = 12, color = '#222', align = 'center', bold = true, font = null } = {}) {
+    super(x, y, w, h);
+    this.text = text; this.size = size; this.color = color; this.align = align;
+    this.bold = bold; this.font = font; this.pickable = false;
+  }
+  set textContent(v) { if (v !== this.text) { this.text = v; this.dirty(); } }
+  get textContent() { return this.text; }
+  draw(ctx) {
+    if (!this.text) return;
+    ctx.fillStyle = this.color;
+    ctx.font = `${this.bold ? 'bold ' : ''}${this.size}px ${this.font || `'Comic Sans MS', cursive, sans-serif`}`;
+    ctx.textAlign = this.align; ctx.textBaseline = 'middle';
+    const tx = this.align === 'center' ? this.w / 2 : this.align === 'right' ? this.w : 0;
+    const lines = String(this.text).split('\n');
+    const lh = this.size * 1.2, y0 = this.h / 2 - (lines.length - 1) * lh / 2;
+    lines.forEach((l, i) => ctx.fillText(l, tx, y0 + i * lh, this.w - 4));
+  }
+}
+
 /** The 3D movie screen — blits the GL canvas into its rect each repaint. */
 export class MovieScreen extends Element {
   constructor(x, y, w, h) { super(x, y, w, h); this.pickable = false; this.playback = null; }

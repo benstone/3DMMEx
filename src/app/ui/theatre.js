@@ -2,12 +2,12 @@
 // theatre.cht kgobMovie: the MVU fills the screen rect (48,85)-(592,391),
 // projector-lens rewind/play sit at (293/318,7), volume slider on the left
 // wall (9,110 + 62px travel). Lights dim (the1dark) while the movie rolls.
-import { View, UI_W, UI_H } from './root.js';
+import { View, ui, UI_W, UI_H } from './root.js';
 import { Element } from './element.js';
 import { Img, ImgButton, TextLink, VSlider, MovieScreen } from './widgets.js';
 import { playing, player, sounds, setModeSync, modeSync } from '../state.js';
 import { setPlaying } from '../loop.js';
-import { showOptsDlg } from '../ui-dom/browsers.js';
+import { showOptsDlg } from './optdlg.js';
 import { t } from '../i18n.js';
 
 const thRewind = () => { // kgobRewindButton: rewind then play
@@ -72,3 +72,8 @@ export class EmbedView extends View {
   }
   onExit() { setModeSync(null); }
 }
+
+// --- theatre / embed mode entry (?3mm=...&mode=theatre|embed) -----------------
+// The cinema is a canvas view; the studio stays mounted underneath it.
+export const enterTheatre = () => ui.replace(new TheatreView(), 'fade');
+export const enterEmbed = () => ui.replace(new EmbedView(), 'fade');

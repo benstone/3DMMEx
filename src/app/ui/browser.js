@@ -11,8 +11,7 @@ import { setSndTag } from '../edit/sound.js';
 import { setPlaying, draw } from '../loop.js';
 import { getSndItems, addUserSnd, importSndFiles, previewItem } from '../sndsrc.js';
 import { bkthCaths, brwsTmpls, mbmpCanvas } from '../thumbs.js';
-import { showSpletter, showWords, showRecorder } from '../ui-dom/easels.js';
-import { brwsEl, brwsCleanup } from '../ui-dom/browsers.js';
+import { showSpletter, showWords, showRecorder } from './easels.js';
 import { t } from '../i18n.js';
 
 export const BRWS_DEFS = {
@@ -131,8 +130,11 @@ export class BrowserView extends View {
   }
 }
 
-/** The currently-open canvas browser view (pushed on the stack), or null. */
+/** The currently-open canvas browser/easel view (pushed on the stack), or null. */
 export let brwsView = null;
+export let brwsCleanup = null; // session teardown (GL dispose, snapshot restore)
+export const setBrwsView = (v) => (brwsView = v);
+export const setBrwsCleanup = (f) => (brwsCleanup = f);
 
 export function showBrowser(kind, items = null) { // open a canvas browser over the studio
   closeBrowser();
@@ -140,19 +142,19 @@ export function showBrowser(kind, items = null) { // open a canvas browser over 
   ui.push(brwsView, 'none');
 }
 
-export function closeBrowser() { // BRWN->Close; also tears down any DOM easel overlay
+export function closeBrowser() { // BRWN->Close; also tears down any easel overlay
   sounds.stopPreview();
-  brwsCleanup?.();
-  brwsEl?.remove();
-  if (brwsView) { const v = brwsView; brwsView = null; if (ui.topView === v) ui.pop('none'); else ui.stack.splice(ui.stack.indexOf(v), 1); }
+  brwsCleanup?.(); brwsCleanup = null;
+  if (brwsView) {
+    const v = brwsView; brwsView = null;
+    if (ui.topView === v) ui.pop('none');
+    else { const i = ui.stack.indexOf(v); if (i >= 0) { ui.stack.splice(i, 1); ui._rebuild(); } }
+    v.onExit(); // pop() doesn't fire onExit — run teardown after stack removal
+  }
 }
 
 /** Esc inside a browser or easel closes it (browser.cht maps Escape to the cancel
- * button's cid). Easels route through brwsEl._onEsc; canvas views pop. */
+ * button's cid). Easels may route Escape to their own _onEsc (e.g. sorter cancel). */
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && (brwsEl || brwsView)) {
-    if (brwsEl?._onEsc) brwsEl._onEsc();
-    else if (brwsEl) brwsEl.remove();
-    else closeBrowser();
-  }
+  if (e.key === 'Escape' && brwsView) (brwsView._onEsc || closeBrowser)();
 });

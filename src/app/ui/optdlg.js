@@ -1,44 +1,9 @@
-import { playing, sounds, renderer, player } from '../state.js';
-import { $, texUrl } from '../res.js';
+import { playing, renderer } from '../state.js';
 import { setPlaying, draw } from '../loop.js';
 import { opts, optsPanel, optSync, buildOptsPanel } from '../opts.js';
 import { t } from '../i18n.js';
-import { closeBrowser } from '../ui/browser.js';
-// --- easel shell + settings dialog (still DOM until easels are ported in M6).
-// The book browsers moved to the canvas stack — see app/ui/browser.js.
-export { showBrowser, closeBrowser, BRWS_DEFS } from '../ui/browser.js';
-
-export let brwsEl = null, brwsCleanup = null;
-export const setBrwsEl = (v) => (brwsEl = v);
-export const setBrwsCleanup = (v) => (brwsCleanup = v);
-export function brwsShell() { // shared: overlay div + % placement helper
-  closeBrowser();
-  brwsEl = document.createElement('div');
-  brwsEl.id = 'brws';
-  $('studio').appendChild(brwsEl);
-  const place = (el, x, y, w, h) => {
-    el.style.left = (x / 6.4) + '%'; el.style.top = (y / 4.8) + '%';
-    el.style.width = (w / 6.4) + '%'; el.style.height = (h / 4.8) + '%';
-  };
-  const mkImg = (n, x, y, w, h, cls = 'stImg') => {
-    const im = document.createElement('img');
-    im.src = texUrl(`${n}`); im.className = cls; im.draggable = false;
-    brwsEl.appendChild(im); place(im, x, y, w, h);
-    return im;
-  };
-  const mkBtn = (up, dn, x, y, w, h, act) => {
-    const b = document.createElement('button');
-    b.className = 'stBtn';
-    const im = document.createElement('img');
-    im.src = texUrl(`${up}`); im.draggable = false;
-    b.appendChild(im); brwsEl.appendChild(b); place(b, x, y, w, h);
-    b.onmousedown = () => { im.src = texUrl(`${dn}`); };
-    b.onmouseup = b.onmouseleave = () => { im.src = texUrl(`${up}`); };
-    if (act) b.onclick = act;
-    return b;
-  };
-  return { place, mkImg, mkBtn };
-}
+// --- render-settings modal — app chrome that deliberately lives OUTSIDE the
+// 640x480 canvas (it's a draggable OS-style dialog, not a 3DMM bitmap panel).
 export let optDlg = null, optSnap = null;
 export function showOptsDlg() { // book button + theatre/embed settings link -> render settings modal
   if (optDlg) { closeOptsDlg(true); return; } // it's a toggle — second call commits

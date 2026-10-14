@@ -24,6 +24,8 @@ export class UiRoot extends Element {
     this.leaving = [];          // views animating out (still painted, not hit-tested)
     this.toast = new Toast();   // say() overlay — always on top
     this.toast._ui = this;
+    this.tips = new Element(0, 0, UI_W, UI_H); // callout balloons — above views, under toast
+    this.tips.pickable = false;
     this.dirtyRects = [];
     this.dirtyAll = false;
     this.hover = null;
@@ -37,7 +39,7 @@ export class UiRoot extends Element {
 
   get topView() { return this.stack[this.stack.length - 1] || null; }
 
-  _rebuild() { this.children = [...this.stack, ...this.leaving, this.toast]; }
+  _rebuild() { this.children = [...this.stack, ...this.leaving, this.tips, this.toast]; }
 
   /** Push a view. anim: 'fade'|'none' */
   push(view, anim = 'fade') {
