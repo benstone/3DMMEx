@@ -1,0 +1,4 @@
+---
+BasedOnStyle: Microsoft
+# The order of includes is very important, so don't sort them!
+SortIncludes: Never
