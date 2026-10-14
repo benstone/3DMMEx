@@ -131,6 +131,7 @@ export function showSceneSorter() {
     e.preventDefault();
     const r = $('studio').getBoundingClientRect();
     const toStudio = (ev) => ({ x: ((ev.clientX - r.left) / r.width) * 640, y: ((ev.clientY - r.top) / r.height) * 480 });
+    /** @type {HTMLDivElement & {_idx?: number}} */
     const g = document.createElement('div'); // idSelFrame — dragged ghost of the selected cell
     g.style.cssText = 'position:absolute;pointer-events:none;';
     const gf = document.createElement('img');
@@ -263,14 +264,14 @@ export function showRecorder(kind) {
     rec = new MediaRecorder(stream);
     rec.ondataavailable = (e) => chunks.push(e.data);
     const mime = rec.mimeType || 'audio/webm'; // capture now — rec is nulled by stopRec before onstop fires
-    stopP = new Promise((res) => {
+    stopP = /** @type {Promise<void>} */ (new Promise((res) => {
       rec.onstop = async () => {
         const blob = new Blob(chunks, { type: mime }), bytes = await blob.arrayBuffer();
         take = { buf: await decodeAudioBytes(bytes), bytes, mime };
         fill.style.width = `${Math.min(100, ((take.buf?.duration || 0) / 10) * 100)}%`;
         stopTracks(); res();
       };
-    });
+    }));
     t0 = performance.now(); rec.start(); tick();
     setTimeout(() => { if (rec?.state === 'recording') stopRec(); }, 10000); // kdtsMaxRecord
   };
@@ -333,6 +334,7 @@ export function showListenerEasel(a) {
     nm.onmouseup = nm.onmouseleave = () => { nim.src = texUrl('e4audit'); };
     nm.onclick = audition;
     colEls.push(nm);
+    /** @type {HTMLDivElement & {_yp?: number}} */
     const sld = document.createElement('div'); // volume track (l,20)-(r,138), thumb travels y 20..128
     sld.className = 'stSld'; brwsEl.appendChild(sld); place(sld, X + sl, Y + 20, sr - sl, 118);
     const th = document.createElement('img'); // e4vol1 thumb, MoveAbsGob(kxpSliderThumb=5, yPos)
@@ -743,9 +745,10 @@ export function showCostumeEasel(a) {
   });
   setBrwsCleanup(() => pr.dispose());
   const modeBtn = (up, dn, x, f) => { // costumes/accessories are radio-selected (kstSelected face)
+    /** @type {HTMLButtonElement & {_mode?: () => boolean, _sync2?: () => void}} */
     const b = mkBtn(up, dn, x, 356, 50, 48, () => { fAcc = f; syncModes(); });
     b._mode = () => fAcc === f;
-    b._sync2 = () => { b.firstElementChild.src = texUrl(`${b._mode() ? dn : up}`); };
+    b._sync2 = () => { (/** @type {HTMLImageElement} */ (b.firstElementChild)).src = texUrl(`${b._mode() ? dn : up}`); };
     b.onmouseup = b.onmouseleave = () => b._sync2();
     return b;
   };
