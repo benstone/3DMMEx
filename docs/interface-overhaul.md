@@ -64,7 +64,7 @@ src/
       movie.ts             editBkgd/editCam/insActr/cut/nuke/sceneChop
       sound.ts             sound tool, easels' sound logic, user imports
       tbox.ts              text box editing
-    state.ts               shared singletons (player, renderer, sounds, sel)
+    state.ts               zustand stores: runtime singletons + editor state
     ui-dom/                ← temporary home for current DOM UI, verbatim
       studio.ts            the ~1,200-line studio chrome block
       browsers.ts          showBrowser/brwsShell/scene sorter
@@ -78,6 +78,10 @@ src/
 Rules: move code verbatim, export what other modules need, keep a single
 `state.ts` for cross-cutting singletons rather than threading params through
 30 functions. Commit per region so `git log -S` still finds history.
+
+Status: **done** — main.js is a ~130-line boot orchestrator; `app/state.js`
+currently holds hand-rolled `export let` + setter pairs. That module becomes
+the zustand store in Phase 2 (see below).
 
 ## Phase 2 — TypeScript
 
@@ -93,6 +97,27 @@ Rules: move code verbatim, export what other modules need, keep a single
   `.ts` natively, shares the Vite transform pipeline, and the existing tests
   port mechanically (assert API is compatible). Migrate test files to `.ts`
   alongside their modules.
+- **State management: zustand (decided).** Replace the hand-rolled
+  `app/state.js` lets+setters with `zustand/vanilla` `createStore` — the UI
+  is not React, so use the vanilla entry (~1 kB, no framework). Migration is
+  mechanical: each `export let x` + `setX` pair becomes a store field written
+  via `set()`; readers go through `useApp.getState().x` or a destructured
+  `useApp()` selector.
+  - Proposed slices: `useApp` — runtime singletons (`player`, `lib`, `pal`,
+    `renderer`, `sounds`; non-serializable objects held as plain refs set
+    once at boot, no reactivity needed); `useEd` — editor state (`tool`,
+    `selChid`, `pendPlace`, `selTbChid`, `focusTbChid`, `tbSel`, `tbAttach`,
+    `tbSnap`, `ed`, `tbPaint`); `useUi` — UI state (`playing`, view stack,
+    open dialog/easel, tooltip, `modeSync`) added as the canvas framework
+    lands.
+  - Why it pays off here (not just convention): `subscribe` /
+    `subscribeWithSelector` gives selector-based invalidation — the canvas
+    renderer only repaints the regions whose backing slice changed (see
+    Phase 4's dirty-region model), and roll calls/browsers can subscribe to
+    `player`/`ed` slices instead of today's manual `syncStudio()` calls.
+  - Mutable hot-path state that changes per-frame (actor positions, drag
+    deltas) stays out of the store — zustand holds UI-relevant state, not
+    the simulation tick.
 
 ## Phase 3 — i18n
 
@@ -136,8 +161,14 @@ Core pieces:
   RAF-driven render loop that only repaints dirty regions (the UI is mostly
   static; don't redraw 60fps idle — the 3D view region repaints per-frame
   while playing).
+- **State→render wiring** — elements subscribe to zustand store slices;
+  `useEd`/`useUi` selectors mark their element's rect dirty on change, so a
+  selChid change repaints just the roll-call strip and the status bar
+  instead of today's whole-UI `syncStudio()` pass.
 - `View` — a screen (studio / theatre / browser / easel / boot). View stack
   with push/pop/replace = the "routing" (modal dialogs push, back pops).
+  The stack itself lives in the `useUi` store — view transitions and any
+  "is a dialog open" checks are just selectors over it.
 - `Element` tree — retained-mode widgets: panel, image, button, label, grid,
   text input. Rect layout in absolute 640×480 coords, straight from the
   original `.cht` positions — no % anywhere.
@@ -244,8 +275,8 @@ pages; Chrome tab-mirroring casts everything. To cast "only the movie":
 
 | # | Deliverable | Depends on |
 |---|-------------|-----------|
-| 1 | `app/` split, tests green, no DOM changes | — |
-| 2 | `tsc --noEmit` clean on `format/`/`engine/` + vitest migration | 1 |
+| 1 | `app/` split, tests green, no DOM changes — **done** | — |
+| 2 | `tsc --noEmit` clean on `format/`/`engine/` + vitest migration + zustand stores (`state.js` → `useApp`/`useEd`/`useUi`) | 1 |
 | 3 | `en.json` + `t()` + `?lang=` + a couple of surfaces using it | 1 |
 | 4 | Canvas framework (single 640×480 canvas) + boot/theatre on it | 2, 3 |
 | 5 | Studio chrome + browsers ported | 4 |
@@ -269,3 +300,8 @@ pages; Chrome tab-mirroring casts everything. To cast "only the movie":
    expansion `.chk` files could later provide per-pack UI strings — a
    possible `t()` override layer — but JSON lang files cover the need; note
    in `format-notes.md` for the future.
+6. **Zustand for state management** — `zustand/vanilla` stores replace the
+   hand-rolled `export let`+setter pairs landed in Milestone 1. Slices:
+   `useApp` (engine singletons), `useEd` (editor state), `useUi` (view stack/
+   playback/dialogs). Selector subscriptions drive canvas dirty-region
+   invalidation; per-frame simulation state stays out of the store.
