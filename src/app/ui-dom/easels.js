@@ -71,7 +71,9 @@ export function showSceneSorter() {
 
   const hand = mkImg('e3hand', PX + 25, PY + 298, 50, 48);   // kidSSorterHand (default)
   const nuke = mkImg('e3rmsn', PX + 80, PY + 298, 50, 48);   // kidSSorterNuke
-  for (const [im, t] of [[hand, 'hand'], [nuke, 'nuke']]) {
+  /** @type {[HTMLImageElement, string][]} */
+  const sorterTools = [[hand, 'hand'], [nuke, 'nuke']];
+  for (const [im, t] of sorterTools) {
     im.style.cursor = 'pointer';
     im.onmousedown = () => { tool = t; syncTools(); };
   }
@@ -81,7 +83,9 @@ export function showSceneSorter() {
   };
   const sup = mkImg('e3up', PX + 580, PY + 2, 17, 19);       // kidSSorterScrollUp (hidden when disabled)
   const sdn = mkImg('e3down', PX + 580, PY + 273, 17, 19);   // kidSSorterScrollDn
-  for (const [el, d, dn] of [[sup, -1, 'e3upc'], [sdn, 1, 'e3downc']]) {
+  /** @type {[HTMLImageElement, number, string][]} */
+  const scrollBtns = [[sup, -1, 'e3upc'], [sdn, 1, 'e3downc']];
+  for (const [el, d, dn] of scrollBtns) {
     let tm = null;
     const step = () => { top = Math.max(0, Math.min(items.length - 1, top + d * 3)); sync(); }; // FCmdScroll ±nxFrame
     el.style.cursor = 'pointer';
