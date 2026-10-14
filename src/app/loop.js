@@ -4,7 +4,7 @@ import { FPS } from '../engine/player.js';
 import { selActor } from './edit/movie.js';
 import { selTbox, focusTbox } from './edit/tbox.js';
 import { opts } from './opts.js';
-import { syncStudio } from './ui-dom/studio.js';
+import { syncStudio, studioEl } from './ui/studio.js';
 export let timer = null;
 export function updateUi() { if (player) syncStudio(); }
 export function draw() {
@@ -45,7 +45,7 @@ export function setPlaying(p) {
   setPlayingFlag(p); clearInterval(timer); if (raf) cancelAnimationFrame(raf);
   if (p) { sounds.ensure(); startLoop(); }
   else sounds.suspend();
-  const pb = /** @type {HTMLElement & {_sync?: () => void} | null} */ ($('stb_play'));
+  const pb = studioEl('stb_play');
   if (pb) { pb.classList.toggle('on', p); pb._sync?.(); }
   updateUi();
   modeSync?.(); // theatre/embed UI follows play state

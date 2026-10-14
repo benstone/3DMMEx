@@ -17,7 +17,7 @@ import { player, ed, setSelChid, selTbSels, sounds, renderer, lib, setPendPlace 
 import { mbmpCanvas, spltThumbs } from '../thumbs.js';
 import { histClear, opExec } from '../undo.js';
 import { brwsShell, brwsEl, closeBrowser, showBrowser, brwsCleanup, setBrwsCleanup } from './browsers.js';
-import { syncRollCall } from './studio.js';
+import { syncRollCall } from '../ui/studio.js';
 import { t } from '../i18n.js';
 // --- scene sorter easel (easels.cht kidSSorter*; scnsort.cpp SCRT) -----------
 // e3par panel at (20,65) 600x350; 6 frame cells 185x126 at (10+c*193,12+r*141);
@@ -543,7 +543,7 @@ export function showSpletter(editA) {
       closeBrowser();
     } else { // new TDT: FInsTdt happens at the drop point (StartPlaceActor)
       setPendPlace({ tdt: { text, tdts: st.tdts, tagTdf: st.tagTdf, tagMtrl: st.mtrlDirty ? st.tagMtrl : null } });
-      $('view').style.cursor = 'crosshair';
+      if (ed.view) ed.view.cursor = 'crosshair';
       closeBrowser(); draw();
     }
   });

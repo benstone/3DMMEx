@@ -87,7 +87,7 @@ export function insTbox(fStory) { // STDIO::FCmdCreateTbox -> MVIE::FInsTbox (kx
       s.startEvents.push({ sevt: SEVT.AddTbox, nfrm, data: chid }); // FAddTboxCore: always the start list (frame-list AddTbox is invalid)
       setTbSel(chid); setSelChid(-1);
       setTbAttach({ tb: s.tboxes.get(chid), moved: false }); // AttachToMouse: box tracks the cursor until a click drops it
-      if (ed.view) ed.view.style.cursor = 'none';
+      if (ed.view) ed.view.cursor = 'none';
     } else {
       s.tboxes.delete(chid);
       for (const l of [s.startEvents, s.frameEvents])
@@ -95,7 +95,7 @@ export function insTbox(fStory) { // STDIO::FCmdCreateTbox -> MVIE::FInsTbox (kx
       if (selTbChid === chid) setTbSel(-1);
       if (focusTbChid === chid) setTbFocus(-1);
       selTbSels.delete(chid);
-      setTbAttach(null); if (ed.view) ed.view.style.cursor = '';
+      setTbAttach(null); if (ed.view) ed.view.cursor = '';
     }
     player.gotoFrame(player.frame); draw();
   };

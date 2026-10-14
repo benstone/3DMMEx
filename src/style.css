@@ -48,7 +48,7 @@ body { display: flex; flex-direction: column; }
   color: #ddd; font: bold 2cqw 'Comic Sans MS', cursive, sans-serif; opacity: 0; transition: opacity .3s; pointer-events: none; z-index: 40; }
 #studio #say.show { opacity: 1; }
 #studio .covImg { position: absolute; image-rendering: pixelated; cursor: pointer; }
-#studio #brws { position: absolute; inset: 0; z-index: 30; }
+#studio #brws { position: absolute; inset: 0; z-index: 56; /* above #ui canvas until easels are ported */ }
 #studio .brwsCv { position: absolute; pointer-events: none; image-rendering: auto; }
 #studio .brwsNum { position: absolute; display: flex; align-items: center; justify-content: center; font: bold 2.4cqw 'Comic Sans MS', cursive, sans-serif; color: #333; pointer-events: none; }
 #studio .spltInp { position: absolute; box-sizing: border-box; background: #fff8dc; border: 2px inset #888; font: bold 3cqw 'Comic Sans MS', cursive, sans-serif; color: #222; padding: 0 1cqw; }

@@ -1,5 +1,7 @@
 import { playing, player } from '../state.js';
 import { $, B } from '../res.js';
+import { ui } from '../ui/root.js';
+import { t } from '../i18n.js';
 // --- callout tips (the original's HBAL: kgobCalloutBalloonN — a cobllnN.bmp
 // skin tiled by GORT with the red arrow baked in; reg point = the arrow tip.
 // Dwell on a control to get its tip (suppressed while playing, like the
@@ -94,7 +96,8 @@ export function callout(target, parts, sticky) { // -> balloon el or null; parts
   }
   return null;
 }
-export let tipEl = null, tipTimer = 0, tipSrc = null;
+export let tipEl = null, tipSrc = null;
+export let tipTimer = /** @type {any} */ (0);
 export const tipDismiss = () => { clearTimeout(tipTimer); tipTimer = 0; tipEl?.remove(); tipEl = null; tipSrc = null; };
 export function tipShow(el) { // HBAL::PhbalNew — the control's topic balloon, arrow at the control
   tipDismiss();
@@ -105,10 +108,24 @@ export function tipShow(el) { // HBAL::PhbalNew — the control's topic balloon,
     tipEl = callout(el, typeof tip === 'string' // 'Title\nBody' -> title run + body
       ? tip.split('\n').map((l, i) => [l + '\n', i ? '' : 't']) : tip, false); });
 }
+// Canvas elements carry a tip id (StBtn.tip) instead of data-tip — wrap the hit
+// in a synthetic target with dataset + getBoundingClientRect so callout() works.
+const tipFromCanvas = (e) => {
+  if (e.target !== $('ui')) return null;
+  const r = e.target.getBoundingClientRect();
+  const hit = ui.topView?.hitTest((e.clientX - r.left) / r.width * 640, (e.clientY - r.top) / r.height * 480);
+  for (let el = hit; el; el = el.parent) {
+    if (!el.tip) continue;
+    const [ax, ay] = el.abs();
+    return { dataset: { tip: t(`tip.${el.tip}`) },
+      getBoundingClientRect: () => new DOMRect(r.left + ax / 640 * r.width, r.top + ay / 480 * r.height, el.w / 640 * r.width, el.h / 480 * r.height) };
+  }
+  return null;
+};
 document.addEventListener('pointermove', (e) => {
   if (tipEl?.classList.contains('sticky')) return; // guide stays until click/X
-  const el = e.target?.closest?.('[data-tip]');
-  if (el === tipSrc || (tipEl && e.target?.closest?.('.coBalloon') === tipEl)) return;
+  const el = /** @type {HTMLElement} */ (e.target)?.closest?.('[data-tip]') || tipFromCanvas(e);
+  if (el === tipSrc || (tipEl && /** @type {HTMLElement} */ (e.target)?.closest?.('.coBalloon') === tipEl)) return;
   clearTimeout(tipTimer); tipTimer = 0;
   tipEl?.remove(); tipEl = null;
   tipSrc = el;
@@ -117,9 +134,10 @@ document.addEventListener('pointermove', (e) => {
 }, true);
 document.addEventListener('pointerdown', tipDismiss, true);
 export function guideTip() { // first-boot guide — the original's CO tip for the scenes cover
-  const b = [...document.querySelectorAll('#studio .stBtn')]
-    .find((x) => x.firstElementChild?.src.includes('/1back.'));
-  if (!b) return; // guidhelp.cht CO__To_see_the_scenes, verbatim text + hot run
+  const cv = $('ui');
+  if (!cv) return;
+  const cr = cv.getBoundingClientRect(); // synthetic target over the 1back insert button (18,1,62,40)
+  const b = { getBoundingClientRect: () => new DOMRect(cr.left + 18 / 640 * cr.width, cr.top + 1 / 480 * cr.height, 62 / 640 * cr.width, 40 / 480 * cr.height) };
   coblnReady.then(() => { if (tipEl || player?.movie.scenes.length) return;
     tipEl = callout(b, [['To see the scenes you can choose from, click '], ['Scene Choices', 1], ['.']], true);
     if (tipEl) tipSrc = b;

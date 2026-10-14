@@ -11,20 +11,23 @@ export class Element {
     this.cursor = null;     // css cursor string while hovering
     this.root = null;
     this._root = null;      // opaque back-ref for view-owned anonymous elements
+    /** @type {any} */ this._pop = null; // popup group this element belongs to (studio)
   }
   add(el) { el.parent = this; el.root = this.root; this.children.push(el); for (const c of el.children) c.root = this.root; return el; }
   remove(el) { const i = this.children.indexOf(el); if (i >= 0) { el.parent = el.root = null; this.children.splice(i, 1); } return el; }
   clear() { for (const c of this.children) { c.parent = c.root = null; } this.children.length = 0; }
   contains(px, py) { return px >= this.x && py >= this.y && px < this.x + this.w && py < this.y + this.h; }
 
-  /** Deepest visible pickable element under (px,py) in absolute coords. */
+  /** Deepest visible pickable element under (px,py) in absolute coords.
+      pickable=false only exempts *this* element — children still test. */
   hitTest(px, py) {
-    if (!this.visible || !this.pickable || !this.contains(px, py)) return null;
+    if (!this.visible) return null;
     for (let i = this.children.length - 1; i >= 0; i--) {
       const hit = this.children[i].hitTest(px, py);
       if (hit) return hit;
     }
-    return this;
+    if (this.pickable && this.contains(px, py)) return this;
+    return null;
   }
 
   /** Mark this element's rect dirty for the next repaint. */

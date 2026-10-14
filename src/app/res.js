@@ -6,10 +6,8 @@ export const curUrl = (n) => packTex.get(`${n}.cur`) || `${B}cur/${n}.cur`;
 export const $ = (id) => document.getElementById(id);
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-let sayEl = null, sayTm = null;
-export function say(msg) { // PushErc-style notice: transient toast on the stage (errors, saves)
-  console.log('[mms]', msg);
-  if (!sayEl) { sayEl = document.createElement('div'); sayEl.id = 'say'; $('studio').appendChild(sayEl); }
-  sayEl.textContent = msg; sayEl.classList.add('show');
-  clearTimeout(sayTm); sayTm = setTimeout(() => sayEl.classList.remove('show'), 3000);
-}
+// say() delegates to the canvas toast once the UI root registers — res.js is a
+// leaf module so it can't import the ui cycle directly.
+let sayImpl = (msg) => console.log('[mms]', msg);
+export const setSayImpl = (f) => { sayImpl = f; };
+export function say(msg) { console.log('[mms]', msg); sayImpl(msg); }

@@ -22,6 +22,8 @@ export class UiRoot extends Element {
     this.root = this;
     this.stack = [];            // View objects, top = last
     this.leaving = [];          // views animating out (still painted, not hit-tested)
+    this.toast = new Toast();   // say() overlay — always on top
+    this.toast._ui = this;
     this.dirtyRects = [];
     this.dirtyAll = false;
     this.hover = null;
@@ -35,7 +37,7 @@ export class UiRoot extends Element {
 
   get topView() { return this.stack[this.stack.length - 1] || null; }
 
-  _rebuild() { this.children = [...this.stack, ...this.leaving]; }
+  _rebuild() { this.children = [...this.stack, ...this.leaving, this.toast]; }
 
   /** Push a view. anim: 'fade'|'none' */
   push(view, anim = 'fade') {
@@ -174,8 +176,35 @@ export class UiRoot extends Element {
   _walkUp(el, method, p) {
     for (let e = el; e; e = e.parent) if (e[method]?.(p)) break;
   }
+
+  /** PushErc-style notice — transient toast bottom-left. */
+  say(msg) { this.toast.say(msg); this.invalidate(); this.start(); }
+}
+
+class Toast extends Element {
+  constructor() { super(6, 452, 340, 22); this.pickable = false; this.msg = ''; /** @type {any} */ this._tm = 0; /** @type {any} */ this._ui = null; }
+  say(msg) {
+    this.msg = msg;
+    this.visible = true; this.opacity = 1;
+    clearTimeout(this._tm);
+    this._tm = /** @type {any} */ (setTimeout(() => {
+      const ui = this._ui;
+      ui?.anim.tween(this, { opacity: 0 }, { dur: 300, done: () => { this.visible = false; } });
+    }), 3000);
+  }
+  draw(ctx) {
+    if (!this.msg) return;
+    ctx.font = "bold 12px 'Comic Sans MS', cursive, sans-serif";
+    const w = Math.min(this.w, ctx.measureText(this.msg).width + 16);
+    ctx.fillStyle = 'rgba(0,0,0,.75)';
+    ctx.beginPath(); ctx.roundRect(0, 0, w, this.h, 4); ctx.fill();
+    ctx.fillStyle = '#ddd'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(this.msg, 8, this.h / 2, w - 16);
+  }
 }
 
 // Singleton — created at module eval so boot can push its view immediately.
 export const ui = new UiRoot(document.getElementById('ui') ?? Object.assign(document.createElement('canvas'), { id: 'ui' }));
 if (!ui.canvas.parentNode) document.getElementById('stage')?.appendChild(ui.canvas);
+import { setSayImpl } from '../res.js';
+setSayImpl((msg) => ui.say(msg));

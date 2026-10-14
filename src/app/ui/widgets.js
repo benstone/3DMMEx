@@ -64,6 +64,54 @@ export class TextLink extends Element {
   onClick() { this.act?.(); }
 }
 
+/** Studio-style bitmap button — mirrors the old DOM stBtn idiom: `on`/`down`
+    class flags, `_sync()` face callback, `onclick` action, `_en` gate, tip id. */
+export class StBtn extends Element {
+  constructor(up, dn, x, y, w, h, onclick, tipId = null) {
+    super(x, y, w, h);
+    this.up = up; this.dn = dn;
+    this.onclick = onclick;
+    this.tip = tipId;
+    this.cursor = 'pointer';
+    this._en = true;            // disabled buttons draw the 'd' face when set
+    this.dim = false;           // 'brightness(.6)' down-face filter
+    this.alpha = 1;
+    this.faceOverride = null;   // explicit texture name (undo/anim faces)
+    /** @type {string|undefined} */ this._tool = undefined; // armed-tool id the face follows
+    /** @type {string[]|undefined} */ this._anim = undefined; /** @type {number} */ this._ai = 0; // cycling faces
+    const cl = new Set();
+    this.classList = { // minimal DOM classList shim so ported logic is verbatim
+      add: (c) => cl.add(c), remove: (c) => cl.delete(c),
+      contains: (c) => cl.has(c), toggle: (c, f) => { f === undefined ? (cl.has(c) ? cl.delete(c) : cl.add(c)) : (f ? cl.add(c) : cl.delete(c)); },
+    };
+    this._classes = cl;
+    this._sync = () => { this.dirty(); };
+  }
+  get isDown() { return this._classes.has('down'); }
+  get isOn() { return this._classes.has('on'); }
+  face() {
+    if (this.faceOverride) return this.faceOverride;
+    return this.isOn || this.isDown ? this.dn : this.up;
+  }
+  draw(ctx) {
+    const im = texImg(this.face(), () => this.dirty());
+    if (!imgReady(im)) return;
+    ctx.save();
+    ctx.globalAlpha *= this.alpha;
+    if (this.dim && ctx.filter !== undefined) ctx.filter = 'brightness(.6)';
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(im, 0, 0, this.w, this.h);
+    ctx.restore();
+  }
+  onPointerDown() {
+    if (!this._en) return true;
+    this._classes.add('down'); this._sync(); this.dirty();
+  }
+  onPointerUp() { this._classes.delete('down'); this._sync(); this.dirty(); }
+  onPointerLeave() { if (this.isDown) { this._classes.delete('down'); this._sync(); this.dirty(); } }
+  onClick() { if (this._en) this.onclick?.(); }
+}
+
 /** Vertical drag slider (theatre volume). thumb = texture name. */
 export class VSlider extends Element {
   constructor(x, y, w, h, thumb, onChange) {
