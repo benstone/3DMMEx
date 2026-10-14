@@ -2,10 +2,15 @@
 // see the current value; only the paired setter may assign (ESM rule).
 // Setters return the value so `a = b = setX(v)` chains still work.
 export let lib = null, pal = null, renderer = null, sounds = null;
+export let player = null, playing = false;
+export let modeSync = null; // theatre/embed UI follow-callback (set by enterTheatre/enterEmbed)
 export let selChid = -1, pendPlace = null;
 export let selTbChid = -1, focusTbChid = -1, tbSel = null;
 export let tbAttach = null, tbSnap = null, lastViewPt = null;
 export const setLib = (v) => (lib = v);
+export const setPlayer = (v) => (player = v);
+export const setPlaying = (v) => (playing = v);
+export const setModeSync = (v) => (modeSync = v);
 export const setPal = (v) => (pal = v);
 export const setRenderer = (v) => (renderer = v);
 export const setSounds = (v) => (sounds = v);
