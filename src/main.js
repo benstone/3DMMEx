@@ -12,12 +12,11 @@ import { Renderer, toMatrix4 } from './render/renderer.js';
 import { hitTbox, acrToColor } from './render/textbox.js';
 import * as THREE from 'three';
 import { version } from '../package.json';
+import { B, packTex, texUrl, curUrl, $, sleep, say } from './app/res.js';
+import { lib, pal, renderer, sounds, selChid, pendPlace, selTbChid, focusTbChid, tbSel, tbAttach, tbSnap, lastViewPt,
+  setLib, setPal, setRenderer, setSounds, setSelChid, setPendPlace, setSelTbChid, setFocusTbChid, setTbSelVal, setTbAttach,
+  setTbSnap, setLastViewPt, ed, tbPaint, selTbSels } from './app/state.js';
 
-const B = import.meta.env.BASE_URL; // vite base ('/' dev, './' pages build)
-const packTex = new Map(); // asset-pack overrides: 'name.png'/'name.cur' -> blob URL (?packs=)
-const texUrl = (n) => packTex.get(`${n}.png`) || `${B}textures/${n}.png`;
-const curUrl = (n) => packTex.get(`${n}.cur`) || `${B}cur/${n}.cur`;
-const $ = (id) => document.getElementById(id);
 let player = null, playing = false, timer = null;
 
 // --- boot splash -------------------------------------------------------------
@@ -36,7 +35,6 @@ const bootCap = document.createElement('div'); bootCap.className = 'bootCap';
 bootScr?.append(bootImg, bootBar, bootCap);
 const bootShow = (n) => { bootImg.src = texUrl(`${n}`); };
 const bootDone = () => { bootEl?.classList.add('gone'); setTimeout(() => bootEl?.remove(), 400); };
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const bootSegs = [];
 const bootSeg = (w) => { // one weighted slice of the bar; cb updates its fraction
   const s = { w, f: 0 };
@@ -87,17 +85,17 @@ const libPart = new Map(); // per-.3CN byte fraction
 await sleep(Math.max(0, 700 - (performance.now() - bootT0))); // a beat on the logo (kdtsHomeLogo)
 bootShow('splash'); bootBar.hidden = false;
 const splashT0 = performance.now();
-const lib = await Library.load(`${B}data`, (n, got, tot) => {
+setLib(await Library.load(`${B}data`, (n, got, tot) => {
   libPart.set(n, tot ? got / tot : 1);
   libSeg([...libPart.values()].reduce((a, b) => a + b, 0) / CONTENT_FILES.length, `loading ${n.toLowerCase()}`);
-});
+}));
 const miscSeg = bootSeg(0.08);
 let miscN = 0;
 const miscTick = (cap) => miscSeg(++miscN / 6, cap); // pal + 5 thumbnail-file fetches
-const pal = new Uint8Array(await (await fetch(`${B}data/socpal.pal`)).arrayBuffer());
+setPal(new Uint8Array(await (await fetch(`${B}data/socpal.pal`)).arrayBuffer()));
 miscTick('loading palette');
-const renderer = new Renderer($('view'), pal);
-const sounds = new SoundQueue(lib);
+setRenderer(new Renderer($('view'), pal));
+setSounds(new SoundQueue(lib));
 
 // roll call thumbnails: TMTH/PRTH (TFC tmpl cno) -> GOKD -> MBMP, from actor.3th / prop.3th
 const rcTmplThumbs = new Map();
@@ -265,14 +263,8 @@ function syncUndoBtn() {
 }
 
 // --- editor state (studio.cht kidBackground flags: fXYAxis/fRGround = fFalse) -
-const ed = { xy: false, ground: false, tool: 'compose', // tool = active secondary tool
-  sndTag: null, pauseSnd: false }; // _tagTool / fpseDown
-let selChid = -1, pendPlace = null;
-let selTbChid = -1, focusTbChid = -1, tbSel = null; // PtboxSelected (border chrome) | TBXG key focus + its cp sel
-let tbAttach = null;             // TBOX::AttachToMouse — new box follows cursor {tb, moved}
-let tbSnap = null;               // pending text-edit undo burst {tb, rc0, doc0}
-let lastViewPt = null;           // last view-space point (popup arm-time apply needs it)
-const tbPaint = { acr: -1, dyp: 14, grfont: 0, font: null }; // AcrPaint/DypFontTextCur/GrfontStyleTextCur/OnnTextCur
+// PtboxSelected (border chrome) | TBXG key focus + its cp sel: selTbChid/focusTbChid/tbSel,
+// TBOX::AttachToMouse {tb, moved}: tbAttach, pending text-edit undo burst: tbSnap — all in app/state.js
 const chidOf = (a) => { for (const [c, x] of player.actors) if (x === a) return c; return -1; };
 const selActor = () => (selChid >= 0 && player ? player.actors.get(selChid) : null);
 function syncSelBox() { renderer.selActor = selActor(); } // 3D bbox drawn in-scene (BODY::_PrepareToRender)
@@ -375,13 +367,13 @@ function insActr(tagTmpl, name, anid, p, after) { // MVIE::FInsActr — AddActr+
     s.actors.set(chid, mk());
     (nfrm === s.nfrmFirst ? s.startEvents : s.frameEvents).push({ sevt: SEVT.AddActr, nfrm, data: chid });
     s.frameEvents.sort((a, b) => a.nfrm - b.nfrm);
-    setPlaying(false); player.loadScene(player.sceneIndex); player.gotoFrame(nfrm); selChid = chid;
+    setPlaying(false); player.loadScene(player.sceneIndex); player.gotoFrame(nfrm); setSelChid(chid);
     after?.(chid);
   };
   const rem = () => {
     s.actors.delete(chid);
     for (const l of [s.startEvents, s.frameEvents]) { const j = l.findIndex((e) => e.sevt === SEVT.AddActr && e.data === chid); if (j >= 0) l.splice(j, 1); }
-    selChid = -1; player.loadScene(player.sceneIndex); player.gotoFrame(Math.min(nfrm, s.nfrmLast));
+    setSelChid(-1); player.loadScene(player.sceneIndex); player.gotoFrame(Math.min(nfrm, s.nfrmLast));
   };
   opExec({ do: add, undo: rem });
 }
@@ -536,7 +528,7 @@ function sceneChop(fwd) { // SCEN::FChop (p3rmfw: truncate at cur) / FChopBack (
     }
     after.frameEvents.sort((a, b) => a.nfrm - b.nfrm);
   }
-  const swap = (dst) => { player.movie.scenes[i] = structuredClone(dst); player.loadScene(i); player.gotoFrame(f); selChid = -1; setTbSel(-1); setTbFocus(-1); selTbSels.clear(); };
+  const swap = (dst) => { player.movie.scenes[i] = structuredClone(dst); player.loadScene(i); player.gotoFrame(f); setSelChid(-1); setTbSel(-1); setTbFocus(-1); selTbSels.clear(); };
   opExec({ do: () => swap(after), undo: () => swap(before) });
 }
 
@@ -554,13 +546,12 @@ const TBX_TOOL = { tboxSel: 1, tbPaintText: 1, tbFill: 1, tbFont: 1, tbSize: 1, 
 const TBX_PAINT_TOOL = { tbPaintText: 1, tbFont: 1, tbSize: 1, tbStyle: 1 };
 const selTbox = () => (selTbChid >= 0 && player?.scene ? player.scene.tboxes.get(selTbChid) : null);
 const focusTbox = () => (focusTbChid >= 0 && player?.scene ? player.scene.tboxes.get(focusTbChid) : null);
-const selTbSels = new Map(); // each TBXG keeps its own caret/selection (_cpAnchor/_cpOther)
-const setTbSel = (chid) => { selTbChid = chid; }; // SCEN::SelectTbox — border chrome only
+const setTbSel = (chid) => { setSelTbChid(chid); }; // SCEN::SelectTbox — border chrome only
 function setTbFocus(chid) { // TBXG key focus — the box whose interior was last clicked
   if (focusTbChid === chid) return;
   if (focusTbChid >= 0) selTbSels.set(focusTbChid, tbSel);
-  focusTbChid = chid;
-  tbSel = chid >= 0 ? (selTbSels.get(chid) || { anchor: 0, other: 0 }) : null;
+  setFocusTbChid(chid);
+  setTbSelVal(chid >= 0 ? (selTbSels.get(chid) || { anchor: 0, other: 0 }) : null);
 }
 const tbChidOf = (tb) => { if (!player?.scene) return -1; for (const [c, x] of player.scene.tboxes) if (x === tb) return c; return -1; };
 const pickTbox = (px, py) => { // topmost visible tbox under a view-space point
@@ -604,11 +595,11 @@ function tbOp(tb, mut) { // run mut() live, then commit snapshot undo
 // text-edit burst: successive keystrokes merge into one undo op
 function tbSnapStart(tb) {
   if (tbSnap && tbSnap.tb !== tb) tbSnapEnd();
-  if (!tbSnap) tbSnap = { tb, d0: tbSnapOf(tb) };
+  if (!tbSnap) setTbSnap({ tb, d0: tbSnapOf(tb) });
 }
 function tbSnapEnd() {
   if (!tbSnap) return;
-  const { tb, d0 } = tbSnap; tbSnap = null;
+  const { tb, d0 } = tbSnap; setTbSnap(null);
   const d1 = tbSnapOf(tb);
   if (JSON.stringify(d0) === JSON.stringify(d1)) return;
   opExec({ do: () => tbApply(tb, structuredClone(d1)), undo: () => tbApply(tb, structuredClone(d0)) });
@@ -623,8 +614,8 @@ function insTbox(fStory) { // STDIO::FCmdCreateTbox -> MVIE::FInsTbox (kxp/kyp/k
         l: 177, t: 78, r: 177 + 140, b: 78 + 100, fStory, _scv: 0,
         rtxt: { font: 'Comic Sans MS', dxpDef: 0, dypFont: 14, acrBack: -1, text: '', mpes: [], fonts: [] } });
       s.startEvents.push({ sevt: SEVT.AddTbox, nfrm, data: chid }); // FAddTboxCore: always the start list (frame-list AddTbox is invalid)
-      setTbSel(chid); selChid = -1;
-      tbAttach = { tb: s.tboxes.get(chid), moved: false }; // AttachToMouse: box tracks the cursor until a click drops it
+      setTbSel(chid); setSelChid(-1);
+      setTbAttach({ tb: s.tboxes.get(chid), moved: false }); // AttachToMouse: box tracks the cursor until a click drops it
       if (ed.view) ed.view.style.cursor = 'none';
     } else {
       s.tboxes.delete(chid);
@@ -633,7 +624,7 @@ function insTbox(fStory) { // STDIO::FCmdCreateTbox -> MVIE::FInsTbox (kxp/kyp/k
       if (selTbChid === chid) setTbSel(-1);
       if (focusTbChid === chid) setTbFocus(-1);
       selTbSels.delete(chid);
-      tbAttach = null; if (ed.view) ed.view.style.cursor = '';
+      setTbAttach(null); if (ed.view) ed.view.style.cursor = '';
     }
     player.gotoFrame(player.frame); draw();
   };
@@ -743,13 +734,6 @@ function tbDelText(tb, a, b) { // delete [a,b): pull interior mpes back to a
 }
 
 function updateUi() { if (player) syncStudio(); }
-let sayEl = null, sayTm = null;
-function say(msg) { // PushErc-style notice: transient toast on the stage (errors, saves)
-  console.log('[mms]', msg);
-  if (!sayEl) { sayEl = document.createElement('div'); sayEl.id = 'say'; $('studio').appendChild(sayEl); }
-  sayEl.textContent = msg; sayEl.classList.add('show');
-  clearTimeout(sayTm); sayTm = setTimeout(() => sayEl.classList.remove('show'), 3000);
-}
 function draw() {
   renderer.selActor = selActor();
   // tbox editor overlay: the border-selected box gets the TBXB frame/anchors;
@@ -933,8 +917,8 @@ function open(buffer, name, cacheDoc = true) {
   p.loadScene = (i) => { _loadScene(i); posSave(); ed.syncToolState?.(); };
   p.gotoFrame = (n) => { _gotoFrame(n); posSave(); };
   player.loadScene(0);
-  histClear(); selChid = -1; pendPlace = null;
-  selTbChid = -1; focusTbChid = -1; tbSel = null; tbAttach = null; tbSnap = null; selTbSels.clear(); // stale tbox refs die with the movie
+  histClear(); setSelChid(-1); setPendPlace(null);
+  setSelTbChid(-1); setFocusTbChid(-1); setTbSelVal(null); setTbAttach(null); setTbSnap(null); selTbSels.clear(); // stale tbox refs die with the movie
   if (player.warnings.length) console.warn(player.warnings);
   draw();
   if (cacheDoc) docMark(); // a newly loaded movie becomes the working doc (debounced — the caller may still reposition the scene)
@@ -1178,9 +1162,9 @@ const stSliders = []; // {th, axis, min, span, get}
     // sooner/later buttons' track-mouse: any click not on the buttons closes the
     // session, switches back to compose, and the click proceeds normally
     if (sl) { endSoonerLater(); ed.toolBtns?.['2comp']?.onclick(); }
-    const [px, py] = lastViewPt = viewPx(e);
+    const [px, py] = setLastViewPt(viewPx(e));
     if (tbAttach) { // AttachToMouse: the click drops the new tbox (TBXB::FCmdTrackMouse)
-      const { tb, moved } = tbAttach; tbAttach = null; view.style.cursor = '';
+      const { tb, moved } = tbAttach; setTbAttach(null); view.style.cursor = '';
       if (moved) tbOp(tb, () => {}); // commit the mouse-tracked rect as one undo op
       draw();
       return;
@@ -1194,7 +1178,7 @@ const stSliders = []; // {th, axis, min, span, get}
         if ((ed.tool === 'tbStory' || ed.tool === 'tbCredit') && selTbChid !== tbChidOf(tbHit)) { // TBXB::FPtIn declines non-selected boxes for the type tools
           setTbSel(-1); draw(); return; // bubbles to MVU -> SelectTbox(pvNil)
         }
-        setTbSel(tbChidOf(tbHit)); selChid = -1;
+        setTbSel(tbChidOf(tbHit)); setSelChid(-1);
         for (const L of rcLists) L.sel = -1;
         drag = { kind: 'tbRc', tb: tbHit, anchor: tbAnchor(lx, ly, w, h), rc0: { l: tbHit.l, t: tbHit.t, r: tbHit.r, b: tbHit.b }, px0: px, py0: py };
         view.setPointerCapture(e.pointerId); draw();
@@ -1203,9 +1187,9 @@ const stSliders = []; // {th, axis, min, span, get}
       // interior (TBXG): fill/type tools hit the clicked box; the rest focus it + start a caret/text drag
       if (ed.tool === 'tbFill') { tbOp(tbHit, () => { tbHit.rtxt.acrBack = tbPaint.acr; tbHit.rtxt._layout = null; }); return; } // FSetAcrBack(AcrPaint)
       if (ed.tool === 'tbStory' || ed.tool === 'tbCredit') { const fs = ed.tool === 'tbStory'; tbOp(tbHit, () => { tbHit.fStory = fs; }); return; } // FSetType — any box, selected or not
-      setTbFocus(tbChidOf(tbHit)); selChid = -1;
+      setTbFocus(tbChidOf(tbHit)); setSelChid(-1);
       const cp = hitTbox(tbHit, renderer.ovCtx, renderer.palColors, px, py); // interior: caret + text selection drag
-      tbSel = { anchor: cp, other: cp };
+      setTbSelVal({ anchor: cp, other: cp });
       drag = { kind: 'tbTxt', tb: tbHit, paint: PAINT_CHP[ed.tool] || null };
       view.setPointerCapture(e.pointerId); draw();
       return;
@@ -1218,11 +1202,11 @@ const stSliders = []; // {th, axis, min, span, get}
     if (pendPlace) {
       const p = renderer.groundPoint(nx, ny, 0);
       if (p) (pendPlace.tdt ? insTdt : placeActor)(pendPlace.tdt ?? pendPlace, { x: p.x, y: 0, z: p.z });
-      pendPlace = null; view.style.cursor = ''; draw();
+      setPendPlace(null); view.style.cursor = ''; draw();
       return;
     }
     const a = renderer.pickActor(nx, ny);
-    selChid = a ? chidOf(a) : -1;
+    setSelChid(a ? chidOf(a) : -1);
     for (const L of rcLists) { // keep the roll-call highlight in sync w/ the view pick
       const i2 = a ? rcActs(L).indexOf(a) : -1;
       L.sel = i2;
@@ -1345,7 +1329,7 @@ const stSliders = []; // {th, axis, min, span, get}
     view.setPointerCapture(e.pointerId);
   });
   view.addEventListener('pointermove', (e) => {
-    lastViewPt = viewPx(e);
+    setLastViewPt(viewPx(e));
     if (tbAttach) { // AttachToMouse: the box's TL follows the cursor (hidden), bounds-clamped
       const [px, py] = lastViewPt, tb = tbAttach.tb;
       const w = tb.r - tb.l, h = tb.b - tb.t;
@@ -1513,7 +1497,7 @@ const stSliders = []; // {th, axis, min, span, get}
     tbFill: `url(${curUrl('textback')}) 2 15, auto`, tbStory: `url(${curUrl('textback')}) 2 15, auto`,
     tbCredit: `url(${curUrl('textback')}) 2 15, auto` };
   view.addEventListener('pointermove', (e) => {
-    const [px, py] = lastViewPt = viewPx(e);
+    const [px, py] = setLastViewPt(viewPx(e));
     if (tbAttach) { view.style.cursor = 'none'; return; }
     const cur = TOOL_CURS[ed.tool];
     if (TBX_TOOL[ed.tool] || (ed.tool === 'nuke' && pickTbox(px, py))) { // tbox tools cursor per TBXG/TBXB FCmdMouseMove
@@ -1588,13 +1572,13 @@ const stSliders = []; // {th, axis, min, span, get}
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (tbAttach) { // drop the attached box at its current spot
-      const { tb, moved } = tbAttach; tbAttach = null; view.style.cursor = '';
+      const { tb, moved } = tbAttach; setTbAttach(null); view.style.cursor = '';
       if (moved) tbOp(tb, () => {});
       draw();
       return;
     }
-    if (tbSel && focusTbChid >= 0) { tbSel = { anchor: tbSel.other, other: tbSel.other }; draw(); } // collapse sel to caret, then still disarm
-    if (pendPlace) { pendPlace = null; view.style.cursor = ''; return; }
+    if (tbSel && focusTbChid >= 0) { setTbSelVal({ anchor: tbSel.other, other: tbSel.other }); draw(); } // collapse sel to caret, then still disarm
+    if (pendPlace) { setPendPlace(null); view.style.cursor = ''; return; }
     if (TOOL_CURS[ed.tool] !== undefined || TBX_TOOL[ed.tool]) { // disarm an armed tool (the original has no Esc; selecting another tool is the canonical disarm)
       tbSnapEnd();
       ed.tool = 'none'; view.style.cursor = ''; endSoonerLater(); earHover = undefined;
@@ -1678,10 +1662,10 @@ const stSliders = []; // {th, axis, min, span, get}
     frmRW: () => { if (!player.scene) return; setPlaying(false); player.gotoFrame(player.frame - 1); draw(); },
     frmFW: () => { if (!player.scene) return; setPlaying(false); player.gotoFrame(player.frame + 1); draw(); },
     frmFWEnd: () => { if (!player.scene) return; setPlaying(false); player.gotoFrame(player.scene.nfrmLast); draw(); },
-    scnRWEnd: () => { setPlaying(false); player.loadScene(0); selTbChid = -1; focusTbChid = -1; tbSel = null; tbAttach = null; selTbSels.clear(); draw(); },
-    scnRW: () => { setPlaying(false); player.loadScene(Math.max(0, player.sceneIndex - 1)); selTbChid = -1; focusTbChid = -1; tbSel = null; tbAttach = null; selTbSels.clear(); draw(); },
-    scnFW: () => { setPlaying(false); player.loadScene(Math.min(player.movie.scenes.length - 1, player.sceneIndex + 1)); selTbChid = -1; focusTbChid = -1; tbSel = null; tbAttach = null; selTbSels.clear(); draw(); },
-    scnFWEnd: () => { setPlaying(false); player.loadScene(player.movie.scenes.length - 1); selTbChid = -1; focusTbChid = -1; tbSel = null; tbAttach = null; selTbSels.clear(); draw(); },
+    scnRWEnd: () => { setPlaying(false); player.loadScene(0); setSelTbChid(-1); setFocusTbChid(-1); setTbSelVal(null); setTbAttach(null); selTbSels.clear(); draw(); },
+    scnRW: () => { setPlaying(false); player.loadScene(Math.max(0, player.sceneIndex - 1)); setSelTbChid(-1); setFocusTbChid(-1); setTbSelVal(null); setTbAttach(null); selTbSels.clear(); draw(); },
+    scnFW: () => { setPlaying(false); player.loadScene(Math.min(player.movie.scenes.length - 1, player.sceneIndex + 1)); setSelTbChid(-1); setFocusTbChid(-1); setTbSelVal(null); setTbAttach(null); selTbSels.clear(); draw(); },
+    scnFWEnd: () => { setPlaying(false); player.loadScene(player.movie.scenes.length - 1); setSelTbChid(-1); setFocusTbChid(-1); setTbSelVal(null); setTbAttach(null); selTbSels.clear(); draw(); },
     play: () => { sounds.ensure(); setPlaying(!playing); },
     undo: () => { const b = $('stb_undo'); if (!b._en) return; (hist.mode === 'u' ? histUndo : histRedo)(); draw(); },
     ccp: () => toggleCcp(), // kidCutCopyPaste dropdown (popups.cht)
@@ -2090,7 +2074,7 @@ const stSliders = []; // {th, axis, min, span, get}
       const cv = document.createElement('canvas');
       cv.width = 38; cv.height = 70; cv.className = 'rcThumb';
       studio.appendChild(cv); place(cv, L.x + 2, 100 + i * 74, 38, 70);
-      b.onclick = () => { const a = rcActs(L)[L.off + i]; if (a) { L.sel = L.off + i; selChid = chidOf(a); syncRollCall(); draw(); } };
+      b.onclick = () => { const a = rcActs(L)[L.off + i]; if (a) { L.sel = L.off + i; setSelChid(chidOf(a)); syncRollCall(); draw(); } };
       L.cells.push({ b, im, cv });
     }
     const mkArrow = (img, x, w, scroll) => {
@@ -2592,7 +2576,7 @@ function showBrowser(kind, importItems = null) {
             if (kind === 'bkgd') editBkgd(it.cno, it.name); // FSetBkgdCore: fill empty scene else insert new
             else if (kind === 'cam') editCam(it.icam); // kidBrwsCamera -> ChngCamera event
             else if (kind === 'actor' || kind === 'prop') { // pick template -> click stage to place
-              pendPlace = { cno: it.cno, name: it.name };
+              setPendPlace({ cno: it.cno, name: it.name });
               $('view').style.cursor = 'crosshair';
             } else if (kind === 'scene') { setPlaying(false); player.loadScene(it.i); }
             closeBrowser(); draw();
@@ -2804,7 +2788,7 @@ function showSceneSorter() {
     }
     mv.scenes.length = 0;
     mv.scenes.push(...items.map((i) => i.scen)); // 0 scenes is legal — _iscen = ivNil
-    selChid = -1; setTbSel(-1); setTbFocus(-1); selTbSels.clear();
+    setSelChid(-1); setTbSel(-1); setTbFocus(-1); selTbSels.clear();
     histClear(); // MVIE::FSetCmvi's caller does ClearUndo — sorter changes aren't undoable
     docMark();
     setPlaying(false); player.loadScene(Math.min(Math.max(0, cur), mv.scenes.length - 1));
@@ -3118,7 +3102,7 @@ function showSpletter(editA) {
         } });
       closeBrowser();
     } else { // new TDT: FInsTdt happens at the drop point (StartPlaceActor)
-      pendPlace = { tdt: { text, tdts: st.tdts, tagTdf: st.tagTdf, tagMtrl: st.mtrlDirty ? st.tagMtrl : null } };
+      setPendPlace({ tdt: { text, tdts: st.tdts, tagTdf: st.tagTdf, tagMtrl: st.mtrlDirty ? st.tagMtrl : null } });
       $('view').style.cursor = 'crosshair';
       closeBrowser(); draw();
     }
@@ -3132,7 +3116,7 @@ function showActionBrowser() {
   if (!player) return;
   const a = selActor() || [...player.actors.values()].find((x) => x.onStage);
   if (!a) return; // original requires a selected actor
-  selChid = chidOf(a); syncRollCall();
+  setSelChid(chidOf(a)); syncRollCall();
   const tmpl = a.tmpl;
   const acts = tmpl.cf.kidsOf('TMPL', tmpl.cno, 'ACTN').map((k) => ({ anid: k.chid, name: tmpl.cf.get('ACTN', k.cno).name || `action ${k.chid}` }));
   if (!acts.length) return;
@@ -3233,7 +3217,7 @@ function showCostumeEasel(a) {
   if (!player || !a || !a.onStage) return;
   const tmpl = a.tmpl;
   if (tmpl.isTdt || !tmpl.cbset) return; // TDTs use the spletter easel; props without part sets do nothing
-  selChid = chidOf(a); syncRollCall(); draw();
+  setSelChid(chidOf(a)); syncRollCall(); draw();
   const { place, mkImg, mkBtn } = brwsShell();
   mkImg('e2par', 102, 100, 436, 347);
   const pcv = document.createElement('canvas'); // preview frame (10,9)-(426,239) rel to bg
