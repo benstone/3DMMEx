@@ -8,6 +8,7 @@ import { Img, ImgButton, TextLink, VSlider, MovieScreen } from './widgets.js';
 import { playing, player, sounds, setModeSync, modeSync } from '../state.js';
 import { setPlaying } from '../loop.js';
 import { showOptsDlg } from './optdlg.js';
+import { castMovie } from '../cast.js';
 import { t } from '../i18n.js';
 
 const thRewind = () => { // kgobRewindButton: rewind then play
@@ -61,6 +62,7 @@ export class TheatreView extends View {
     this.vol = mkVol(9, 110, 12, 74);
     this.add(this.vol);
     this.add(new TextLink(t('ui.settings'), 4, 4, 60, 14, () => showOptsDlg()));
+    this.add(new TextLink(t('ui.cast'), 4, 22, 60, 14, () => castMovie()));
     setModeSync(() => {                                 // lights dim while rolling (kst3 -> the1dark)
       this.bg.name = playing ? 'the1dark' : 'theatre1';
       this.playB.sync();

@@ -173,6 +173,7 @@ export async function saveMovie(saveAs = false) { // MVIE::FSave / FGetFniSave
     say(t('doc.saved', { name: saveHandle?.name || name }));
   } catch (e) { if (e.name !== 'AbortError') say(t('doc.saveFailed', { err: e.message })); }
 }
+export let lastMovieUrl = null; // URL the open movie came from (for cast hand-off)
 export async function openUrl(urlOrName, cacheDoc = true) { // ?3mm= — returns null on success, else a friendly error
   let url;
   try { url = /^[\w.-]+$/.test(urlOrName) ? `${B}movies/${urlOrName}` : new URL(urlOrName, location.href).href; }
@@ -190,5 +191,7 @@ export async function openUrl(urlOrName, cacheDoc = true) { // ?3mm= — returns
   const magic = buf.byteLength >= 4 ? String.fromCharCode(...new Uint8Array(buf, 0, 4)) : '';
   if (magic !== 'CHN2' && magic !== '2NHC') return `that file isn't a 3D Movie Maker movie`;
   const name = decodeURIComponent(new URL(url, location.href).pathname.split('/').pop()) || 'movie.3mm';
-  return open(buf, name, cacheDoc) ? null : `couldn't load that movie`;
+  const ok = open(buf, name, cacheDoc);
+  if (ok) lastMovieUrl = url;
+  return ok ? null : `couldn't load that movie`;
 }

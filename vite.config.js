@@ -8,7 +8,12 @@ const MIME = { '.json': 'application/json', '.png': 'image/png', '.cur': 'applic
 
 export default {
   base: './',
-  build: { target: 'es2022' },
+  build: {
+    target: 'es2022',
+    rollupOptions: { // second entry: the Chromecast CAF receiver page
+      input: { main: resolve('index.html'), receiver: resolve('receiver.html') },
+    },
+  },
   esbuild: { target: 'es2022' },
   optimizeDeps: { esbuildOptions: { target: 'es2022' } },
   plugins: [{
