@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { ChunkyFile } from '../src/format/chunky.js';
 import { parseMovie, serializeMovie, SEVT, AET } from '../src/format/movie.js';

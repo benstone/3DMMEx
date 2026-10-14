@@ -29,6 +29,8 @@ export class MoviePlayer {
     this.wit = null;        // sevtPause applied at the current frame (WIT)
     this.clk = false;       // witUntilClick resume latch — set by any UI click
     this.onTransStart = null; // (trans) => snapshot outgoing frame before scene switch
+    /** @type {CanvasRenderingContext2D | null} */
+    this._tbCtx = null;
     this.transition = null;
     this._sndDirty = false;
   }

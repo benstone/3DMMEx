@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { Reader, Writer, ctgToStr, strToCtg, readStn, writeStn, FIX } from '../src/format/binary.js';
 

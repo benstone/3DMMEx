@@ -32,15 +32,17 @@ export class SoundQueue {
     this.buffers = new Map();   // 'cf:cno' -> Promise<AudioBuffer|null>
     this.channels = new Map();  // class key -> { current, queue }
     this.warnings = [];
+    /** @type {((cno: number) => Promise<any>) | null} */
+    this.userSnd = null;
     this.volume = 1;
     this.master = null;
-    this.enabled = typeof window !== 'undefined' && !!(window.AudioContext || window.webkitAudioContext);
+    this.enabled = typeof window !== 'undefined' && !!(window.AudioContext || /** @type {any} */ (window).webkitAudioContext);
   }
 
   /** Create/resume the AudioContext — call from a user gesture. */
   ensure() {
     if (!this.enabled) return null;
-    if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (!this.ctx) this.ctx = new (window.AudioContext || /** @type {any} */ (window).webkitAudioContext)();
     if (!this.master) { this.master = this.ctx.createGain(); this.master.gain.value = this.volume; this.master.connect(this.ctx.destination); }
     if (this.ctx.state === 'suspended') this.ctx.resume();
     return this.ctx;
@@ -184,10 +186,10 @@ export class SoundQueue {
       if (ch === 9) { drum(note, vel * vol[ch], t); return; }
       const [wave, atk, sus, rel] = _gm(prog[ch]);
       const o = oc.createOscillator(), g = oc.createGain(), p = oc.createStereoPanner();
-      o.type = wave; o.frequency.value = 440 * 2 ** ((note - 69) / 12); p.pan.value = pan[ch];
+      o.type = /** @type {OscillatorType} */ (wave); o.frequency.value = 440 * 2 ** ((+note - 69) / 12); p.pan.value = pan[ch];
       const peak = vel * vol[ch] * 0.22;
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + atk);
-      g.gain.setTargetAtTime(peak * sus, t + atk, 0.4);
+      g.gain.setTargetAtTime(peak * +sus, t + atk, 0.4);
       o.connect(g).connect(p).connect(oc.destination); o.start(t);
       active.set(key, { o, g, sus, rel, peak });
     };

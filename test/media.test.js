@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { decodeWavAdpcm } from '../src/format/wav.js';
 import { parseMids } from '../src/format/mids.js';

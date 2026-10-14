@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test 'test/*.test.js'"
+    "test": "vitest run"
   },
   "keywords": [
     "3dmm",
@@ -21,10 +21,13 @@
   "license": "ISC",
   "dependencies": {
     "spessasynth_core": "^4.3.22",
-    "three": "^0.169.0"
+    "three": "^0.169.0",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@types/node": "^22.20.5",
     "typescript": "^7.0.2",
-    "vite": "^5.4.10"
+    "vite": "^5.4.10",
+    "vitest": "^2.1.9"
   }
 }

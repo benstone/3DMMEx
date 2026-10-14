@@ -20,6 +20,8 @@ export class Actor {
     const n = tmpl.parents.length;
     this.parts = Array.from({ length: n }, () => ({ model: null, mtrl: null, matrix: M.identity() }));
     this.rootMatrix = M.identity();
+    /** @type {((actr: Actor, d: any) => void) | null} */
+    this.onSnd = null;
     this.nfrmCur = null;
     this._rewind();
   }

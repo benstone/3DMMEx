@@ -1,4 +1,4 @@
-import test from 'node:test';
+import { test } from 'vitest';
 import assert from 'node:assert/strict';
 import { MoviePlayer } from '../src/engine/player.js';
 import { movieFile, contentLibrary } from './helpers.js';
