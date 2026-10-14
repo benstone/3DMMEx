@@ -45,8 +45,8 @@ export function setPlaying(p) {
   setPlayingFlag(p); clearInterval(timer); if (raf) cancelAnimationFrame(raf);
   if (p) { sounds.ensure(); startLoop(); }
   else sounds.suspend();
-  const pb = $('stb_play');
-  if (pb) { pb.classList.toggle('on', p); pb._sync(); }
+  const pb = /** @type {HTMLElement & {_sync?: () => void} | null} */ ($('stb_play'));
+  if (pb) { pb.classList.toggle('on', p); pb._sync?.(); }
   updateUi();
   modeSync?.(); // theatre/embed UI follows play state
 }
