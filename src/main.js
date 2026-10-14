@@ -21,6 +21,7 @@ import { Renderer } from './render/renderer.js';
 import { B, $, sleep, say } from './app/res.js';
 import { lib, pal, renderer, sounds, player, playing,
   setLib, setPal, setRenderer, setSounds } from './app/state.js';
+import { t, initLang } from './app/i18n.js';
 
 
 /* @@boot.js:25@@ */
@@ -34,7 +35,7 @@ manifestP.then(async (manifest) => {
     while (i < files.length) {
       const f = files[i++];
       try { await (await fetch(`${B}${f}`)).blob(); } catch { /* lazy loads retry */ }
-      warmSeg(++done / files.length, 'warming up');
+      warmSeg(++done / files.length, t('boot.loading'));
     }
   }));
 }).catch(() => {});
@@ -52,7 +53,7 @@ setLib(await Library.load(`${B}data`, (n, got, tot) => {
 }));
 /* @@boot.js:95@@ */
 setPal(new Uint8Array(await (await fetch(`${B}data/socpal.pal`)).arrayBuffer()));
-miscTick('loading palette');
+miscTick(t('boot.palette'));
 setRenderer(new Renderer($('view'), pal));
 setSounds(new SoundQueue(lib));
 
@@ -71,6 +72,7 @@ await applyPacks();
 /* @@loop.js:747@@ */
 /* @@opts.js:775@@ */
 renderer.setOpts(opts);
+await initLang(); // ?lang= dictionary before any UI strings bake
 /* @@doc.js:873@@ */
 initStudio();
 /* @@ui-dom/browsers.js:2290@@ */

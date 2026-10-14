@@ -3,10 +3,11 @@ import { $, texUrl } from '../res.js';
 import { editBkgd, editCam } from '../edit/movie.js';
 import { setSndTag } from '../edit/sound.js';
 import { setPlaying, draw } from '../loop.js';
-import { opts, optsPanel, optSync } from '../opts.js';
+import { opts, optsPanel, optSync, buildOptsPanel } from '../opts.js';
 import { getSndItems, addUserSnd, importSndFiles, previewItem } from '../sndsrc.js';
 import { bkthCaths, brwsTmpls, mbmpCanvas } from '../thumbs.js';
 import { showSpletter, showWords, showRecorder } from './easels.js';
+import { t } from '../i18n.js';
 // --- item browser dialogs (browser.cht): modal book panel + frame grid + page controls
 export const BRWS_DEFS = {
   // kidBrwsBackground/kidBrwsSceneFrames: book1 at (62,48) via reg (258,370); frames 136x78, cells +4.
@@ -67,10 +68,10 @@ export function showOptsDlg() { // book button + theatre/embed settings link -> 
   const bar = document.createElement('div');
   bar.className = 'optBar'; box.appendChild(bar);
   const ttl = document.createElement('span');
-  ttl.textContent = 'render settings'; bar.appendChild(ttl);
+  ttl.textContent = t('ui.renderSettings'); bar.appendChild(ttl);
   const x = document.createElement('button');
   x.className = 'optX'; x.textContent = '×'; x.onclick = () => closeOptsDlg(true); bar.appendChild(x);
-  optsPanel.hidden = false; box.appendChild(optsPanel);
+  buildOptsPanel(); optsPanel.hidden = false; box.appendChild(optsPanel);
   const pos = JSON.parse(localStorage.getItem('optdlgpos') || 'null');
   if (pos) { box.style.position = 'fixed'; box.style.left = pos.x + 'px'; box.style.top = pos.y + 'px'; }
   bar.onpointerdown = (e) => { // drag the modal by its titlebar
@@ -143,7 +144,7 @@ export function showBrowser(kind, importItems = null) {
   if (d.rec && !importItems) mkBtn('mike', 'mikes', d.x + d.rec[0], d.y + d.rec[1], 50, 48, () => showRecorder(kind));
   if (d.imp && !importItems) mkBtn('sndport', 'sndports', d.x + d.imp[0], d.y + d.imp[1], 50, 48, () => importSndFiles(kind));
   function render() {
-    num.textContent = `${page + 1} / ${nPages()}`;
+    num.textContent = t('ui.pageNum', { page: page + 1, total: nPages() });
     for (let i = 0; i < cells.length; i++) {
       const it = items[page * perPage + i], { b, fim, cv } = cells[i];
       cv.width = d.fw - 8; cv.height = d.fh - 8;

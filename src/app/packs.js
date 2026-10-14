@@ -3,6 +3,7 @@ import { bootCap } from './boot.js';
 import { packTex } from './res.js';
 import { lib } from './state.js';
 import { scanThumbFile } from './thumbs.js';
+import { t } from './i18n.js';
 // ?packs=url[,url...] — each entry is an assets.json URL (or a directory ending
 // in assets.json). Fetch manifests up front; the files are applied below once
 // the content library + thumbnail structures exist.
@@ -32,8 +33,8 @@ export const packNotes = []; // user-visible results, toasted after boot
 export async function applyPacks() {
 for (const pack of await packsP) {
   const dir = pack ? new URL(pack.url).pathname.replace(/\/[^/]*$/, '').split('/').pop() : null;
-  if (!pack) { packNotes.push('asset pack failed to load'); continue; }
-  bootCap.textContent = 'loading asset pack';
+  if (!pack) { packNotes.push(t('pack.failedGeneric')); continue; }
+  bootCap.textContent = t('boot.pack');
   try {
     const items = await Promise.all(pack.files.map(async (rel) => {
       try {
@@ -65,7 +66,7 @@ for (const pack of await packsP) {
     }
     lib.content.push(...cfs); // before the .3th scan so chunk names resolve
     for (const th of ths) scanThumbFile(th, packPal);
-    packNotes.push(`${dir || 'pack'}: ${loaded}/${pack.files.length} assets loaded`);
-  } catch (e) { console.warn(`pack ${pack.url}:`, e.message); packNotes.push(`${dir || 'pack'} failed to load`); }
+    packNotes.push(t('pack.loaded', { name: dir || t('pack.unnamed'), loaded, total: pack.files.length }));
+  } catch (e) { console.warn(`pack ${pack.url}:`, e.message); packNotes.push(t('pack.failed', { name: dir || t('pack.unnamed') })); }
 }
 }

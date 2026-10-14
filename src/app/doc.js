@@ -10,12 +10,13 @@ import { serializeMovie } from '../format/movie.js';
 import { setPlaying, draw } from './loop.js';
 import { say, B } from './res.js';
 import { hist, histClear } from './undo.js';
+import { t } from './i18n.js';
 export let saveHandle = null; // FileSystemFileHandle for cidSave (FGetFniSave result)
 export function open(buffer, name, cacheDoc = true) {
   setPlaying(false);
   sounds.stopAll();
   // MVU::FCloseDoc keep-changes check: unsaved ops prompt before replacing
-  if (player && (hist.undos.length || hist.redos.length) && !confirm('Discard unsaved changes to the current movie?')) return false;
+  if (player && (hist.undos.length || hist.redos.length) && !confirm(t('doc.discard'))) return false;
   let p;
   try { p = new MoviePlayer(new ChunkyFile(buffer, name), lib); }
   catch (e) { // _FLoadMovie restore: a failed load leaves the old movie open
@@ -60,7 +61,7 @@ export const movieBytes = () => serializeMovie(player.movie, {
   userSnd: (key) => userSnds.find((u) => u.key === key) || null,
 });
 export function newMovie() { // cidNew -> FLoadMovie(nil): PmvieNew(nil) = NO scenes (_iscen ivNil)
-  open(serializeMovie({ name: 'A New Movie', scenes: [] }), 'A New Movie.3mm'); // idsEngineDefaultTitle
+  open(serializeMovie({ name: t('doc.untitled'), scenes: [] }), t('doc.untitled') + '.3mm'); // idsEngineDefaultTitle
   setTimeout(guideTip, 450); // a sceneless doc gets the CO guide tip, on boot or via New
 }
 // --- working-doc autosave (the original's autosave doc: startup loads pfniUserDoc,
@@ -119,14 +120,14 @@ export async function docFlush() {
   if (!docDirty || docFlushing || !player) return;
   docFlushing = true;
   try {
-    const rec = { bytes: movieBytes(), name: player.movie.name || 'A New Movie',
+    const rec = { bytes: movieBytes(), name: player.movie.name || t('doc.untitled'),
       scene: player.sceneIndex, frame: player.frame, t: Date.now() };
     docDirty = false;
     lsPut(rec);           // sync — always lands before any await
     await docDB.put(rec); // IDB for durability / movies over the LS quota
   } catch (e) {
     docDirty = true; console.warn('[autosave]', e);
-    if (!docWarned) { docWarned = true; say(`autosave failed: ${e.message}`); } // surface it once, not every 3s
+    if (!docWarned) { docWarned = true; say(t('doc.autosaveFailed', { err: e.message })); } // surface it once, not every 3s
   }
   docFlushing = false;
 }
@@ -152,7 +153,7 @@ export function openMovieFile() { // cidOpen -> file picker (FGetFniOpen); any .
   inp.click();
 }
 export async function saveMovie(saveAs = false) { // MVIE::FSave / FGetFniSave
-  const name = `${player.movie.name || 'A New Movie'}.3mm`;
+  const name = `${player.movie.name || t('doc.untitled')}.3mm`;
   try {
     if (!saveAs && saveHandle) {
       const ws = await saveHandle.createWritable();
@@ -169,8 +170,8 @@ export async function saveMovie(saveAs = false) { // MVIE::FSave / FGetFniSave
       setTimeout(() => URL.revokeObjectURL(a.href), 5000);
       saveHandle = null;
     }
-    say(`saved ${saveHandle?.name || name}`);
-  } catch (e) { if (e.name !== 'AbortError') say(`save failed: ${e.message}`); }
+    say(t('doc.saved', { name: saveHandle?.name || name }));
+  } catch (e) { if (e.name !== 'AbortError') say(t('doc.saveFailed', { err: e.message })); }
 }
 export async function openUrl(urlOrName, cacheDoc = true) { // ?3mm= — returns null on success, else a friendly error
   let url;

@@ -1,6 +1,7 @@
 import { texUrl } from '../res.js';
 import { brwsTmpls } from '../thumbs.js';
 import { brwsShell, brwsEl, closeBrowser } from './browsers.js';
+import { t } from '../i18n.js';
 // --- talent book (BIO_CREATEBOOK / biopage.cht + sharecd.cht) ---------------
 // corkboard book (biopage.pbm) + per-page portrait collage (biopgN.png adopted
 // cells on kgobBioActors) + spiral-ring overlay (biopanel.pbm). The original's
@@ -42,7 +43,7 @@ export function showBio(bit = bioState.page) {
     const ai = BIO_ACTOR[bit];
     const name = ai == null ? '' : (brwsTmpls.actor[ai]?.name || 'actor');
     txt.innerHTML = `<b>${name}</b>${BIO_BLURB[bit] ? '<br><br>' + name + ' ' + BIO_BLURB[bit] : ''}`;
-    num.textContent = `Page ${bit}`;
+    num.textContent = t('ui.bioPage', { n: bit });
   };
   mkBtn('bioback', 'biobackc', 229, 410, 69, 50, () => { // kxpBioBack/kypBioBack
     if (bit > 1) { bit--; render(); }

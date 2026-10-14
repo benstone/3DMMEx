@@ -2,6 +2,7 @@ import { playing, player, sounds, setModeSync, modeSync } from '../state.js';
 import { $, texUrl } from '../res.js';
 import { setPlaying } from '../loop.js';
 import { showOptsDlg } from './browsers.js';
+import { t } from '../i18n.js';
 // --- theatre mode (?3mm=...&mode=theatre) ------------------------------------
 // The building's cinema (bldghd.cht kgobTheatre1 + theatre.cht kgobMovie):
 // theatre1.pbm room (the1dark.pbm while the movie plays), the MVU fills the
@@ -26,7 +27,7 @@ export const thRewind = () => { // kgobRewindButton: rewind then play
 };
 export const mkSetLink = (parent) => { // small settings link, top-left — toggles the render modal
   const s = document.createElement('button');
-  s.className = 'thSet'; s.textContent = 'settings';
+  s.className = 'thSet'; s.textContent = t('ui.settings');
   s.onclick = showOptsDlg; parent.appendChild(s);
 };
 export const mkVol = () => { // kgobTheaterVolume slidepath + thumb

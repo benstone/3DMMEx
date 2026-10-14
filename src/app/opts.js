@@ -1,5 +1,6 @@
 import { playing, renderer } from './state.js';
 import { draw, setPlaying } from './loop.js';
+import { t } from './i18n.js';
 // --- options ---------------------------------------------------------------
 export const opts = { fps24: false, modernLighting: false, shadows: false, castOnOthers: false, selfShadow: false, smoothTex: false, smoothVerts: false, scale2x: false, aa: false, aaMode: 4, wireframe: false, lightInt: 1, selfShadowOp: 0.65 };
 try { Object.assign(opts, JSON.parse(localStorage.getItem('opts3dmm') || '{}')); delete opts.mute; } catch { /* bad saved opts */ }
@@ -7,26 +8,26 @@ if (opts.aa && typeof opts.aa !== 'boolean') { opts.aaMode = opts.aa; opts.aa = 
 
 
 export const OPT_DEFS = [
-  ['playback', [
-    ['fps24', 'smooth playback (24 fps)'],
+  ['catPlayback', [
+    ['fps24', ''],
   ]],
-  ['lighting', [
-    ['modernLighting', 'modern lighting (smooth shading)', [['lightInt', 'intensity', 0, 200]]],
+  ['catLighting', [
+    ['modernLighting', '', [['lightInt', 'lightInt', 0, 200]]],
   ]],
-  ['shadows', [
-    ['selfShadowOp', 'shadow opacity', 'range', [0, 100]],
-    ['shadows', 'ground shadows'],
-    ['castOnOthers', 'cast on others'],
-    ['selfShadow', 'self shadows'],
+  ['catShadows', [
+    ['selfShadowOp', '', 'range', [0, 100]],
+    ['shadows', ''],
+    ['castOnOthers', ''],
+    ['selfShadow', ''],
   ]],
-  ['textures', [
-    ['smoothTex', 'smooth textures'],
-    ['smoothVerts', 'vertex smoothing'],
+  ['catTextures', [
+    ['smoothTex', ''],
+    ['smoothVerts', ''],
   ]],
-  ['rendering', [
-    ['scale2x', '2x render resolution'],
-    ['aa', 'antialiasing', [['aaMode', 'mode', 'sel', [[2, 'msaa 2x'], [4, 'msaa 4x'], [8, 'msaa 8x'], ['fsaa', 'fsaa (2x supersample)']]]]],
-    ['wireframe', 'wireframe'],
+  ['catRendering', [
+    ['scale2x', ''],
+    ['aa', '', [['aaMode', 'aaMode', 'sel', [[2, 'aaMsaa2'], [4, 'aaMsaa4'], [8, 'aaMsaa8'], ['fsaa', 'aaFsaa']]]]],
+    ['', ''],
   ]],
 ];
 export const optCbs = {}, optInputs = []; // checkboxes + range/select controls, resynced on dialog revert
@@ -36,11 +37,15 @@ export const optSync = () => {
 };
 export const optsPanel = document.createElement('div'); // render-settings controls — shown in the book button's dialog
 optsPanel.className = 'optPanel'; optsPanel.hidden = true;
+let optsBuilt = false;
+/** Build the controls lazily so ?lang= has loaded by first open. */
+export function buildOptsPanel() {
+  if (optsBuilt) return; optsBuilt = true;
 {
   const menu = optsPanel;
   for (const [cat, defs] of OPT_DEFS) {
     const h = document.createElement('div');
-    h.className = 'optCat'; h.textContent = cat;
+    h.className = 'optCat'; h.textContent = t('opt.' + cat);
     menu.appendChild(h);
     for (const [key, label, sliders, selOpts] of defs) {
       const l = document.createElement('label');
@@ -50,14 +55,14 @@ optsPanel.className = 'optPanel'; optsPanel.hidden = true;
         r.type = 'range'; r.min = selOpts[0]; r.max = selOpts[1]; r.value = Math.round(opts[key] * 100);
         r.oninput = () => { opts[key] = +r.value / 100; localStorage.setItem('opts3dmm', JSON.stringify(opts)); renderer.setOpts(opts); draw(); };
         optInputs.push([key, r]);
-        l.append(label, r);
+        l.append(t('opt.' + key), r);
         menu.appendChild(l);
         continue;
       }
       const cb = document.createElement('input');
       optCbs[key] = cb;
       cb.type = 'checkbox'; cb.checked = !!opts[key];
-      l.append(cb, label);
+      l.append(cb, t('opt.' + key));
       menu.appendChild(l);
       let sub = null;
       if (sliders) {
@@ -71,21 +76,21 @@ optsPanel.className = 'optPanel'; optsPanel.hidden = true;
             scb.type = 'checkbox'; scb.checked = !!opts[skey];
             optCbs[skey] = scb;
             scb.onchange = () => { opts[skey] = scb.checked; localStorage.setItem('opts3dmm', JSON.stringify(opts)); renderer.setOpts(opts); draw(); };
-            sl.append(scb, slabel);
+            sl.append(scb, t('opt.' + slabel));
           } else if (min === 'sel') { // dropdown sub-option
             sl.className = 'optCheck';
             const sel = document.createElement('select');
-            for (const [v, t] of max) { const o = document.createElement('option'); o.value = String(v); o.textContent = t; sel.appendChild(o); }
+            for (const [v, lbl] of max) { const o = document.createElement('option'); o.value = String(v); o.textContent = t('opt.' + lbl); sel.appendChild(o); }
             sel.value = String(opts[skey]);
             sel.onchange = () => { opts[skey] = isNaN(+sel.value) ? sel.value : +sel.value; localStorage.setItem('opts3dmm', JSON.stringify(opts)); renderer.setOpts(opts); draw(); };
             optInputs.push([skey, sel]);
-            sl.append(slabel, sel);
+            sl.append(t('opt.' + slabel), sel);
           } else {
             const r = document.createElement('input');
             r.type = 'range'; r.min = min; r.max = max; r.value = Math.round(opts[skey] * 100);
             r.oninput = () => { opts[skey] = +r.value / 100; localStorage.setItem('opts3dmm', JSON.stringify(opts)); renderer.setOpts(opts); draw(); };
             optInputs.push([skey, r]);
-            sl.append(slabel, r);
+            sl.append(t('opt.' + slabel), r);
           }
           sub.appendChild(sl);
         }
@@ -102,4 +107,4 @@ optsPanel.className = 'optPanel'; optsPanel.hidden = true;
       };
     }
   }
-}
+}}

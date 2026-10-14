@@ -18,6 +18,7 @@ import { mbmpCanvas, spltThumbs } from '../thumbs.js';
 import { histClear, opExec } from '../undo.js';
 import { brwsShell, brwsEl, closeBrowser, showBrowser, brwsCleanup, setBrwsCleanup } from './browsers.js';
 import { syncRollCall } from './studio.js';
+import { t } from '../i18n.js';
 // --- scene sorter easel (easels.cht kidSSorter*; scnsort.cpp SCRT) -----------
 // e3par panel at (20,65) 600x350; 6 frame cells 185x126 at (10+c*193,12+r*141);
 // thumb rect (8,12)-(151,92); transition buttons at (156,11/33/55/77). Edits a
@@ -244,7 +245,7 @@ export function showRecorder(kind) {
   therm.className = 'recTherm'; brwsEl.appendChild(therm); place(therm, 224, 184, 193, 22);
   const fill = document.createElement('div'); fill.className = 'recThermFill'; therm.appendChild(fill);
   const inp = document.createElement('input'); // kidRecordSoundName (123,75)-(232,95)
-  inp.className = 'spltInp'; inp.maxLength = 40; inp.placeholder = 'sound name';
+  inp.className = 'spltInp'; inp.maxLength = 40; inp.placeholder = t('easel.soundName');
   brwsEl.appendChild(inp); place(inp, 325, 229, 110, 21);
   let stream = null, rec = null, chunks = [], take = null, t0 = 0, raf = 0, stopP = null;
   const stopTracks = () => { stream?.getTracks().forEach((t) => t.stop()); stream = null; };
@@ -630,7 +631,7 @@ export function showActionBrowser() {
   });
   mkBtn('cancel', 'cancelc', X + 381, Y + 320, 50, 48, closeBrowser);
   function render() {
-    num.textContent = `${page + 1} / ${nPages()}`;
+    num.textContent = t('ui.pageNum', { page: page + 1, total: nPages() });
     for (let i = 0; i < cells.length; i++) {
       const it = acts[page * perPage + i], { b, fim, cv } = cells[i];
       cv.width = 130; cv.height = 17;

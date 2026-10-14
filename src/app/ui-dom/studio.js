@@ -15,59 +15,17 @@ import { opExec, hist, histUndo, histRedo, syncUndoBtn } from '../undo.js';
 import { showBio } from './bio.js';
 import { brwsEl, showOptsDlg, showBrowser } from './browsers.js';
 import { showListenerEasel, showActionBrowser, showSpletter, showCostumeEasel, showSceneSorter } from './easels.js';
+import { t } from '../i18n.js';
 // --- studio editor chrome (visual layout only for now) ----------------------
 // Positions lifted from 3DMMEx studio.cht / pos3.chh: bitmap lands at (gob - preg).
 export const STUDIO_IMGS = [ // [name, x, y, w, h] in the original 640x480 screen space
   ['back1', 0, 0, 640, 100], ['back2', 0, 97, 48, 314], ['back3', 592, 97, 48, 313], ['back4', 0, 406, 640, 74],
   ['vsld', 331, 414, 29, 45], ['name', 28, 464, 300, 16],
 ];
-export const TIP_TEXT = { // stb id or tool bmp -> 'Title\nDescription' verbatim from src/help/tooltips.cht (ktt* topics)
-  frmRWEnd: 'First\nGo to the first frame of the current scene.', frmRW: 'Previous\nGo to the previous frame of the current scene.',
-  frmFW: 'Next\nGo to the next frame of the current scene.', frmFWEnd: 'Last\nGo to the last frame of the current scene.',
-  scnRWEnd: 'First Scene\nGo to the first scene.', scnRW: 'Previous Scene\nGo to the previous scene.',
-  scnFW: 'Next Scene\nGo to the next scene.', scnFWEnd: 'Last Scene\nGo to the last scene.',
-  play: 'Play/Stop \nClick to Play and Stop your movie.',
-  undo: 'Undo/Redo\nUndo the last thing you did!  Redo what you undid!',
-  ccp: 'Cut, Copy, & Paste Tools\nGet rid of, copy, paste, or move things from one place to another.',
-  port: 'Portfolio\nStart a new movie, open an existing movie, and save your work!',
-  book: 'Play in Theatre\nWatch your movie in the theatre!',
-  map: 'Source Code\nView the source code for this project on Github.',
-  '1back': 'Scene Choices\nChoose from many different scenes!', // kidSettingsBrowser
-  '1view': 'Camera Angles\nChoose a different camera view of the current scene.',
-  p3rmbk: 'Remove Everything Before\nRemove everything before the current frame in the current scene.',
-  p3rmfw: 'Remove Everything After\nRemove everything after the current frame in the current scene.',
-  '1scen': 'Scene Organizer\nChange the scene order and add transitions.',
-  '2actr': 'Actors\nChoose from many characters!', '2prop': 'Props \nAdd props like furniture and cars!',
-  '2splt': '3D Words\nCreate 3D words that can spin and move!',
-  '2comp': 'Reposition\nReposition an actor, prop, or 3D word and its path from the current frame on.',
-  '2cont': 'Resume Last Action\nContinue the last action an actor, prop, or 3D word used.',
-  '2acts': 'Actions\nMake the actor, prop, or 3D word you click move!',
-  '2cost': 'Costume Changer\nChange the way the actor, prop, or 3D word you click looks!',
-  '2rot': 'Rotate Tools\nChange the direction an actor, prop, or 3D word faces.',
-  '2xy': 'Up & Down\nWhen this is "on," you can move an actor, prop, or 3D word up and down (instead of near and far).',
-  '2zero': 'Fall Through Ground\nWhen this is "on," an actor, prop, or 3D word can move through the ground surface.  Otherwise, it can\'t.',
-  '2tran': 'Size Tools\nResize an actor, prop, or 3D word!',
-  '2soon': 'Synchronize\nChange when an actor, prop, or 3D word gets to a particular location.',
-  '2bio': 'Talent Book\nGives you the scoop on all the actors you can use in your movie!',
-  '3horn': 'Sound Effects\nAdd sound effects.', '3mike': 'Speech\nMake an actor talk!',
-  '3note': 'Music\nAttach music to a background.',
-  '3sing': 'Play Once\nAttaches the sound you choose and plays it one time.',
-  '3loop': 'Loop\nAttaches the sound you choose and plays it continuously.',
-  '3ear': 'Listener\nListen to, remove, or change the volume of individual sounds.',
-  '3rpt': 'Action Matcher\nAttaches a sound to the current action position.',
-  '1note': 'Wait For Sound to End\nPause the movie action until a sound is finished.',
-  '4new': 'Word Box\nCreate a box where you can type your movie story or credits.',
-  '4ins': 'Insertion Point\nMove, resize, or change words in a word box.',
-  '4font': 'Letters\nChange the way your letters look!', '4bold': 'Styles\nMake words stand out with styles like bold or italic.',
-  '4size': 'Letter Size\nChange the size of your letters.', '4colr': 'Letter Color\nChange the color of your letters.',
-  '4back': 'Background Color\nChange the background color of a word box.',
-  '4scrl': 'Scrolling or Non-Scrolling Words\nChange a word box so that words scroll or stay still!',
-  p3cut: 'Cut\nCut what you click.  If you want, you can paste it in another location.',
-  p3copy: 'Copy\nCopy what you click so that you can paste it in another location.',
-  p3cppt: 'Copy Path\nCopy the path of the actor, prop, or 3D word you click.',
-  p3past: 'Paste\nPaste whatever you most recently cut or copied at the place where you click.',
-  p3rmac: 'Remove 3D Object\nRemove the actor, prop, or 3D word you click from the current scene.',
-};
+// stb id or tool bmp ids -> 'tip.<id>' in lang/*.json (verbatim from src/help/tooltips.cht ktt* topics)
+export const TIP_IDS = new Set([
+  'frmRWEnd', 'frmRW', 'frmFW', 'frmFWEnd', 'scnRWEnd', 'scnRW', 'scnFW', 'scnFWEnd', 'play', 'undo', 'ccp', 'port', 'book', 'map', '1back', '1view', 'p3rmbk', 'p3rmfw', '1scen', '2actr', '2prop', '2splt', '2comp', '2cont', '2acts', '2cost', '2rot', '2xy', '2zero', '2tran', '2soon', '2bio', '3horn', '3mike', '3note', '3sing', '3loop', '3ear', '3rpt', '1note', '4new', '4ins', '4font', '4bold', '4size', '4colr', '4back', '4scrl', 'p3cut', 'p3copy', 'p3cppt', 'p3past', 'p3rmac']);
+// resolved lazily so ?lang= applies at tooltip-show time
 
 export const STUDIO_BTNS = [ // [id, up, down/selected, x, y, w, h]
   ['frmRWEnd', 'frwe', 'frwes', 108, 414, 22, 17], ['frmRW', 'frw', 'frws', 130, 414, 22, 17],
@@ -552,10 +510,10 @@ export function initStudio() {
   { // the original's EXIT strip (kidExit, quits the app) — a web page can't quit,
     // so its slot shows the app version instead
     const ver = document.createElement('div');
-    ver.className = 'stVer'; ver.textContent = 'v' + version;
+    ver.className = 'stVer'; ver.textContent = t('ui.version', { version });
     studio.appendChild(ver); place(ver, 584, 466, 51, 14);
     const a = document.createElement('a'); // render-settings modal toggle
-    a.id = 'stOpts'; a.className = 'stLink'; a.textContent = 'settings';
+    a.id = 'stOpts'; a.className = 'stLink'; a.textContent = t('ui.settings');
     a.onclick = (e) => { e.preventDefault(); showOptsDlg(); };
     studio.appendChild(a); place(a, 470, 466, 108, 14);
   }
@@ -629,7 +587,7 @@ export function initStudio() {
   for (const [id, up, dn, x, y, w, h] of STUDIO_BTNS) {
     const b = document.createElement('button');
     b.id = 'stb_' + id; b.className = 'stBtn';
-    if (TIP_TEXT[id]) b.dataset.tip = TIP_TEXT[id]; // GOK's cnoTopic -> HBAL
+    if (TIP_IDS.has(id)) b.dataset.tip = t(`tip.${id}`); // GOK's cnoTopic -> HBAL
     const im = document.createElement('img');
     im.src = texUrl(`${up}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, x, y, w, h);
@@ -658,7 +616,7 @@ export function initStudio() {
   ]) {
     const b = document.createElement('button');
     b.className = 'stBtn ccpCell';
-    if (TIP_TEXT[bmp]) b.dataset.tip = TIP_TEXT[bmp]; // GOK's cnoTopic -> HBAL
+    if (TIP_IDS.has(bmp)) b.dataset.tip = t(`tip.${bmp}`); // GOK's cnoTopic -> HBAL
     const im = document.createElement('img'); im.src = texUrl(`${bmp}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, 224 + x - 24, 354, 49, 52); // REP_MBMPREG kxpregCCP*=24: bitmaps draw gobpos-preg -> contiguous from bg left
     b.style.display = 'none';
@@ -1081,7 +1039,7 @@ export function initStudio() {
     const dn = TB_DOWN[up] || up + 's';
     const b = document.createElement('button');
     b.className = 'stBtn';
-    if (TIP_TEXT[up]) b.dataset.tip = TIP_TEXT[up]; // GOK's cnoTopic -> HBAL
+    if (TIP_IDS.has(up)) b.dataset.tip = t(`tip.${up}`); // GOK's cnoTopic -> HBAL
     const im = document.createElement('img');
     im.src = texUrl(`${up}`); im.draggable = false;
     b.appendChild(im); studio.appendChild(b); place(b, x, y, w, h);
@@ -1209,7 +1167,7 @@ export function syncStudio() { // reflect player state into the studio bar (call
   $('stfnum').textContent = player.scene ? player.frame - player.scene.nfrmFirst + 1 : '–';
   $('stsnum').textContent = player.sceneIndex >= 0 ? player.sceneIndex + 1 : '–';
   const nm = $('stname');
-  if (!nm.querySelector('input')) nm.textContent = player.movie.name || 'A New Movie';
+  if (!nm.querySelector('input')) nm.textContent = player.movie.name || t('doc.untitled');
   for (const s of stSliders) {
     const p = s.min + s.get() * s.span;
     s.th.style[s.axis === 'x' ? 'left' : 'top'] = (p / (s.axis === 'x' ? 6.4 : 4.8)) + '%';
