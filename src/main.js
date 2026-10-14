@@ -9,27 +9,18 @@ import { showOptsDlg } from './app/ui-dom/browsers.js';
 import { enterTheatre, enterEmbed } from './app/ui-dom/modes.js';
 import { initStudio } from './app/ui-dom/studio.js';
 import { guideTip } from './app/ui-dom/tips.js';
-import { ChunkyFile, readGL } from './format/chunky.js';
-import { Reader } from './format/binary.js';
-import { SEVT, AET, parseMovie, serializeMovie } from './format/movie.js';
-import { decodeWavAdpcm } from './format/wav.js';
-import { parseMbmp, templateCmtl, makeTdtTemplate, TDTS, STY, SPRM } from './format/content.js';
+// 3DMM Web — boot orchestrator. Everything else lives in src/app/: state
+// (shared lets+setters), res (paths/DOM helpers), undo, boot (splash), packs
+// (?packs= expansions), thumbs (.3th scan), doc (open/save/autosave), loop
+// (play loop + draw), opts (render settings), sndsrc (sound browsers),
+// edit/ (movie/sound/tbox mutations), ui-dom/ (studio, browsers, easels,
+// bio, tips, theatre/embed modes).
 import { Library, CONTENT_FILES } from './engine/library.js';
-import { MoviePlayer, FPS, WIT } from './engine/player.js';
 import { SoundQueue } from './engine/sound.js';
-import { Actor, DWR_NIL } from './engine/actor.js';
-import * as M from './engine/mat34.js';
-import { Renderer, toMatrix4 } from './render/renderer.js';
-import { hitTbox, acrToColor } from './render/textbox.js';
-import * as THREE from 'three';
-import { version } from '../package.json';
-import { B, packTex, texUrl, curUrl, $, sleep, say } from './app/res.js';
-import { hist, opExec, histUndo, histRedo, histClear, syncUndoBtn } from './app/undo.js';
-import { tbSnapEnd } from './app/edit/tbox.js';
-import { docMark } from './app/doc.js';
-import { lib, pal, renderer, sounds, player, playing, modeSync, selChid, pendPlace, selTbChid, focusTbChid, tbSel, tbAttach, tbSnap, lastViewPt,
-  setLib, setPal, setRenderer, setSounds, setPlayer, setPlaying as setPlayingFlag, setModeSync, setSelChid, setPendPlace, setSelTbChid, setFocusTbChid, setTbSelVal, setTbAttach,
-  setTbSnap, setLastViewPt, ed, tbPaint, selTbSels } from './app/state.js';
+import { Renderer } from './render/renderer.js';
+import { B, $, sleep, say } from './app/res.js';
+import { lib, pal, renderer, sounds, player, playing,
+  setLib, setPal, setRenderer, setSounds } from './app/state.js';
 
 
 /* @@boot.js:25@@ */

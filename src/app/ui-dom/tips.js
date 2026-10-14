@@ -1,4 +1,5 @@
-import { playing } from '../state.js';import { $ } from '../res.js';import { B } from '../res.js';import { player } from '../state.js';
+import { playing, player } from '../state.js';
+import { $, B } from '../res.js';
 // --- callout tips (the original's HBAL: kgobCalloutBalloonN — a cobllnN.bmp
 // skin tiled by GORT with the red arrow baked in; reg point = the arrow tip.
 // Dwell on a control to get its tip (suppressed while playing, like the

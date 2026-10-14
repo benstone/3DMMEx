@@ -1,4 +1,6 @@
-import { texUrl } from '../res.js';import { brwsTmpls } from '../thumbs.js';import { brwsShell, brwsEl, closeBrowser } from './browsers.js';
+import { texUrl } from '../res.js';
+import { brwsTmpls } from '../thumbs.js';
+import { brwsShell, brwsEl, closeBrowser } from './browsers.js';
 // --- talent book (BIO_CREATEBOOK / biopage.cht + sharecd.cht) ---------------
 // corkboard book (biopage.pbm) + per-page portrait collage (biopgN.png adopted
 // cells on kgobBioActors) + spiral-ring overlay (biopanel.pbm). The original's

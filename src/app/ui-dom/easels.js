@@ -1,4 +1,21 @@
-import { Actor } from '../../engine/actor.js';import { $ } from '../res.js';import * as M from "../../engine/mat34.js";import { FPS } from '../../engine/player.js';import { ChunkyFile } from '../../format/chunky.js';import { parseMbmp, STY, TDTS, makeTdtTemplate, templateCmtl } from '../../format/content.js';import { parseMovie } from '../../format/movie.js';import { toMatrix4 } from '../../render/renderer.js';import { docMark } from '../doc.js';import { selActor, chidOf } from '../edit/movie.js';import { queryScenSnd, setScenVlm, remScenSnd } from '../edit/sound.js';import { setTbSel, setTbFocus, insTbox } from '../edit/tbox.js';import { setPlaying, draw } from '../loop.js';import { texUrl } from '../res.js';import { addUserSnd, userSnds, decodeAudioBytes, sndName } from '../sndsrc.js';import { player, ed, setSelChid, selTbSels, sounds, renderer, lib, setPendPlace } from '../state.js';import { mbmpCanvas, spltThumbs } from '../thumbs.js';import { histClear, opExec } from '../undo.js';import { brwsShell, brwsEl, closeBrowser, showBrowser, brwsCleanup, setBrwsCleanup } from './browsers.js';import { syncRollCall } from './studio.js';import * as THREE from "three";
+import { Actor } from '../../engine/actor.js';
+import { $, texUrl } from '../res.js';
+import { FPS } from '../../engine/player.js';
+import { ChunkyFile } from '../../format/chunky.js';
+import { parseMbmp, STY, TDTS, makeTdtTemplate, templateCmtl } from '../../format/content.js';
+import { parseMovie } from '../../format/movie.js';
+import { toMatrix4 } from '../../render/renderer.js';
+import { docMark } from '../doc.js';
+import { selActor, chidOf } from '../edit/movie.js';
+import { queryScenSnd, setScenVlm, remScenSnd } from '../edit/sound.js';
+import { setTbSel, setTbFocus, insTbox } from '../edit/tbox.js';
+import { setPlaying, draw } from '../loop.js';
+import { addUserSnd, userSnds, decodeAudioBytes, sndName } from '../sndsrc.js';
+import { player, ed, setSelChid, selTbSels, sounds, renderer, lib, setPendPlace } from '../state.js';
+import { mbmpCanvas, spltThumbs } from '../thumbs.js';
+import { histClear, opExec } from '../undo.js';
+import { brwsShell, brwsEl, closeBrowser, showBrowser, brwsCleanup, setBrwsCleanup } from './browsers.js';
+import { syncRollCall } from './studio.js';
 // --- scene sorter easel (easels.cht kidSSorter*; scnsort.cpp SCRT) -----------
 // e3par panel at (20,65) 600x350; 6 frame cells 185x126 at (10+c*193,12+r*141);
 // thumb rect (8,12)-(151,92); transition buttons at (156,11/33/55/77). Edits a

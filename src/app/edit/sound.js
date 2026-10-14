@@ -1,4 +1,10 @@
-import { SEVT } from '../../format/movie.js';import { WIT } from '../../engine/player.js';import { STY } from '../../format/content.js';import { AET } from '../../format/movie.js';import { draw } from '../loop.js';import { lib, ed, player, sounds, setSelChid, selTbSels } from '../state.js';import { opExec } from '../undo.js';import { setTbSel, setTbFocus } from './tbox.js';
+import { SEVT, AET } from '../../format/movie.js';
+import { WIT } from '../../engine/player.js';
+import { STY } from '../../format/content.js';
+import { draw } from '../loop.js';
+import { lib, ed, player, sounds, setSelChid, selTbSels } from '../state.js';
+import { opExec } from '../undo.js';
+import { setTbSel, setTbFocus } from './tbox.js';
 // --- sound editing (movie.cpp toolSounder/Looper/Matcher + scene.cpp FAddSnd/
 // FPauseCore + actrsnd.cpp FSetSndCore) ----------------------------------------
 export const SND_STY = { fx: STY.Sfx, speech: STY.Speech, music: STY.Midi };

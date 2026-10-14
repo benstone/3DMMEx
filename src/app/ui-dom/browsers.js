@@ -1,4 +1,12 @@
-import { playing } from '../state.js';import { $ } from '../res.js';import { editBkgd, editCam } from '../edit/movie.js';import { setSndTag } from '../edit/sound.js';import { setPlaying, draw } from '../loop.js';import { opts, optsPanel, optSync } from '../opts.js';import { texUrl } from '../res.js';import { getSndItems, addUserSnd, importSndFiles, previewItem } from '../sndsrc.js';import { sounds, renderer, player, setPendPlace } from '../state.js';import { bkthCaths, brwsTmpls, mbmpCanvas } from '../thumbs.js';import { showSpletter, showWords, showRecorder } from './easels.js';
+import { playing, sounds, renderer, player, setPendPlace } from '../state.js';
+import { $, texUrl } from '../res.js';
+import { editBkgd, editCam } from '../edit/movie.js';
+import { setSndTag } from '../edit/sound.js';
+import { setPlaying, draw } from '../loop.js';
+import { opts, optsPanel, optSync } from '../opts.js';
+import { getSndItems, addUserSnd, importSndFiles, previewItem } from '../sndsrc.js';
+import { bkthCaths, brwsTmpls, mbmpCanvas } from '../thumbs.js';
+import { showSpletter, showWords, showRecorder } from './easels.js';
 // --- item browser dialogs (browser.cht): modal book panel + frame grid + page controls
 export const BRWS_DEFS = {
   // kidBrwsBackground/kidBrwsSceneFrames: book1 at (62,48) via reg (258,370); frames 136x78, cells +4.

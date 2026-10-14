@@ -1,4 +1,15 @@
-import { insTbox, pickTbox, selTbox } from './edit/tbox.js';import { importSndFile, getSndItems } from './sndsrc.js';import { pal } from './state.js';import { spltThumbs, brwsTmpls } from './thumbs.js';import { showRecorder } from './ui-dom/easels.js';import { callout } from './ui-dom/tips.js';import { MoviePlayer } from '../engine/player.js';import { ChunkyFile } from '../format/chunky.js';import { serializeMovie } from '../format/movie.js';import { setPlaying, draw } from './loop.js';import { say, B } from './res.js';import { userSnds, wavToBuf } from './sndsrc.js';import { sounds, player, lib, setPlayer, renderer, selTbChid, focusTbChid, tbSel, tbAttach, pendPlace, selChid, ed, setSelChid, setPendPlace, setSelTbChid, setFocusTbChid, setTbSelVal, setTbAttach, setTbSnap, selTbSels } from './state.js';import { guideTip } from './ui-dom/tips.js';import { hist, histClear } from './undo.js';
+import { insTbox, pickTbox, selTbox } from './edit/tbox.js';
+import { importSndFile, getSndItems, userSnds, wavToBuf } from './sndsrc.js';
+import { pal, sounds, player, lib, setPlayer, renderer, selTbChid, focusTbChid, tbSel, tbAttach, pendPlace, selChid, ed, setSelChid, setPendPlace, setSelTbChid, setFocusTbChid, setTbSelVal, setTbAttach, setTbSnap, selTbSels } from './state.js';
+import { spltThumbs, brwsTmpls } from './thumbs.js';
+import { showRecorder } from './ui-dom/easels.js';
+import { callout, guideTip } from './ui-dom/tips.js';
+import { MoviePlayer } from '../engine/player.js';
+import { ChunkyFile } from '../format/chunky.js';
+import { serializeMovie } from '../format/movie.js';
+import { setPlaying, draw } from './loop.js';
+import { say, B } from './res.js';
+import { hist, histClear } from './undo.js';
 export let saveHandle = null; // FileSystemFileHandle for cidSave (FGetFniSave result)
 export function open(buffer, name, cacheDoc = true) {
   setPlaying(false);

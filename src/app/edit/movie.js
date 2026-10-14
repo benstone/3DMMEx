@@ -1,4 +1,8 @@
-import { SEVT } from '../../format/movie.js';import { makeTdtTemplate } from '../../format/content.js';import { AET } from '../../format/movie.js';import { setPlaying, draw } from '../loop.js';import { player, selChid, renderer, setSelChid, lib } from '../state.js';import { opExec } from '../undo.js';
+import { SEVT, AET } from '../../format/movie.js';
+import { makeTdtTemplate } from '../../format/content.js';
+import { setPlaying, draw } from '../loop.js';
+import { player, selChid, renderer, setSelChid, lib } from '../state.js';
+import { opExec } from '../undo.js';
 // --- editor state (studio.cht kidBackground flags: fXYAxis/fRGround = fFalse) -
 // PtboxSelected (border chrome) | TBXG key focus + its cp sel: selTbChid/focusTbChid/tbSel,
 // TBOX::AttachToMouse {tb, moved}: tbAttach, pending text-edit undo burst: tbSnap — all in app/state.js

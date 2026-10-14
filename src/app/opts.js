@@ -1,4 +1,5 @@
-import { playing } from './state.js';import { draw, setPlaying } from './loop.js';import { renderer } from './state.js';
+import { playing, renderer } from './state.js';
+import { draw, setPlaying } from './loop.js';
 // --- options ---------------------------------------------------------------
 export const opts = { fps24: false, modernLighting: false, shadows: false, castOnOthers: false, selfShadow: false, smoothTex: false, smoothVerts: false, scale2x: false, aa: false, aaMode: 4, wireframe: false, lightInt: 1, selfShadowOp: 0.65 };
 try { Object.assign(opts, JSON.parse(localStorage.getItem('opts3dmm') || '{}')); delete opts.mute; } catch { /* bad saved opts */ }

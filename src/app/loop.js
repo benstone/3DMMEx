@@ -1,4 +1,10 @@
-import { playing, setPlaying as setPlayingFlag } from './state.js';import { $ } from './res.js';import { FPS } from '../engine/player.js';import { selActor } from './edit/movie.js';import { selTbox, focusTbox } from './edit/tbox.js';import { opts } from './opts.js';import { player, renderer, tbAttach, tbSel, sounds, modeSync } from './state.js';import { syncStudio } from './ui-dom/studio.js';
+import { playing, setPlaying as setPlayingFlag, player, renderer, tbAttach, tbSel, sounds, modeSync } from './state.js';
+import { $ } from './res.js';
+import { FPS } from '../engine/player.js';
+import { selActor } from './edit/movie.js';
+import { selTbox, focusTbox } from './edit/tbox.js';
+import { opts } from './opts.js';
+import { syncStudio } from './ui-dom/studio.js';
 export let timer = null;
 export function updateUi() { if (player) syncStudio(); }
 export function draw() {

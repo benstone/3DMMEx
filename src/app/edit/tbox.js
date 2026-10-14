@@ -1,4 +1,8 @@
-import { SEVT } from '../../format/movie.js';import { selTbSels, setTbSelVal, tbSnap } from '../state.js';import { SPRM } from '../../format/content.js';import { draw } from '../loop.js';import { selTbChid, player, focusTbChid, setSelTbChid, tbSel, setFocusTbChid, setTbSnap, setSelChid, setTbAttach, ed } from '../state.js';import { opExec } from '../undo.js';
+import { SEVT } from '../../format/movie.js';
+import { selTbSels, setTbSelVal, tbSnap, selTbChid, player, focusTbChid, setSelTbChid, tbSel, setFocusTbChid, setTbSnap, setSelChid, setTbAttach, ed } from '../state.js';
+import { SPRM } from '../../format/content.js';
+import { draw } from '../loop.js';
+import { opExec } from '../undo.js';
 // --- text boxes (tbox.cpp TBXB/TBXG + studio.cpp FCmdCreateTbox/FCmdText*) ---
 // Thumb data from content-files/tbox.3th: TCTH color iscr list, TBTH same plus
 // iscr 0 (clear) first, TZTH font sizes, TYTH styles (grfontMask 3, grfont 0-3).

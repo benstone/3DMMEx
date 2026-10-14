@@ -1,4 +1,7 @@
-import { playing } from '../state.js';import { $ } from '../res.js';import { setPlaying } from '../loop.js';import { texUrl } from '../res.js';import { player, sounds, setModeSync, modeSync } from '../state.js';import { showOptsDlg } from './browsers.js';
+import { playing, player, sounds, setModeSync, modeSync } from '../state.js';
+import { $, texUrl } from '../res.js';
+import { setPlaying } from '../loop.js';
+import { showOptsDlg } from './browsers.js';
 // --- theatre mode (?3mm=...&mode=theatre) ------------------------------------
 // The building's cinema (bldghd.cht kgobTheatre1 + theatre.cht kgobMovie):
 // theatre1.pbm room (the1dark.pbm while the movie plays), the MVU fills the

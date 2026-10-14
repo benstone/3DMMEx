@@ -1,4 +1,8 @@
-import { ChunkyFile, readGL } from '../format/chunky.js';import { bootCap } from './boot.js';import { packTex } from './res.js';import { lib } from './state.js';import { scanThumbFile } from './thumbs.js';
+import { ChunkyFile, readGL } from '../format/chunky.js';
+import { bootCap } from './boot.js';
+import { packTex } from './res.js';
+import { lib } from './state.js';
+import { scanThumbFile } from './thumbs.js';
 // ?packs=url[,url...] — each entry is an assets.json URL (or a directory ending
 // in assets.json). Fetch manifests up front; the files are applied below once
 // the content library + thumbnail structures exist.

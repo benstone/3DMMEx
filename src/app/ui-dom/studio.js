@@ -1,4 +1,20 @@
-import { SEVT } from '../../format/movie.js';import { tbOp } from '../edit/tbox.js';import { playing } from '../state.js';import { $ } from '../res.js';import { DWR_NIL } from '../../engine/actor.js';import { FPS } from '../../engine/player.js';import { AET } from '../../format/movie.js';import { hitTbox } from '../../render/textbox.js';import { docMark, newMovie, openMovieFile, saveMovie } from '../doc.js';import { insTdt, placeActor, chidOf, cutSelActor, nukeSelActor, syncSelBox } from '../edit/movie.js';import { addBkgdSnd, addActrSnd, sceneChop, editPause } from '../edit/sound.js';import { tbSnapEnd, pickTbox, TBX_TOOL, remTbox, inTboxBorder, tbChidOf, setTbSel, tbAnchor, setTbFocus, TBX_MINW, TBX_MINH, applyChpOp, TB_ANCHOR_CURS, TB_ANCHOR_HOT, focusTbox, tbDelText, tbInsText, TCTH_ISCR, TBTH_ISCR, TZTH_DYP, TYTH_STYLES, TB_FONTS, applyChpSel } from '../edit/tbox.js';import { draw, setPlaying } from '../loop.js';import { version } from '../../../package.json';import { curUrl, texUrl } from '../res.js';import { ed, tbPaint, player, setLastViewPt, tbAttach, setTbAttach, selTbChid, setSelChid, renderer, setTbSelVal, pendPlace, setPendPlace, lastViewPt, tbSel, sounds, focusTbChid, setSelTbChid, setFocusTbChid, selTbSels } from '../state.js';import { rcLists, rcActs, rcThumbFor } from '../thumbs.js';import { opExec, hist, histUndo, histRedo, syncUndoBtn } from '../undo.js';import { showBio } from './bio.js';import { brwsEl, showOptsDlg, showBrowser } from './browsers.js';import { showListenerEasel, showActionBrowser, showSpletter, showCostumeEasel, showSceneSorter } from './easels.js';
+import { SEVT, AET } from '../../format/movie.js';
+import { tbOp, tbSnapEnd, pickTbox, TBX_TOOL, remTbox, inTboxBorder, tbChidOf, setTbSel, tbAnchor, setTbFocus, TBX_MINW, TBX_MINH, applyChpOp, TB_ANCHOR_CURS, TB_ANCHOR_HOT, focusTbox, tbDelText, tbInsText, TCTH_ISCR, TBTH_ISCR, TZTH_DYP, TYTH_STYLES, TB_FONTS, applyChpSel } from '../edit/tbox.js';
+import { playing, ed, tbPaint, player, setLastViewPt, tbAttach, setTbAttach, selTbChid, setSelChid, renderer, setTbSelVal, pendPlace, setPendPlace, lastViewPt, tbSel, sounds, focusTbChid, setSelTbChid, setFocusTbChid, selTbSels } from '../state.js';
+import { $, curUrl, texUrl } from '../res.js';
+import { DWR_NIL } from '../../engine/actor.js';
+import { FPS } from '../../engine/player.js';
+import { hitTbox } from '../../render/textbox.js';
+import { docMark, newMovie, openMovieFile, saveMovie } from '../doc.js';
+import { insTdt, placeActor, chidOf, cutSelActor, nukeSelActor, syncSelBox } from '../edit/movie.js';
+import { addBkgdSnd, addActrSnd, sceneChop, editPause } from '../edit/sound.js';
+import { draw, setPlaying } from '../loop.js';
+import { version } from '../../../package.json';
+import { rcLists, rcActs, rcThumbFor } from '../thumbs.js';
+import { opExec, hist, histUndo, histRedo, syncUndoBtn } from '../undo.js';
+import { showBio } from './bio.js';
+import { brwsEl, showOptsDlg, showBrowser } from './browsers.js';
+import { showListenerEasel, showActionBrowser, showSpletter, showCostumeEasel, showSceneSorter } from './easels.js';
 // --- studio editor chrome (visual layout only for now) ----------------------
 // Positions lifted from 3DMMEx studio.cht / pos3.chh: bitmap lands at (gob - preg).
 export const STUDIO_IMGS = [ // [name, x, y, w, h] in the original 640x480 screen space

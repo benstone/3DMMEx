@@ -1,4 +1,4 @@
-import { $ } from './res.js';import { texUrl, B } from './res.js';
+import { $, texUrl, B } from './res.js';
 // --- boot splash -------------------------------------------------------------
 // UTEST.CPP APP::_FInit: the Microsoft Home logo rides the early init, then the
 // splash screen stays up while _FInitCrm reads the content chunkies; afterwards

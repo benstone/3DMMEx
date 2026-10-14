@@ -1,4 +1,9 @@
-import { Reader } from '../format/binary.js';import { ChunkyFile } from '../format/chunky.js';import { parseMbmp } from '../format/content.js';import { miscTick } from './boot.js';import { B } from './res.js';import { lib, pal, player } from './state.js';
+import { Reader } from '../format/binary.js';
+import { ChunkyFile } from '../format/chunky.js';
+import { parseMbmp } from '../format/content.js';
+import { miscTick } from './boot.js';
+import { B } from './res.js';
+import { lib, pal, player } from './state.js';
 // roll call thumbnails: TMTH/PRTH (TFC tmpl cno) -> GOKD -> MBMP, from actor.3th / prop.3th
 export const rcTmplThumbs = new Map();
 export const brwsTmpls = { actor: [], prop: [], scene: [] }; // selector grids: {cno, name, mbmp} in .3th order
