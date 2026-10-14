@@ -20,6 +20,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "spessasynth_core": "^4.3.22",
     "three": "^0.169.0"
   },
   "devDependencies": {

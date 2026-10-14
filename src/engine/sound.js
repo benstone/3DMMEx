@@ -1,6 +1,7 @@
 // Browser audio playback for 3DMM movie sounds (Web Audio).
-// MSND chunks hold a WAVE kid (raw .wav bytes) or a MIDS kid (proprietary
-// MIDI format — not supported, reported as a warning).
+// MSND chunks hold a WAVE kid (raw .wav bytes) or a MIDS kid (MIDI event
+// stream — rendered through an SF2/DLS soundfont when one is available,
+// with a small oscillator synth as fallback).
 import { STY } from '../format/content.js';
 import { decodeWavAdpcm } from '../format/wav.js';
 import { parseMids } from '../format/mids.js';
@@ -70,11 +71,101 @@ export class SoundQueue {
     return this.buffers.get(key);
   }
 
+  // The original played MIDI through the OS GM wavetable (gm.dls). We render
+  // the same event stream through a real SF2/SF3/DLS bank via spessasynth_core
+  // — bank lookup: ?sf=<url>, then data/gm.dls, data/soundfont.{dls,sf3,sf2}
+  // under the app base. null when nothing loads -> _oscBuffer fallback.
+  _sfBank() {
+    if (this._bankP === undefined) {
+      this._bankP = (async () => {
+        const urls = [];
+        const q = typeof location !== 'undefined' && new URLSearchParams(location.search).get('sf');
+        if (q) urls.push(q);
+        const B = import.meta.env.BASE_URL;
+        for (const n of ['gm.dls', 'soundfont.dls', 'soundfont.sf3', 'soundfont.sf2']) urls.push(`${B}data/${n}`);
+        const { SoundBankLoader } = await import('spessasynth_core');
+        for (const u of urls) {
+          try {
+            const r = await fetch(u);
+            if (r.ok) return SoundBankLoader.fromArrayBuffer(await r.arrayBuffer());
+          } catch { /* try the next candidate */ }
+        }
+        this._warn('MIDI: no soundfont (data/gm.dls or data/soundfont.sf2) — synth preview used');
+        return null;
+      })().catch(() => { this._warn('MIDI: soundfont synth unavailable — synth preview used'); return null; });
+    }
+    return this._bankP;
+  }
+
+  // Run parsed MIDS events through the soundfont into an AudioBuffer (or null).
+  async _sfBuffer(evs) {
+    const bank = await this._sfBank();
+    if (!bank || !evs.length) return null;
+    const { SpessaSynthProcessor } = await import('spessasynth_core');
+    const rate = 44100, n = Math.ceil((evs[evs.length - 1].ts / 1000 + 1.5) * rate);
+    const synth = new SpessaSynthProcessor(rate, { maxBufferSize: 256 });
+    synth.soundBankManager.addSoundBank(bank, 'main');
+    await synth.processorInitialized;
+    const L = new Float32Array(n), R = new Float32Array(n);
+    let done = 0;
+    const run = (at) => { // render [done, at) in <=256-sample quanta
+      while (done < at) { const c = Math.min(256, at - done); synth.process(L, R, done, c); done += c; }
+    };
+    for (const e of evs) {
+      run(Math.min(n, Math.round((e.ts * rate) / 1000)));
+      const [st, a, b] = e.msg, ch = st & 15;
+      switch (st & 0xf0) {
+        case 0x80: synth.noteOff(ch, a); break;
+        case 0x90: b ? synth.noteOn(ch, a, b) : synth.noteOff(ch, a); break;
+        case 0xa0: synth.polyPressure(ch, a, b); break;
+        case 0xb0: synth.controllerChange(ch, a, b); break;
+        case 0xc0: synth.programChange(ch, a); break;
+        case 0xd0: synth.channelPressure(ch, a); break;
+        case 0xe0: synth.pitchWheel(ch, a | (b << 7), -1); break;
+      }
+    }
+    run(n);
+    const buf = new AudioBuffer({ numberOfChannels: 2, length: n, sampleRate: rate });
+    buf.copyToChannel(L, 0); buf.copyToChannel(R, 1);
+    return buf;
+  }
+
+  // User-imported .mid files are SMF, not MIDS — render via the sequencer.
+  async _sfSmfBuffer(bytes) {
+    const bank = await this._sfBank();
+    if (!bank) return null;
+    const { BasicMIDI, SpessaSynthProcessor, SpessaSynthSequencer } = await import('spessasynth_core');
+    let midi;
+    try { midi = BasicMIDI.fromArrayBuffer(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength)); }
+    catch { return null; }
+    const rate = 44100, n = Math.ceil((midi.duration + 1.5) * rate);
+    const synth = new SpessaSynthProcessor(rate, { maxBufferSize: 256 });
+    synth.soundBankManager.addSoundBank(bank, 'main');
+    await synth.processorInitialized;
+    const seq = new SpessaSynthSequencer(synth);
+    seq.loadNewSongList([midi]); seq.play();
+    const L = new Float32Array(n), R = new Float32Array(n);
+    for (let done = 0; done < n;) { seq.processTick(); const c = Math.min(256, n - done); synth.process(L, R, done, c); done += c; }
+    const buf = new AudioBuffer({ numberOfChannels: 2, length: n, sampleRate: rate });
+    buf.copyToChannel(L, 0); buf.copyToChannel(R, 1);
+    return buf;
+  }
+
   // Render a MIDS event stream to an AudioBuffer with a small GM-ish synth.
   async _midiBuffer(msnd) {
-    if (typeof OfflineAudioContext === 'undefined') { this._warn('MIDI: OfflineAudioContext unavailable'); return null; }
-    const evs = parseMids(msnd.cf.data('MIDS', msnd.midiCno));
+    const data = msnd.cf.data('MIDS', msnd.midiCno);
+    const smf = data[0] === 0x4d && data[1] === 0x54 && data[2] === 0x68 && data[3] === 0x64; // 'MThd'
+    if (smf) return this._sfSmfBuffer(data);
+    const evs = parseMids(data);
     if (!evs.length) return null;
+    const sf = await this._sfBuffer(evs);
+    if (sf) return sf;
+    if (typeof OfflineAudioContext === 'undefined') { this._warn('MIDI: OfflineAudioContext unavailable'); return null; }
+    return this._oscBuffer(evs);
+  }
+
+  // Fallback when no soundfont is present: the rough oscillator preview.
+  _oscBuffer(evs) {
     const dur = evs[evs.length - 1].ts / 1000 + 1.5;
     const oc = new OfflineAudioContext(2, Math.ceil(dur * 44100), 44100);
     const prog = new Array(16).fill(0), vol = new Array(16).fill(1), pan = new Array(16).fill(0);
