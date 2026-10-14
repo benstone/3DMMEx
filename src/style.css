@@ -64,6 +64,7 @@ body { display: flex; flex-direction: column; }
 #studio #selBox { display: none; } /* unused — selection is a 3D Box3Helper in-scene (BODY::_PrepareToRender) */
 
 /* --- boot splash (UTEST.CPP: homelogo -> splash during _FInitCrm) ----------- */
+#ui { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; z-index: 55; }
 #boot { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; align-items: center; justify-content: center; transition: opacity .35s; }
 #boot.gone { opacity: 0; pointer-events: none; }
 #bootScr { position: relative; aspect-ratio: 640 / 480; height: min(100%, 75vw); overflow: hidden; container-type: size; }

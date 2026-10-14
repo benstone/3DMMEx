@@ -156,7 +156,7 @@ void main(){
 
 export class Renderer {
   constructor(canvas, basePalette) {
-    this.gl = new THREE.WebGLRenderer({ canvas, antialias: false });
+    this.gl = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true }); // preserve so the UI canvas can blit this canvas between renders
     this.gl.setPixelRatio(1);
     this.gl.setSize(WIDTH, HEIGHT, false);
     this.gl.autoClear = false;
