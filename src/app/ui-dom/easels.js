@@ -1,3 +1,5 @@
+import * as M from '../../engine/mat34.js';
+import * as THREE from 'three';
 import { Actor } from '../../engine/actor.js';
 import { $, texUrl } from '../res.js';
 import { FPS } from '../../engine/player.js';
