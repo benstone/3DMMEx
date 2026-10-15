@@ -35,20 +35,38 @@ await expansionPacks.applyAll();
 movieDocument.newMovie(); // empty doc so the view has a appState.moviePlayer before the first message
 
 const qs = new URLSearchParams(location.search);
-/** Load a movie by URL into the receiver — called for CAF 'movie' messages and
- *  the ?3mm= standalone test param. `scene`/`frame` position the playhead,
- *  `play` starts playback; errors land on the view's status line.
- *  @param {{url: string, scene?: number, frame?: number, play?: boolean}} m */
+/** Position the playhead per a cast message and start (or hold) playback. */
+function applyPos(m) {
+  if (m.scene != null && appState.moviePlayer.movie.scenes.length)
+    appState.moviePlayer.loadScene(Math.min(m.scene, appState.moviePlayer.movie.scenes.length - 1));
+  if (m.frame != null && appState.moviePlayer.scene) appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmFirst + m.frame - 1);
+  playbackLoop.drawFrame();
+  if (m.play !== false) { appState.soundQueue.ensure(); playbackLoop.setPlaying(true); }
+}
+/** Load a movie by URL — for CAF/Presentation 'movie' messages and the ?3mm=
+ *  standalone test param; errors land on the view's status line. */
 async function loadMovie(m) {
-  const { url, scene, frame, play } = m;
-  const err = await movieDocument.openMovieUrl(url, false); // receiver docs aren't autosaved locally
+  const err = await movieDocument.openMovieUrl(m.url, false); // receiver docs aren't autosaved locally
   if (err) { view.setStatus(err); return; }
   view.setStatus('');
-  if (scene != null && appState.moviePlayer.movie.scenes.length)
-    appState.moviePlayer.loadScene(Math.min(scene, appState.moviePlayer.movie.scenes.length - 1));
-  if (frame != null && appState.moviePlayer.scene) appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmFirst + frame - 1);
-  playbackLoop.drawFrame();
-  if (play !== false) { appState.soundQueue.ensure(); playbackLoop.setPlaying(true); }
+  applyPos(m);
+}
+/** Load a movie from serialized bytes — Presentation connections carry the
+ *  doc itself, so local/autosaved movies cast without a hosted URL. */
+function loadMovieBytes(buf, m) {
+  if (movieDocument.openMovie(buf, m.name || 'cast.3mm', false) === false) { view.setStatus(localizer.translate('ui.castFailed')); return; }
+  view.setStatus('');
+  applyPos(m);
+}
+/** Shared command handler — CAF messages arrive as objects, Presentation
+ *  messages as JSON strings; 'movieBytes' arms the next binary payload. */
+let pendingBytes = null;
+function onCastMessage(m) {
+  if (m?.type === 'movie') loadMovie(m);
+  else if (m?.type === 'movieBytes') pendingBytes = m;
+  else if (m?.type === 'play') playbackLoop.setPlaying(true);
+  else if (m?.type === 'pause') playbackLoop.setPlaying(false);
+  else if (m?.type === 'seek' && appState.moviePlayer?.scene) { appState.moviePlayer.gotoFrame(m.frame); playbackLoop.drawFrame(); }
 }
 if (qs.get('3mm')) await loadMovie({ url: qs.get('3mm'), scene: +qs.get('scene') || null, frame: +qs.get('frame') || null, play: true });
 
@@ -56,13 +74,24 @@ if (qs.get('3mm')) await loadMovie({ url: qs.get('3mm'), scene: +qs.get('scene')
 const caf = globalThis.cast?.framework;
 if (caf) {
   const ctx = caf.CastReceiverContext.getInstance();
-  ctx.addCustomMessageListener(CAST_NS, (e) => {
-    if (e.data?.type === 'movie') loadMovie(e.data);
-    else if (e.data?.type === 'play') playbackLoop.setPlaying(true);
-    else if (e.data?.type === 'pause') playbackLoop.setPlaying(false);
-    else if (e.data?.type === 'seek' && appState.moviePlayer?.scene) { appState.moviePlayer.gotoFrame(e.data.frame); playbackLoop.drawFrame(); }
-  });
+  ctx.addCustomMessageListener(CAST_NS, (e) => onCastMessage(e.data));
   const opts2 = new caf.CastReceiverOptions();
   opts2.disableIdleTimeout = true; // movies can sit paused for a while
   ctx.start(opts2);
+}
+
+// Presentation API — Chrome's built-in page cast: the sender opens this page
+// on the device and streams commands/movie bytes over the connection.
+const pres = (navigator as any).presentation?.receiver;
+if (pres) {
+  pres.connectionList.then((list) => {
+    const wire = (conn) => {
+      conn.onmessage = (e) => {
+        if (typeof e.data === 'string') { try { onCastMessage(JSON.parse(e.data)); } catch { /* not ours */ } }
+        else if (pendingBytes) { const m = pendingBytes; pendingBytes = null; loadMovieBytes(e.data, m); }
+      };
+    };
+    (list.connections || []).forEach(wire);
+    list.addEventListener('connectionavailable', (e) => wire(e.connection));
+  });
 }
