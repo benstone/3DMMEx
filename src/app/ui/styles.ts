@@ -2,7 +2,7 @@
 // Covers the DOM the canvas app still uses: the stage/studio layout shell, the
 // #view/#ui canvases, DOM-overlay inputs (word text boxes, movie name), the
 // settings dialog, and the portrait rotate prompt. The pre-JS #boot splash is
-// styled inline in index.html/receiver.html — it must render before JS runs.
+// styled inline in index.html — it must render before JS runs.
 /** Inject the app stylesheet — called once at boot; idempotent. Covers the
  *  DOM the canvas app still uses: layout shell, canvases, overlay inputs, the
  *  settings dialog, and the rotate prompt. */

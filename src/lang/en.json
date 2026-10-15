@@ -25,18 +25,7 @@
     "pageNum": "{page} / {total}",
     "bioPage": "{n} / {total}",
     "frameDash": "–",
-    "rotateDevice": "Rotate your device to watch the movie",
-    "playOn": "play on…",
-    "streamLocal": "This screen",
-    "streamRemote": "Cast / TV devices",
-    "streamCastApp": "Chromecast (3DMM app)",
-    "streamSearching": "searching…",
-    "streamNeedsUrl": "needs a movie loaded from a URL",
-    "casting": "casting to TV — this window is now the remote",
-    "castNeedsUrl": "casting needs a movie loaded from a URL (?3mm=) — local movies can't be sent",
-    "castUnavailable": "no cast targets found — needs Chrome, or AirPlay in Safari",
-    "castFailed": "couldn't reach the receiver — is the app registered with ?castid=?",
-    "castWaiting": "waiting for a movie…"
+    "rotateDevice": "Rotate your device to watch the movie"
   },
   "opt": {
     "catPlayback": "playback",

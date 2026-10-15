@@ -67,5 +67,5 @@ export interface UrlParams {
   scene?: string; frame?: string; play?: string;
   opts?: string;                    // comma-separated render flags
   menu?: string; packs?: string;    // comma-separated assets.json URLs
-  sf?: string; castid?: string;     // sound bank / CAF receiver app id
+  sf?: string;                      // sound bank
 }

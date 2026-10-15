@@ -12,8 +12,8 @@ export default {
   build: {
     target: 'es2022',
     assetsInlineLimit: 0, // never inline runtime blobs — data/ textures live in public/
-    rollupOptions: { // second entry: the Chromecast CAF receiver page
-      input: { main: resolve('index.html'), receiver: resolve('receiver.html') },
+    rollupOptions: {
+      input: { main: resolve('index.html') },
       output: {
         manualChunks(id) { // split heavy deps into cacheable chunks
           if (!id.includes('node_modules')) return;

@@ -43,7 +43,7 @@ export class SoundQueue {
     this.volume = 1;
     this.master = null;
     this.localOut = null;   // master -> localOut -> destination; muted while streaming remotely
-    this._streamDest = null; // MediaStreamAudioDestinationNode tap for canvas-cast audio
+    this._streamDest = null;
     this.enabled = typeof window !== 'undefined' && !!(window.AudioContext || (window as any).webkitAudioContext);
   }
 
@@ -64,18 +64,6 @@ export class SoundQueue {
   setVolume(v) {
     this.volume = Math.max(0, Math.min(1, v));
     if (this.master) this.master.gain.value = this.volume;
-  }
-
-  /** Mute the speakers only — the stream tap keeps carrying audio while a
-   *  movie plays on a remote device. */
-  setLocalMute(m) { if (this.localOut) this.localOut.gain.value = m ? 0 : 1; }
-
-  /** Tap the master bus into a MediaStream destination — its `stream` audio
-   *  track joins the canvas captureStream for AirPlay/Remote Playback. */
-  mediaStreamDest() {
-    if (!this.ensure()) return null;
-    if (!this._streamDest) { this._streamDest = this.ctx.createMediaStreamDestination(); this.master.connect(this._streamDest); }
-    return this._streamDest;
   }
 
   /** Log a sound problem once per distinct message. */
