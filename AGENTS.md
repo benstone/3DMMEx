@@ -9,31 +9,31 @@ logical pixels, never percentages.
 ## Commands
 
 - `npm run dev` — Vite dev server (expansion packs served from `/expansions`)
-- `npm test` — Vitest (`test/*.test.js`, node env)
+- `npm test` — Vitest (`test/*.test.ts`, node env)
 - `npx vite build` — production build (emits `index.html` + `receiver.html`)
-- `npx tsc --noEmit` — JSDoc typecheck (`allowJs`+`checkJs`). ~14 errors remain
-  in `app/doc.js`, `app/opts.js`, `app/state.js` (dynamic DOM props,
-  `showSaveFilePicker`) — known baseline, don't "fix" by weakening types.
+- `npx tsc --noEmit` — TypeScript typecheck, **clean** (all source is `.ts`,
+  `allowImportingTsExtensions`; `strict:false`/`noImplicitAny:false` is the
+  deliberate migration posture — don't weaken further).
 
 ## Layout
 
 ```
-src/main.js            boot orchestrator (only import graph + URL params)
-src/receiver.js        Chromecast CAF receiver entry (receiver.html)
+src/main.ts            boot orchestrator (only import graph + URL params)
+src/receiver.ts        Chromecast CAF receiver entry (receiver.html)
 src/app/
-  state.js             zustand stores (useApp/useUi/useEd) + `export let` facade + setters
-  res.js               B/texUrl/curUrl/$/sleep/say
-  undo.js  boot.js  packs.js  thumbs.js  doc.js  loop.js  opts.js  sndsrc.js  cast.js
+  state.ts             zustand stores (useApp/useUi/useEd) + `export let` facade + setters
+  res.ts               B/texUrl/curUrl/$/sleep/say
+  undo.ts  boot.ts  packs.ts  thumbs.ts  doc.ts  loop.ts  opts.ts  sndsrc.ts  cast.ts
   edit/                movie/sound/tbox mutations
   ui/                  canvas UI — the ONLY UI layer (ui-dom/ is gone)
-    root.js            UiRoot: 640x480 canvas, view stack, pointer dispatch, toast, tips layer
-    element.js         Element (hitTest/pickable/cursor/dirty), anim.js Animator
-    widgets.js         Img ImgButton TextLink StBtn VSlider Txt MovieScreen
-    studio.js          editor chrome + movie-view interaction (all pointer events)
-    browser.js         book browsers (scene/actor/prop/sound pickers) + brwsView slot
-    easel.js/easels.js EaselView shell + scene sorter, recorder, listener, spletter,
+    root.ts            UiRoot: 640x480 canvas, view stack, pointer dispatch, toast, tips layer
+    element.ts         Element (hitTest/pickable/cursor/dirty), anim.ts Animator
+    widgets.ts         Img ImgButton TextLink StBtn VSlider Txt MovieScreen
+    studio.ts          editor chrome + movie-view interaction (all pointer events)
+    browser.ts         book browsers (scene/actor/prop/sound pickers) + brwsView slot
+    easel.ts/easels.ts EaselView shell + scene sorter, recorder, listener, spletter,
                        action browser, costume easel (GL previews blitted via CvEl)
-    bio.js  tips.js  bootview.js  theatre.js  castview.js  optdlg.js
+    bio.ts  tips.ts  bootview.ts  theatre.ts  castview.ts  optdlg.ts
 src/engine/            chunky-file parse, library, player, sound (spessasynth MIDI)
 src/format/            .3mm/.3cn/.chk parsing + writing
 src/render/            three.js renderer (renders into #view)
@@ -54,12 +54,12 @@ src/render/            three.js renderer (renders into #view)
   `el.draw = …`/`el.onPointerDown = …` closures or growing a function body.
   Free functions are thin factories (`showX()`), boot wiring, or pure
   utilities. If two sites need the same custom element, it's a missing
-  widget subclass — add it to `widgets.js`/`easel.js`.
-- **Modal slot.** `brwsView`/`brwsCleanup` in browser.js is the single
+  widget subclass — add it to `widgets.ts`/`easel.ts`.
+- **Modal slot.** `brwsView`/`brwsCleanup` in browser.ts is the single
   browser-or-easel slot; `showEasel()` closes whatever is up; Escape routes
   through `brwsView._onEsc || closeBrowser`.
 - **State.** Mutable singletons live in zustand stores; the `export let`
-  bindings in state.js are a synced facade — write via the `set*` setters,
+  bindings in state.ts are a synced facade — write via the `set*` setters,
   never assign imports. Per-frame sim state stays out of the stores.
 - **Hit testing.** `pickable=false` exempts only the element itself; children
   remain testable. Pointer events bubble up via `_walkUp` until a handler
@@ -67,8 +67,9 @@ src/render/            three.js renderer (renders into #view)
 - **i18n.** `t('section.key')` from `src/lang/en.json` (bundled) merged with
   `public/lang/<lang>.json` via `?lang=`. Sync both en.json files. Texture-
   baked text is art, not strings.
-- **Type style.** JS + JSDoc. Ad-hoc element fields are declared as
-  `/** @type {El & {_x: T}} */` or in constructors — keep the pattern.
+- **Type style.** TypeScript. Ad-hoc element fields ride on `Element`'s
+  index signature (the codebase's documented transient-prop idiom);
+  `Record<…,any>`/`any[]` annotations mark narrow-literal seams.
 
 ## URL params
 
@@ -85,11 +86,11 @@ render flags · `?menu` open settings · `?castid=` CAF receiver app id.
 
 ## Gotchas
 
-- `open` in doc.js shadows `window.open` — always import it.
+- `open` in doc.ts shadows `window.open` — always import it.
 - `pop()` does NOT call `onExit` — callers that remove a view directly must
   call it (see `closeBrowser`).
 - Tuple destructuring widens — annotate `[El, number, string][]` loops.
-- `new Promise(r => r())` needs a `Promise<void>` JSDoc hint for tsc.
-- Casting requires a URL-loadable movie (`lastMovieUrl` in doc.js) and a
+- `new Promise(r => r())` needs a `Promise<void>` type arg for tsc.
+- Casting requires a URL-loadable movie (`lastMovieUrl` in doc.ts) and a
   registered CAF app id; `receiver.html` also runs standalone via `?3mm=`.
-- Test hooks for automation live on `window.__mms` (doc.js).
+- Test hooks for automation live on `window.__mms` (doc.ts).

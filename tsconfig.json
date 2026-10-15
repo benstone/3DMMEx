@@ -10,6 +10,7 @@
     ],
     "allowJs": true,
     "checkJs": true,
+    "allowImportingTsExtensions": true,
     "strict": false,
     "noImplicitAny": false,
     "noEmit": true,
@@ -23,9 +24,9 @@
     ]
   },
   "include": [
-    "src/**/*.js",
     "src/**/*.ts",
-    "vite.config.js"
+    "test/**/*.ts",
+    "vite.config.ts"
   ],
   "exclude": [
     "node_modules",

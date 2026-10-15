@@ -4,11 +4,10 @@ Working plan for the `interface-updates` branch: single-canvas UI, i18n,
 TypeScript + codebase split, LLM instructions, touch, and Chromecast.
 
 **Status: all milestones M1–M10 shipped; every phase bullet is marked
-✅ / ⏸️ below.** The canvas UI is the only UI layer (`ui-dom/` deleted).
-Remaining deferrals (all conscious, marked ⏸️): `.ts` renames (decision 8),
-RTL, two-finger pan / pinch-zoom / `touchScale`, a registered `?castid=`
-for live casting, `vite@7`, eslint. Outstanding debt: ~14 baseline `tsc`
-errors in doc/opts/state.js.
+✅ / ⏸️ below. The full codebase is `.ts` and `tsc --noEmit` is clean.**
+The canvas UI is the only UI layer (`ui-dom/` deleted). Remaining
+deferrals (all conscious, marked ⏸️): RTL, two-finger pan / pinch-zoom /
+`touchScale`, a registered `?castid=` for live casting, `vite@7`, eslint.
 
 ## Current state (baseline)
 
@@ -97,17 +96,21 @@ the zustand store in Phase 2 (see below).
 - ✅ Script: `"typecheck": "tsc --noEmit"` in package.json. Deliberately
   **not** wired into `npm test` — the ~14 baseline errors would gate the
   suite; run explicitly or in CI.
-- ⏸️ Rename bottom-up: `format/*` → `engine/*` → `render/*` → `app/*` → `main`.
-  **Deferred (decision 8):** the codebase shipped as `.js` + `allowJs`/
-  `checkJs` + JSDoc instead — full typecheck coverage without the
-  import-specifier churn; renames remain available as a follow-up.
-- ✅ Shared interfaces → `src/types.d.ts` (ambient declarations consumed by
-  JSDoc `import('../types')` — the .d.ts form avoids depending on the
-  deferred renames).
+- ✅ Rename bottom-up: **all `src/**/*.js` → `.ts`** (44 source modules plus
+  `main`/`receiver` entries) and `test/*.js` → `.ts`; relative import
+  specifiers rewritten `.js` → `.ts` via `allowImportingTsExtensions`;
+  `index.html`/`receiver.html` entries updated. `strict:false` /
+  `noImplicitAny:false` kept as the migration posture — errors were driven
+  2,454 → 0 with index signatures on dynamic-prop classes (`Element`,
+  engine/format/render classes), `Record<…,any>`/`any[]` annotations on
+  inferred-narrow literals (`TB`, `OPT_DEFS`, `els`, `coblnImgs`…), optional
+  params where JS arity was loose, and `Window` globals in `types.d.ts`.
+  `tsc --noEmit` is **clean** (no remaining baseline).
+- ✅ Shared interfaces → `src/types.d.ts` (ambient globals + `Window`
+  declarations: `player`, `sounds`, `renderer`, `showSaveFilePicker`, …).
 - ✅ three.js ships its own types — no extra deps.
 - ✅ **Test runner: vitest (decided).** Replaces `node --test`; shares the
-  Vite transform pipeline. Test files stayed `.js` alongside the deferred
-  `.ts` renames.
+  Vite transform pipeline. Test files renamed to `.ts` with the sources.
 - ✅ **State management: zustand (decided).** `zustand/vanilla` `createStore`
   (~1 kB, no React). **Landed** as stores-as-source-of-truth with a
   synchronous `export let` facade mirroring each field, so old call sites
@@ -347,8 +350,9 @@ pages; Chrome tab-mirroring casts everything. To cast "only the movie":
    than duplicated. Free functions are only thin factories/wiring
    (`showX()`), boot orchestration, or pure utilities; new UI code should
    add or extend a class, not grow a function body.
-8. **Type checking via `checkJs`, not `.ts` renames** (amends Phase 2) —
-   the codebase stays `.js` with `tsconfig` `allowJs`+`checkJs` and JSDoc
-   types; `tsc --noEmit` is the gate and runs clean except ~14 documented
-   baseline errors. The full `.ts` rename described above remains a valid
-   follow-up but wasn't worth the import-specifier churn for this branch.
+8. **Source is `.ts`; `tsc --noEmit` is clean** (amends the earlier
+   checkJs-only posture) — all source and test modules are TypeScript.
+   Migration keeps `strict:false`/`noImplicitAny:false` so dynamic legacy
+   patterns compile; index signatures and `Record`/`any` annotations mark
+   the intentional-`any` seams for future tightening. JSDoc annotations
+   remain but native annotations are preferred for new types.

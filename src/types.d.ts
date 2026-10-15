@@ -1,9 +1,11 @@
+export {}; // module marker — required for `declare global` below to apply
+
 // Shared ambient types — referenced from JSDoc as `import('../types').X`
 // (or `import('./types').X` inside src/). The codebase is checkJs+JSDoc, so
 // these are the single home for cross-module shapes (decision 8).
 
 /** A 4-char chunky-file tag ('MVIE', 'SCEN', 'GST ' …) */
-type Ctg = string;
+export type Ctg = string;
 
 /** Index record for one chunk in a CHN2 file (format/chunky.js). */
 interface Chunk {
@@ -16,7 +18,7 @@ interface Chunk {
 }
 
 /** Decoded chunky container (format/chunky.js ChunkyFile). */
-interface ChunkyFileHandle {
+export interface ChunkyFileHandle {
   name: string;
   bytes: Uint8Array;
   chunks: Map<string, Chunk>;
@@ -28,7 +30,7 @@ interface ChunkyFileHandle {
 }
 
 /** Indexed-color bitmap decoded from an MBMP chunk (render/thumbs). */
-interface Mbmp {
+export interface Mbmp {
   width: number; height: number;
   /** palette-indexed pixels; resolve through the owning GLCR */
   px: Uint8Array;
@@ -36,7 +38,7 @@ interface Mbmp {
 }
 
 /** Browser-grid item shown by ui/browser.js BrwsCell. */
-interface BrwsItem {
+export interface BrwsItem {
   name?: string;
   mbmp?: Mbmp;          // pre-rendered thumbnail (from .NTH)
   s?: unknown;          // scene items carry the scene object
@@ -44,8 +46,21 @@ interface BrwsItem {
   [k: string]: unknown;
 }
 
+// Window globals the app installs at boot (doc.ts sets window.player etc
+// for console debugging; __mms is the test/automation hook; cast/chrome
+// are the Google Cast SDK globals).
+declare global {
+  interface Window {
+    player?: any; sounds?: any; renderer?: any; lib?: any;
+    __mms?: any; __onGCastApiAvailable?: (ok: boolean) => void;
+    cast?: any; chrome?: any; showSaveFilePicker?: (opts?: any) => Promise<any>;
+  }
+  // bare-global form for sites that call it unqualified
+  var showSaveFilePicker: ((opts?: any) => Promise<any>) | undefined;
+}
+
 /** The app's URL-parameter object (all optional). */
-interface UrlParams {
+export interface UrlParams {
   lang?: string;                    // 'auto' | lang code
   '3mm'?: string;                   // movie URL or name to load
   mode?: 'edit' | 'theatre' | 'embed';
