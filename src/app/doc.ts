@@ -72,8 +72,10 @@ export const docDB = {
     if (this._db) return Promise.resolve(this._db);
     return new Promise((res) => {
       let rq;
-      try { rq = indexedDB.open('mmsdoc', 1); } catch { return res(null); } // blocked context
-      rq.onupgradeneeded = () => rq.result.createObjectStore('doc');
+      try { rq = indexedDB.open('mmsdoc', 2); } catch { return res(null); } // blocked context
+      // v2: a stale v1 db may exist without the 'doc' store (put/get then no-op
+      // forever) — create it if missing instead of assuming the schema
+      rq.onupgradeneeded = () => { const d = rq.result; if (!d.objectStoreNames.contains('doc')) d.createObjectStore('doc'); };
       rq.onsuccess = () => { this._db = rq.result; res(this._db); };
       rq.onerror = () => res(null);
     });
@@ -81,11 +83,11 @@ export const docDB = {
   async put(rec) {
     const db = await this.open(); if (!db) return;
     await new Promise<void>((res) => {
-      try { // a leftover/empty mmsdoc db may lack the store — treat as unwritable
+      try {
         const tx = db.transaction('doc', 'readwrite');
         tx.objectStore('doc').put(rec, 'autosave');
         tx.oncomplete = tx.onerror = tx.onabort = res;
-      } catch { res(); }
+      } catch (e) { console.warn('[autosave] idb put failed:', e.message); res(); }
     });
   },
   async get() { // newer of the IDB record and the localStorage mirror wins
@@ -94,7 +96,7 @@ export const docDB = {
       try {
         const rq = db.transaction('doc').objectStore('doc').get('autosave');
         rq.onsuccess = () => res(rq.result || null); rq.onerror = () => res(null);
-      } catch { res(null); }
+      } catch (e) { console.warn('[autosave] idb get failed:', e.message); res(null); }
     }) : null;
     const ls = lsGet();
     if (idb && ls) return idb.t >= ls.t ? idb : ls;
@@ -123,13 +125,14 @@ export async function docFlush() {
     const rec = { bytes: movieBytes(), name: player.movie.name || t('doc.untitled'),
       scene: player.sceneIndex, frame: player.frame, t: Date.now() };
     docDirty = false;
-    lsPut(rec);           // sync — always lands before any await
+    if (!lsPut(rec)) console.warn('[autosave] localStorage mirror failed (quota or blocked storage)'); // sync — lands before any await
     await docDB.put(rec); // IDB for durability / movies over the LS quota
   } catch (e) {
     docDirty = true; console.warn('[autosave]', e);
     if (!docWarned) { docWarned = true; say(t('doc.autosaveFailed', { err: e.message })); } // surface it once, not every 3s
+  } finally {
+    docFlushing = false; // must reset even if the error path itself throws
   }
-  docFlushing = false;
 }
 setInterval(docFlush, 3000);
 addEventListener('pagehide', docFlush);

@@ -63,7 +63,8 @@ class BrwsCell extends Element { // frame img + content (mbmp thumb or text labe
     }
     ctx.restore();
   }
-  onPointerEnter() { this.hover = true; this.dirty(); }
+  onPointerDown() { this.hover = true; this.dirty(); } // 'h' face is a press state, not hover
+  onPointerUp() { this.hover = false; this.dirty(); }
   onPointerLeave() { this.hover = false; this.dirty(); }
   onClick() { this.view.pick(this); }
 }
@@ -143,6 +144,7 @@ export class BrowserView extends ModalView {
 export { modalView as brwsView, modalCleanup as brwsCleanup, setModalView as setBrwsView, setModalCleanup as setBrwsCleanup, closeModal as closeBrowser, ModalView };
 
 export function showBrowser(kind, items = null) { // open a canvas browser over the studio
+  if (!BRWS_DEFS[kind]) { console.warn(`[browser] unknown kind: ${kind}`); return; }
   closeModal();
   setModalView(new BrowserView(kind, items));
   ui.push(modalView, 'none');

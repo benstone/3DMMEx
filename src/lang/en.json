@@ -23,7 +23,7 @@
     "renderSettings": "render settings",
     "version": "v{version}",
     "pageNum": "{page} / {total}",
-    "bioPage": "Page {n}",
+    "bioPage": "{n} / {total}",
     "frameDash": "–",
     "rotateDevice": "Rotate your device to watch the movie",
     "cast": "cast",

@@ -107,7 +107,8 @@ if (remoteMovie) {
 if (!booted) {
   const doc = await docDB.get(), pos = posGet(); // pos first — open()'s loadScene(0) overwrites it
   if (doc?.bytes?.length) {
-    booted = open(doc.bytes, doc.name || 'autosave.3mm');
+    try { booted = open(doc.bytes, doc.name || 'autosave.3mm'); } // open() catches only the
+    catch (e) { console.warn('[autosave] restore threw:', e); }  // ctor — guard the rest too
     if (booted) { // return to the last scene+frame seen — the fresher of pos (nav) vs doc rec (flush)
       const rec = (pos?.t ?? 0) >= (doc.t ?? 0) ? pos : doc; // scene+frame stay consistent per source
       if (rec?.scene >= 0) player.loadScene(Math.min(rec.scene, player.movie.scenes.length - 1));

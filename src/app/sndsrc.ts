@@ -1,5 +1,6 @@
 import { ChunkyFile } from '../format/chunky.ts';
 import { decodeWavAdpcm } from '../format/wav.ts';
+import { parseMsnd, STY } from '../format/content.ts';
 import { lib, sounds } from './state.ts';
 import { showBrowser } from './ui/browser.ts';
 export const sndName = (tags) => { // first resolvable tag's name for the name plate
@@ -13,15 +14,17 @@ export const sndName = (tags) => { // first resolvable tag's name for the name p
 
 export let sndItems = null;
 export const userSnds = []; // imported/recorded: {kind:'fx'|'speech'|'music', name, buf, midi, key}
-export function getSndItems() { // MSNDs: WAVE kid = fx, MIDS kid = music; + user sounds tagged by browser
+export function getSndItems() { // MSNDs classified by sty (fx/speech/midi) — the original's three browsers; + user sounds
   if (!sndItems) {
     sndItems = { fx: [], music: [], speech: [] };
+    const KIND = { [STY.Speech]: 'speech', [STY.Midi]: 'music', [STY.Sfx]: 'fx' };
     const seen = new Set(); // all content files (builtin + asset packs); first cf wins a cno, matching resolve()
     for (const cf of lib.content) for (const m of cf.ofType('MSND')) {
       if (seen.has(m.cno)) continue;
       seen.add(m.cno);
-      const kids = cf.kidsOf('MSND', m.cno).map((k) => k.ctg);
-      sndItems[kids.includes('MIDS') ? 'music' : 'fx'].push({ cno: m.cno, name: m.name });
+      let sty = STY.Sfx;
+      try { const p = parseMsnd(cf, m.cno); if (p.invalid) continue; sty = p.sty; } catch { /* malformed -> fx */ }
+      sndItems[KIND[sty] || 'fx'].push({ cno: m.cno, name: m.name });
     }
   }
   return { fx: [...sndItems.fx, ...userSnds.filter((u) => u.kind === 'fx')],

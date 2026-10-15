@@ -93,9 +93,10 @@ export class LisSlider extends Element {
     this.yp = Math.max(0, Math.min(108, p.y - (this.abs()[1]))); // p is view-space
     this.th.y = this.yp; this.th.dirty();
   }
-  onPointerDown(p) { this.move(p); return true; }
-  onPointerMove(p) { this.move(p); }
-  onPointerUp() { this.onCommit(this.vlm()); }
+  onPointerDown(p) { this._drag = true; this.move(p); return true; }
+  onPointerMove(p) { if (this._drag) this.move(p); }
+  onPointerUp() { if (this._drag) { this._drag = false; this.onCommit(this.vlm()); } }
+  onPointerLeave() { this._drag = false; }
 }
 
 /** Framed pick cell — d1frm/frame5 face with hover+selected states and a
@@ -112,7 +113,8 @@ export class FrmCell extends Element {
     this.drawInner(ctx);
   }
   drawInner(ctx) {} // eslint-disable-line no-unused-vars
-  onPointerEnter() { this.hov = true; this.dirty(); }
+  onPointerDown() { this.hov = true; this.dirty(); } // sunken face is a press state, not hover
+  onPointerUp() { this.hov = false; this.dirty(); }
   onPointerLeave() { this.hov = false; this.dirty(); }
   onClick() { this.act?.(this); }
 }

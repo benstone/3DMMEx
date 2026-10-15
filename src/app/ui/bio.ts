@@ -15,8 +15,11 @@ export const NUM_BIOPAGES = 41; // biopage.chh — bits 1..40 (bit 0 was the TOC
 // bit -> actor index in .3th order (Henry, S'kelly and the three mascots have
 // no page; Ramu/Patrick swap order and Maribella sits with the late pages —
 // matched visually: each biopgN.png shows that actor's 4 costume portraits)
+// bit -> actor index in .3th order — the original's page sequence (BIOPAGE.CHT
+// topic names): Mirabella(.3th 'Maribella') sits at 26 ahead of Nakita; Henry,
+// S'kelly and the three mascots have no page.
 export const BIO_ACTOR = [null, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-  18, 19, 20, 21, 22, 24, 25, 26, 27, 29, 28, 30, 31, 23, 33, 34, 35, 36, 37, 38, 39, 40, 41];
+  18, 19, 20, 21, 22, 24, 25, 26, 23, 27, 28, 29, 30, 31, 33, 34, 35, 36, 37, 38, 39, 40, 41];
 // page bitmap bounds (left,top,w,h) — deviations from the common 42,60 box
 export const BIO_POS = { 3: [43, 60, 548, 359] };
 export const BIO_BLURB = { // short per-page line keyed by bit — name always shown
@@ -45,11 +48,22 @@ class BioText extends Txt { // bioTxt — name bold + blurb, crude rich lines
     if (ai == null) return;
     const name = brwsTmpls.actor[ai]?.name || 'actor';
     ctx.fillStyle = '#222'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-    ctx.font = "bold 11px 'Comic Sans MS', cursive, sans-serif";
+    ctx.font = "bold 12px 'Comic Sans MS', cursive, sans-serif";
     ctx.fillText(name, 0, 0, 207);
-    if (BIO_BLURB[this.pg.bit]) {
+    // The original rendered an RTXT help topic here — its shipped text was an
+    // unfinished "text to come" placeholder on every page, so we show the
+    // actor's name + our one-line blurb, word-wrapped to the column.
+    const blurb = BIO_BLURB[this.pg.bit];
+    if (blurb) {
       ctx.font = "11px 'Comic Sans MS', cursive, sans-serif";
-      ctx.fillText(name + ' ' + BIO_BLURB[this.pg.bit], 0, 30, 207);
+      const words = `${name} ${blurb}`.split(' ');
+      let line = '', ly = 26;
+      for (const w of words) {
+        const cand = line ? `${line} ${w}` : w;
+        if (ctx.measureText(cand).width > 190 && line) { ctx.fillText(line, 0, ly); line = w; ly += 14; }
+        else line = cand;
+      }
+      if (line) ctx.fillText(line, 0, ly);
     }
   }
 }
@@ -63,7 +77,7 @@ export class BioView extends EaselView {
     this.mkImg('biopnl', 0, 0, 640, 480); // ring panel goes on top
     this.txt = new BioText(this.pg);
     this.add(this.txt);
-    this.num = new Txt('', 282, 424, 62, 27, { size: 15 });
+    this.num = new Txt('', 299, 427, 40, 22, { size: 12 }); // fits the gap between the nav arrows
     this.add(this.num);
     this.mkBtn('bioback', 'biobackc', 229, 410, 69, 50, () => { // kxpBioBack/kypBioBack
       if (this.pg.bit > 1) { this.pg.bit--; this.render(); }
@@ -79,7 +93,7 @@ export class BioView extends EaselView {
     const [l, tt, w, h] = BIO_POS[this.pg.bit] ?? [42, 60, 549, 359];
     this.pg.x = l; this.pg.y = tt; this.pg.w = w; this.pg.h = h;
     this.pg.dirty(); this.txt.dirty();
-    this.num.textContent = t('ui.bioPage', { n: this.pg.bit });
+    this.num.textContent = t('ui.bioPage', { n: this.pg.bit, total: NUM_BIOPAGES - 1 });
   }
 }
 export const showBio = (bit?) => showEasel(new BioView(bit));

@@ -15,7 +15,7 @@ import { opExec, hist, histUndo, histRedo, syncUndoBtn } from '../undo.ts';
 import { showBio } from './bio.ts';
 import { brwsView, showBrowser } from './browser.ts';
 import { showOptsDlg } from './optdlg.ts';
-import { showListenerEasel, showActionBrowser, showSpletter, showCostumeEasel, showSceneSorter } from './easels.ts';
+import { showListenerEasel, showActionBrowser, showSpletter, showCostumeEasel, showSceneSorter, showWords } from './easels.ts';
 import { t } from '../i18n.ts';
 import { View, ui, UI_W, UI_H } from './root.ts';
 import { Element } from './element.ts';
@@ -76,8 +76,10 @@ class StSlider extends Element {
     if (this.axis === 'x') this.thumb.x = p; else this.thumb.y = p;
     this.thumb.dirty();
   }
-  onPointerDown(p) { this._move(p); }
-  onPointerMove(p) { this._move(p); }
+  onPointerDown(p) { this._drag = true; this._move(p); }
+  onPointerMove(p) { if (this._drag) this._move(p); }
+  onPointerUp() { this._drag = false; }
+  onPointerLeave() { this._drag = false; }
   _move(p) {
     const v = this.axis === 'x' ? p.x : p.y;
     this.set(Math.max(0, Math.min(1, (v - this.min) / this.span)));
@@ -916,7 +918,8 @@ const scrlCells = [];
         else { ctx.font = `${it.grfont & 1 ? 'bold ' : ''}${it.grfont & 2 ? 'italic ' : ''}14px "Comic Sans MS",sans-serif`; ctx.fillText('Ab', x0, this.h / 2, this.w * 0.93); }
       }
     }
-    onPointerEnter() { this.hover = true; this.dirty(); }
+    onPointerDown() { this.hover = true; this.dirty(); } // 'h' face is a press state, not hover
+    onPointerUp() { this.hover = false; this.dirty(); }
     onPointerLeave() { this.hover = false; this.dirty(); }
     onClick() { this.act(this.it); }
   }
@@ -1040,7 +1043,7 @@ const scrlCells = [];
       sec: [['1view', 199, 0, 'cam'], ['p3rmbk', 256, 0, () => sceneChop(false)],
             ['p3rmfw', 315, 0, () => sceneChop(true)], ['1scen', 390, 0, () => showSceneSorter()]] },
     { id: 'actors', cov: 'covr2', cx: 100, row: '2par', def: '2comp', door: 6, dx: 374,
-      ins: [['2actr', 114, 'actor'], ['2prop', 180, 'prop'], ['2splt', 246, 'splt']],
+      ins: [['2actr', 114, 'actor'], ['2prop', 180, 'prop'], ['2splt', 246, () => showSpletter(null)]],
       sec: [['2comp', 41], ['2acts', 98, 0, undefined, ['2act01', '2act02', '2act03', '2act04', '2act05', '2act06']],
             ['2cont', 155], ['2cost', 211], ['2rot', 268, 50, () => setRot(!rotOpen())],
             ['2xy', 325, 36, 'tog:xy'], ['2zero', 392, 36, 'tog:ground'], ['2tran', 435, 50, () => setTrn(!trnOpen())],
@@ -1049,7 +1052,7 @@ const scrlCells = [];
       ins: [['3horn', 334, 'fx'], ['3mike', 400, 'speech'], ['3note', 466, 'music']],
       sec: [['3sing', 176], ['3loop', 234], ['3ear', 292], ['3rpt', 370], ['1note', 428, 36, 'tog:pause']] },
     { id: 'words',  cov: 'covr4', cx: 543, row: '4par', def: '4ins', door: 8, dx: 403,
-      ins: [['4new', 560, 'words']],
+      ins: [['4new', 560, () => showWords()]],
       sec: [['4ins', 112], ['4font', 170, 0, () => showTextPop('font')], ['4bold', 228, 0, () => showTextPop('style')],
             ['4size', 286, 0, () => showTextPop('size')], ['4colr', 344, 0, () => showTextPop('fore')],
             ['4back', 419, 0, () => showTextPop('back')], ['4scrl', 477, 0, () => setScrl(!scrlBg.visible)]] },
@@ -1069,7 +1072,8 @@ const scrlCells = [];
   for (const tt of TB) {
     // insert buttons — created first so the cover image can cover them
     tt.insBtns = tt.ins.map(([bmp, x, act]) => {
-      const b = mkTbBtn(bmp, x, 1, 62, 40, act ? () => showBrowser(act) : () => {});
+      const b = mkTbBtn(bmp, x, 1, 62, 40, // string act -> book browser; fn -> its own surface (words dlg / spletter easel)
+        typeof act === 'function' ? act : act ? () => showBrowser(act) : () => {});
       V.add(b);
       return b;
     });
