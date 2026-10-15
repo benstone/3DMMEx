@@ -3,6 +3,11 @@
 Working plan for the `interface-updates` branch: single-canvas UI, i18n,
 TypeScript + codebase split, LLM instructions, touch, and Chromecast.
 
+**Status: all milestones M1–M10 shipped.** The canvas UI is the only UI
+layer (`ui-dom/` deleted); remaining work is debt and follow-ups noted
+inline (`.ts` renames deferred — see amended decision 8; live casting needs
+a registered `?castid=`; ~14 baseline `tsc` errors in doc/opts/state).
+
 ## Current state (baseline)
 
 - `index.html` is nearly empty: `#stage > #studio > canvas#view` (the 544×306
@@ -92,6 +97,9 @@ the zustand store in Phase 2 (see below).
   The format/engine files are already typed-adjacent (JSDoc comments,
   consistent data shapes) — define shared interfaces in `src/types.ts`
   (ChunkyFile handles, MBMP, TMPL/actor descriptors, URL param object).
+  **Amended (decision 8):** the codebase shipped as `.js` + `allowJs`/
+  `checkJs` + JSDoc instead — full typecheck coverage without the
+  import-specifier churn; renames remain available as a follow-up.
 - three.js ships its own types — no extra deps.
 - **Test runner: vitest (decided).** Replaces `node --test`; it handles
   `.ts` natively, shares the Vite transform pipeline, and the existing tests
@@ -102,7 +110,9 @@ the zustand store in Phase 2 (see below).
   is not React, so use the vanilla entry (~1 kB, no framework). Migration is
   mechanical: each `export let x` + `setX` pair becomes a store field written
   via `set()`; readers go through `useApp.getState().x` or a destructured
-  `useApp()` selector.
+  `useApp()` selector. **Landed** as stores-as-source-of-truth with a
+  synchronous `export let` facade mirroring each field, so old call sites
+  keep working while new code subscribes to slices.
   - Proposed slices: `useApp` — runtime singletons (`player`, `lib`, `pal`,
     `renderer`, `sounds`; non-serializable objects held as plain refs set
     once at boot, no reactivity needed); `useEd` — editor state (`tool`,
@@ -176,7 +186,10 @@ Phase 5 / milestone 10).
   helpers become private methods. View stack with push/pop/replace = the
   "routing" (modal dialogs push, back pops). The stack itself lives in the
   `useUi` store — view transitions and any "is a dialog open" checks are
-  just selectors over it.
+  just selectors over it. **Landed as a published mirror:** `UiRoot` owns
+  the stack array (cheap direct mutation) and mirrors `topView`/
+  `stackDepth` into `useUi` on every `_rebuild` — selectors work, the hot
+  path stays a plain array.
 - `ModalView` (a `View` subclass) — shared modal semantics: the `brwsView`
   slot, Escape routing (`_onEsc` → method), DOM-overlay teardown, dimming.
   `EaselView` and `BrowserView` both extend it.
@@ -286,14 +299,14 @@ pages; Chrome tab-mirroring casts everything. To cast "only the movie":
 
 ## LLM instruction files
 
-- `AGENTS.md` at repo root: commands (dev/build/test/typecheck), architecture
-  map (one line per module), conventions (chunky-file naming, comment style,
-  "port code verbatim" rule, no comments unless explanatory).
-- `docs/` deep-dives: `format-notes.md` (chunky/CHN2 primer, ctg tables),
-  `ui-framework.md` (view stack + element API once Phase 4 lands),
-  `asset-packs.md` (existing README section expanded).
-- `.devin/skills/` — keep them thin: point at AGENTS.md + the right doc per
-  task type ("adding a new easel", "adding a URL param", "pack manifest").
+- `AGENTS.md` at repo root — **done**: commands (dev/build/test/typecheck),
+  architecture map (one line per module), conventions (chunky-file naming,
+  comment style, "port code verbatim" rule, no comments unless explanatory).
+- `docs/` deep-dives — **done**: `format-notes.md` (chunky/CHN2 primer, ctg
+  tables, GST note), `ui-framework.md` (as-built view stack + element API +
+  z-order rules), `asset-packs.md` (README section expanded).
+- `.devin/skills/` — **done**, thin as planned: `add-easel`, `add-url-param`,
+  `pack-manifest` — each points at AGENTS.md + the right doc.
 - Rule for the docs: commands verified, no aspirational APIs — LLMs
   hallucinate less when docs match the code, so write them *as* phases land.
 
@@ -337,3 +350,8 @@ pages; Chrome tab-mirroring casts everything. To cast "only the movie":
    than duplicated. Free functions are only thin factories/wiring
    (`showX()`), boot orchestration, or pure utilities; new UI code should
    add or extend a class, not grow a function body.
+8. **Type checking via `checkJs`, not `.ts` renames** (amends Phase 2) —
+   the codebase stays `.js` with `tsconfig` `allowJs`+`checkJs` and JSDoc
+   types; `tsc --noEmit` is the gate and runs clean except ~14 documented
+   baseline errors. The full `.ts` rename described above remains a valid
+   follow-up but wasn't worth the import-specifier churn for this branch.

@@ -76,6 +76,13 @@ src/render/            three.js renderer (renders into #view)
 · `?packs=a,b` expansion pack paths · `?lang=` dictionary · `?opts=a,b`
 render flags · `?menu` open settings · `?castid=` CAF receiver app id.
 
+## Docs
+
+`docs/interface-overhaul.md` (plan + locked decisions) ·
+`docs/ui-framework.md` (canvas view/element API — read before UI work) ·
+`docs/format-notes.md` (CHN2/chunky primer) · `docs/asset-packs.md`
+(`?packs=` manifest + merge rules).
+
 ## Gotchas
 
 - `open` in doc.js shadows `window.open` — always import it.
