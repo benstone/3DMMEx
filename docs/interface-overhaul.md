@@ -63,26 +63,26 @@ Target layout (new code under `src/app/`, existing dirs untouched):
 src/
   main.ts                  entry only: boot orchestration, URL params, glue
   app/
-    boot.ts                splash, progress ticks, library load, ?packs=
-    doc.ts                 open/save/autosave/portfolio/file pickers
-    undo.ts                hist/opExec + docMark wiring
+    bootstrap.ts                splash, progress ticks, library load, ?packs=
+    movieDocument.ts                 open/save/autosave/portfolio/file pickers
+    editHistory.ts                hist/opExec + docMark wiring
     edit/
       movie.ts             editBkgd/editCam/insActr/cut/nuke/sceneChop
       sound.ts             sound tool, easels' sound logic, user imports
       tbox.ts              text box editing
-    state.ts               zustand stores: runtime singletons + editor state
+    appState.ts               zustand stores: runtime singletons + editor state
     ui-dom/                ← temporary home for current DOM UI, verbatim
       studio.ts            the ~1,200-line studio chrome block
-      browsers.ts          showBrowser/brwsShell/scene sorter
+      browsers.ts          AssetAssetBrowserView.show/brwsShell/scene sorter
       easels.ts            recorder/listener/words/spletter/action/costume
-      bio.ts               talent book
-      tips.ts              callouts/guide
+      talentBook.ts               talent book
+      tooltips.ts              callouts/guide
       modes.ts             theatre/embed entry
   format/ engine/ render/  unchanged (converted in Phase 2)
 ```
 
 Rules: move code verbatim, export what other modules need, keep a single
-`state.ts` for cross-cutting singletons rather than threading params through
+`appState.ts` for cross-cutting singletons rather than threading params through
 30 functions. Commit per region so `git log -S` still finds history.
 
 Status: **done** — main.js is a ~130-line boot orchestrator; `app/state.js`
@@ -103,7 +103,7 @@ the zustand store in Phase 2 (see below).
   `noImplicitAny:false` kept as the migration posture — errors were driven
   2,454 → 0 with index signatures on dynamic-prop classes (`Element`,
   engine/format/render classes), `Record<…,any>`/`any[]` annotations on
-  inferred-narrow literals (`TB`, `OPT_DEFS`, `els`, `coblnImgs`…), optional
+  inferred-narrow literals (`TB`, `OPT_DEFS`, `els`, `coblnImageElements`…), optional
   params where JS arity was loose, and `Window` globals in `types.d.ts`.
   `tsc --noEmit` is **clean** (no remaining baseline).
 - ✅ Shared interfaces → `src/types.d.ts` (ambient globals + `Window`
@@ -194,17 +194,17 @@ Phase 5 / milestone 10).
 - ✅ `ModalView` (a `View` subclass in `modal.ts` — a leaf module, so the
   `extends` base can never be mid-init when subclasses evaluate; this
   replaced an in-browser.ts definition that sat inside an import cycle
-  and caused a runtime TDZ) — shared modal semantics: the `modalView`
+  and caused a runtime TDZ) — shared modal semantics: the `modalSlot.view`
   slot, Escape routing (`_onEsc` → method), DOM-overlay teardown (`_dom`,
   hidden-when-covered / removed-when-popped). `EaselView` and
-  `BrowserView` both extend it; `browser.ts` re-exports the slot under
+  `AssetBrowserView` both extend it; `assetBrowser.ts` re-exports the slot under
   the `brws*` names.
 - ✅ `Element` tree — retained-mode widgets. Rect layout in absolute 640×480
   coords, straight from the original `.cht` positions — no % anywhere.
   Element classes are **subclassed for behavior**: press-state faces,
   sliders, paging grids, custom-drawn plates each get a named class
-  (`Img`, `StBtn`, `VSlider`, `Txt`, `MovieScreen`, `Toast`, `BrwsCell`,
-  `RcCell`, `SCell`, `FrmCell`, `LisSlider`, `ScrollBtn`, `Therm`,
+  (`ImageElement`, `StudioButton`, `VerticalSlider`, `TextElement`, `MovieScreen`, `Toast`, `BrowserCell`,
+  `RcCell`, `SCell`, `FramedCell`, `ListenerSlider`, `ScrollButton`, `Thermometer`,
   `NamePlate`…). If two call sites override the same hooks, that's a
   missing subclass — extract it, don't copy the closure.
 - ✅ `Input` — normalized pointer events → hit-test → capture model on
@@ -216,7 +216,7 @@ Phase 5 / milestone 10).
   the plan's element-level API. View in/out transitions run through
   `push`/`pop`/`replace` anim params; toasts/balloons fade via tweens.
 - ✅ `Tooltip`/`Toast`/`Callout` — `ui.toast` layer + canvas callout
-  balloons in `ui.tips` (GORT-sliced `coblln`, long-press on touch).
+  balloons in `uiRoot.tips` (GORT-sliced `coblln`, long-press on touch).
 - ✅ `Theme` — texture atlas loading (`texUrl`/`curUrl`/`packTex` give
   per-pack override hooks — kept).
 - ✅ Text inputs on canvas are the hard part: pragmatic approach is a real
@@ -241,8 +241,8 @@ subclasses** (`studio.js` → `StudioView`, `easels.js` → `SorterEasel`/
 `ListenerEasel`/`SpletterEasel`/`CostumeEasel`/`RecorderEasel`/`ActionBrowser`/
 `WordsDlg`…). The `showFoo()` free functions remain as thin exported
 factories so call sites didn't churn. Repeated patterns became shared
-subclasses in `easel.js`/`widgets.js` (`ScrollBtn`, `FrmCell`, `LisSlider`,
-`Therm`, `NamePlate`).
+subclasses in `easel.js`/`widgets.js` (`ScrollButton`, `FramedCell`, `ListenerSlider`,
+`Thermometer`, `NamePlate`).
 
 ## Phase 6 — Touch
 
@@ -327,7 +327,7 @@ pages; Chrome tab-mirroring casts everything. To cast "only the movie":
 | 7 | Touch pass + rotate-to-view — **done** (`d1c5fef`) | 4 |
 | 8 | Cast receiver entry (same repo, second Vite entry) + sender button — **done** (`363511c`; live casting still needs a registered `?castid=`) | 4, needs Cast dev account |
 | 9 | Build perf + AGENTS.md/docs finalized — **done** (`81bfa81`; `docs/ui-framework.md` etc. below) | all |
-| 10 | **Class refactor pass** — **done** (`1a5829d`): easels/studio/browser internals collapsed into named `Element`/`View` subclasses (`SorterEasel`, `StudioView`, `BioView`, `ScrollBtn`, `Therm`, `LisSlider`, `FrmCell`…); factories stay thin. Post-pass layering fix: `Element.root` propagates on attach + `leavingUnder` (`d35d128`, `f6c3a6b`) | 6 |
+| 10 | **Class refactor pass** — **done** (`1a5829d`): easels/studio/browser internals collapsed into named `Element`/`View` subclasses (`SorterEasel`, `StudioView`, `TalentBookView`, `ScrollButton`, `Thermometer`, `ListenerSlider`, `FramedCell`…); factories stay thin. Post-pass layering fix: `Element.root` propagates on attach + `leavingUnder` (`d35d128`, `f6c3a6b`) | 6 |
 
 ## Decisions (locked)
 

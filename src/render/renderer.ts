@@ -1,6 +1,6 @@
 // three.js renderer reproducing 3DMM's 8-bit palette pipeline at 544x306.
 import * as THREE from 'three';
-import { drawTboxes } from './textbox.ts';
+import { drawTextboxes } from './textbox.ts';
 
 export const WIDTH = 544, HEIGHT = 306;
 
@@ -12,7 +12,7 @@ const BG_FS = `precision highp float; in vec2 vUv; uniform sampler2D uIndex, uDe
 uniform float uSmooth;
 uniform mat4 uInvVP, uSelfVP; uniform sampler2D uSelfMap; uniform float uBgShadow, uBgOp;
 out vec4 outColor;
-vec3 pal(float idx){ return texture(uPalette, vec2((idx + 0.5) / 256.0, 0.5)).rgb; }
+vec3 palette(float idx){ return texture(uPalette, vec2((idx + 0.5) / 256.0, 0.5)).rgb; }
 float bgShade(vec3 wp){ // darken where the actor shadow map occludes the key light (soft PCF)
   vec4 lp = uSelfVP * vec4(wp, 1.0);
   vec3 sc = lp.xyz / lp.w * 0.5 + 0.5;
@@ -30,10 +30,10 @@ void main(){
     ivec2 ts = textureSize(uIndex, 0);
     vec2 t = uv * vec2(ts) - 0.5, f = fract(t);
     ivec2 i = ivec2(floor(t)), j = min(i + 1, ts - 1);
-    col = mix(mix(pal(texelFetch(uIndex, i, 0).r * 255.0), pal(texelFetch(uIndex, ivec2(j.x, i.y), 0).r * 255.0), f.x),
-              mix(pal(texelFetch(uIndex, ivec2(i.x, j.y), 0).r * 255.0), pal(texelFetch(uIndex, j, 0).r * 255.0), f.x), f.y);
+    col = mix(mix(palette(texelFetch(uIndex, i, 0).r * 255.0), palette(texelFetch(uIndex, ivec2(j.x, i.y), 0).r * 255.0), f.x),
+              mix(palette(texelFetch(uIndex, ivec2(i.x, j.y), 0).r * 255.0), palette(texelFetch(uIndex, j, 0).r * 255.0), f.x), f.y);
   } else {
-    col = pal(texture(uIndex, uv).r * 255.0);
+    col = palette(texture(uIndex, uv).r * 255.0);
   }
   vec2 zd = texture(uDepth, uv).rg * 255.0;
   float z = zd.y * 256.0 + zd.x;              // raw u16
@@ -55,7 +55,7 @@ uniform float uLightMul, uShadeMul;
 uniform vec3 uLightDir[4]; uniform float uLightI[4]; uniform int uLights; uniform mat3 uTxxf;
 uniform mat4 uSelfVP; uniform sampler2D uSelfMap, uSelfId; uniform float uSelfShadow, uOthersShadow, uSelfOp, uAid; uniform vec3 uSelfDir;
 out vec4 outColor;
-vec3 pal(float idx){ return texture(uPalette, vec2((idx + 0.5) / 256.0, 0.5)).rgb; }
+vec3 palette(float idx){ return texture(uPalette, vec2((idx + 0.5) / 256.0, 0.5)).rgb; }
 float selfShade(){
   if (uSelfShadow < 0.5 && uOthersShadow < 0.5) return 1.0;
   vec4 lp = uSelfVP * vec4(vWp, 1.0);
@@ -84,10 +84,10 @@ void main(){
       vec2 g = fract(t) * vec2(ts) - 0.5, f = fract(g);
       ivec2 i = ivec2(floor(g)), j = i + 1;
       i = (i % ts + ts) % ts; j = (j % ts + ts) % ts; // wrap
-      col = mix(mix(pal(texelFetch(uTex, i, 0).r * 255.0), pal(texelFetch(uTex, ivec2(j.x, i.y), 0).r * 255.0), f.x),
-                mix(pal(texelFetch(uTex, ivec2(i.x, j.y), 0).r * 255.0), pal(texelFetch(uTex, j, 0).r * 255.0), f.x), f.y);
+      col = mix(mix(palette(texelFetch(uTex, i, 0).r * 255.0), palette(texelFetch(uTex, ivec2(j.x, i.y), 0).r * 255.0), f.x),
+                mix(palette(texelFetch(uTex, ivec2(i.x, j.y), 0).r * 255.0), palette(texelFetch(uTex, j, 0).r * 255.0), f.x), f.y);
     } else {
-      col = pal(texture(uTex, fract(t)).r * 255.0);
+      col = palette(texture(uTex, fract(t)).r * 255.0);
     }
     // modern: shade textured parts with the scene lights instead of flat-bright
     float li = 0.0;
@@ -100,7 +100,7 @@ void main(){
   for (int k = 0; k < 4; k++) if (k < uLights) i += uKd * uLightMul * max(0.0, dot(n, uLightDir[k])) * uLightI[k] * ss;
   float q = clamp(i, 0.0, 1.0) * uRange;
   float idx = uBase + (uSmooth > 0.5 ? q : floor(q)); // fractional index -> smooth ramp w/ linear palette
-  outColor = vec4(pal(idx), 1.0);
+  outColor = vec4(palette(idx), 1.0);
 }`;
 const COPY_FS = `precision highp float; in vec2 vUv; uniform sampler2D uSrc; out vec4 outColor;
 void main(){ outColor = texture(uSrc, vUv); }`;
@@ -223,7 +223,7 @@ export class Renderer {
     this.ovScene = new THREE.Scene();
     this.ovScene.add(this.ovMesh);
     this.palColors = null;
-    this.tbEd = null; // {tb, a, b, caret} — tbox selection/caret chrome for the overlay
+    this.textboxChrome = null; // {textbox, a, b, caret} — tbox selection/caret chrome for the overlay
     // modern options
     this.opts = { fps24: false, modernLighting: false, shadows: false, castOnOthers: false, selfShadow: false, smoothTex: false, smoothVerts: false, scale2x: false, aa: 0, wireframe: false, lightInt: 1, shadeInt: 1, selfShadowOp: 0.65 };
     this._prevW = new Map(); this._curW = new Map();   // per-actor part world matrices (prev vs target step)
@@ -269,7 +269,7 @@ export class Renderer {
     if (this.aaRT.texture.magFilter !== af) { this.aaRT.texture.magFilter = this.aaRT.texture.minFilter = af; this.aaRT.texture.needsUpdate = true; }
   }
 
-  /** Snapshot rendered state as the interpolation start (call right before player.step()). */
+  /** Snapshot rendered state as the interpolation start (call right before moviePlayer.step()). */
   beginFrame() {
     this._prevW = this._curW; this._curW = new Map();
     this._prevCam = this._curCam;
@@ -285,7 +285,7 @@ export class Renderer {
   }
 
   _setBackground(bkgd, cam) {
-    const key = `${bkgd.cf.name}:${cam.cno}`;
+    const key = `${bkgd.chunkyFile.name}:${cam.cno}`;
     if (key === this.bgKey) return;
     this.bgKey = key;
     this.setPalette(bkgd);
@@ -373,13 +373,13 @@ export class Renderer {
   }
 
   /** Render bg + actors into the given target (or the screen). t in [0,1] interpolates toward the current step. */
-  _drawScene(player, target, t = 1) {
+  _drawScene(moviePlayer, target, t = 1) {
     const gl = this.gl;
     gl.setRenderTarget(target);
     gl.clear();
-    if (player.bkgd && player.camera) {
-      const cam = player.camera;
-      this._setBackground(player.bkgd, cam);
+    if (moviePlayer.bkgd && moviePlayer.camera) {
+      const cam = moviePlayer.camera;
+      this._setBackground(moviePlayer.bkgd, cam);
       if (t < 1 && this._prevCam?.cno === cam.cno) { // smooth camera between steps
         const a = this._prevCam.m;
         this.camera.matrixWorld.copy(toMatrix4(cam.matrix.map((v, k) => a[k] + (v - a[k]) * t)));
@@ -390,7 +390,7 @@ export class Renderer {
       let n = 0;
       const d = this._lightDir; // shadow dir = away from key light
       let aid = 0;
-      for (const actor of player.visibleActors) {
+      for (const actor of moviePlayer.visibleActors) {
         aid++; // 1-based occluder id written into the shadow map's color channel
         const world = actor.partWorldMatrices();
         this._curW.set(actor, world);
@@ -431,11 +431,11 @@ export class Renderer {
       let mapOk = false;
       if ((this.opts.shadows || this.opts.selfShadow || this.opts.castOnOthers) && n) {
         let cx = 0, cy = 0, cz = 0;
-        for (const a of player.visibleActors) { cx += a.rootMatrix[9]; cy += a.rootMatrix[10]; cz += a.rootMatrix[11]; }
-        const c = player.visibleActors.length;
+        for (const a of moviePlayer.visibleActors) { cx += a.rootMatrix[9]; cy += a.rootMatrix[10]; cz += a.rootMatrix[11]; }
+        const c = moviePlayer.visibleActors.length;
         cx /= c; cy /= c; cz /= c;
         let r = 80; // generous margin: shadows can stretch well past the actor
-        for (const a of player.visibleActors)
+        for (const a of moviePlayer.visibleActors)
           r = Math.max(r, Math.hypot(a.rootMatrix[9] - cx, a.rootMatrix[10] - cy, a.rootMatrix[11] - cz) + 250);
         const lc = this.lightCam;
         lc.position.set(cx - d.x * 800, cy - d.y * 800, cz - d.z * 800);
@@ -513,27 +513,27 @@ export class Renderer {
     return any ? { x0, y0, x1, y1 } : null;
   }
 
-  snapshot(player) { this._drawScene(player, this.prevRT); }
+  snapshot(moviePlayer) { this._drawScene(moviePlayer, this.prevRT); }
 
-  render(player, t = 1) {
+  render(moviePlayer, t = 1) {
     const gl = this.gl;
-    if (player.sceneIndex !== this._sceneIdx) { this._sceneIdx = player.sceneIndex; this._prevW.clear(); this._prevCam = null; }
+    if (moviePlayer.sceneIndex !== this._sceneIdx) { this._sceneIdx = moviePlayer.sceneIndex; this._prevW.clear(); this._prevCam = null; }
     const out = this.opts.aa ? this.aaRT : null;
-    const trans = player.transition;
+    const trans = moviePlayer.transition;
     if (trans) {
-      this._drawScene(player, this.curRT, t);
+      this._drawScene(moviePlayer, this.curRT, t);
       gl.setRenderTarget(out);
       gl.clear();
       this.transMat.uniforms.uMode.value = trans.trans;
       this.transMat.uniforms.uT.value = Math.min(1, (trans.frame + t) / trans.dur);
       gl.render(this.transScene, this.bgCam);
     } else {
-      this._drawScene(player, out, t);
+      this._drawScene(moviePlayer, out, t);
     }
     if (out) { gl.setRenderTarget(null); gl.clear(); gl.render(this.copyScene, this.bgCam); }
     // text box overlay (suppressed during scene transitions, like the original)
-    const tboxes = trans ? [] : player.tboxes || [];
-    drawTboxes(this.ovCtx, tboxes, this.palColors, WIDTH, HEIGHT, this.tbEd);
-    if (tboxes.length) { this.ovTex.needsUpdate = true; gl.render(this.ovScene, this.bgCam); }
+    const textboxes = trans ? [] : moviePlayer.textboxes || [];
+    drawTextboxes(this.ovCtx, textboxes, this.palColors, WIDTH, HEIGHT, this.textboxChrome);
+    if (textboxes.length) { this.ovTex.needsUpdate = true; gl.render(this.ovScene, this.bgCam); }
   }
 }

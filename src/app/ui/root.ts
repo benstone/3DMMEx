@@ -3,20 +3,20 @@
 // Virtual coords: everything works in 640x480 space regardless of the
 // stretched CSS size — client->virtual mapping happens here.
 import { Element } from './element.ts';
-import { Animator, EASE } from './anim.ts';
-import { useUi } from '../state.ts';
+import { Animator, EASE } from './animator.ts';
+import { appState, useUiState } from '../appState.ts';
 
-export const UI_W = 640, UI_H = 480;
+export const UI_WIDTH = 640, UI_HEIGHT = 480;
 
 export class View extends Element {
-  constructor() { super(0, 0, UI_W, UI_H); this.interactive = true; } // interactive: canvas takes pointer-events
+  constructor() { super(0, 0, UI_WIDTH, UI_HEIGHT); this.interactive = true; } // interactive: canvas takes pointer-events
   onEnter() {}   // pushed / uncovered
   onExit() {}    // popped / covered
 }
 
 export class UiRoot extends Element {
   constructor(canvas) {
-    super(0, 0, UI_W, UI_H);
+    super(0, 0, UI_WIDTH, UI_HEIGHT);
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.ctx.imageSmoothingEnabled = false; // pixel-perfect scaling of the bitmap art
@@ -24,10 +24,10 @@ export class UiRoot extends Element {
     this.stack = [];            // View objects, top = last
     this.leaving = [];          // popped views fading out — painted ON TOP of the stack
     this.leavingUnder = [];     // replaced views fading out — painted UNDER the stack
-    this.toast = new Toast();   // say() overlay — always on top
+    this.toast = new Toast();   // toastHost.show() overlay — always on top
     this.toast._ui = this;
     this.toast.root = this;
-    this.tips = new Element(0, 0, UI_W, UI_H); // callout balloons — above views, under toast
+    this.tips = new Element(0, 0, UI_WIDTH, UI_HEIGHT); // showCallout balloons — above views, under toast
     this.tips.pickable = false;
     this.tips.root = this;
     this.dirtyRects = [];
@@ -36,7 +36,7 @@ export class UiRoot extends Element {
     this.captured = null;       // element holding pointer capture
     this.anim = new Animator(() => this.invalidate());
     this._raf = 0;
-    canvas.width = UI_W; canvas.height = UI_H;
+    canvas.width = UI_WIDTH; canvas.height = UI_HEIGHT;
     canvas.style.pointerEvents = 'none'; // passive until a view asks for input
     this._bindInput();
   }
@@ -45,11 +45,11 @@ export class UiRoot extends Element {
 
   _rebuild() {
     this.children = [...this.leavingUnder, ...this.stack, ...this.leaving, this.tips, this.toast];
-    // publish the stack into useUi — view transitions / "is a dialog open"
-    // (stackDepth > 1) become plain store selectors (see docs/ui-framework.md)
-    const u = useUi.getState();
+    // publish the stack into useUiState — view transitions / "is a dialog open"
+    // (stackDepth > 1) become plain store selectors (see docs/uiRoot-framework.md)
+    const u = useUiState.getState();
     if (u.topView !== this.topView || u.stackDepth !== this.stack.length)
-      useUi.setState({ topView: this.topView, stackDepth: this.stack.length });
+      useUiState.setState({ topView: this.topView, stackDepth: this.stack.length });
   }
 
   /** Push a view. anim: 'fade'|'none' */
@@ -110,8 +110,8 @@ export class UiRoot extends Element {
   invalidate(x?, y?, w?, h?) {
     if (x === undefined) this.dirtyAll = true;
     else {
-      if (x >= UI_W || y >= UI_H || x + w <= 0 || y + h <= 0) return; // fully outside
-      this.dirtyRects.push([Math.max(0, x), Math.max(0, y), Math.min(UI_W, x + w), Math.min(UI_H, y + h)]);
+      if (x >= UI_WIDTH || y >= UI_HEIGHT || x + w <= 0 || y + h <= 0) return; // fully outside
+      this.dirtyRects.push([Math.max(0, x), Math.max(0, y), Math.min(UI_WIDTH, x + w), Math.min(UI_HEIGHT, y + h)]);
     }
     this.start();
   }
@@ -143,7 +143,7 @@ export class UiRoot extends Element {
         [Math.min(ax, x), Math.min(ay, y), Math.max(ab, b), Math.max(at, t2)]);
       ctx.beginPath(); ctx.rect(u[0], u[1], u[2] - u[0], u[3] - u[1]); ctx.clip();
     }
-    ctx.clearRect(0, 0, UI_W, UI_H);
+    ctx.clearRect(0, 0, UI_WIDTH, UI_HEIGHT);
     for (const v of this.children) v.paintTree(ctx);
     ctx.restore();
     this.dirtyAll = false; this.dirtyRects.length = 0;
@@ -152,7 +152,7 @@ export class UiRoot extends Element {
   // --- input -----------------------------------------------------------------
   _toVirtual(e) {
     const r = this.canvas.getBoundingClientRect();
-    return { x: (e.clientX - r.left) / r.width * UI_W, y: (e.clientY - r.top) / r.height * UI_H, src: e };
+    return { x: (e.clientX - r.left) / r.width * UI_WIDTH, y: (e.clientY - r.top) / r.height * UI_HEIGHT, src: e };
   }
 
   _bindInput() {
@@ -193,18 +193,18 @@ export class UiRoot extends Element {
   }
 
   /** PushErc-style notice — transient toast bottom-left. */
-  say(msg) { this.toast.say(msg); this.invalidate(); this.start(); }
+  showToast(msg) { this.toast.showToast(msg); this.invalidate(); this.start(); }
 }
 
 class Toast extends Element {
   constructor() { super(6, 452, 340, 22); this.pickable = false; this.msg = ''; /** @type {any} */ this._tm = 0; /** @type {any} */ this._ui = null; }
-  say(msg) {
+  showToast(msg) {
     this.msg = msg;
     this.visible = true; this.opacity = 1;
     clearTimeout(this._tm);
     this._tm = (setTimeout(() => {
-      const ui = this._ui;
-      ui?.anim.tween(this, { opacity: 0 }, { dur: 300, done: () => { this.visible = false; } });
+      const uiRoot = this._ui;
+      uiRoot?.anim.tween(this, { opacity: 0 }, { dur: 300, done: () => { this.visible = false; } });
     }), 3000 as any);
   }
   draw(ctx) {
@@ -219,7 +219,7 @@ class Toast extends Element {
 }
 
 // Singleton — created at module eval so boot can push its view immediately.
-export const ui = new UiRoot(document.getElementById('ui') ?? Object.assign(document.createElement('canvas'), { id: 'ui' }));
-if (!ui.canvas.parentNode) document.getElementById('stage')?.appendChild(ui.canvas);
-import { setSayImpl } from '../res.ts';
-setSayImpl((msg) => ui.say(msg));
+export const uiRoot = new UiRoot(document.getElementById('ui') ?? Object.assign(document.createElement('canvas'), { id: 'ui' }));
+if (!uiRoot.canvas.parentNode) document.getElementById('stage')?.appendChild(uiRoot.canvas);
+import { toastHost } from '../resources.ts';
+toastHost.setHandler((msg) => uiRoot.showToast(msg));

@@ -1,4 +1,4 @@
-// Autosave smoke: docMark -> docFlush -> docDB/localStorage -> open() restore.
+// Autosave smoke: movieDocument.markDocumentDirty -> movieDocument.flushDocument -> movieDocument.documentDatabase/localStorage -> movieDocument.openMovie() restore.
 import { test, expect, beforeAll } from 'vitest';
 import { movieFile, contentLibrary } from './helpers.ts';
 
@@ -32,48 +32,48 @@ beforeAll(() => {
   (globalThis as any).indexedDB = undefined; // exercise the localStorage mirror path
 });
 
-test('docFlush writes a restorable record; get()+bytes reopen', async () => {
-  const state = await import('../src/app/state.ts');
-  const doc = await import('../src/app/doc.ts');
+test('movieDocument.flushDocument writes a restorable record; get()+bytes reopen', async () => {
+  const state = await import('../src/app/appState.ts');
+  const doc = await import('../src/app/movieDocument.ts');
   const { MoviePlayer } = await import('../src/engine/player.ts');
-  state.setLib(contentLibrary());
-  state.setSounds(new Proxy({}, { get: () => () => {} }));
-  state.setRenderer(new Proxy({}, { get: () => () => {}, set: () => true }));
-  state.setPlayer(new MoviePlayer(movieFile(), state.lib));
+  state.appState.setContentLibrary(contentLibrary());
+  state.appState.setSoundQueue(new Proxy({}, { get: () => () => {} }));
+  state.appState.setSceneRenderer(new Proxy({}, { get: () => () => {}, set: () => true }));
+  state.appState.setMoviePlayer(new MoviePlayer(movieFile(), state.appState.contentLibrary));
 
-  doc.docMark();
-  await doc.docFlush();
+  doc.movieDocument.markDocumentDirty();
+  await doc.movieDocument.flushDocument();
 
-  const rec = await doc.docDB.get();
+  const rec = await doc.movieDocument.documentDatabase.get();
   expect(rec?.bytes?.length).toBeGreaterThan(100);
   expect(rec?.name).toBeTruthy();
 
-  // restore path: open() the saved bytes into a fresh player
-  const ok = doc.open(rec.bytes, rec.name, false);
+  // restore path: open() the saved bytes into a fresh appState.moviePlayer
+  const ok = doc.movieDocument.openMovie(rec.bytes, rec.name, false);
   expect(ok).toBe(true);
-  expect(state.player.movie.scenes.length).toBe(3);
+  expect(state.appState.moviePlayer.movie.scenes.length).toBe(3);
 });
 
 test('edited movie (scene/actor/tbox inserts) serializes, flushes, restores', async () => {
-  const state = await import('../src/app/state.ts');
-  const doc = await import('../src/app/doc.ts');
-  const { insActr, editBkgd } = await import('../src/app/edit/movie.ts');
-  const { insTbox } = await import('../src/app/edit/tbox.ts');
+  const state = await import('../src/app/appState.ts');
+  const doc = await import('../src/app/movieDocument.ts');
+  const { movieEdits } = await import('../src/app/edit/movieEdits.ts');
+  const { textboxEdits } = await import('../src/app/edit/textboxEdits.ts');
 
-  state.player.loadScene(0);
-  const tmpl = state.lib.content.map((cf) => [...cf.ofType('TMPL')]).flat()[0];
-  const bkgd = state.lib.content.map((cf) => [...cf.ofType('BKGD')]).flat()[0];
-  expect(tmpl && bkgd).toBeTruthy();
+  state.appState.moviePlayer.loadScene(0);
+  const template = state.appState.contentLibrary.content.map((chunkyFile) => [...chunkyFile.ofType('TMPL')]).flat()[0];
+  const bkgd = state.appState.contentLibrary.content.map((chunkyFile) => [...chunkyFile.ofType('BKGD')]).flat()[0];
+  expect(template && bkgd).toBeTruthy();
 
-  editBkgd(bkgd.cno, 'test scene');
-  insActr({ sid: 2, ctg: 'TMPL', cno: tmpl.cno }, 'test actor', 0, { x: 0, y: 0, z: 0 });
-  insTbox(true);
+  movieEdits.editBackground(bkgd.cno, 'test scene');
+  movieEdits.insertActor({ sid: 2, ctg: 'TMPL', cno: template.cno }, 'test actor', 0, { x: 0, y: 0, z: 0 });
+  textboxEdits.insertTextbox(true);
 
-  doc.docMark();
-  await doc.docFlush();
-  const rec = await doc.docDB.get();
+  doc.movieDocument.markDocumentDirty();
+  await doc.movieDocument.flushDocument();
+  const rec = await doc.movieDocument.documentDatabase.get();
   expect(rec?.bytes?.length).toBeGreaterThan(100);
 
-  const ok = doc.open(rec.bytes, rec.name, false);
+  const ok = doc.movieDocument.openMovie(rec.bytes, rec.name, false);
   expect(ok).toBe(true);
 });

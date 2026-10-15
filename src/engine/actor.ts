@@ -11,18 +11,18 @@ const faet = { Tweak: 1 << AET.Tweak, RotF: 1 << AET.RotF, Freeze: 1 << AET.Free
 
 export class Actor {
   [k: string]: any; // transient fields — real declarations can replace incrementally
-  constructor(data, tmpl, lib) {
+  constructor(data, template, contentLibrary) {
     this.data = data;
-    this.tmpl = tmpl;
-    this.lib = lib;
+    this.template = template;
+    this.contentLibrary = contentLibrary;
     this.events = data.events;
     this.route = data.route.length ? data.route : [{ x: 0, y: 0, z: 0, dwr: 0 }];
     this.nfrmFirst = data.events.length ? data.events[0].nfrm : data.nfrmFirst;
-    const n = tmpl.parents.length;
+    const n = template.parents.length;
     this.parts = Array.from({ length: n }, () => ({ model: null, mtrl: null, matrix: M.identity() }));
     this.rootMatrix = M.identity();
     /** @type {((actr: Actor, d: any) => void) | null} */
-    this.onSnd = null;
+    this.onSound = null;
     this.nfrmCur = null;
     this._rewind();
   }
@@ -83,7 +83,7 @@ export class Actor {
   }
 
   // --- template helpers -------------------------------------------------
-  _actn(anid) { return templateAction(this.tmpl, anid); }
+  _actn(anid) { return templateAction(this.template, anid); }
 
   _setActnCel(anid, celn) {
     const actn = this._actn(anid);
@@ -95,7 +95,7 @@ export class Actor {
       const cps = cel.cps[i];
       if (!cps) continue;
       if (cps.chidModl !== -1) {
-        const m = templateModel(this.tmpl, cps.chidModl & 0xffff);
+        const m = templateModel(this.template, cps.chidModl & 0xffff);
         if (m) this.parts[i].model = m;
       }
       this.parts[i].matrix = actn.matrices[cps.imat34] || M.identity();
@@ -114,7 +114,7 @@ export class Actor {
     if (!cmtl) return;
     let k = 0;
     for (let i = 0; i < this.parts.length; i++) {
-      if (this.tmpl.ibsets[i] !== cmtl.ibset) continue;
+      if (this.template.ibsets[i] !== cmtl.ibset) continue;
       const p = cmtl.parts[k++];
       if (!p) continue;
       if (p.model) this.parts[i].model = p.model;
@@ -123,9 +123,9 @@ export class Actor {
   }
 
   _setDefaultCost() {
-    for (let ibset = 0; ibset < this.tmpl.cbset; ibset++) {
-      const cmid = this.tmpl.cmids[ibset]?.[0];
-      if (cmid !== undefined) { this._applyCmtl(templateCmtl(this.tmpl, cmid)); this._cost[ibset] = { fCmtl: true, cmid }; }
+    for (let ibset = 0; ibset < this.template.cbset; ibset++) {
+      const cmid = this.template.cmids[ibset]?.[0];
+      if (cmid !== undefined) { this._applyCmtl(templateCmtl(this.template, cmid)); this._cost[ibset] = { fCmtl: true, cmid }; }
     }
   }
 
@@ -260,7 +260,7 @@ export class Actor {
   // _FEnqueueSmmInMsq: fire smm entries that land on the current cel
   _enqueueSmm() {
     const ccel = this.ccel || 1, celn = ((this.celn % ccel) + ccel) % ccel;
-    for (const s of this.smm) if (s.data.celn === celn && !s.data.fNoSound) this.onSnd?.(this, { ...s.data, mm: true });
+    for (const s of this.smm) if (s.data.celn === celn && !s.data.fNoSound) this.onSound?.(this, { ...s.data, mm: true });
   }
 
   // FReplayFrame: re-fire this frame's sounds — listener-tool hover audition
@@ -268,7 +268,7 @@ export class Actor {
     if (!this.onStage) return;
     for (let i = this.iaevFrmMin; i < this.iaevCur; i++) {
       const e = this.events[i];
-      if (e.aet === AET.Snd && e.data.celn === -1 && !e.data.fNoSound) this.onSnd?.(this, e.data);
+      if (e.aet === AET.Snd && e.data.celn === -1 && !e.data.fNoSound) this.onSound?.(this, e.data);
     }
     this._enqueueSmm();
   }
@@ -308,10 +308,10 @@ export class Actor {
         this.onStage = false;
         break;
       case AET.Cost:
-        if (d.fCmtl) this._applyCmtl(templateCmtl(this.tmpl, d.cmid));
+        if (d.fCmtl) this._applyCmtl(templateCmtl(this.template, d.cmid));
         else {
-          const mtrl = this.lib.mtrl(d.tag);
-          if (mtrl) for (let i = 0; i < this.parts.length; i++) if (this.tmpl.ibsets[i] === d.ibset) this.parts[i].mtrl = mtrl;
+          const mtrl = this.contentLibrary.mtrl(d.tag);
+          if (mtrl) for (let i = 0; i < this.parts.length; i++) if (this.template.ibsets[i] === d.ibset) this.parts[i].mtrl = mtrl;
         }
         this._cost[d.ibset] = d;
         break;
@@ -335,7 +335,7 @@ export class Actor {
         // _FEnqueueSnd: motion-match sounds (celn != smmNil) latch into the smm
         // instead of playing now; plain sounds enqueue on the positioning frame
         if (d.celn !== -1) this._insertSmm(iaev);
-        else if (this._fpb && !d.fNoSound) this.onSnd?.(this, d);
+        else if (this._fpb && !d.fNoSound) this.onSound?.(this, d);
         break;
       default:
         break;
@@ -437,7 +437,7 @@ export class Actor {
     this.addDoAev(AET.Actn, { anid, celn });
     const done = () => this._isDoneAevSub(this.iaevCur, this.rtel);
     this.addDoAev(AET.Freeze, fFreeze || done());
-    if (!fStatic && !this.tmpl.isTdt && !done()) this.setStep(DWR_NIL);
+    if (!fStatic && !this.template.isTdt && !done()) this.setStep(DWR_NIL);
   }
 
   // --- transform fills (actor.cpp _PrepXfrmFill/_PrepCostFill) ----------------
@@ -486,7 +486,7 @@ export class Actor {
   setCostumeCore(ibsetClicked, tag, cmid, fCmtl) {
     let ibsetApply = ibsetClicked;
     if (fCmtl) {
-      const cmtl = templateCmtl(this.tmpl, cmid);
+      const cmtl = templateCmtl(this.template, cmid);
       if (!cmtl) return false;
       ibsetApply = cmtl.ibset;
     }
@@ -725,7 +725,7 @@ export class Actor {
 
   // --- orientation ------------------------------------------------------------
   _matrixRotUpdate() {
-    const [xa, ya, za] = this.tmpl.rest;
+    const [xa, ya, za] = this.template.rest;
     let ts = M.mul(M.mul(M.rotX(xa), M.rotY(ya)), M.rotZ(za));
     const p = this.xfrm.pull, s = this.xfrm.scaleStep;
     if (p.x !== 1 || p.y !== 1 || p.z !== 1 || s !== 1) {
@@ -736,7 +736,7 @@ export class Actor {
     let tr = this.xfrm.fwd.slice();
     const add = this.events[this.iaevAddCur];
     const rpt = this.route[add.rtel.irpt] || this.route[0];
-    if (this.tmpl.isTdt || add.nfrm === this.nfrmCur || rpt.dwr === 0) {
+    if (this.template.isTdt || add.nfrm === this.nfrmCur || rpt.dwr === 0) {
       tr = M.mul(M.mul(M.mul(tr, M.rotX(add.data.xa)), M.rotY(add.data.ya)), M.rotZ(add.data.za));
       this.pathAng = { xa: add.data.xa, ya: add.data.ya, za: add.data.za }; // path part = Add's orientation
     } else {
@@ -799,7 +799,7 @@ export class Actor {
   /** World matrices of all body parts (BRender 4x3) */
   partWorldMatrices() {
     const out = new Array(this.parts.length);
-    const { parents } = this.tmpl;
+    const { parents } = this.template;
     for (let i = 0; i < this.parts.length; i++) {
       const par = parents[i];
       const pm = par < 0 ? this.rootMatrix : out[par];

@@ -37,7 +37,7 @@ export interface Mbmp {
   regX: number; regY: number; // registration point
 }
 
-/** Browser-grid item shown by ui/browser.js BrwsCell. */
+/** Browser-grid item shown by ui/browser.js BrowserCell. */
 export interface BrwsItem {
   name?: string;
   mbmp?: Mbmp;          // pre-rendered thumbnail (from .NTH)
@@ -46,12 +46,12 @@ export interface BrwsItem {
   [k: string]: unknown;
 }
 
-// Window globals the app installs at boot (doc.ts sets window.player etc
+// Window globals the app installs at boot (doc.ts sets window.moviePlayer etc
 // for console debugging; __mms is the test/automation hook; cast/chrome
 // are the Google Cast SDK globals).
 declare global {
   interface Window {
-    player?: any; sounds?: any; renderer?: any; lib?: any;
+    moviePlayer?: any; soundQueue?: any; sceneRenderer?: any; contentLibrary?: any;
     __mms?: any; __onGCastApiAvailable?: (ok: boolean) => void;
     cast?: any; chrome?: any; showSaveFilePicker?: (opts?: any) => Promise<any>;
   }

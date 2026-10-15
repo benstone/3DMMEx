@@ -62,17 +62,17 @@ test('writeChunkyFile -> ChunkyFile roundtrip', () => {
     { ctg: 'CHLD', cno: 0, data: kidData, name: 'kid chunk' },
     { ctg: 'MVIE', cno: 1, data, kids: [{ ctg: 'CHLD', cno: 0, chid: 3 }], name: 'a movie', loner: true },
   ]);
-  const cf = new ChunkyFile(bytes, 'rt');
-  assert.equal(cf.creator, 'SOC ');
-  assert.equal(cf.chunks.size, 2);
-  assert.deepEqual([...cf.data('MVIE', 1)], [...data]);
-  assert.deepEqual([...cf.data('CHLD', 0)], [...kidData]);
-  assert.equal(cf.get('MVIE', 1).name, 'a movie');
-  const k = cf.kid('MVIE', 1, 'CHLD', 3);
+  const chunkyFile = new ChunkyFile(bytes, 'rt');
+  assert.equal(chunkyFile.creator, 'SOC ');
+  assert.equal(chunkyFile.chunks.size, 2);
+  assert.deepEqual([...chunkyFile.data('MVIE', 1)], [...data]);
+  assert.deepEqual([...chunkyFile.data('CHLD', 0)], [...kidData]);
+  assert.equal(chunkyFile.get('MVIE', 1).name, 'a movie');
+  const k = chunkyFile.kid('MVIE', 1, 'CHLD', 3);
   assert.ok(k);
   assert.equal(k.cno, 0);
-  assert.deepEqual(cf.kidsOf('MVIE', 1).length, 1);
-  assert.equal([...cf.ofType('CHLD')].length, 1);
+  assert.deepEqual(chunkyFile.kidsOf('MVIE', 1).length, 1);
+  assert.equal([...chunkyFile.ofType('CHLD')].length, 1);
 });
 
 test('ChunkyFile rejects non-chunky input', () => {
@@ -80,16 +80,16 @@ test('ChunkyFile rejects non-chunky input', () => {
 });
 
 test('ChunkyFile.adopt clones a subtree with fresh cnos', () => {
-  const cf = movieFile();
-  const mvie = cf.ofType('MVIE').next().value;
+  const chunkyFile = movieFile();
+  const mvie = chunkyFile.ofType('MVIE').next().value;
   const scenKid = mvie.kids.find((k) => k.ctg === 'SCEN');
-  const before = cf.chunks.size;
-  const copy = cf.adopt(cf, 'SCEN', scenKid.cno);
+  const before = chunkyFile.chunks.size;
+  const copy = chunkyFile.adopt(chunkyFile, 'SCEN', scenKid.cno);
   assert.ok(copy);
   assert.notEqual(copy.cno, scenKid.cno);
-  assert.ok(cf.chunks.size > before);
+  assert.ok(chunkyFile.chunks.size > before);
   // the adopted scene's data is byte-identical to the source
-  assert.deepEqual(cf.data('SCEN', copy.cno), cf.data('SCEN', scenKid.cno));
+  assert.deepEqual(chunkyFile.data('SCEN', copy.cno), chunkyFile.data('SCEN', scenKid.cno));
   // kids were re-mapped to the new copies, not the originals
   assert.ok(copy.kids.every((k) => k.cno !== scenKid.cno));
 });
@@ -102,11 +102,11 @@ test('unpack throws on unknown codec', () => {
 });
 
 test('real packed chunks decode from TMPLS.3CN (KCDC/KCD2)', () => {
-  const cf = new ChunkyFile(readFile('public/data/TMPLS.3CN'), 'TMPLS.3CN');
-  const packed = [...cf.chunks.values()].filter((c) => c.packed);
+  const chunkyFile = new ChunkyFile(readFile('public/data/TMPLS.3CN'), 'TMPLS.3CN');
+  const packed = [...chunkyFile.chunks.values()].filter((c) => c.packed);
   assert.ok(packed.length > 0, 'expected packed chunks in TMPLS.3CN');
   for (const c of packed.slice(0, 25)) {
-    const raw = cf.data(c.ctg, c.cno);
+    const raw = chunkyFile.data(c.ctg, c.cno);
     assert.ok(raw.length > 0, `${c.ctg}:${c.cno} decoded to empty`);
   }
 });

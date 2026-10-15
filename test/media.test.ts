@@ -18,12 +18,12 @@ test('decodeWavAdpcm returns null for non-ADPCM input', () => {
 });
 
 test('decodeWavAdpcm decodes a real 3DMM WAVE chunk', () => {
-  const cf = movieFile();
-  const wave = cf.ofType('WAVE').next().value;
-  const d = cf.data('WAVE', wave.cno);
+  const chunkyFile = movieFile();
+  const wave = chunkyFile.ofType('WAVE').next().value;
+  const d = chunkyFile.data('WAVE', wave.cno);
   const res = decodeWavAdpcm(d);
   assert.ok(res, 'fixture WAVE should be ADPCM');
-  assert.equal(res.rate, 11025); // embedded user-recorded sound; stock sounds are 22050
+  assert.equal(res.rate, 11025); // embedded user-recorded sound; stock appState.soundQueue are 22050
   assert.equal(res.channels, 1);
   assert.ok(res.frames > 0);
   assert.equal(res.out.length, 1);
@@ -42,9 +42,9 @@ test('parseMids handles varint deltas, running status and meta events', () => {
 });
 
 test('parseMids parses real MIDS chunks from SNDS.3CN', () => {
-  const cf = new ChunkyFile(readFile('public/data/SNDS.3CN'), 'SNDS.3CN');
-  const mids = cf.ofType('MIDS').next().value;
-  const evs = parseMids(cf.data('MIDS', mids.cno));
+  const chunkyFile = new ChunkyFile(readFile('public/data/SNDS.3CN'), 'SNDS.3CN');
+  const mids = chunkyFile.ofType('MIDS').next().value;
+  const evs = parseMids(chunkyFile.data('MIDS', mids.cno));
   assert.ok(evs.length > 0);
   for (let i = 1; i < evs.length; i++) assert.ok(evs[i].ts >= evs[i - 1].ts, 'timestamps must be non-decreasing');
 });

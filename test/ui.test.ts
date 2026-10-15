@@ -110,17 +110,17 @@ describe('paint order', () => {
 });
 
 describe('balloon skins', () => {
-  // Regression: COBLN[1] once had a 6-element tvz row — the destructure left
+  // Regression: CALLOUT_SKINS[1] once had a 6-element tvz row — the destructure left
   // `r` undefined, every flex length went NaN, and the balloon silently drew
   // only its top strip (tip appeared "behind" the toolbar).
-  it('every COBLN tile row is well-formed and covers the dest axis', async () => {
-    const { COBLN, gortSegs } = await import('../src/app/ui/tips.ts');
-    for (const [dir, c] of Object.entries(COBLN)) {
+  it('every CALLOUT_SKINS tile row is well-formed and covers the dest axis', async () => {
+    const { CALLOUT_SKINS, gortFlexSegments } = await import('../src/app/ui/tooltips.ts');
+    for (const [dir, c] of Object.entries(CALLOUT_SKINS)) {
       const [, , , , , , , , thz, tvz] = c as any[];
       for (const row of [thz, tvz]) {
         expect(row.length, `dir ${dir} row length`).toBe(7);
         for (let D = 60; D <= 240; D += 45) {
-          const segs = gortSegs(row, D);
+          const segs = gortFlexSegments(row, D);
           let d = 0;
           for (const [s, sl, dOff, dl] of segs) {
             expect(Number.isFinite(s), `dir ${dir} src`).toBe(true);

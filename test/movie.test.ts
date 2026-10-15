@@ -19,7 +19,7 @@ test('parseMovie reads the fixture movie structure', () => {
 
   // scene 1 carries the actors, text boxes and frame events
   assert.equal(s1.actors.size, 2);
-  assert.equal(s1.tboxes.size, 12);
+  assert.equal(s1.textboxes.size, 12);
   assert.ok(s1.frameEvents.length > 0);
   assert.ok(s1.startEvents.length > 0);
 
@@ -48,7 +48,7 @@ test('parseMovie reads a byte-swapped (2NHC) container identically', () => {
   for (let i = 0; i < le.scenes.length; i++) {
     assert.equal(be.scenes[i].name, le.scenes[i].name);
     assert.equal(be.scenes[i].actors.size, le.scenes[i].actors.size);
-    assert.equal(be.scenes[i].tboxes.size, le.scenes[i].tboxes.size);
+    assert.equal(be.scenes[i].textboxes.size, le.scenes[i].textboxes.size);
     assert.equal(be.scenes[i].frameEvents.length, le.scenes[i].frameEvents.length);
   }
   assert.equal(be.rollCall.get(0).name, 'Patrick');
@@ -59,16 +59,16 @@ test('scene events decode into typed data', () => {
   const s1 = mv.scenes[1];
   const adds = s1.startEvents.filter((e) => e.sevt === SEVT.AddActr);
   assert.deepEqual(adds.map((e) => e.data).sort(), [0, 1]);
-  const snd = s1.frameEvents.find((e) => e.sevt === SEVT.PlaySnd);
-  if (snd) {
-    assert.equal(typeof snd.data.vlm, 'number');
-    assert.ok(Array.isArray(snd.data.tags));
+  const sound = s1.frameEvents.find((e) => e.sevt === SEVT.PlaySnd);
+  if (sound) {
+    assert.equal(typeof sound.data.vlm, 'number');
+    assert.ok(Array.isArray(sound.data.tags));
   }
 });
 
 test('serializeMovie -> parseMovie roundtrip preserves structure', () => {
-  const cf = movieFile();
-  const mv = parseMovie(cf);
+  const chunkyFile = movieFile();
+  const mv = parseMovie(chunkyFile);
   const cf2 = new ChunkyFile(serializeMovie(mv), 'roundtrip');
   const mv2 = parseMovie(cf2);
 
@@ -80,7 +80,7 @@ test('serializeMovie -> parseMovie roundtrip preserves structure', () => {
     assert.equal(b.nfrmFirst, a.nfrmFirst);
     assert.equal(b.nfrmLast, a.nfrmLast);
     assert.equal(b.actors.size, a.actors.size);
-    assert.equal(b.tboxes.size, a.tboxes.size);
+    assert.equal(b.textboxes.size, a.textboxes.size);
     assert.equal(b.frameEvents.length, a.frameEvents.length);
     assert.equal(b.startEvents.length, a.startEvents.length);
     for (const [chid, actor] of a.actors) {
@@ -92,8 +92,8 @@ test('serializeMovie -> parseMovie roundtrip preserves structure', () => {
     }
   }
   // embedded media survives the copy
-  assert.equal([...cf2.ofType('MSND')].length, [...cf.ofType('MSND')].length);
-  assert.equal([...cf2.ofType('WAVE')].length, [...cf.ofType('WAVE')].length);
-  const w0 = cf.ofType('WAVE').next().value;
-  assert.deepEqual(cf2.data('WAVE', w0.cno), cf.data('WAVE', w0.cno));
+  assert.equal([...cf2.ofType('MSND')].length, [...chunkyFile.ofType('MSND')].length);
+  assert.equal([...cf2.ofType('WAVE')].length, [...chunkyFile.ofType('WAVE')].length);
+  const w0 = chunkyFile.ofType('WAVE').next().value;
+  assert.deepEqual(cf2.data('WAVE', w0.cno), chunkyFile.data('WAVE', w0.cno));
 });

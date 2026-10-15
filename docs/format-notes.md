@@ -76,7 +76,7 @@ The top chunk is `MVIE`; its kids include:
 - `.CHK` — expansion **patch**: merges new content + the pack's palette
   (`GLCR` color list) + `GST ` string tables.
 - `.NTH` — thumbnail index: pre-rendered cell bitmaps the browsers show
-  (scan via `thumbs.ts` `scanThumbFile`; pack thumbs index the pack's own
+  (scan via `thumbnails.ts` `scanThumbFile`; pack thumbs index the pack's own
   `GLCR` palette — wrong palette = inverted colors).
 
 `parseTemplate(cf, cno)` walks a TMPL's kids: default `BRS ` browser info,

@@ -37,11 +37,13 @@ describe('module graph eval (studio-first)', () => {
   it('initializes studio-first', async () => {
     const studio = await import('../src/app/ui/studio.ts');
     const easels = await import('../src/app/ui/easels.ts');
-    const browser = await import('../src/app/ui/browser.ts');
+    const browser = await import('../src/app/ui/assetBrowser.ts');
     const easel = await import('../src/app/ui/easel.ts');
+    const modal = await import('../src/app/ui/modal.ts');
     expect(typeof studio.StudioView).toBe('function');
     expect(typeof easels.SorterEasel).toBe('function');
     expect(typeof easel.EaselView).toBe('function');
-    expect(typeof browser.ModalView).toBe('function');
+    expect(typeof browser.AssetBrowserView).toBe('function');
+    expect(typeof modal.ModalView).toBe('function');
   });
 });

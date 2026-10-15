@@ -1,4 +1,14 @@
-html, body { margin: 0; height: 100%; height: 100dvh; background: #000; color: #ccc; font: 12px monospace; } /* dvh tracks mobile browser chrome collapsing */
+// App stylesheet — injected at module init so no external .css file is needed.
+// Covers the DOM the canvas app still uses: the stage/studio layout shell, the
+// #view/#ui canvases, DOM-overlay inputs (word text boxes, movie name), the
+// settings dialog, and the portrait rotate prompt. The pre-JS #boot splash is
+// styled inline in index.html/receiver.html — it must render before JS runs.
+export function injectAppStyles() {
+  if (document.getElementById('appStyles')) return;
+  const el = document.createElement('style');
+  el.id = 'appStyles';
+  el.textContent = `
+html, body { margin: 0; height: 100%; height: 100dvh; background: #000; color: #ccc; font: 12px monospace; }
 body { display: flex; flex-direction: column; }
 #stage { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
 #studio { position: relative; touch-action: none; aspect-ratio: 640 / 480; height: min(100%, 75vw); margin: auto; overflow: hidden; container-type: size; }
@@ -28,16 +38,7 @@ body { display: flex; flex-direction: column; }
 #studio .spltInp { position: absolute; box-sizing: border-box; background: #fff8dc; border: 2px inset #888; font: bold 3cqw 'Comic Sans MS', cursive, sans-serif; color: #222; padding: 0 1cqw; }
 #studio .stNameInp { width: 100%; height: 100%; box-sizing: border-box; background: #cfe8ff; border: none; outline: none; font: bold 2cqw 'Comic Sans MS', cursive, sans-serif; color: #222; padding: 0 .4cqw; }
 #studio #selBox { display: none; } /* unused — selection is a 3D Box3Helper in-scene (BODY::_PrepareToRender) */
-
-/* --- boot splash (UTEST.CPP: homelogo -> splash during _FInitCrm) ----------- */
 #ui { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; z-index: 55; touch-action: none; }
-#boot { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; align-items: center; justify-content: center; transition: opacity .35s; }
-#boot.gone { opacity: 0; pointer-events: none; }
-#bootScr { position: relative; aspect-ratio: 640 / 480; height: min(100%, 75vw); overflow: hidden; container-type: size; }
-#bootTxt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #777; font: bold 3.4cqw 'Comic Sans MS', cursive, sans-serif; letter-spacing: .3cqw; }
-#bootImg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.bootBar { position: absolute; left: 27%; top: 72%; width: 46%; height: 3.4%; background: #0c0c0c; border: .35cqw solid; border-color: #555 #d8d8d8 #d8d8d8 #555; box-sizing: border-box; }
-.bootFill { height: 100%; width: 0; background: #0a56c8; }
-.bootCap { position: absolute; left: 0; right: 0; top: 76.5%; text-align: center; color: #666; font: bold 2cqw 'Comic Sans MS', cursive, sans-serif; }
-/* --- callout tips (HBAL + GORT-tiled cobllnN.bmp skins, arrow baked in) ------ */
-
+`;
+  document.head.appendChild(el);
+}

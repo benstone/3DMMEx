@@ -4,7 +4,7 @@ import { MoviePlayer } from '../src/engine/player.ts';
 import { movieFile, contentLibrary } from './helpers.ts';
 
 // Integration: step the whole fixture movie headlessly against the real
-// .3CN content files. Guards the Kauai scene-state semantics in player.js.
+// .3CN content files. Guards the Kauai scene-state semantics in appState.moviePlayer.js.
 test('MoviePlayer steps through every scene to movie end', () => {
   const p = new MoviePlayer(movieFile(), contentLibrary());
   assert.equal(p.movie.scenes.length, 3);
@@ -14,7 +14,7 @@ test('MoviePlayer steps through every scene to movie end', () => {
   p.loadScene(0);
   do {
     seen.add(p.sceneIndex);
-    assert.ok(++steps < 10000, 'player should terminate');
+    assert.ok(++steps < 10000, 'appState.moviePlayer should terminate');
   } while (p.step());
 
   assert.deepEqual([...seen].sort(), [0, 1, 2]);
@@ -26,9 +26,9 @@ test('MoviePlayer resolves actor templates and stage presence', () => {
   p.loadScene(1); // the scene with actors
   // Patrick is added at frame 30, Sasha enters via an AET.Add at frame 154
   p.gotoFrame(31);
-  assert.deepEqual(p.visibleActors.map((a) => a.tmpl.name), ['Patrick']);
+  assert.deepEqual(p.visibleActors.map((a) => a.template.name), ['Patrick']);
   p.gotoFrame(200);
-  const names = p.visibleActors.map((a) => a.tmpl.name);
+  const names = p.visibleActors.map((a) => a.template.name);
   assert.ok(names.includes('Patrick'), `expected Patrick on stage, got ${names}`);
   assert.ok(names.some((n) => /sasha|dog/i.test(n)), `expected Sasha on stage, got ${names}`);
   for (const a of p.visibleActors) assert.ok(a.rootMatrix.length === 12);

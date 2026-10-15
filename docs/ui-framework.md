@@ -22,25 +22,25 @@ canvas by `domOverlay()` (z-index 57, inside `#studio`), the settings dialog
 | File | Contents |
 |------|----------|
 | `element.ts` | `Element` — rect + children + paint/hit/invalidate |
-| `root.ts` | `UiRoot` (singleton `ui`), `View`, `Toast` |
-| `anim.ts` | `Animator` — `tween(target, {prop:end}, {dur, ease, done})` |
-| `img.ts` | `texImg(name, onload)` texture cache, `imgReady()` |
-| `widgets.ts` | `Img`, `StBtn`, `Txt`, `MovieScreen`, `VSlider`, links |
-| `easel.ts` | `EaselView`, `domOverlay`, `CvEl`, `offCv`, shared widgets (`ScrollBtn`, `Therm`, `NamePlate`, `LisSlider`, `FrmCell`) |
-| `modal.ts` | `ModalView` + the shared modal slot (`modalView`/`modalCleanup`/`closeModal`) — leaf module, kept out of import cycles so `extends` bases always init first |
-| `browser.ts` | `BrowserView`, `showBrowser`; `brwsView`/`closeBrowser`/`setBrwsView` re-export the modal.ts slot |
+| `root.ts` | `UiRoot` (singleton `uiRoot`), `View`, `Toast` |
+| `animator.ts` | `Animator` — `tween(target, {prop:end}, {dur, ease, done})` |
+| `textureCache.ts` | `textureCache.image(name, onload)` texture cache, `textureCache.isReady()` |
+| `widgets.ts` | `ImageElement`, `StudioButton`, `TextElement`, `MovieScreen`, `VerticalSlider`, links |
+| `easel.ts` | `EaselView`, `domOverlay`, `CvEl`, `offCv`, shared widgets (`ScrollButton`, `Thermometer`, `NamePlate`, `ListenerSlider`, `FramedCell`) |
+| `modal.ts` | `ModalView` + the shared modal slot (`modalSlot.view`/`modalSlot.cleanup`/`modalSlot.close`) — leaf module, kept out of import cycles so `extends` bases always init first |
+| `assetBrowser.ts` | `AssetBrowserView`, `AssetAssetBrowserView.show`; `modalSlot.view`/`modalSlot.close`/`modalSlot` re-export the modal.ts slot |
 | `easels.ts` | `SorterEasel`, `RecorderEasel`, `ListenerEasel`, `WordsDlg`, `SpletterEasel`, `ActionBrowser`, `CostumeEasel` |
 | `studio.ts` | `StudioView` (editor chrome), `studioEl`, `syncStudio`, `syncRollCall` |
-| `bio.ts` | `BioView`, `BioPage`, `BioText` |
+| `talentBook.ts` | `TalentBookView`, `BioPage`, `BioText` |
 | `theatre.ts` | `TheatreView`, `EmbedView`, `enterTheatre`, `enterEmbed` |
-| `bootview.ts` | `BootView` splash |
-| `castview.ts` | `CastView` sender-side remote |
-| `tips.ts` | callout balloons in the `ui.tips` layer |
-| `optdlg.ts` | settings modal (DOM, outside the canvas) |
+| `bootView.ts` | `BootView` splash |
+| `castView.ts` | `CastView` sender-side remote |
+| `tooltips.ts` | callout balloons in the `uiRoot.tips` layer |
+| `optionsDialog.ts` | settings modal (DOM, outside the canvas) |
 
 ## Views and the stack
 
-`ui.stack` is the view stack; `stack.at(-1)` (`ui.topView`) is the only view
+`uiRoot.stack` is the view stack; `stack.at(-1)` (`ui.topView`) is the only view
 hit-tested for input. `ui.push(v, anim)` / `ui.pop(anim)` /
 `ui.replace(v, anim)` with `anim ∈ 'fade'|'none'`.
 
@@ -62,9 +62,9 @@ popped/covered. `EaselView.onExit` distinguishes the two (covers hide its
 DOM inputs, pops remove them).
 
 The studio is inserted under everything once at boot
-(`ui.stack.unshift(studioView)`). Easels/browsers share the `brwsView` modal
-slot — `showEasel()`/`showBrowser()` `closeBrowser()` first, then push.
-Escape routes through `brwsView._onEsc || closeBrowser`.
+(`uiRoot.stack.unshift(studioView)`). Easels/browsers share the `modalSlot.view` modal
+slot — `modalSlot.open()`/`AssetAssetBrowserView.show()` `modalSlot.close()` first, then push.
+Escape routes through `modalSlot.view._onEsc || modalSlot.close`.
 
 `UiRoot._rebuild()` also mirrors `{topView, stackDepth}` into the `useUi`
 store, so "is a dialog open" is `useUi.getState().stackDepth > 1` and view
@@ -110,14 +110,14 @@ repaints, looking like a z-order bug. Never bypass the setter.
 
 ### Textures
 
-`texImg(name)` returns a cached `Image` that may still be loading — always
+`textureCache.image(name)` returns a cached `Image` that may still be loading — always
 pass an `onload` that calls `this.dirty()` and guard draws with
-`imgReady(im)`. Forgetting the guard paints a blank rect (drawImage on an
+`textureCache.isReady(im)`. Forgetting the guard paints a blank rect (drawImage on an
 incomplete image throws).
 
 ## Modals and DOM overlays
 
-`EaselView`/`BrowserView` own the modal slot. Text entry uses real DOM:
+`EaselView`/`AssetBrowserView` own the modal slot. Text entry uses real DOM:
 `this.domInp(x, y, w, h)` creates an `<input class="spltInp">` floated at
 logical coords via `domOverlay()`; inputs are tracked in `view._dom`,
 hidden while the view is covered and removed when it leaves the stack.

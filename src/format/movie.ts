@@ -9,19 +9,19 @@ export const AET = {
   Freeze: 8, Tweak: 9, Step: 10, Rem: 11, RotH: 12,
 };
 
-export function parseMovie(cf) {
-  const mvie = cf.ofType('MVIE').next().value;
+export function parseMovie(chunkyFile) {
+  const mvie = chunkyFile.ofType('MVIE').next().value;
   if (!mvie) throw new Error('no MVIE chunk');
   const scenes = mvie.kids
     .filter((k) => k.ctg === 'SCEN')
     .sort((a, b) => a.chid - b.chid)
-    .map((k) => parseScene(cf, k.cno));
+    .map((k) => parseScene(chunkyFile, k.cno));
   // roll call GST (MVIE kid chid 0): arid -> actor name/template (movie.cpp FReadRollCall)
   const rollCall = new Map();
   const gstKid = mvie.kids.find((k) => k.ctg === 'GST ' && k.chid === 0);
   if (gstKid) {
     try {
-      for (const e of readGST(cf.data('GST ', gstKid.cno)).entries) {
+      for (const e of readGST(chunkyFile.data('GST ', gstKid.cno)).entries) {
         if (!e || e.extra.length < 28) continue;
         const er = new Reader(e.extra);
         rollCall.set(er.i32(), { cactRef: er.i32(), grfbrws: er.u32(), tagTmpl: er.tag(), name: e.str });
@@ -33,7 +33,7 @@ export function parseMovie(cf) {
     const rc = rollCall.get(a.arid);
     if (rc && !a.name) a.name = rc.name;
   }
-  return { cf, name: mvie.name, scenes, rollCall, gstSource: gstSrc ? cf.data('GST ', gstSrc.cno) : null };
+  return { chunkyFile, name: mvie.name, scenes, rollCall, gstSource: gstSrc ? chunkyFile.data('GST ', gstSrc.cno) : null };
 }
 
 // SSE: vlm(BRS), sty, fLoop, ctagc + TAGC array {chidden, tag}
@@ -50,9 +50,9 @@ function readSse(vr) {
   return { vlm, sty, fLoop, tags };
 }
 
-function readSevs(cf, ctg, cno) {
+function readSevs(chunkyFile, ctg, cno) {
   if (!cno && cno !== 0) return [];
-  const gg = readGG(cf.data(ctg, cno));
+  const gg = readGG(chunkyFile.data(ctg, cno));
   return gg.entries.filter(Boolean).map((e) => {
     const fr = new Reader(e.fixed, 0, gg.le);
     const nfrm = fr.i32();
@@ -71,34 +71,34 @@ function readSevs(cf, ctg, cno) {
   });
 }
 
-export function parseScene(cf, cno) {
-  const r = new Reader(cf.data('SCEN', cno));
+export function parseScene(chunkyFile, cno) {
+  const r = new Reader(chunkyFile.data('SCEN', cno));
   r.bo(); r.i16();
   const nfrmLast = r.i32();
   const nfrmFirst = r.i32();
   const trans = r.i32();
-  const frm = cf.kid('SCEN', cno, 'GGFR', 0);
-  const st = cf.kid('SCEN', cno, 'GGST', 1);
+  const frm = chunkyFile.kid('SCEN', cno, 'GGFR', 0);
+  const st = chunkyFile.kid('SCEN', cno, 'GGST', 1);
   const actors = new Map();
-  for (const k of cf.kidsOf('SCEN', cno, 'ACTR')) actors.set(k.chid, parseActor(cf, k.cno));
-  const tboxes = new Map();
-  for (const k of cf.kidsOf('SCEN', cno, 'TBOX')) {
-    try { tboxes.set(k.chid, parseTbox(cf, k.cno)); } catch { /* malformed tbox */ }
+  for (const k of chunkyFile.kidsOf('SCEN', cno, 'ACTR')) actors.set(k.chid, parseActor(chunkyFile, k.cno));
+  const textboxes = new Map();
+  for (const k of chunkyFile.kidsOf('SCEN', cno, 'TBOX')) {
+    try { textboxes.set(k.chid, parseTbox(chunkyFile, k.cno)); } catch { /* malformed tbox */ }
   }
-  const th = cf.kid('SCEN', cno, 'THUM', 0);
+  const th = chunkyFile.kid('SCEN', cno, 'THUM', 0);
   return {
-    cno, name: cf.get('SCEN', cno).name, nfrmFirst, nfrmLast, trans,
-    frameEvents: frm ? readSevs(cf, 'GGFR', frm.cno) : [],
-    startEvents: st ? readSevs(cf, 'GGST', st.cno) : [],
-    actors, tboxes,
-    thumb: th ? cf.data('THUM', th.cno) : null, // scene sorter thumbnail MBMP
+    cno, name: chunkyFile.get('SCEN', cno).name, nfrmFirst, nfrmLast, trans,
+    frameEvents: frm ? readSevs(chunkyFile, 'GGFR', frm.cno) : [],
+    startEvents: st ? readSevs(chunkyFile, 'GGST', st.cno) : [],
+    actors, textboxes,
+    thumb: th ? chunkyFile.data('THUM', th.cno) : null, // scene sorter thumbnail MBMP
   };
 }
 
 const xyz = (r) => ({ x: r.brs(), y: r.brs(), z: r.brs() });
 
-export function parseActor(cf, cno) {
-  const d = cf.data('ACTR', cno);
+export function parseActor(chunkyFile, cno) {
+  const d = chunkyFile.data('ACTR', cno);
   const r = new Reader(d);
   r.bo(); r.i16();
   const dxyzFullRte = xyz(r);
@@ -107,19 +107,19 @@ export function parseActor(cf, cno) {
   let nfrmLast = null;
   if (d.length >= 44) nfrmLast = r.i32();
   const tagTmpl = r.tag();
-  const kp = cf.kid('ACTR', cno, 'PATH', 0);
+  const kp = chunkyFile.kid('ACTR', cno, 'PATH', 0);
   const route = [];
   if (kp) {
-    const gl = readGL(cf.data('PATH', kp.cno));
+    const gl = readGL(chunkyFile.data('PATH', kp.cno));
     for (const e of gl.entries) {
       const pr = new Reader(e, 0, gl.le);
       route.push({ ...xyz(pr), dwr: pr.brs() });
     }
   }
-  const ke = cf.kid('ACTR', cno, 'GGAE', 0);
+  const ke = chunkyFile.kid('ACTR', cno, 'GGAE', 0);
   const events = [];
   if (ke) {
-    const gg = readGG(cf.data('GGAE', ke.cno));
+    const gg = readGG(chunkyFile.data('GGAE', ke.cno));
     for (const e of gg.entries) {
       if (!e) continue;
       const fr = new Reader(e.fixed, 0, gg.le);
@@ -150,7 +150,7 @@ export function parseActor(cf, cno) {
       events.push({ aet, nfrm, rtel, data });
     }
   }
-  return { cno, arid, nfrmFirst, nfrmLast, dxyzFullRte, tagTmpl, route, events, name: cf.get('ACTR', cno).name };
+  return { cno, arid, nfrmFirst, nfrmLast, dxyzFullRte, tagTmpl, route, events, name: chunkyFile.get('ACTR', cno).name };
 }
 
 // ---- serialization (MVIE::FSaveToFni / SCEN::FWrite / ACTR::FWrite / TBOX::FWrite) ---
@@ -201,7 +201,7 @@ function aevData(e, tagFor) {
 
 /**
  * Serialize a parsed/edited movie back to a CHN2 (.3MM) file.
- * movie: {name, scenes, rollCall?, gstSource?, cf?}
+ * movie: {name, scenes, rollCall?, gstSource?, chunkyFile?}
  * opts.rtmpl(cno): runtime TDT template for 'rt'-sid template tags
  * opts.userSnd(key): imported sound record {name, bytes, midi, kind} for 'usr' tags
  */
@@ -209,7 +209,7 @@ export function serializeMovie(movie, opts: any = {}) {
   const chunks = [];
   const byKey = new Map();
   let cnoNext = 0;
-  if (movie.cf) for (const k of movie.cf.chunks.keys()) cnoNext = Math.max(cnoNext, +k.split(':')[1] + 1);
+  if (movie.chunkyFile) for (const k of movie.chunkyFile.chunks.keys()) cnoNext = Math.max(cnoNext, +k.split(':')[1] + 1);
   const mk = (ctg, data, kids = [], name = '', loner = false, cno = null) => {
     const c = { ctg, cno: cno ?? cnoNext++, data, kids, name, loner };
     chunks.push(c); byKey.set(`${ctg}:${c.cno}`, c);
@@ -217,16 +217,16 @@ export function serializeMovie(movie, opts: any = {}) {
   };
   // verbatim copy of an existing chunk subtree (embedded MSNDs/TMPLs)
   const copied = new Set();
-  const copySubtree = (cf, ctg, cno) => {
+  const copySubtree = (chunkyFile, ctg, cno) => {
     const key = `${ctg}:${cno}`;
     if (copied.has(key)) return byKey.get(key);
-    const src = cf.get(ctg, cno);
+    const src = chunkyFile.get(ctg, cno);
     if (!src) return null;
     const kids = [];
-    const c = mk(ctg, cf.data(ctg, cno), kids, src.name, false, cno);
+    const c = mk(ctg, chunkyFile.data(ctg, cno), kids, src.name, false, cno);
     copied.add(key);
     for (const k of src.kids) {
-      const kid = copySubtree(cf, k.ctg, k.cno);
+      const kid = copySubtree(chunkyFile, k.ctg, k.cno);
       if (kid) kids.push({ ctg: kid.ctg, cno: kid.cno, chid: k.chid });
     }
     return c;
@@ -238,12 +238,12 @@ export function serializeMovie(movie, opts: any = {}) {
     if (t.sid === 'rt') {
       const key = `rt:${t.cno}`;
       if (!byKey.has(key)) {
-        const tmpl = opts.rtmpl?.(t.cno);
-        const tdt = mk('TDT ', new Writer().bo().u16(0x0303).i32(tmpl?.tdts ?? 0)
-          .tag(wtag(tmpl?.tagTdf || { sid: 2, ctg: 'TDF ', cno: 0 })).out());
+        const template = opts.rtmpl?.(t.cno);
+        const tdt = mk('TDT ', new Writer().bo().u16(0x0303).i32(template?.tdts ?? 0)
+          .tag(wtag(template?.tagTdf || { sid: 2, ctg: 'TDF ', cno: 0 })).out());
         const tm = mk('TMPL', new Writer().bo().u16(0x0303)
-          .bra(tmpl?.rest?.[0] || 0).bra(tmpl?.rest?.[1] || 0).bra(tmpl?.rest?.[2] || 0)
-          .u16(0).u32(tmpl?.grftmpl ?? 2).out(), [{ ctg: 'TDT ', cno: tdt.cno, chid: 0 }], tmpl?.name || '');
+          .bra(template?.rest?.[0] || 0).bra(template?.rest?.[1] || 0).bra(template?.rest?.[2] || 0)
+          .u16(0).u32(template?.grftmpl ?? 2).out(), [{ ctg: 'TDT ', cno: tdt.cno, chid: 0 }], template?.name || '');
         byKey.set(key, tm);
       }
       return { sid: 0, ctg: 'TMPL', cno: byKey.get(key).cno };
@@ -267,24 +267,24 @@ export function serializeMovie(movie, opts: any = {}) {
   const scenKids = [];
   for (const s of movie.scenes) {
     const kids = [];
-    // adopt embedded sounds: embedded (sid 0) copies from movie.cf, 'usr' builds
+    // adopt embedded sounds: embedded (sid 0) copies from movie.chunkyFile, 'usr' builds
     // — matching SCEN::FWrite's FAdoptChild(msnd, chid) for ksidUseCrf tags
-    const sndKids = new Map(); // tagKey -> {tag:{sid:0,..cno}, chid}
-    let sndChid = 0;
+    const soundKids = new Map(); // tagKey -> {tag:{sid:0,..cno}, chid}
+    let soundChid = 0;
     const tagFor = (t) => {
       if (t.sid === 'usr' || (t.sid === 0 && t.ctg === 'MSND')) { // embedded sound -> MSND kid of SCEN
         const key = `${t.sid}:${t.cno}`;
-        if (!sndKids.has(key)) {
-          const m = t.sid === 'usr' ? buildUsrMsnd(t.cno) : movie.cf && copySubtree(movie.cf, 'MSND', t.cno);
+        if (!soundKids.has(key)) {
+          const m = t.sid === 'usr' ? buildUsrMsnd(t.cno) : movie.chunkyFile && copySubtree(movie.chunkyFile, 'MSND', t.cno);
           if (!m) return { tag: { sid: -1, ctg: t.ctg, cno: t.cno } }; // unresolvable -> invalid sid
-          const chid = sndChid++;
+          const chid = soundChid++;
           kids.push({ ctg: 'MSND', cno: m.cno, chid });
-          sndKids.set(key, { tag: { sid: 0, ctg: 'MSND', cno: m.cno }, chid });
+          soundKids.set(key, { tag: { sid: 0, ctg: 'MSND', cno: m.cno }, chid });
         }
-        return sndKids.get(key);
+        return soundKids.get(key);
       }
-      if (t.sid === 0 && movie.cf) { // other embedded chunk (rare) — copy it across
-        copySubtree(movie.cf, t.ctg, t.cno);
+      if (t.sid === 0 && movie.chunkyFile) { // other embedded chunk (rare) — copy it across
+        copySubtree(movie.chunkyFile, t.ctg, t.cno);
         return { tag: wtag(t) };
       }
       return { tag: wtag(t) };
@@ -304,8 +304,8 @@ export function serializeMovie(movie, opts: any = {}) {
       ];
       const tagTmpl = wtag(a.tagTmpl);
       if (a.tagTmpl.sid === 'rt') ak.push({ ctg: 'TMPL', cno: tagTmpl.cno, chid: 0 });
-      else if (a.tagTmpl.sid === 0 && movie.cf) { // loaded embedded TDT — copy + adopt (ACTR::FWrite)
-        const tm = copySubtree(movie.cf, 'TMPL', a.tagTmpl.cno);
+      else if (a.tagTmpl.sid === 0 && movie.chunkyFile) { // loaded embedded TDT — copy + adopt (ACTR::FWrite)
+        const tm = copySubtree(movie.chunkyFile, 'TMPL', a.tagTmpl.cno);
         if (tm) ak.push({ ctg: 'TMPL', cno: tm.cno, chid: 0 });
       }
       const body = new Writer().bo().u16(0x0303)
@@ -313,10 +313,10 @@ export function serializeMovie(movie, opts: any = {}) {
         .i32(a.arid).i32(a.nfrmFirst).i32(a.nfrmLast ?? KLW_MAX).tag(tagTmpl).out();
       kids.push({ ctg: 'ACTR', cno: mk('ACTR', body, ak, a.name || '').cno, chid });
     }
-    for (const [chid, tb] of s.tboxes) {
-      const rtxt = tb.rtxt || {};
+    for (const [chid, textbox] of s.textboxes) {
+      const rtxt = textbox.rtxt || {};
       const rk = []; // kids of the RTXT chunk
-      if (tb.rtxt) rk.push({ ctg: 'TEXT', cno: mk('TEXT', new Writer().u16(0x0303)
+      if (textbox.rtxt) rk.push({ ctg: 'TEXT', cno: mk('TEXT', new Writer().u16(0x0303)
         .bytes(Uint8Array.from([...(rtxt.text || '')].map((c) => c.charCodeAt(0) & 0xff))).out()).cno, chid: 0 });
       if (rtxt.mpes?.length) rk.push({ ctg: 'GLMP', cno: mk('GLMP', buildGL([...rtxt.mpes]
         .sort((a, b) => ((a.sprm << 24) | (a.cp & 0xffffff)) - ((b.sprm << 24) | (b.cp & 0xffffff)))
@@ -329,8 +329,8 @@ export function serializeMovie(movie, opts: any = {}) {
         .i32(rtxt.dxpDef || 0).i32(rtxt.dypFont || 14).u32(rtxt.acrBack ?? 0xffffffff)
         .bytes(writeStn(rtxt.font || 'Comic Sans MS')).out(), rk).cno;
       kids.push({ ctg: 'TBOX', cno: mk('TBOX', new Writer().bo().u16(0x0303)
-        .i32(tb.nfrmFirst).i32(tb.nfrmMax ?? KLW_MAX)
-        .i32(tb.l).i32(tb.r).i32(tb.t).i32(tb.b).i32(0).i32(tb.fStory ? 1 : 0).out(),
+        .i32(textbox.nfrmFirst).i32(textbox.nfrmMax ?? KLW_MAX)
+        .i32(textbox.l).i32(textbox.r).i32(textbox.t).i32(textbox.b).i32(0).i32(textbox.fStory ? 1 : 0).out(),
         [{ ctg: 'RTXT', cno: rtCno, chid: 0 }]).cno, chid });
     }
     if (s.thumb) kids.push({ ctg: 'THUM', cno: mk('THUM', s.thumb).cno, chid: 0 }); // SCEN::FWrite keeps the thumbnail
@@ -353,10 +353,10 @@ export function serializeMovie(movie, opts: any = {}) {
     })))).cno, chid: 0 },
   ];
   if (movie.gstSource) mvieKids.push({ ctg: 'GST ', cno: mk('GST ', movie.gstSource).cno, chid: 1 });
-  if (movie.cf) { // preserve movie-level (music) MSNDs adopted under MVIE
-    const mvie = movie.cf.ofType('MVIE').next().value;
+  if (movie.chunkyFile) { // preserve movie-level (music) MSNDs adopted under MVIE
+    const mvie = movie.chunkyFile.ofType('MVIE').next().value;
     for (const k of (mvie?.kids || [])) if (k.ctg === 'MSND') {
-      const m = copySubtree(movie.cf, 'MSND', k.cno);
+      const m = copySubtree(movie.chunkyFile, 'MSND', k.cno);
       if (m) mvieKids.push({ ctg: 'MSND', cno: m.cno, chid: k.chid });
     }
   }

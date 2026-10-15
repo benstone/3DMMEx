@@ -1,7 +1,7 @@
 // Scene/movie state at a given frame (SRC/ENGINE/SCENE.CPP semantics).
 import { parseMovie, SEVT } from '../format/movie.ts';
 import { Actor } from './actor.ts';
-import { measureTbox, SCROLL_PX_PER_S } from '../render/textbox.ts';
+import { measureTextbox, TEXTBOX_SCROLL_PIXELS_PER_SECOND } from '../render/textbox.ts';
 
 export const FPS = 6;
 
@@ -13,20 +13,20 @@ export const WIT = { Nil: 0, UntilClick: 1, UntilSnd: 2, ForTime: 3 };
 
 export class MoviePlayer {
   [k: string]: any; // transient fields — real declarations can replace incrementally
-  constructor(movieFile, lib) {
-    this.lib = lib;
-    lib.setMovie(movieFile);
+  constructor(movieFile, contentLibrary) {
+    this.contentLibrary = contentLibrary;
+    contentLibrary.setMovie(movieFile);
     this.movie = parseMovie(movieFile);
     this.sceneIndex = -1;
     this.frame = null;
     this.actors = new Map();
     this.visibleActors = [];
-    this.tboxes = [];
+    this.textboxes = [];
     this.bkgd = this.camera = null;
     this.warnings = [];
-    this.onSnd = null;      // ({scope, data}) => play a sound
-    this.onSndStop = null;  // () => stop looping sounds (scene change/seek)
-    this.sndPlaying = null; // () => true while the sound queue still has output
+    this.onSound = null;      // ({scope, data}) => play a sound
+    this.onSoundStop = null;  // () => stop looping sounds (scene change/seek)
+    this.isSoundPlaying = null; // () => true while the sound queue still has output
     this.wit = null;        // sevtPause applied at the current frame (WIT)
     this.clk = false;       // witUntilClick resume latch — set by any UI click
     this.onTransStart = null; // (trans) => snapshot outgoing frame before scene switch
@@ -39,13 +39,13 @@ export class MoviePlayer {
   get scene() { return this.movie.scenes[this.sceneIndex]; }
 
   loadScene(i) {
-    this.onSndStop?.();
+    this.onSoundStop?.();
     const s = this.movie.scenes[i];
     if (!s) { // _iscen = ivNil — a movie can be sceneless (new doc / all scenes nuked)
       this.sceneIndex = -1;
       this.actors = new Map();
       this.visibleActors = [];
-      this.tboxes = [];
+      this.textboxes = [];
       this.bkgd = this.camera = null;
       this.frame = null; this.wit = null; this.transition = null;
       return;
@@ -53,11 +53,11 @@ export class MoviePlayer {
     this.sceneIndex = i;
     this.actors = new Map();
     for (const [chid, a] of s.actors) {
-      let tmpl = null;
-      try { tmpl = this.lib.template(a.tagTmpl); } catch (e) { this.warnings.push(`template ${a.tagTmpl.ctg} ${a.tagTmpl.cno}: ${e.message}`); }
-      if (!tmpl) { this.warnings.push(`missing template ${a.tagTmpl.ctg} ${a.tagTmpl.cno}`); continue; }
-      const actor = new Actor(a, tmpl, this.lib);
-      actor.onSnd = (actr, d) => this.onSnd?.({ scope: 'actor', arid: actr.data.arid, data: d });
+      let template = null;
+      try { template = this.contentLibrary.template(a.tagTmpl); } catch (e) { this.warnings.push(`template ${a.tagTmpl.ctg} ${a.tagTmpl.cno}: ${e.message}`); }
+      if (!template) { this.warnings.push(`missing template ${a.tagTmpl.ctg} ${a.tagTmpl.cno}`); continue; }
+      const actor = new Actor(a, template, this.contentLibrary);
+      actor.onSound = (actr, d) => this.onSound?.({ scope: 'actor', arid: actr.data.arid, data: d });
       this.actors.set(chid, actor);
     }
     this.frame = null;
@@ -66,7 +66,7 @@ export class MoviePlayer {
 
   gotoFrame(nfrm) {
     if (!this.scene) return;
-    this.onSndStop?.(); // seeking kills loops (original ties them to scene playback)
+    this.onSoundStop?.(); // seeking kills loops (original ties them to scene playback)
     this._sndDirty = true; // seeking: replay current-frame sounds on next play step
     this._applyFrame(nfrm, false);
   }
@@ -88,16 +88,16 @@ export class MoviePlayer {
     };
     s.startEvents.forEach(apply);
     for (const e of s.frameEvents) if (e.nfrm <= nfrm) apply(e);
-    this.bkgd = bkgdTag ? this.lib.bkgd(bkgdTag) : null;
+    this.bkgd = bkgdTag ? this.contentLibrary.bkgd(bkgdTag) : null;
     this.icam = icam;
-    this.camera = this.bkgd ? this.lib.camera(this.bkgd, icam) : null;
-    this.tboxes = [...tboxChids]
-      .map((chid) => s.tboxes.get(chid))
-      .filter((tb) => tb && nfrm >= tb.nfrmFirst && nfrm < tb.nfrmMax);
-    for (const tb of this.tboxes) { // TBOX::FNeedToScroll inputs for the scroll hold
-      if (tb._scv === undefined) tb._scv = 0; // persisted like _dypDisp — not reset by seeks
-      if (!tb.fStory && typeof document !== 'undefined') // headless runs (tests/tools) skip scroll measurement
-        tb._maxScroll = measureTbox(tb, this._tbCtx ||= document.createElement('canvas').getContext('2d')).maxScroll;
+    this.camera = this.bkgd ? this.contentLibrary.camera(this.bkgd, icam) : null;
+    this.textboxes = [...tboxChids]
+      .map((chid) => s.textboxes.get(chid))
+      .filter((textbox) => textbox && nfrm >= textbox.nfrmFirst && nfrm < textbox.nfrmMax);
+    for (const textbox of this.textboxes) { // TBOX::FNeedToScroll inputs for the scroll hold
+      if (textbox._scv === undefined) textbox._scv = 0; // persisted like _dypDisp — not reset by seeks
+      if (!textbox.fStory && typeof document !== 'undefined') // headless runs (tests/tools) skip scroll measurement
+        textbox._maxScroll = measureTextbox(textbox, this._tbCtx ||= document.createElement('canvas').getContext('2d')).maxScroll;
     }
     this.visibleActors = [];
     for (const [chid, actor] of this.actors) {
@@ -111,7 +111,7 @@ export class MoviePlayer {
   }
 
   _fireSnd(e) {
-    if (e.sevt === SEVT.PlaySnd) this.onSnd?.({ scope: 'scene', data: e.data });
+    if (e.sevt === SEVT.PlaySnd) this.onSound?.({ scope: 'scene', data: e.data });
   }
 
   _replaySnd() {
@@ -128,17 +128,17 @@ export class MoviePlayer {
     }
     if (this._sndDirty && this.frame !== null) this._replaySnd();
     this._sndDirty = false;
-    // MVIE::_FAdvance _fScrolling: non-story tboxes at their first frame hold
+    // MVIE::_FAdvance _fScrolling: non-story textboxes at their first frame hold
     // playback and scroll up 1px per kdtsScrolling (5ms) until the rest fits
     let scrollHold = false;
     const now = performance.now();
     const dt = Math.min(250, now - (this._scrollT || now));
-    for (const tb of this.tboxes || []) {
-      if (tb.fStory || this.frame !== tb.nfrmFirst) continue;
-      const target = tb._maxScroll || 0;
-      if ((tb._scv || 0) < target) {
-        tb._scv = Math.min(target, (tb._scv || 0) + (dt / 1000) * SCROLL_PX_PER_S);
-        if (tb._scv < target) scrollHold = true;
+    for (const textbox of this.textboxes || []) {
+      if (textbox.fStory || this.frame !== textbox.nfrmFirst) continue;
+      const target = textbox._maxScroll || 0;
+      if ((textbox._scv || 0) < target) {
+        textbox._scv = Math.min(target, (textbox._scv || 0) + (dt / 1000) * TEXTBOX_SCROLL_PIXELS_PER_SECOND);
+        if (textbox._scv < target) scrollHold = true;
       }
     }
     this._scrollT = now;
@@ -148,7 +148,7 @@ export class MoviePlayer {
       if (w.wit === WIT.UntilClick) {
         if (this.clk) { this.clk = false; this.wit = null; } else return true;
       } else if (w.wit === WIT.UntilSnd) {
-        if (this.sndPlaying?.()) return true; // _pmsq->FPlaying: wait for sounds to drain
+        if (this.isSoundPlaying?.()) return true; // _pmsq->FPlaying: wait for sounds to drain
         this.wit = null;
       } else if (w.wit === WIT.ForTime) {
         if (w.ticks === undefined) w.ticks = Math.max(1, Math.ceil(w.dts / 10)); // 60Hz ticks -> 6fps frames

@@ -4,7 +4,7 @@ import { SPRM } from '../format/content.ts';
 
 const K_BORDER = 5;   // kdzpBorderTbox
 const K_INDENT = 9;   // kdxpIndentTxtg (kdzpInch / 8)
-const SCROLL_PX_PER_S = 200; // kdypScroll(1px) / kdtsScrolling(5ms)
+const TEXTBOX_SCROLL_PIXELS_PER_SECOND = 200; // kdypScroll(1px) / kdtsScrolling(5ms)
 const KDEN = 256;     // kdenLine / kdenAfter
 const KDXP_TAB = 18;  // kdxpTabDef (kdzpInch / 4)
 
@@ -18,7 +18,7 @@ const b2 = (lw) => (lw >>> 16) & 0xff;
 const KACR_BLACK = 0x01000000;
 
 /** Decode an ACR (aggregate color ref). Returns css color, 'invert', or null (clear). */
-export function acrToColor(lw, palette) {
+export function fontAttrToColor(lw, palette) {
   lw = lw >>> 0;
   const top = lw >>> 24;
   if (top === 0xff) {
@@ -60,7 +60,7 @@ function groupMpes(doc) {
  * comes from its latest mpe <= cp (mpe.lw is absolute; 0 restores default).
  * Fore/back colors are stored as offsets from kacrBlack/kacrClear.
  */
-export function resolveStyles(doc, palette) {
+export function resolveTextStyles(doc, palette) {
   const def = defaultChp(doc);
   const len = doc.text.length;
   const chps = new Array(len);
@@ -68,8 +68,8 @@ export function resolveStyles(doc, palette) {
   const apply = {
     [SPRM.Style]: (lw) => { cur.grfont = lw & 0xff; cur.off = (lw << 16) >> 24; cur.dyp = def.dyp + swHigh(lw); },
     [SPRM.Font]: (lw) => { cur.font = lw > 0 ? doc.fonts[lw - 1] || def.font : def.font; },
-    [SPRM.Fore]: (lw) => { const c = acrToColor((KACR_BLACK + lw) | 0, palette); if (c !== 'invert') cur.fore = fixFore(c); },
-    [SPRM.Back]: (lw) => { cur.back = acrToColor((lw - 1) | 0, palette); }, // kacrClear + lw
+    [SPRM.Fore]: (lw) => { const c = fontAttrToColor((KACR_BLACK + lw) | 0, palette); if (c !== 'invert') cur.fore = fixFore(c); },
+    [SPRM.Back]: (lw) => { cur.back = fontAttrToColor((lw - 1) | 0, palette); }, // kacrClear + lw
   };
   const groups = groupMpes(doc);
   const pos = new Map();
@@ -116,9 +116,9 @@ function resolvePaps(doc) {
 const fontKey = (s) => `${s.grfont & 2 ? 'italic ' : ''}${s.grfont & 1 ? 'bold ' : ''}${s.dyp}px ${JSON.stringify(s.font)}, sans-serif`;
 
 /** Layout a doc into lines of styled runs within width px. Cached on the doc. */
-export function layoutDoc(doc, ctx, palette) {
+export function layoutTextDocument(doc, ctx, palette) {
   if (doc._layout && doc._layoutW === doc.wrapW && doc._layoutPal === palette) return doc._layout;
-  const chps = doc.text.length ? resolveStyles(doc, palette) : [];
+  const chps = doc.text.length ? resolveTextStyles(doc, palette) : [];
   const papAt = resolvePaps(doc);
   const wrapW = doc.wrapW;
   const lines = [];
@@ -186,12 +186,12 @@ function sameStyle(a, b) {
 }
 
 /** Lay out + position a tbox's lines/runs in box-pixel space (for draw + hit-test). */
-function positionLines(tb, ctx, palette) {
-  const doc = tb.rtxt, w = tb.r - tb.l, h = tb.b - tb.t;
+function positionLines(textbox, ctx, palette) {
+  const doc = textbox.rtxt, w = textbox.r - textbox.l, h = textbox.b - textbox.t;
   doc.wrapW = w - 2 * (K_BORDER + K_INDENT);
-  const lines = layoutDoc(doc, ctx, palette);
-  const tx = tb.l + K_BORDER + K_INDENT, tw = w - 2 * (K_BORDER + K_INDENT);
-  let y = tb.t + K_BORDER - (tb._scv || 0);
+  const lines = layoutTextDocument(doc, ctx, palette);
+  const tx = textbox.l + K_BORDER + K_INDENT, tw = w - 2 * (K_BORDER + K_INDENT);
+  let y = textbox.t + K_BORDER - (textbox._scv || 0);
   const out = [];
   for (const ln of lines) {
     let x = tx + (ln.indent || 0);
@@ -207,18 +207,18 @@ function positionLines(tb, ctx, palette) {
 }
 
 /** Text metrics for the scroll-hold check (TBOX::FNeedToScroll). */
-export function measureTbox(tb, ctx, palette?) {
-  if (!tb?.rtxt) return { docH: 0, maxScroll: 0 };
-  const lines = positionLines(tb, ctx, palette);
+export function measureTextbox(textbox, ctx, palette?) {
+  if (!textbox?.rtxt) return { docH: 0, maxScroll: 0 };
+  const lines = positionLines(textbox, ctx, palette);
   const docH = lines.reduce((y, ln) => y + ln.h, 0);
-  const inner = (tb.b - tb.t) - 2 * K_BORDER;
+  const inner = (textbox.b - textbox.t) - 2 * K_BORDER;
   return { docH, maxScroll: Math.max(0, docH - inner) };
 }
 
 /** Pixel point (view coords) -> character position in the doc. */
-export function hitTbox(tb, ctx, palette, px, py) {
-  const doc = tb.rtxt;
-  const lines = positionLines(tb, ctx, palette);
+export function hitTestTextbox(textbox, ctx, palette, px, py) {
+  const doc = textbox.rtxt;
+  const lines = positionLines(textbox, ctx, palette);
   if (!lines.length) return 0;
   // clamp to the line the point is closest to vertically (end of doc if below)
   let ln = null;
@@ -242,10 +242,10 @@ export function hitTbox(tb, ctx, palette, px, py) {
 }
 
 /** cp -> {x,y,h} caret geometry in view px (for drawing the caret/selection). */
-export function cpRect(tb, ctx, palette, cp) {
-  const doc = tb.rtxt, lines = positionLines(tb, ctx, palette);
+export function caretRect(textbox, ctx, palette, cp) {
+  const doc = textbox.rtxt, lines = positionLines(textbox, ctx, palette);
   const defH = (doc.dypFont || 14) * 1.2;
-  if (!lines.length) return { x: tb.l + K_BORDER + K_INDENT, y: tb.t + K_BORDER, h: defH };
+  if (!lines.length) return { x: textbox.l + K_BORDER + K_INDENT, y: textbox.t + K_BORDER, h: defH };
   for (const ln of lines) {
     for (const r of ln.runs) {
       if (cp <= r.cp0 + r.text.length) {
@@ -255,12 +255,12 @@ export function cpRect(tb, ctx, palette, cp) {
     }
   }
   const last = lines[lines.length - 1], lr = last.runs[last.runs.length - 1];
-  return { x: lr ? lr.x + lr.w : tb.l + K_BORDER + K_INDENT, y: last.y, h: last.h };
+  return { x: lr ? lr.x + lr.w : textbox.l + K_BORDER + K_INDENT, y: last.y, h: last.h };
 }
 
 /** Runs+span rects covering cp range [a,b) — for drawing selection highlight. */
-export function cpRangeRects(tb, ctx, palette, a, b) {
-  const lines = positionLines(tb, ctx, palette), rects = [];
+export function caretRangeRects(textbox, ctx, palette, a, b) {
+  const lines = positionLines(textbox, ctx, palette), rects = [];
   for (const ln of lines) {
     for (const r of ln.runs) {
       const r0 = r.cp0, r1 = r.cp0 + r.text.length;
@@ -277,21 +277,21 @@ export function cpRangeRects(tb, ctx, palette, a, b) {
 
 /**
  * Draw all visible text boxes for a frame into a 2d context.
- * tb._scv is the player-managed scroll offset (credits boxes hold the frame
- * and scroll at SCROLL_PX_PER_S, like MVIE's kdtsScrolling alarm).
- * sel: {chrome, tb, a, b, caret} — chrome gets the frame + resize anchors
- * (TBXB border selection); tb gets the text selection/caret (TBXG focus).
+ * textbox._scv is the player-managed scroll offset (credits boxes hold the frame
+ * and scroll at TEXTBOX_SCROLL_PIXELS_PER_SECOND, like MVIE's kdtsScrolling alarm).
+ * sel: {chrome, textbox, a, b, caret} — chrome gets the frame + resize anchors
+ * (TBXB border selection); textbox gets the text selection/caret (TBXG focus).
  * The two differ in the original: border clicks select, interior clicks focus.
  */
-export function drawTboxes(ctx, tboxes, palette, W, H, sel) {
+export function drawTextboxes(ctx, textboxes, palette, W, H, sel) {
   ctx.clearRect(0, 0, W, H);
-  for (const tb of tboxes) {
-    const doc = tb.rtxt;
+  for (const textbox of textboxes) {
+    const doc = textbox.rtxt;
     if (!doc) continue;
-    const l = tb.l, t = tb.t, w = tb.r - tb.l, h = tb.b - tb.t;
-    const bg = acrToColor(doc.acrBack, palette);
+    const l = textbox.l, t = textbox.t, w = textbox.r - textbox.l, h = textbox.b - textbox.t;
+    const bg = fontAttrToColor(doc.acrBack, palette);
     if (bg && bg !== 'invert') { ctx.fillStyle = bg; ctx.fillRect(l, t, w, h); }
-    const plines = positionLines(tb, ctx, palette);
+    const plines = positionLines(textbox, ctx, palette);
     ctx.save();
     ctx.beginPath();
     ctx.rect(l + K_BORDER, t + K_BORDER, w - 2 * K_BORDER, h - 2 * K_BORDER);
@@ -311,24 +311,24 @@ export function drawTboxes(ctx, tboxes, palette, W, H, sel) {
       }
     }
     ctx.restore();
-    if (sel && sel.tb === tb) {
+    if (sel && sel.tb === textbox) {
       // selection: invert the covered spans (classic highlight)
       const [a, b] = sel.a < sel.b ? [sel.a, sel.b] : [sel.b, sel.a];
       if (a !== b) {
         ctx.save();
         ctx.globalCompositeOperation = 'difference';
         ctx.fillStyle = '#fff';
-        for (const r of cpRangeRects(tb, ctx, palette, a, b)) ctx.fillRect(r.x, r.y, r.w, r.h);
+        for (const r of caretRangeRects(textbox, ctx, palette, a, b)) ctx.fillRect(r.x, r.y, r.w, r.h);
         ctx.restore();
       }
       if (sel.caret != null) {
-        const c = cpRect(tb, ctx, palette, sel.caret);
+        const c = caretRect(textbox, ctx, palette, sel.caret);
         ctx.fillStyle = '#000';
         ctx.fillRect(c.x, c.y, 1, c.h);
       }
     }
-    if (sel && sel.chrome === tb) { // TBXB chrome: frame + 8 resize anchors (kdzpBorderTbox band)
-      ctx.strokeStyle = tb.fStory ? '#000' : '#ff0'; ctx.lineWidth = 1; // FrameRcApt: kacrBlack story / kacrYellow credits
+    if (sel && sel.chrome === textbox) { // TBXB chrome: frame + 8 resize anchors (kdzpBorderTbox band)
+      ctx.strokeStyle = textbox.fStory ? '#000' : '#ff0'; ctx.lineWidth = 1; // FrameRcApt: kacrBlack story / kacrYellow credits
       ctx.strokeRect(l + 0.5, t + 0.5, w - 1, h - 1);
       const hs = K_BORDER;
       ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000';
@@ -339,4 +339,4 @@ export function drawTboxes(ctx, tboxes, palette, W, H, sel) {
     }
   }
 }
-export { SCROLL_PX_PER_S };
+export { TEXTBOX_SCROLL_PIXELS_PER_SECOND };

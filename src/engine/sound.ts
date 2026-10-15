@@ -27,10 +27,10 @@ const _gm = (p) =>
 
 export class SoundQueue {
   [k: string]: any; // transient fields — real declarations can replace incrementally
-  constructor(lib) {
-    this.lib = lib;
+  constructor(contentLibrary) {
+    this.contentLibrary = contentLibrary;
     this.ctx = null;
-    this.buffers = new Map();   // 'cf:cno' -> Promise<AudioBuffer|null>
+    this.buffers = new Map();   // 'chunkyFile:cno' -> Promise<AudioBuffer|null>
     this.channels = new Map();  // class key -> { current, queue }
     this.warnings = [];
     /** @type {((cno: number) => Promise<any>) | null} */
@@ -60,10 +60,10 @@ export class SoundQueue {
   }
 
   _buffer(msnd) {
-    const key = `${msnd.cf.name}:${msnd.cno}`;
+    const key = `${msnd.chunkyFile.name}:${msnd.cno}`;
     if (!this.buffers.has(key)) {
       if (msnd.wavCno != null) {
-        const data = msnd.cf.data('WAVE', msnd.wavCno);
+        const data = msnd.chunkyFile.data('WAVE', msnd.wavCno);
         this.buffers.set(key, this._decode(data));
       } else if (msnd.midiCno != null) {
         this.buffers.set(key, this._midiBuffer(msnd));
@@ -156,7 +156,7 @@ export class SoundQueue {
 
   // Render a MIDS event stream to an AudioBuffer with a small GM-ish synth.
   async _midiBuffer(msnd) {
-    const data = msnd.cf.data('MIDS', msnd.midiCno);
+    const data = msnd.chunkyFile.data('MIDS', msnd.midiCno);
     const smf = data[0] === 0x4d && data[1] === 0x54 && data[2] === 0x68 && data[3] === 0x64; // 'MThd'
     if (smf) return this._sfSmfBuffer(data);
     const evs = parseMids(data);
@@ -231,7 +231,7 @@ export class SoundQueue {
     const seq = (this._previewSeq = (this._previewSeq || 0) + 1); // stopPreview bumps it — a slow MIDS render can't start after the modal closed
     let buf = it.buf;
     if (!buf && it.cno != null) {
-      const msnd = this.lib.msnd({ ctg: 'MSND', cno: it.cno, sid: 2 });
+      const msnd = this.contentLibrary.msnd({ ctg: 'MSND', cno: it.cno, sid: 2 });
       if (!msnd) { this._warn(`can't preview: ${it.name || `MSND ${it.cno}`}`); return; }
       buf = await this._buffer(msnd);
     }
@@ -269,11 +269,11 @@ export class SoundQueue {
   suspend() { this.ctx?.suspend(); }
 
   /** Mute toggle: suspend everything now, resume only if playing. */
-  setMuted(m, playing) {
+  setMuted(m, isPlaying) {
     this.muted = m;
     if (!this.ctx) return;
     if (m) this.ctx.suspend();
-    else if (playing) this.ctx.resume();
+    else if (isPlaying) this.ctx.resume();
   }
 
   /** True while any non-preview channel has a live source or queued items (_pmsq->FPlaying). */
@@ -298,7 +298,7 @@ export class SoundQueue {
         if (!u?.buf) { this._warn(`missing user sound ${tag.cno}`); continue; }
         buf = u.buf; isMidi = !!u.midi;
       } else {
-        const msnd = this.lib.msnd(tag);
+        const msnd = this.contentLibrary.msnd(tag);
         if (!msnd || msnd.invalid) { this._warn(`missing/invalid MSND ${tag.ctg} ${tag.cno}`); continue; }
         buf = await this._buffer(msnd);
         if (!buf) { this._warn(`no audio data in MSND ${msnd.cno}`); continue; }

@@ -21,20 +21,24 @@ logical pixels, never percentages.
 src/main.ts            boot orchestrator (only import graph + URL params)
 src/receiver.ts        Chromecast CAF receiver entry (receiver.html)
 src/app/
-  state.ts             zustand stores (useApp/useUi/useEd) + `export let` facade + setters
-  res.ts               B/texUrl/curUrl/$/sleep/say
-  undo.ts  boot.ts  packs.ts  thumbs.ts  doc.ts  loop.ts  opts.ts  sndsrc.ts  cast.ts
-  edit/                movie/sound/tbox mutations
+  appState.ts          `appState` singleton facade over zustand stores (useAppState/useUiState/useEditState)
+  resources.ts         baseUrl/packTextures/textureUrl/cursorUrl/elementById/sleep + toastHost
+  editHistory.ts  bootstrap.ts  expansionPacks.ts  thumbnails.ts  movieDocument.ts
+  playbackLoop.ts  renderOptions.ts  soundSources.ts  chromecast.ts  localization.ts
+  edit/                movieEdits.ts / soundEdits.ts / textboxEdits.ts (singleton classes)
   ui/                  canvas UI — the ONLY UI layer (ui-dom/ is gone)
-    root.ts            UiRoot: 640x480 canvas, view stack, pointer dispatch, toast, tips layer
-    element.ts         Element (hitTest/pickable/cursor/dirty), anim.ts Animator
-    widgets.ts         Img ImgButton TextLink StBtn VSlider Txt MovieScreen
-    studio.ts          editor chrome + movie-view interaction (all pointer events)
-    modal.ts           ModalView + modal slot (leaf: no imports back into app/)
-    browser.ts         book browsers (scene/actor/prop/sound pickers); brwsView slot re-exports modal.ts
-    easel.ts/easels.ts EaselView shell + scene sorter, recorder, listener, spletter,
-                       action browser, costume easel (GL previews blitted via CvEl)
-    bio.ts  tips.ts  bootview.ts  theatre.ts  castview.ts  optdlg.ts
+    root.ts            UiRoot (`uiRoot`): 640x480 canvas, view stack, pointer dispatch, toast, tips layer
+    element.ts         Element (hitTest/pickable/cursor/dirty), animator.ts Animator
+    widgets.ts         ImageElement ImageButton TextLink StudioButton VerticalSlider TextElement MovieScreen
+    studio.ts          StudioView + `studioHost` (chrome sync); all editor pointer events
+    modal.ts           ModalView + `modalSlot` (leaf: no imports back into app/)
+    assetBrowser.ts    AssetBrowserView book browsers (scene/actor/prop/sound pickers)
+    easel.ts/easels.ts EaselView shell + easels, each with a static `.show()`:
+                       SorterEasel RecorderEasel ListenerEasel WordsDialog
+                       SpletterEasel ActionBrowser CostumeEasel (GL previews via CanvasEl)
+    talentBook.ts  tooltips.ts  bootView.ts  theatre.ts  castView.ts  optionsDialog.ts
+    textureCache.ts    `textureCache` singleton (image cache + decode prewarm)
+    styles.ts          injectAppStyles() — all app CSS lives here (no style.css)
 src/engine/            chunky-file parse, library, player, sound (spessasynth MIDI)
 src/format/            .3mm/.3cn/.chk parsing + writing
 src/render/            three.js renderer (renders into #view)
@@ -45,30 +49,34 @@ src/render/            three.js renderer (renders into #view)
 - **One canvas.** `#ui` (640×480) is the only interactive surface; `#view` is
   the WebGL canvas, blitted by `MovieScreen` (needs `preserveDrawingBuffer`).
   No absolutely-positioned DOM UI except: `#boot` splash, `optModal` settings
-  dialog, `#rotMsg` rotate prompt, and easel `<input>` overlays (`domOverlay`,
-  torn down on view pop via `EaselView.onExit`).
-- **View stack.** `ui.push(view, 'none'|'fade')`, `ui.pop()`, `ui.replace()`.
-  `onEnter`/`onExit` fire on cover/uncover AND push/pop — check
-  `ui.stack.includes(this)` to distinguish.
+  dialog, `#rotMsg` rotate prompt, and easel `<input>` overlays
+  (`EaselView.overlayElement`, torn down on view pop via `ModalView.onExit`).
+- **View stack.** `uiRoot.push(view, 'none'|'fade')`, `uiRoot.pop()`,
+  `uiRoot.replace()`. `onEnter`/`onExit` fire on cover/uncover AND push/pop —
+  check `uiRoot.stack.includes(this)` to distinguish.
 - **Class-first UI.** Views and elements are named classes with behavior in
-  methods — subclass `View`/`Element`/`StBtn` instead of assigning
+  methods — subclass `View`/`Element`/`StudioButton` instead of assigning
   `el.draw = …`/`el.onPointerDown = …` closures or growing a function body.
-  Free functions are thin factories (`showX()`), boot wiring, or pure
-  utilities. If two sites need the same custom element, it's a missing
-  widget subclass — add it to `widgets.ts`/`easel.ts`.
-- **Modal slot.** `modalView`/`modalCleanup` in `modal.ts` (leaf module —
-  never import app/ui modules from it) is the single browser-or-easel slot;
-  `browser.ts` re-exports it under the `brws*` names. `showEasel()` closes
-  whatever is up; Escape routes through `modalView._onEsc || closeModal`.
-- **State.** Mutable singletons live in zustand stores; the `export let`
-  bindings in state.ts are a synced facade — write via the `set*` setters,
-  never assign imports. Per-frame sim state stays out of the stores.
+  Stateful services are singleton classes (`appState`, `movieDocument`,
+  `soundSources`, `thumbnails`, `editHistory`, `movieEdits`, `textboxEdits`,
+  `soundEdits`, `studioHost`, `modalSlot`, `tooltips`, `talentBook`,
+  `optionsDialog`, `toastHost`, `textureCache`, `bootSequence`, `bootView`,
+  `playbackLoop`, `castSender`, `expansionPacks`, `renderOptionsPanel`).
+  Modals open via `modalSlot.open(view)` or `SomeEasel.show()`. Free functions
+  are factories, boot wiring, or pure utilities only.
+- **Modal slot.** `modalSlot` in `modal.ts` (leaf module — never import app/ui
+  modules from it) is the single browser-or-easel slot: `modalSlot.open(v)`
+  closes whatever is up and pushes; `modalSlot.close()` tears down
+  (`modalSlot.cleanup`); Escape routes through `modalSlot.view._onEsc`.
+- **State.** Mutable singletons live in zustand stores behind the `appState`
+  facade — write via the `set*` setters, never assign imports. Per-frame sim
+  state stays out of the stores.
 - **Hit testing.** `pickable=false` exempts only the element itself; children
   remain testable. Pointer events bubble up via `_walkUp` until a handler
   returns true.
-- **i18n.** `t('section.key')` from `src/lang/en.json` (bundled) merged with
-  `public/lang/<lang>.json` via `?lang=`. Sync both en.json files. Texture-
-  baked text is art, not strings.
+- **i18n.** `localizer.translate('section.key', vars)` from `src/lang/en.json`
+  (bundled) merged with `public/lang/<lang>.json` via `?lang=`. Sync both
+  en.json files. Texture-baked text is art, not strings.
 - **Type style.** TypeScript. Ad-hoc element fields ride on `Element`'s
   index signature (the codebase's documented transient-prop idiom);
   `Record<…,any>`/`any[]` annotations mark narrow-literal seams.
@@ -88,11 +96,10 @@ render flags · `?menu` open settings · `?castid=` CAF receiver app id.
 
 ## Gotchas
 
-- `open` in doc.ts shadows `window.open` — always import it.
 - `pop()` does NOT call `onExit` — callers that remove a view directly must
-  call it (see `closeBrowser`).
+  call it (see `modalSlot.close`).
 - Tuple destructuring widens — annotate `[El, number, string][]` loops.
 - `new Promise(r => r())` needs a `Promise<void>` type arg for tsc.
-- Casting requires a URL-loadable movie (`lastMovieUrl` in doc.ts) and a
+- Casting requires a URL-loadable movie (`movieDocument.lastMovieUrl`) and a
   registered CAF app id; `receiver.html` also runs standalone via `?3mm=`.
-- Test hooks for automation live on `window.__mms` (doc.ts).
+- Test hooks for automation live on `window.__mms` (movieDocument.ts).

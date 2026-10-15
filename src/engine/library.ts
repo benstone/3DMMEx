@@ -44,8 +44,8 @@ export class Library {
     return new Library(files);
   }
 
-  setMovie(cf) {
-    this.movieFile = cf;
+  setMovie(chunkyFile) {
+    this.movieFile = chunkyFile;
     for (const m of [this._tmpl, this._bkgd, this._msnd]) for (const k of [...m.keys()]) if (k.startsWith('movie:')) m.delete(k);
     this._rtmpl.clear(); // runtime TDTs live in the movie's autosave CRF — a new movie gets a fresh one
   }
@@ -53,41 +53,41 @@ export class Library {
   /** Locate the chunky file holding a tag's chunk */
   resolve(tag) {
     if (tag.sid === 0 && this.movieFile?.has(tag.ctg, tag.cno)) return this.movieFile;
-    for (const cf of this.content) if (cf.has(tag.ctg, tag.cno)) return cf;
+    for (const chunkyFile of this.content) if (chunkyFile.has(tag.ctg, tag.cno)) return chunkyFile;
     if (this.movieFile?.has(tag.ctg, tag.cno)) return this.movieFile;
     return null;
   }
 
   _cached(map, tag, fn) {
-    const cf = this.resolve(tag);
-    if (!cf) return null;
-    const key = `${cf === this.movieFile ? 'movie' : cf.name}:${tag.cno}`;
-    if (!map.has(key)) map.set(key, fn(cf, tag.cno));
+    const chunkyFile = this.resolve(tag);
+    if (!chunkyFile) return null;
+    const key = `${chunkyFile === this.movieFile ? 'movie' : chunkyFile.name}:${tag.cno}`;
+    if (!map.has(key)) map.set(key, fn(chunkyFile, tag.cno));
     return map.get(key);
   }
 
   /** Register a runtime-built template; returns the tag that resolves to it */
-  addTmpl(tmpl) {
+  addTmpl(template) {
     const cno = 0x40000000 + this._rtmpl.size;
-    tmpl.cno = cno;
-    this._rtmpl.set(cno, tmpl);
+    template.cno = cno;
+    this._rtmpl.set(cno, template);
     return { sid: 'rt', ctg: 'TMPL', cno };
   }
 
   template(tag) {
     const rt = this._rtmpl.get(tag.cno);
     if (rt) return rt;
-    return this._cached(this._tmpl, tag, (cf, cno) => parseTemplate(cf, cno, this));
+    return this._cached(this._tmpl, tag, (chunkyFile, cno) => parseTemplate(chunkyFile, cno, this));
   }
   bkgd(tag) { return this._cached(this._bkgd, tag, parseBkgd); }
-  mtrl(tag) { const cf = this.resolve(tag); return cf ? parseMtrl(cf, tag.cno) : null; }
+  mtrl(tag) { const chunkyFile = this.resolve(tag); return chunkyFile ? parseMtrl(chunkyFile, tag.cno) : null; }
   tdf(tag) { return this._cached(this._tdf, tag, parseTdf); }
   msnd(tag) { return this._cached(this._msnd, tag, parseMsnd); }
 
   camera(bkgd, icam) {
     const cno = bkgd.cameras[icam] ?? bkgd.cameras[0];
-    const key = `${bkgd.cf.name}:${cno}`;
-    if (!this._cam.has(key)) this._cam.set(key, parseCamera(bkgd.cf, cno));
+    const key = `${bkgd.chunkyFile.name}:${cno}`;
+    if (!this._cam.has(key)) this._cam.set(key, parseCamera(bkgd.chunkyFile, cno));
     return this._cam.get(key);
   }
 }

@@ -1,47 +1,50 @@
 // Chromecast receiver entry (receiver.html) — minimal boot: no studio, no
 // editor. Loads the app stack, pushes a CastView, then takes movies over the
 // CAF custom namespace (or ?3mm= for standalone testing).
-import { docDB, openUrl, newMovie } from './app/doc.ts';
-import { setPlaying, draw } from './app/loop.ts';
-import { opts } from './app/opts.ts';
-import { applyPacks } from './app/packs.ts';
+import { movieDocument } from './app/movieDocument.ts';
+import { playbackLoop } from './app/playbackLoop.ts';
+import { renderOptions } from './app/renderOptions.ts';
+import { expansionPacks } from './app/expansionPacks.ts';
 import { Library } from './engine/library.ts';
 import { SoundQueue } from './engine/sound.ts';
 import { Renderer } from './render/renderer.ts';
-import { B, $, say } from './app/res.ts';
-import { pal, player, renderer, lib, sounds, setLib, setPal, setRenderer, setSounds } from './app/state.ts';
-import { initLang } from './app/i18n.ts';
-import { ui } from './app/ui/root.ts';
-import { CastView } from './app/ui/castview.ts';
-import { CAST_NS } from './app/cast.ts';
+import {baseUrl, elementById } from './app/resources.ts';
+import { appState } from './app/appState.ts';
+import { localizer } from './app/localization.ts';
+import { uiRoot } from './app/ui/root.ts';
+import { CastView } from './app/ui/castView.ts';
+import { injectAppStyles } from './app/ui/styles.ts';
+import { CAST_NS } from './app/chromecast.ts';
 
+injectAppStyles();
 document.getElementById('boot').remove(); // receiver shows the canvas immediately
+document.getElementById('studio').style.height = '100vh'; // receiver fills the TV viewport
 const view = new CastView();
-ui.push(view, 'none');
-ui.canvas.style.background = '#000';
+uiRoot.push(view, 'none');
+uiRoot.canvas.style.background = '#000';
 
-setLib(await Library.load(`${B}data`));
-setPal(new Uint8Array(await (await fetch(`${B}data/socpal.pal`)).arrayBuffer()));
-setRenderer(new Renderer($('view'), pal));
-setSounds(new SoundQueue(lib));
-renderer.setOpts(opts);
-await initLang();
-await applyPacks();
+appState.setContentLibrary(await Library.load(`${baseUrl}data`));
+appState.setSocialPalette(new Uint8Array(await (await fetch(`${baseUrl}data/socpal.palette`)).arrayBuffer()));
+appState.setSceneRenderer(new Renderer(elementById('view'), appState.socialPalette));
+appState.setSoundQueue(new SoundQueue(appState.contentLibrary));
+appState.sceneRenderer.setOpts(renderOptions);
+await localizer.initialize();
+await expansionPacks.applyAll();
 
-newMovie(); // empty doc so the view has a player before the first message
+movieDocument.newMovie(); // empty doc so the view has a appState.moviePlayer before the first message
 
 const qs = new URLSearchParams(location.search);
 /** @param {{url: string, scene?: number, frame?: number, play?: boolean}} m */
 async function loadMovie(m) {
   const { url, scene, frame, play } = m;
-  const err = await openUrl(url, false); // receiver docs aren't autosaved locally
+  const err = await movieDocument.openMovieUrl(url, false); // receiver docs aren't autosaved locally
   if (err) { view.setStatus(err); return; }
   view.setStatus('');
-  if (scene != null && player.movie.scenes.length)
-    player.loadScene(Math.min(scene, player.movie.scenes.length - 1));
-  if (frame != null && player.scene) player.gotoFrame(player.scene.nfrmFirst + frame - 1);
-  draw();
-  if (play !== false) { sounds.ensure(); setPlaying(true); }
+  if (scene != null && appState.moviePlayer.movie.scenes.length)
+    appState.moviePlayer.loadScene(Math.min(scene, appState.moviePlayer.movie.scenes.length - 1));
+  if (frame != null && appState.moviePlayer.scene) appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmFirst + frame - 1);
+  playbackLoop.drawFrame();
+  if (play !== false) { appState.soundQueue.ensure(); playbackLoop.setPlaying(true); }
 }
 if (qs.get('3mm')) await loadMovie({ url: qs.get('3mm'), scene: +qs.get('scene') || null, frame: +qs.get('frame') || null, play: true });
 
@@ -51,9 +54,9 @@ if (caf) {
   const ctx = caf.CastReceiverContext.getInstance();
   ctx.addCustomMessageListener(CAST_NS, (e) => {
     if (e.data?.type === 'movie') loadMovie(e.data);
-    else if (e.data?.type === 'play') setPlaying(true);
-    else if (e.data?.type === 'pause') setPlaying(false);
-    else if (e.data?.type === 'seek' && player?.scene) { player.gotoFrame(e.data.frame); draw(); }
+    else if (e.data?.type === 'play') playbackLoop.setPlaying(true);
+    else if (e.data?.type === 'pause') playbackLoop.setPlaying(false);
+    else if (e.data?.type === 'seek' && appState.moviePlayer?.scene) { appState.moviePlayer.gotoFrame(e.data.frame); playbackLoop.drawFrame(); }
   });
   const opts2 = new caf.CastReceiverOptions();
   opts2.disableIdleTimeout = true; // movies can sit paused for a while

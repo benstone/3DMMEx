@@ -37,15 +37,15 @@ beforeAll(() => {
 describe('module graph eval', () => {
   it('initializes easel-first (worst case for `extends EaselView`)', async () => {
     const easel = await import('../src/app/ui/easel.ts');
-    const bio = await import('../src/app/ui/bio.ts');       // extends EaselView
-    const easels = await import('../src/app/ui/easels.ts'); // extends EaselView/FrmCell
-    const browser = await import('../src/app/ui/browser.ts'); // extends ModalView
+    const bio = await import('../src/app/ui/talentBook.ts');       // extends EaselView
+    const easels = await import('../src/app/ui/easels.ts'); // extends EaselView/FramedCell
+    const browser = await import('../src/app/ui/assetBrowser.ts'); // extends ModalView
     const studio = await import('../src/app/ui/studio.ts');
     expect(typeof easel.EaselView).toBe('function');
-    expect(typeof bio.BioView).toBe('function');
+    expect(typeof bio.TalentBookView).toBe('function');
     expect(typeof easels.SorterEasel).toBe('function');
     expect(typeof easels.CostumeEasel).toBe('function');
-    expect(typeof browser.BrowserView).toBe('function');
+    expect(typeof browser.AssetBrowserView).toBe('function');
     expect(typeof studio.StudioView).toBe('function');
   });
 });
