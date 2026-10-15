@@ -11,8 +11,10 @@ import { setSndTag } from '../edit/sound.ts';
 import { setPlaying, draw } from '../loop.ts';
 import { getSndItems, addUserSnd, importSndFiles, previewItem } from '../sndsrc.ts';
 import { bkthCaths, brwsTmpls, mbmpCanvas } from '../thumbs.ts';
-import { showSpletter, showWords, showRecorder } from './easels.ts';
 import { t } from '../i18n.ts';
+// easel->browser->easels->easel is an import cycle; the recorder entry is
+// click-time only, so a lazy import keeps the edge out of module eval.
+const easels = () => import('./easels.ts');
 
 export const BRWS_DEFS = {
   // kidBrwsBackground/kidBrwsSceneFrames: book1 at (62,48) via reg (258,370); frames 136x78, cells +4.
@@ -121,7 +123,7 @@ export class BrowserView extends ModalView {
       closeBrowser();                                              // (empty pick clears the tool sound)
     });
     mkB('cancel', 'cancelc', d.x + d.can[0], d.y + d.can[1], 50, 48, () => importItems ? (closeBrowser(), showBrowser(kind)) : closeBrowser());
-    if (d.rec && !importItems) mkB('mike', 'mikes', d.x + d.rec[0], d.y + d.rec[1], 50, 48, () => showRecorder(kind));
+    if (d.rec && !importItems) mkB('mike', 'mikes', d.x + d.rec[0], d.y + d.rec[1], 50, 48, () => easels().then((m) => m.showRecorder(kind)));
     if (d.imp && !importItems) mkB('sndport', 'sndports', d.x + d.imp[0], d.y + d.imp[1], 50, 48, () => importSndFiles(kind));
     this.invalidate();
   }
