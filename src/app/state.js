@@ -4,21 +4,24 @@
 // subscription mirrors every set() into them synchronously, so existing
 // call sites keep working while new code subscribes to slices directly.
 import { createStore } from 'zustand/vanilla';
+import { subscribeWithSelector } from 'zustand/middleware';
 
-export const useApp = createStore(() => ({
+// subscribeWithSelector enables store.subscribe(selector, cb[, opts]) —
+// elements subscribe to a single field and repaint only when it changes.
+export const useApp = createStore(subscribeWithSelector(() => ({
     lib: null, pal: null, renderer: null, sounds: null, player: null,
-}));
-export const useUi = createStore(() => ({
+})));
+export const useUi = createStore(subscribeWithSelector(() => ({
     playing: false,
     modeSync: null, // theatre/embed UI follow-callback (set by enterTheatre/enterEmbed)
     topView: null,  // published by UiRoot._rebuild — selector surface for
     stackDepth: 0,  // "is a dialog open" (stackDepth > 1) / view transitions
-}));
-export const useEd = createStore(() => ({
+})));
+export const useEd = createStore(subscribeWithSelector(() => ({
     selChid: -1, pendPlace: null,
     selTbChid: -1, focusTbChid: -1, tbSel: null,
     tbAttach: null, tbSnap: null, lastViewPt: null,
-}));
+})));
 
 // Facade bindings — kept in sync by store subscriptions so legacy imports
 // always read the current value (setters return the value so `a = setX(v)`

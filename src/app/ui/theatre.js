@@ -8,13 +8,16 @@ import { Img, ImgButton, TextLink, VSlider, MovieScreen } from './widgets.js';
 import { playing, player, sounds, setModeSync, modeSync } from '../state.js';
 import { setPlaying } from '../loop.js';
 import { showOptsDlg } from './optdlg.js';
-import { castMovie } from '../cast.js';
+import { castMovie, castState, castTogglePlay, castRewind } from '../cast.js';
 import { t } from '../i18n.js';
 
 const thRewind = () => { // kgobRewindButton: rewind then play
+  if (castState.active) return void castRewind(); // remote: seek+play on the TV
   if (!player?.movie.scenes.length) return;
   player.loadScene(0); player.gotoFrame(player.scene.nfrmFirst); setPlaying(true);
 };
+const thPlay = () => castState.active ? void castTogglePlay() : setPlaying(!playing);
+const thPlayFace = () => (castState.active ? castState.playing : playing) ? 'thstop' : 'thplay';
 
 class Veil extends Element { // transparent click filter — no editing in theatre
   constructor(x, y, w, h) { super(x, y, w, h); }
@@ -55,8 +58,7 @@ export class TheatreView extends View {
     this.add(this.bg);
     this.add(new MovieScreen(48, 85, 544, 306));       // kgobMovie workspace
     this.add(new Veil(48, 85, 544, 306));
-    this.playB = new ImgButton(() => playing ? 'thstop' : 'thplay', null, 318, 7, 25, 51,
-      () => setPlaying(!playing));                      // kgobPlayButton
+    this.playB = new ImgButton(thPlayFace, null, 318, 7, 25, 51, thPlay); // kgobPlayButton
     this.add(this.playB);
     this.add(new ImgButton('threw', 'threwc', 293, 7, 24, 51, thRewind));
     this.vol = mkVol(9, 110, 12, 74);
@@ -84,8 +86,7 @@ export class EmbedView extends View {
     this.vol = mkVol(14, 395, 12, 70);
     this.add(this.vol);
     this.add(new ImgButton('threw', 'threwc', 556, 405, 30, 60, thRewind));
-    this.playB = new ImgButton(() => playing ? 'thstop' : 'thplay', null, 594, 405, 30, 60,
-      () => setPlaying(!playing));
+    this.playB = new ImgButton(thPlayFace, null, 594, 405, 30, 60, thPlay);
     this.add(this.playB);
     this.add(new TextLink(t('ui.settings'), 4, 4, 60, 14, () => showOptsDlg()));
     setModeSync(() => { this.playB.sync(); this.invalidate(); });

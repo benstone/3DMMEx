@@ -27,16 +27,31 @@ export const t = (key, args) => {
 };
 
 export const getLang = () => lang;
+// Languages with a dictionary shipped in public/lang/ — 'auto' resolves
+// navigator.language at init. Add codes here when new json files land.
+export const LANGS = ['en', 'auto'];
 
-/** Load ?lang=xx (or navigator language when ?lang=auto) over the bundled en. */
+/** Swap the dictionary to <code>.json (merged over en); persists to
+ *  localStorage so it survives across sessions. Falls back to en on miss. */
+export const setLang = async (code) => {
+  if (code === 'auto') code = navigator.language?.split('-')[0] || 'en';
+  if (code === lang && code !== 'en') return lang;
+  if (code === 'en') { for (const k of Object.keys(dict)) delete dict[k]; deepMerge(dict, en); lang = 'en'; }
+  try {
+    if (code !== 'en') {
+      const r = await fetch(`${B}lang/${code}.json`);
+      if (!r.ok) throw new Error(`${r.status}`);
+      deepMerge(dict, await r.json());
+      lang = code;
+    }
+    localStorage.setItem('lang3dmm', lang);
+  } catch (e) { console.warn(`lang ${code}:`, e.message); } // stay on current
+  return lang;
+};
+
+/** Resolve the dictionary: ?lang= > localStorage > navigator.language > en. */
 export const initLang = async () => {
   const q = new URLSearchParams(location.search).get('lang');
-  const code = q === 'auto' ? navigator.language?.split('-')[0] : q;
-  if (!code || code === 'en') return;
-  try {
-    const r = await fetch(`${B}lang/${code}.json`);
-    if (!r.ok) throw new Error(`${r.status}`);
-    deepMerge(dict, await r.json());
-    lang = code;
-  } catch (e) { console.warn(`lang ${code}:`, e.message); } // stay on en
+  const code = q ?? localStorage.getItem('lang3dmm') ?? 'auto';
+  await setLang(code);
 };

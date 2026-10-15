@@ -64,7 +64,22 @@ class BrwsCell extends Element { // frame img + content (mbmp thumb or text labe
   onClick() { this.view.pick(this); }
 }
 
-export class BrowserView extends View {
+/** Shared modal semantics — the view that owns the brwsView slot: Escape
+ *  routing (brwsView._onEsc || closeBrowser) and DOM-overlay teardown. DOM
+ *  inputs (EaselView.domInp) are tracked in _dom: hidden while the modal is
+ *  covered by a nested push, removed when it actually leaves the stack. */
+export class ModalView extends View {
+  constructor() { super(); this._onEsc = null; this._dom = []; }
+  onExit() {
+    const gone = !ui.stack.includes(this);
+    for (const el of this._dom) gone ? el.remove() : (el.style.display = 'none');
+    if (gone) this._dom.length = 0;
+  }
+  onEnter() { for (const el of this._dom) el.style.display = ''; }
+  addDom(el) { this._dom.push(el); return el; }
+}
+
+export class BrowserView extends ModalView {
   constructor(kind, importItems = null) {
     super();
     this.kind = kind; this.importItems = importItems;

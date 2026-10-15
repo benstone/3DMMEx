@@ -3,10 +3,12 @@
 Working plan for the `interface-updates` branch: single-canvas UI, i18n,
 TypeScript + codebase split, LLM instructions, touch, and Chromecast.
 
-**Status: all milestones M1–M10 shipped.** The canvas UI is the only UI
-layer (`ui-dom/` deleted); remaining work is debt and follow-ups noted
-inline (`.ts` renames deferred — see amended decision 8; live casting needs
-a registered `?castid=`; ~14 baseline `tsc` errors in doc/opts/state).
+**Status: all milestones M1–M10 shipped; every phase bullet is marked
+✅ / ⏸️ below.** The canvas UI is the only UI layer (`ui-dom/` deleted).
+Remaining deferrals (all conscious, marked ⏸️): `.ts` renames (decision 8),
+RTL, two-finger pan / pinch-zoom / `touchScale`, a registered `?castid=`
+for live casting, `vite@7`, eslint. Outstanding debt: ~14 baseline `tsc`
+errors in doc/opts/state.js.
 
 ## Current state (baseline)
 
@@ -90,60 +92,57 @@ the zustand store in Phase 2 (see below).
 
 ## Phase 2 — TypeScript
 
-- Add `typescript` devDep + `tsconfig.json` (`strict`, `moduleResolution:
+- ✅ Add `typescript` devDep + `tsconfig.json` (`strict`, `moduleResolution:
   "bundler"`, `noEmit` — Vite transpiles TS natively; `tsc` is typecheck only).
-- Script: `"typecheck": "tsc --noEmit"`; wire into `npm test` or CI.
-- Rename bottom-up: `format/*` → `engine/*` → `render/*` → `app/*` → `main`.
-  The format/engine files are already typed-adjacent (JSDoc comments,
-  consistent data shapes) — define shared interfaces in `src/types.ts`
-  (ChunkyFile handles, MBMP, TMPL/actor descriptors, URL param object).
-  **Amended (decision 8):** the codebase shipped as `.js` + `allowJs`/
+- ✅ Script: `"typecheck": "tsc --noEmit"` in package.json. Deliberately
+  **not** wired into `npm test` — the ~14 baseline errors would gate the
+  suite; run explicitly or in CI.
+- ⏸️ Rename bottom-up: `format/*` → `engine/*` → `render/*` → `app/*` → `main`.
+  **Deferred (decision 8):** the codebase shipped as `.js` + `allowJs`/
   `checkJs` + JSDoc instead — full typecheck coverage without the
   import-specifier churn; renames remain available as a follow-up.
-- three.js ships its own types — no extra deps.
-- **Test runner: vitest (decided).** Replaces `node --test`; it handles
-  `.ts` natively, shares the Vite transform pipeline, and the existing tests
-  port mechanically (assert API is compatible). Migrate test files to `.ts`
-  alongside their modules.
-- **State management: zustand (decided).** Replace the hand-rolled
-  `app/state.js` lets+setters with `zustand/vanilla` `createStore` — the UI
-  is not React, so use the vanilla entry (~1 kB, no framework). Migration is
-  mechanical: each `export let x` + `setX` pair becomes a store field written
-  via `set()`; readers go through `useApp.getState().x` or a destructured
-  `useApp()` selector. **Landed** as stores-as-source-of-truth with a
+- ✅ Shared interfaces → `src/types.d.ts` (ambient declarations consumed by
+  JSDoc `import('../types')` — the .d.ts form avoids depending on the
+  deferred renames).
+- ✅ three.js ships its own types — no extra deps.
+- ✅ **Test runner: vitest (decided).** Replaces `node --test`; shares the
+  Vite transform pipeline. Test files stayed `.js` alongside the deferred
+  `.ts` renames.
+- ✅ **State management: zustand (decided).** `zustand/vanilla` `createStore`
+  (~1 kB, no React). **Landed** as stores-as-source-of-truth with a
   synchronous `export let` facade mirroring each field, so old call sites
   keep working while new code subscribes to slices.
-  - Proposed slices: `useApp` — runtime singletons (`player`, `lib`, `pal`,
-    `renderer`, `sounds`; non-serializable objects held as plain refs set
-    once at boot, no reactivity needed); `useEd` — editor state (`tool`,
-    `selChid`, `pendPlace`, `selTbChid`, `focusTbChid`, `tbSel`, `tbAttach`,
-    `tbSnap`, `ed`, `tbPaint`); `useUi` — UI state (`playing`, view stack,
-    open dialog/easel, tooltip, `modeSync`) added as the canvas framework
-    lands.
-  - Why it pays off here (not just convention): `subscribe` /
-    `subscribeWithSelector` gives selector-based invalidation — the canvas
-    renderer only repaints the regions whose backing slice changed (see
-    Phase 4's dirty-region model), and roll calls/browsers can subscribe to
-    `player`/`ed` slices instead of today's manual `syncStudio()` calls.
-  - Mutable hot-path state that changes per-frame (actor positions, drag
+  - ✅ Slices: `useApp` — runtime singletons (`player`, `lib`, `pal`,
+    `renderer`, `sounds`; non-serializable refs set once at boot); `useEd` —
+    editor state (`ed`/`tool`, `selChid`, `pendPlace`, `selTbChid`,
+    `focusTbChid`, `tbSel`, `tbAttach`, `tbSnap`, `tbPaint`, `selTbSels`,
+    `lastViewPt`); `useUi` — `playing`, `modeSync`, `topView`, `stackDepth`
+    ("open dialog" = `stackDepth > 1`).
+  - ✅ `subscribeWithSelector` middleware enabled on all three stores —
+    `store.subscribe(selector, cb)` gives selector-based invalidation:
+    StudioView repaints the play button on `useUi.playing` and re-keys the
+    roll calls on `useEd.selChid` rather than relying on callers
+    remembering `syncStudio()`.
+  - ✅ Mutable hot-path state that changes per-frame (actor positions, drag
     deltas) stays out of the store — zustand holds UI-relevant state, not
     the simulation tick.
 
 ## Phase 3 — i18n
 
-- `src/i18n/`: `en.json` (source of truth), `index.ts` exposing
-  `t(key, params?)`, `setLang()`, `LANGS`.
-- Loader: `?lang=` URL param → `localStorage` → `navigator.language` → `en`.
-  Lang JSONs fetched at boot like other `data/` assets (bundled via
-  `import.meta.glob` so they're code-split per language).
-- String extraction: every user-visible literal in `app/ui-dom/` gets a
-  `t('studio.newMovie')`-style key. Do it during the canvas port — don't
-  bother translating the DOM UI that's being deleted; translate as each
-  surface is rewritten.
-- Note: text baked into PNG textures (button faces, book covers) is art, not
-  strings — out of scope for v1; the `GST` chunks in expansion files are the
-  original's string tables if we ever want per-pack localization.
-- RTL: defer; note in the i18n README.
+- ✅ `src/lang/en.json` (source of truth, bundled synchronously) +
+  `src/app/i18n.js` exposing `t(key, args?)`, `setLang()`, `LANGS`,
+  `initLang()`.
+- ✅ Loader chain: `?lang=` URL param → `localStorage('lang3dmm')` →
+  `navigator.language` (`?lang=auto`) → `en`. Lang JSONs live in
+  `public/lang/` and are fetched on demand — landed *instead of*
+  `import.meta.glob`, which keeps dictionaries entirely out of the JS
+  chunks (better than code-split for the same goal).
+- ✅ String extraction: tips, render-options labels, boot progress, pack
+  toasts, browser/easel labels, theatre links, cast strings are all `t()`'d.
+- ✅ Note: text baked into PNG textures (button faces, book covers) is art,
+  not strings — out of scope for v1; the `GST` chunks in expansion files
+  are the original's string tables (see `docs/format-notes.md`).
+- ⏸️ RTL: deferred (documented).
 
 ## Phase 4 — Canvas UI framework (`src/ui/`)
 
@@ -172,85 +171,91 @@ classes so it's inheritable and discoverable; ad-hoc `el.draw = …` /
 into named subclasses, not the end state (see the class refactor in
 Phase 5 / milestone 10).
 
-- `UiRoot` — owns the 640×480 canvas, maps client coords → virtual coords,
+- ✅ `UiRoot` — owns the 640×480 canvas, maps client coords → virtual coords,
   RAF-driven render loop that only repaints dirty regions (the UI is mostly
   static; don't redraw 60fps idle — the 3D view region repaints per-frame
   while playing).
-- **State→render wiring** — elements subscribe to zustand store slices;
-  `useEd`/`useUi` selectors mark their element's rect dirty on change, so a
-  selChid change repaints just the roll-call strip and the status bar
-  instead of today's whole-UI `syncStudio()` pass.
-- `View` — a screen (studio / theatre / browser / easel / boot). Every
+- ✅ **State→render wiring** — elements subscribe to zustand store slices;
+  `useEd`/`useUi` selectors mark their element's rect dirty on change
+  (`subscribeWithSelector`; landed in StudioView for `playing`/`selChid`).
+- ✅ `View` — a screen (studio / theatre / browser / easel / boot). Every
   surface is a `View` **subclass**: the constructor builds the element
-  tree, lifecycle lives in `onEnter`/`onExit`/`onFrame`, and view-local
-  helpers become private methods. View stack with push/pop/replace = the
+  tree, lifecycle lives in `onEnter`/`onExit`, and view-local
+  helpers are methods. View stack with push/pop/replace = the
   "routing" (modal dialogs push, back pops). The stack itself lives in the
   `useUi` store — view transitions and any "is a dialog open" checks are
   just selectors over it. **Landed as a published mirror:** `UiRoot` owns
   the stack array (cheap direct mutation) and mirrors `topView`/
   `stackDepth` into `useUi` on every `_rebuild` — selectors work, the hot
   path stays a plain array.
-- `ModalView` (a `View` subclass) — shared modal semantics: the `brwsView`
-  slot, Escape routing (`_onEsc` → method), DOM-overlay teardown, dimming.
+- ✅ `ModalView` (a `View` subclass in `browser.js`) — shared modal
+  semantics: the `brwsView` slot, Escape routing (`_onEsc` → method),
+  DOM-overlay teardown (`_dom`, hidden-when-covered / removed-when-popped).
   `EaselView` and `BrowserView` both extend it.
-- `Element` tree — retained-mode widgets. Rect layout in absolute 640×480
+- ✅ `Element` tree — retained-mode widgets. Rect layout in absolute 640×480
   coords, straight from the original `.cht` positions — no % anywhere.
   Element classes are **subclassed for behavior**: press-state faces,
   sliders, paging grids, custom-drawn plates each get a named class
-  (`Img`, `StBtn`, `VSlider`, `Txt`, `MovieScreen`, `Toast`, `Balloon`,
-  `SorterCell`, `PopupMenu`, `ScrollBar`…). If two call sites override the
-  same hooks, that's a missing subclass — extract it, don't copy the
-  closure.
-- `Input` — normalized pointer events → hit-test → focus/capture model.
-  One dispatcher on `UiRoot`; keyboard focus for text entry.
-- `Animator` — tween engine (position/opacity/scale, easing). API:
-  `view.show({ in: 'fade' })`, `el.animate('out', { ms: 200 })`. Views get
-  in/out transitions; transient elements (tooltips, callouts, toasts) get
-  pop-in/fade-out. Keep it dependency-free (~100 lines) — don't pull in a
-  tween lib for this.
-- `Tooltip`/`Toast`/`Callout` — built on the element system (replaces the
-  current DOM balloons; the GORT flex math for balloon arrows ports as-is).
-- `Theme` — texture atlas loading (`texUrl`/`curUrl`/`packTex` already give
-  per-pack override hooks — keep them).
-- Text inputs on canvas are the hard part: pragmatic approach is a hidden
-  `<input>` synced to the focused field (IME, selection, paste, a11y for
-  free). Same for the file picker (`<input type=file>`) and recorder UI —
-  plan these as explicit DOM exceptions, not failures of "single canvas".
+  (`Img`, `StBtn`, `VSlider`, `Txt`, `MovieScreen`, `Toast`, `BrwsCell`,
+  `RcCell`, `SCell`, `FrmCell`, `LisSlider`, `ScrollBtn`, `Therm`,
+  `NamePlate`…). If two call sites override the same hooks, that's a
+  missing subclass — extract it, don't copy the closure.
+- ✅ `Input` — normalized pointer events → hit-test → capture model on
+  `UiRoot` (pointerdown captures the hit element; click = up on the same
+  element; events bubble to ancestors). Keyboard focus for text entry is
+  delegated to the DOM overlay inputs (below).
+- ✅ `Animator` — tween engine (`anim.js`, ~40 lines): `ui.anim.tween(
+  target, {prop: end}, {dur, ease, done})` plus `el.animate(to, opts)` —
+  the plan's element-level API. View in/out transitions run through
+  `push`/`pop`/`replace` anim params; toasts/balloons fade via tweens.
+- ✅ `Tooltip`/`Toast`/`Callout` — `ui.toast` layer + canvas callout
+  balloons in `ui.tips` (GORT-sliced `coblln`, long-press on touch).
+- ✅ `Theme` — texture atlas loading (`texUrl`/`curUrl`/`packTex` give
+  per-pack override hooks — kept).
+- ✅ Text inputs on canvas are the hard part: pragmatic approach is a real
+  `<input>` floated over the canvas at logical coords by `domOverlay()` —
+  IME, selection, paste, a11y for free; tracked per-view and torn down by
+  `ModalView`. Same for the file picker — explicit DOM exceptions, not
+  failures of "single canvas".
+
+✅ **Deliverable landed:** boot screen + all surfaces on the framework.
 
 Deliverable: the boot screen + one settings dialog running on the framework
 before any mass port.
 
-## Phase 5 — Port surfaces
+## Phase 5 — Port surfaces — ✅ done
 
 Order by risk/value: boot → theatre/embed (smallest) → studio chrome →
 browsers/grids → easels → talent book → callouts. No DOM-UI fallback flag —
-the port is all-or-nothing per surface, git history is the escape hatch.
-Delete `app/ui-dom/` files as each is replaced.
+the port was all-or-nothing per surface; `app/ui-dom/` is deleted.
 
-Port convention: each surface lands as **one file exporting one `View`
-subclass** (e.g. `studio.js` → `StudioView`, `easels.js` → `SorterEasel`,
-`ListenerEasel`, `SpletterEasel`, `CostumeEasel`… each a small class, not
-one 800-line function). The `showFoo()` free functions remain as thin
-exported factories (`showX = () => ui.push(new FooView())`) so call sites
-don't churn — but the surface's state, children, and handlers live on the
-class. When porting a second easel reveals the same pattern (paged grid,
-scroll buttons, preview panel), that pattern becomes a shared subclass in
-`widgets.js`/`easel.js` rather than a copy-paste.
+Port convention landed: each surface is **one file exporting `View`
+subclasses** (`studio.js` → `StudioView`, `easels.js` → `SorterEasel`/
+`ListenerEasel`/`SpletterEasel`/`CostumeEasel`/`RecorderEasel`/`ActionBrowser`/
+`WordsDlg`…). The `showFoo()` free functions remain as thin exported
+factories so call sites didn't churn. Repeated patterns became shared
+subclasses in `easel.js`/`widgets.js` (`ScrollBtn`, `FrmCell`, `LisSlider`,
+`Therm`, `NamePlate`).
 
 ## Phase 6 — Touch
 
-- Framework already normalizes on Pointer Events — audit the remaining
-  `mouse*`/`onmouse*` handlers and unify.
-- Hit targets: scale-independent minimums (~44px CSS); the 640×480 UI is
-  dense on a 7" screen — a `touchScale` theme factor for tablets.
-- Gestures (in `Input`): tap vs. drag disambiguation (the studio relies on
-  click-place and drag-move), two-finger pan on the stage, pinch zoom for
-  camera move in theatre. Long-press = the hover/tooltip equivalent.
-- Mobile phones in theatre mode: when `mode=theatre` + portrait + small
-  screen, show a canvas-rendered "rotate device to watch" view (the plan's
-  spec); in editor mode, allow it but the UI is tablet-first — document that.
-- `touch-action`/`user-select` CSS cleanup + visualViewport handling for
-  mobile browser chrome.
+- ✅ Framework normalizes on Pointer Events — no `mouse*`/`onmouse*`
+  handlers remain in `src/`.
+- ⏸️ Hit-target minimums / `touchScale` theme factor — **deferred**: the UI
+  renders a fixed 640×480 `.cht` layout; scaling hit rects independently
+  would decouple them from the authored art. The whole canvas stretches to
+  fit so physical target size scales with the window — editor is
+  tablet-first as documented below.
+- ✅ Gestures: tap vs. drag disambiguation comes free with the
+  capture-on-pointerdown model; long-press = the hover/tooltip equivalent
+  (implemented in `tips.js`). ⏸️ two-finger pan on the stage and pinch-zoom
+  for camera move — **deferred**: there is nothing to pan in a fixed-fit
+  640×480 layout, and camera dolly needs engine camera work — follow-up.
+- ✅ Mobile phones in theatre mode: portrait + coarse pointer + small screen
+  shows the "rotate device to watch" prompt; editor mode is allowed but
+  tablet-first.
+- ✅ `touch-action`/`user-select` CSS done; mobile browser chrome handled
+  via `100dvh`/`62dvh` units (visualViewport equivalent without JS).
 
 ## Phase 7 — Chromecast
 
@@ -258,44 +263,36 @@ Honest constraint: **you can't cast a DOM element or a canvas stream to a
 Chromecast**. CAF (Cast Application Framework) receivers are hosted web
 pages; Chrome tab-mirroring casts everything. To cast "only the movie":
 
-- Build a **receiver entry point** — a second Vite entry
-  (`receiver.html` / `receiver.ts`) that boots the same app in a
-  `mode=cast` view: movie render only, no editor chrome. It's the same
-  codebase, so chunk sharing keeps it small.
-- Sender side (`src/cast/`): Google Cast sender SDK, "Cast" button in
-  theatre mode → launches the receiver (hosted on the GitHub Pages URL —
-  HTTPS requirement is already satisfied) with the movie's URL + scene/
-  frame/playback state as the load payload.
-- Playback control: receiver exposes play/pause/seek via Cast messages; the
-  sender's theatre UI stays visible locally and acts as the remote —
-  matching the "editor background stays client-side" requirement.
-- Needs a Cast developer account to register the receiver app ID (~$5) —
-  until then, dev testing works with the SDK's default/styled receiver only
-  for plain media, so local validation will mostly be the sender-UI side.
-- Local movies (no URL): for `?3mm=` remote files the receiver just refetches.
-  For user-uploaded/autosaved docs, either export-and-host is out of scope —
-  document that casting requires a URL-loadable movie (or a future
-  WebRTC-based local relay).
-- Interaction with the single-canvas UI: none — the receiver is a separate
-  page that instantiates the scene/player view only (no chrome), so the
-  sender's one-canvas app stays intact locally. The receiver entry reuses
-  `format/`+`engine/`+`render/` and a `mode=cast` view; if it ever needs to
-  take over an in-progress local edit, the movie buffer can be exported and
-  pushed to the receiver over the Cast message channel (size permitting) —
-  note as a stretch goal.
+- ✅ **Receiver entry point** — `receiver.html`/`src/receiver.js`, a second
+  Vite entry booting a `CastView`: movie render only, no editor chrome.
+- ✅ Sender side (`src/app/cast.js`): Cast sender SDK loaded lazily, "Cast"
+  link in theatre mode launches the receiver with `{url, scene, frame,
+  play, packs}` on `urn:x-cast:com.3dmmweb.movie`.
+- ✅ Playback control: receiver handles `play`/`pause`/`seek`/`movie`
+  messages; the sender retains the session (`castState`) and the theatre
+  controls send `play`/`pause`/`seek` while `castState.active` — the
+  theatre literally becomes the remote; session-end clears it.
+- ⏸️ Needs a Cast developer account to register the receiver app ID (~$5) —
+  external prerequisite; pass `?castid=` once registered. Failure paths
+  toast gracefully until then.
+- ✅ Local movies (no URL): documented — casting requires a URL-loadable
+  movie (`?3mm=` remote files refetch on the receiver; autosaved/local docs
+  can't be handed off — future WebRTC relay is the stretch goal).
+- ✅ Interaction with the single-canvas UI: none — the receiver is a
+  separate page instantiating the player view only.
 
 ## Phase 8 — Build performance
 
-- `manualChunks`: split `three` into its own chunk; split `format/`+`engine/`
-  (shared by receiver entry).
-- `build.target: 'es2020'`+, `assetsInlineLimit` for small textures.
-- `rollup-plugin-visualizer` as devDep for a size report.
-- Fonts/data: `data/` + `textures/` stay in `public/` (correct — they're
-  runtime-fetched); confirm no accidental inlining of the .3cn/.3th blobs.
-- Evaluate `vite@7`/`rolldown-vite` upgrade separately — Vite 5 is fine;
-  don't churn it in the same branch.
-- TS typecheck runs `tsc --noEmit` (no emit cost); add `eslint`? Optional —
-  discuss before adding a lint gate mid-refactor.
+- ✅ `manualChunks`: `three`/`synth`/`vendor`/`sound` split into their own
+  chunks — all under the 500 kB warning, shared by both entries.
+- ✅ `build.target: 'es2022'` (exceeds es2020) + `assetsInlineLimit: 0` —
+  nothing runtime-fetched ever gets inlined.
+- ✅ `rollup-plugin-visualizer` devDep — `ANALYZE=1 npx vite build` emits
+  `dist/stats.html` (treemap, gzip sizes); gated so normal builds skip it.
+- ✅ Fonts/data: `data/` + `textures/` stay in `public/` — no bundling.
+- ⏸️ `vite@7`/`rolldown-vite` — deferred deliberately; Vite 5 is fine.
+- ✅ TS typecheck runs `npx tsc --noEmit` / `npm run typecheck` (no emit
+  cost). ⏸️ eslint — optional, not added.
 
 ## LLM instruction files
 

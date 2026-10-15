@@ -1,4 +1,4 @@
-html, body { margin: 0; height: 100%; background: #000; color: #ccc; font: 12px monospace; }
+html, body { margin: 0; height: 100%; height: 100dvh; background: #000; color: #ccc; font: 12px monospace; } /* dvh tracks mobile browser chrome collapsing */
 body { display: flex; flex-direction: column; }
 #stage { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
 #studio { position: relative; touch-action: none; aspect-ratio: 640 / 480; height: min(100%, 75vw); margin: auto; overflow: hidden; container-type: size; }
@@ -10,7 +10,7 @@ body { display: flex; flex-direction: column; }
   font-size: 10px; text-transform: uppercase; letter-spacing: .6px; }
 .optX { background: none; border: 0; color: #999; font: inherit; font-size: 15px; line-height: 1; padding: 0 3px; cursor: pointer; }
 .optX:hover { color: #fff; }
-.optPanel { overflow-y: auto; max-height: 62vh; display: flex; flex-direction: column; gap: 4px; }
+.optPanel { overflow-y: auto; max-height: 62vh; max-height: 62dvh; display: flex; flex-direction: column; gap: 4px; }
 .optPanel[hidden] { display: none; }
 .optPanel label { display: flex; gap: 6px; align-items: center; cursor: pointer; white-space: nowrap; }
 .optPanel .optCat { color: #777; font-size: 10px; text-transform: uppercase; letter-spacing: .6px; margin-top: 3px; }

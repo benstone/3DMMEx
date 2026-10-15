@@ -64,6 +64,9 @@ export class Element {
     ctx.restore();
   }
 
+  /** Tween this element's props on the UiRoot animator — el.animate({opacity:0}, {dur:200, done}). */
+  animate(to, opts) { return this.root?.anim.tween(this, to, opts); }
+
   /** Local -> absolute offset (walk parents). */
   abs() { let x = this.x, y = this.y, p = this.parent; while (p) { x += p.x; y += p.y; p = p.parent; } return [x, y]; }
 

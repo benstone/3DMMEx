@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "3dmm",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
+    "rollup-plugin-visualizer": "^6.0.5",
     "typescript": "^7.0.2",
     "vite": "^5.4.10",
     "vitest": "^2.1.9"

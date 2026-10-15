@@ -2,6 +2,7 @@
 // mount point (e.g. a GitHub Pages project site at /<user>.github.io/<repo>/)
 import { createReadStream, statSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const EXP_DIR = resolve('expansions'); // dev: ?packs=/expansions/<dir> tests local packs
 const MIME = { '.json': 'application/json', '.png': 'image/png', '.cur': 'application/octet-stream' };
@@ -10,6 +11,7 @@ export default {
   base: './',
   build: {
     target: 'es2022',
+    assetsInlineLimit: 0, // never inline runtime blobs — data/ textures live in public/
     rollupOptions: { // second entry: the Chromecast CAF receiver page
       input: { main: resolve('index.html'), receiver: resolve('receiver.html') },
       output: {
@@ -24,7 +26,10 @@ export default {
   },
   esbuild: { target: 'es2022' },
   optimizeDeps: { esbuildOptions: { target: 'es2022' } },
-  plugins: [{
+  plugins: [
+  // ANALYZE=1 npx vite build -> dist/stats.html treemap (rollup-plugin-visualizer)
+  ...(process.env.ANALYZE ? [visualizer({ filename: 'dist/stats.html', template: 'treemap', gzipSize: true })] : []),
+  {
     name: 'serve-expansions',
     configureServer(server) {
       server.middlewares.use('/expansions', (req, res, next) => {

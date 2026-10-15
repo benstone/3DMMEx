@@ -1199,16 +1199,11 @@ const scrlCells = [];
   // Selectors repaint just the affected elements instead of relying on callers
   // remembering to sync chrome (interface-overhaul Phase 2/4). StudioView lives
   // for the whole session — no unsubscribe needed.
-  /** @type {any} */ this._wasPlaying = undefined;
-  /** @type {any} */ this._wasSel = undefined;
-  useUi.subscribe((s) => {
-    if (s.playing === V._wasPlaying) return;
-    V._wasPlaying = s.playing;
-    const pb = els.stb_play; if (pb) { pb.classList.toggle('on', s.playing); pb._sync?.(); }
+  useUi.subscribe((s) => s.playing, (p) => {
+    const pb = els.stb_play; if (pb) { pb.classList.toggle('on', p); pb._sync?.(); }
   });
-  useEd.subscribe((s) => {
-    if (s.selChid === V._wasSel) return;
-    V._wasSel = s.selChid; syncRollCall(); // key-dedup'd — repaints only on real change
+  useEd.subscribe((s) => s.selChid, () => {
+    syncRollCall(); // key-dedup'd — repaints only on real change
   });
   }
 }
