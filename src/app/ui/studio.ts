@@ -596,11 +596,10 @@ export class StudioView extends View {
   V.add(view); // stage blit stays under the roll calls so their thumbs draw over it
   for (const [id, x, y, w, h] of STUDIO_TEXT_LAYOUT) { const text = new StudioText(id, x, y, w, h); V.add(text); namedElements[id] = text; }
   { // the exit strip slot — a web page can't quit, so it shows the app
-    // version plus a settings link instead
+    // version instead
     const ver = new StudioText('stver', 584, 466, 51, 14, { size: 9, color: '#555' });
     ver.textContent = localizer.translate('ui.version', { version });
     V.add(ver);
-    V.add(new TextLink(localizer.translate('ui.settings'), 470, 466, 108, 14, () => OptionsEasel.show(), { size: 9, align: 'right' }));
   }
   { // the movie-name field doubles as the rename control — clicking swaps in a
     // DOM input floated over the canvas (real text entry stays DOM until the
