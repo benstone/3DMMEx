@@ -301,16 +301,16 @@ pages; Chrome tab-mirroring casts everything. To cast "only the movie":
 
 | # | Deliverable | Depends on |
 |---|-------------|-----------|
-| 1 | `app/` split, tests green, no DOM changes — **done** | — |
-| 2 | `tsc --noEmit` clean on `format/`/`engine/` + vitest migration + zustand stores (`state.js` → `useApp`/`useEd`/`useUi`) | 1 |
-| 3 | `en.json` + `t()` + `?lang=` + a couple of surfaces using it | 1 |
-| 4 | Canvas framework (single 640×480 canvas) + boot/theatre on it | 2, 3 |
-| 5 | Studio chrome + browsers ported | 4 |
-| 6 | Easels + tips ported; `app/ui-dom/` deleted | 5 |
-| 7 | Touch pass + rotate-to-view | 4 |
-| 8 | Cast receiver entry (same repo, second Vite entry) + sender button | 4, needs Cast dev account |
-| 9 | Build perf + AGENTS.md/docs finalized | all |
-| 10 | **Class refactor pass** — easels/studio/browser internals currently build elements ad-hoc inside big functions (`el.draw = …`, `_idx`/`_yp` fields). Collapse them into named `Element`/`View` subclasses (`SorterCell`, `ScrollPair`, `PopupMenu`, `RecorderEasel`…); one `View` subclass per surface; factories stay thin | 6 |
+| 1 | `app/` split, tests green, no DOM changes — **done** (`0ecab38` series) | — |
+| 2 | `tsc --noEmit` clean on `format/`/`engine/` + vitest migration + zustand stores (`state.js` → `useApp`/`useEd`/`useUi`) — **done** (`124c36f`) | 1 |
+| 3 | `en.json` + `t()` + `?lang=` + a couple of surfaces using it — **done** (`f44c1e4`) | 1 |
+| 4 | Canvas framework (single 640×480 canvas) + boot/theatre on it — **done** (`8330ab0`) | 2, 3 |
+| 5 | Studio chrome + browsers ported — **done** (`2af81fe`) | 4 |
+| 6 | Easels + tips ported; `app/ui-dom/` deleted — **done** (`80527e9`) | 5 |
+| 7 | Touch pass + rotate-to-view — **done** (`d1c5fef`) | 4 |
+| 8 | Cast receiver entry (same repo, second Vite entry) + sender button — **done** (`363511c`; live casting still needs a registered `?castid=`) | 4, needs Cast dev account |
+| 9 | Build perf + AGENTS.md/docs finalized — **done** (`81bfa81`; `docs/ui-framework.md` etc. below) | all |
+| 10 | **Class refactor pass** — **done** (`1a5829d`): easels/studio/browser internals collapsed into named `Element`/`View` subclasses (`SorterEasel`, `StudioView`, `BioView`, `ScrollBtn`, `Therm`, `LisSlider`, `FrmCell`…); factories stay thin. Post-pass layering fix: `Element.root` propagates on attach + `leavingUnder` (`d35d128`, `f6c3a6b`) | 6 |
 
 ## Decisions (locked)
 

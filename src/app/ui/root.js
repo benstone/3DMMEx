@@ -4,6 +4,7 @@
 // stretched CSS size — client->virtual mapping happens here.
 import { Element } from './element.js';
 import { Animator, EASE } from './anim.js';
+import { useUi } from '../state.js';
 
 export const UI_W = 640, UI_H = 480;
 
@@ -42,7 +43,14 @@ export class UiRoot extends Element {
 
   get topView() { return this.stack[this.stack.length - 1] || null; }
 
-  _rebuild() { this.children = [...this.leavingUnder, ...this.stack, ...this.leaving, this.tips, this.toast]; }
+  _rebuild() {
+    this.children = [...this.leavingUnder, ...this.stack, ...this.leaving, this.tips, this.toast];
+    // publish the stack into useUi — view transitions / "is a dialog open"
+    // (stackDepth > 1) become plain store selectors (see docs/ui-framework.md)
+    const u = useUi.getState();
+    if (u.topView !== this.topView || u.stackDepth !== this.stack.length)
+      useUi.setState({ topView: this.topView, stackDepth: this.stack.length });
+  }
 
   /** Push a view. anim: 'fade'|'none' */
   push(view, anim = 'fade') {

@@ -11,6 +11,8 @@ export const useApp = createStore(() => ({
 export const useUi = createStore(() => ({
     playing: false,
     modeSync: null, // theatre/embed UI follow-callback (set by enterTheatre/enterEmbed)
+    topView: null,  // published by UiRoot._rebuild — selector surface for
+    stackDepth: 0,  // "is a dialog open" (stackDepth > 1) / view transitions
 }));
 export const useEd = createStore(() => ({
     selChid: -1, pendPlace: null,
