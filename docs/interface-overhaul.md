@@ -191,10 +191,14 @@ Phase 5 / milestone 10).
   the stack array (cheap direct mutation) and mirrors `topView`/
   `stackDepth` into `useUi` on every `_rebuild` — selectors work, the hot
   path stays a plain array.
-- ✅ `ModalView` (a `View` subclass in `browser.js`) — shared modal
-  semantics: the `brwsView` slot, Escape routing (`_onEsc` → method),
-  DOM-overlay teardown (`_dom`, hidden-when-covered / removed-when-popped).
-  `EaselView` and `BrowserView` both extend it.
+- ✅ `ModalView` (a `View` subclass in `modal.ts` — a leaf module, so the
+  `extends` base can never be mid-init when subclasses evaluate; this
+  replaced an in-browser.ts definition that sat inside an import cycle
+  and caused a runtime TDZ) — shared modal semantics: the `modalView`
+  slot, Escape routing (`_onEsc` → method), DOM-overlay teardown (`_dom`,
+  hidden-when-covered / removed-when-popped). `EaselView` and
+  `BrowserView` both extend it; `browser.ts` re-exports the slot under
+  the `brws*` names.
 - ✅ `Element` tree — retained-mode widgets. Rect layout in absolute 640×480
   coords, straight from the original `.cht` positions — no % anywhere.
   Element classes are **subclassed for behavior**: press-state faces,

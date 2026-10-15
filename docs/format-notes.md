@@ -8,7 +8,7 @@ touching anything in `format/`.
 
 Every `.3MM`, `.3TH`, `.CHK`, `.3CN`, `.NTH` file is a **chunky file** —
 a tagged-chunk container, the same family as RIFF but Microsoft/Kauai's
-variant. See `src/format/chunky.js`.
+variant. See `src/format/chunky.ts`.
 
 Layout:
 
@@ -23,7 +23,7 @@ index at fpIndex: a GG of CRP records (chunk descriptors)
 ```
 
 - **ctg** — a 4-byte chunk-type tag (`'MVIE'`, `'SCEN'`, `'GST '`, `'MBMP'`…).
-  `binary.js` `ctgToStr`/`strToCtg` handle the trailing-space convention
+  `binary.ts` `ctgToStr`/`strToCtg` handle the trailing-space convention
   (a 3-char tag like `GST` is stored as `'GST '`).
 - **cno** — the chunk number, a u32 "instance id" so multiple chunks share a
   ctg (e.g. one `SCEN` per scene). `ChunkyFile.key(ctg, cno)` addresses a
@@ -32,7 +32,7 @@ index at fpIndex: a GG of CRP records (chunk descriptors)
   payload), `grfcrp` flags, optional kid list (child ctg/cno/chid triples),
   optional long name.
 - `grfcrp & FCRP_PACKED` — payload is **KCDC/KCD2 compressed**
-  (`kcdc.js` decodes it in `data()`); `FCRP_FOREST` marks forest-group
+  (`kcdc.ts` decodes it in `data()`); `FCRP_FOREST` marks forest-group
   chunks. `writeChunkyFile` recompresses on save.
 
 Read API: `cf.get(ctg,cno)` (metadata), `cf.data(ctg,cno)` (decoded bytes),
@@ -50,12 +50,12 @@ chid), `cf.ofType(ctg)` (iterator).
 - **GST** — group of **STN** strings + fixed data (used for the roll call:
   each entry is a name string plus its `MACTRF` fixed record).
 
-`STN` (`binary.js` `readStn`/`writeStn`) is the length-prefixed string type.
+`STN` (`binary.ts` `readStn`/`writeStn`) is the length-prefixed string type.
 
-`FIX` (`binary.js`) = 1/65536 — the engine stores most geometry as
+`FIX` (`binary.ts`) = 1/65536 — the engine stores most geometry as
 **16.16 fixed-point**; multiply floats by 65536 going in, `* FIX` coming out.
 
-## The .3MM movie (`format/movie.js`)
+## The .3MM movie (`format/movie.ts`)
 
 The top chunk is `MVIE`; its kids include:
 
@@ -69,14 +69,14 @@ The top chunk is `MVIE`; its kids include:
   `BKGD`; text boxes `TBOX` children carry `TDF` (text definition) +
   `MTRL` (material) data.
 
-## Content files (`.3CN` / `.CHK` / `.NTH`) — `format/content.js`
+## Content files (`.3CN` / `.CHK` / `.NTH`) — `format/content.ts`
 
 - `.3CN` — content: `TMPL` actor/prop templates, `BKGD`, `MTRL` materials,
   `TDF` font definitions, `SND ` sounds, `MBMP`/`TMAP` bitmaps.
 - `.CHK` — expansion **patch**: merges new content + the pack's palette
   (`GLCR` color list) + `GST ` string tables.
 - `.NTH` — thumbnail index: pre-rendered cell bitmaps the browsers show
-  (scan via `thumbs.js` `scanThumbFile`; pack thumbs index the pack's own
+  (scan via `thumbs.ts` `scanThumbFile`; pack thumbs index the pack's own
   `GLCR` palette — wrong palette = inverted colors).
 
 `parseTemplate(cf, cno)` walks a TMPL's kids: default `BRS ` browser info,

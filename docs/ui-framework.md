@@ -15,27 +15,28 @@ is blitted into the UI each frame by `MovieScreen` (`studio`) or `CvEl`
 
 DOM survives only where the OS is needed: text `<input>`s floated over the
 canvas by `domOverlay()` (z-index 57, inside `#studio`), the settings dialog
-(`ui/optdlg.js`, z-index 60), and the file picker. Everything else is canvas.
+(`ui/optdlg.ts`, z-index 60), and the file picker. Everything else is canvas.
 
 ## Files
 
 | File | Contents |
 |------|----------|
-| `element.js` | `Element` — rect + children + paint/hit/invalidate |
-| `root.js` | `UiRoot` (singleton `ui`), `View`, `Toast` |
-| `anim.js` | `Animator` — `tween(target, {prop:end}, {dur, ease, done})` |
-| `img.js` | `texImg(name, onload)` texture cache, `imgReady()` |
-| `widgets.js` | `Img`, `StBtn`, `Txt`, `MovieScreen`, `VSlider`, links |
-| `easel.js` | `EaselView`, `domOverlay`, `CvEl`, `offCv`, shared widgets (`ScrollBtn`, `Therm`, `NamePlate`, `LisSlider`, `FrmCell`) |
-| `browser.js` | `BrowserView` + `brwsView` modal slot, `closeBrowser`, `setBrwsView` |
-| `easels.js` | `SorterEasel`, `RecorderEasel`, `ListenerEasel`, `WordsDlg`, `SpletterEasel`, `ActionBrowser`, `CostumeEasel` |
-| `studio.js` | `StudioView` (editor chrome), `studioEl`, `syncStudio`, `syncRollCall` |
-| `bio.js` | `BioView`, `BioPage`, `BioText` |
-| `theatre.js` | `TheatreView`, `EmbedView`, `enterTheatre`, `enterEmbed` |
-| `bootview.js` | `BootView` splash |
-| `castview.js` | `CastView` sender-side remote |
-| `tips.js` | callout balloons in the `ui.tips` layer |
-| `optdlg.js` | settings modal (DOM, outside the canvas) |
+| `element.ts` | `Element` — rect + children + paint/hit/invalidate |
+| `root.ts` | `UiRoot` (singleton `ui`), `View`, `Toast` |
+| `anim.ts` | `Animator` — `tween(target, {prop:end}, {dur, ease, done})` |
+| `img.ts` | `texImg(name, onload)` texture cache, `imgReady()` |
+| `widgets.ts` | `Img`, `StBtn`, `Txt`, `MovieScreen`, `VSlider`, links |
+| `easel.ts` | `EaselView`, `domOverlay`, `CvEl`, `offCv`, shared widgets (`ScrollBtn`, `Therm`, `NamePlate`, `LisSlider`, `FrmCell`) |
+| `modal.ts` | `ModalView` + the shared modal slot (`modalView`/`modalCleanup`/`closeModal`) — leaf module, kept out of import cycles so `extends` bases always init first |
+| `browser.ts` | `BrowserView`, `showBrowser`; `brwsView`/`closeBrowser`/`setBrwsView` re-export the modal.ts slot |
+| `easels.ts` | `SorterEasel`, `RecorderEasel`, `ListenerEasel`, `WordsDlg`, `SpletterEasel`, `ActionBrowser`, `CostumeEasel` |
+| `studio.ts` | `StudioView` (editor chrome), `studioEl`, `syncStudio`, `syncRollCall` |
+| `bio.ts` | `BioView`, `BioPage`, `BioText` |
+| `theatre.ts` | `TheatreView`, `EmbedView`, `enterTheatre`, `enterEmbed` |
+| `bootview.ts` | `BootView` splash |
+| `castview.ts` | `CastView` sender-side remote |
+| `tips.ts` | callout balloons in the `ui.tips` layer |
+| `optdlg.ts` | settings modal (DOM, outside the canvas) |
 
 ## Views and the stack
 
@@ -133,7 +134,7 @@ alive). View pushes/pops use opacity tweens.
 - One surface = one `View` subclass; constructor builds the tree, helpers
   are methods, state lives in fields.
 - Two call sites with the same custom draw/behavior = a missing shared
-  subclass — extract it into `widgets.js`/`easel.js`.
+  subclass — extract it into `widgets.ts`/`easel.ts`.
 - `showFoo()` stays a thin `ui.push(new FooView())` factory.
 - Transient element fields use `/** @type {any} */` declarations until the
   TS migration names them properly.

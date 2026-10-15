@@ -2,7 +2,7 @@
 
 Expansion packs reskin the editor and add browsable content — the original
 motivation for the UI overhaul. This expands the README's asset-packs
-section; the implementation lives in `src/app/packs.js`.
+section; the implementation lives in `src/app/packs.ts`.
 
 ## Manifest
 
@@ -31,7 +31,7 @@ resource name.
 
 ## Load order & merge semantics
 
-1. Boot fetches all manifests up front (`packsP` in `packs.js`) — a bad URL
+1. Boot fetches all manifests up front (`packsP` in `packs.ts`) — a bad URL
    toasts an error and doesn't block the app.
 2. UI bitmaps + cursors apply first so the editor visibly reskins early.
 3. Content files stream in and merge **additively** into the built-in
@@ -46,7 +46,7 @@ resource name.
 
 ## Dev & deployment
 
-- Local testing: drop a pack under `expansions/<name>/` — `vite.config.js`
+- Local testing: drop a pack under `expansions/<name>/` — `vite.config.ts`
   serves that dir in dev: `?packs=/expansions/NICK3D`.
 - Deployed: host the pack anywhere CORS-enabled; the receiver page
   (`receiver.html`) accepts `?packs=` too, and the sender includes the pack
@@ -57,8 +57,8 @@ resource name.
 
 ## Adding a new pack category
 
-Browsers enumerate categories via `BRWS_DEFS` (`ui/browser.js`) +
-`scanThumbFile` (`thumbs.js`). A pack only needs to ship the right `.NTH`
+Browsers enumerate categories via `BRWS_DEFS` (`ui/browser.ts`) +
+`scanThumbFile` (`thumbs.ts`). A pack only needs to ship the right `.NTH`
 name to slot into an existing browser; a genuinely new category needs a
 `BRWS_DEFS` entry, a `kind` in `showBrowser`, and the `.NTH` naming
 convention — see the add-easel skill for the UI side.

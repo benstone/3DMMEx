@@ -30,7 +30,8 @@ src/app/
     element.ts         Element (hitTest/pickable/cursor/dirty), anim.ts Animator
     widgets.ts         Img ImgButton TextLink StBtn VSlider Txt MovieScreen
     studio.ts          editor chrome + movie-view interaction (all pointer events)
-    browser.ts         book browsers (scene/actor/prop/sound pickers) + brwsView slot
+    modal.ts           ModalView + modal slot (leaf: no imports back into app/)
+    browser.ts         book browsers (scene/actor/prop/sound pickers); brwsView slot re-exports modal.ts
     easel.ts/easels.ts EaselView shell + scene sorter, recorder, listener, spletter,
                        action browser, costume easel (GL previews blitted via CvEl)
     bio.ts  tips.ts  bootview.ts  theatre.ts  castview.ts  optdlg.ts
@@ -55,9 +56,10 @@ src/render/            three.js renderer (renders into #view)
   Free functions are thin factories (`showX()`), boot wiring, or pure
   utilities. If two sites need the same custom element, it's a missing
   widget subclass — add it to `widgets.ts`/`easel.ts`.
-- **Modal slot.** `brwsView`/`brwsCleanup` in browser.ts is the single
-  browser-or-easel slot; `showEasel()` closes whatever is up; Escape routes
-  through `brwsView._onEsc || closeBrowser`.
+- **Modal slot.** `modalView`/`modalCleanup` in `modal.ts` (leaf module —
+  never import app/ui modules from it) is the single browser-or-easel slot;
+  `browser.ts` re-exports it under the `brws*` names. `showEasel()` closes
+  whatever is up; Escape routes through `modalView._onEsc || closeModal`.
 - **State.** Mutable singletons live in zustand stores; the `export let`
   bindings in state.ts are a synced facade — write via the `set*` setters,
   never assign imports. Per-frame sim state stays out of the stores.

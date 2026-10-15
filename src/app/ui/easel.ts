@@ -9,7 +9,7 @@ import { Element } from './element.ts';
 import { Img, StBtn } from './widgets.ts';
 import { texImg, imgReady } from './img.ts';
 import { $ } from '../res.ts';
-import { setBrwsView, closeBrowser, ModalView } from './browser.ts';
+import { ModalView, setModalView, closeModal } from './modal.ts';
 
 /** Blits an offscreen canvas (GL preview, baked thumb) into its rect. */
 export class CvEl extends Element {
@@ -127,7 +127,7 @@ export function domOverlay(el, x, y, w, h) {
   return el;
 }
 
-export class EaselView extends ModalView { // modal semantics live in ModalView (browser.js)
+export class EaselView extends ModalView { // modal semantics live in ModalView (modal.ts)
   mkImg(n, x, y, w, h) { const im = new Img(n, x, y, w, h); this.add(im); return im; }
   mkBtn(up, dn, x, y, w, h, act, tip = null) { const b = new StBtn(up, dn, x, y, w, h, act, tip); this.add(b); return b; }
   domInp(x, y, w, h, cls = 'spltInp') {
@@ -138,4 +138,4 @@ export class EaselView extends ModalView { // modal semantics live in ModalView 
 }
 
 /** Open an easel view (closes whatever browser/easel is up, then pushes). */
-export function showEasel(view) { closeBrowser(); setBrwsView(view); ui.push(view, 'none'); }
+export function showEasel(view) { closeModal(); setModalView(view); ui.push(view, 'none'); }

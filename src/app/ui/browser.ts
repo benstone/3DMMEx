@@ -12,8 +12,10 @@ import { setPlaying, draw } from '../loop.ts';
 import { getSndItems, addUserSnd, importSndFiles, previewItem } from '../sndsrc.ts';
 import { bkthCaths, brwsTmpls, mbmpCanvas } from '../thumbs.ts';
 import { t } from '../i18n.ts';
-// easel->browser->easels->easel is an import cycle; the recorder entry is
-// click-time only, so a lazy import keeps the edge out of module eval.
+// easel->browser->easels->easel was an eval-time import cycle; modal.ts owns
+// ModalView+the slot (a leaf), and the recorder entry is click-time only, so
+// a lazy import keeps this module out of the cycle entirely.
+import { ModalView, modalView, modalCleanup, setModalView, setModalCleanup, closeModal } from './modal.ts';
 const easels = () => import('./easels.ts');
 
 export const BRWS_DEFS = {
@@ -70,17 +72,6 @@ class BrwsCell extends Element { // frame img + content (mbmp thumb or text labe
  *  routing (brwsView._onEsc || closeBrowser) and DOM-overlay teardown. DOM
  *  inputs (EaselView.domInp) are tracked in _dom: hidden while the modal is
  *  covered by a nested push, removed when it actually leaves the stack. */
-export class ModalView extends View {
-  constructor() { super(); this._onEsc = null; this._dom = []; }
-  onExit() {
-    const gone = !ui.stack.includes(this);
-    for (const el of this._dom) gone ? el.remove() : (el.style.display = 'none');
-    if (gone) this._dom.length = 0;
-  }
-  onEnter() { for (const el of this._dom) el.style.display = ''; }
-  addDom(el) { this._dom.push(el); return el; }
-}
-
 export class BrowserView extends ModalView {
   constructor(kind, importItems = null) {
     super();
@@ -117,12 +108,12 @@ export class BrowserView extends ModalView {
     if (d.ok) mkB('okay', 'okayc', d.x + d.ok[0], d.y + d.ok[1], 50, 48, () => {
       if (importItems) { // import pick -> into the browser's list
         if (this.sel < 0) return;
-        addUserSnd(kind, this.items[this.sel]); closeBrowser(); showBrowser(kind); return;
+        addUserSnd(kind, this.items[this.sel]); closeModal(); showBrowser(kind); return;
       }
       setSndTag(kind, this.sel >= 0 ? this.items[this.sel] : null); // BRWN::FCmdOk -> MVU::SetTagTool
-      closeBrowser();                                              // (empty pick clears the tool sound)
+      closeModal();                                              // (empty pick clears the tool sound)
     });
-    mkB('cancel', 'cancelc', d.x + d.can[0], d.y + d.can[1], 50, 48, () => importItems ? (closeBrowser(), showBrowser(kind)) : closeBrowser());
+    mkB('cancel', 'cancelc', d.x + d.can[0], d.y + d.can[1], 50, 48, () => importItems ? (closeModal(), showBrowser(kind)) : closeModal());
     if (d.rec && !importItems) mkB('mike', 'mikes', d.x + d.rec[0], d.y + d.rec[1], 50, 48, () => easels().then((m) => m.showRecorder(kind)));
     if (d.imp && !importItems) mkB('sndport', 'sndports', d.x + d.imp[0], d.y + d.imp[1], 50, 48, () => importSndFiles(kind));
     this.invalidate();
@@ -143,35 +134,16 @@ export class BrowserView extends ModalView {
       setPendPlace({ cno: it.cno, name: it.name });
       if (ed.view) ed.view.cursor = 'crosshair';
     } else if (kind === 'scene') { setPlaying(false); player.loadScene(it.i); }
-    closeBrowser(); draw();
+    closeModal(); draw();
   }
 }
 
-/** The currently-open canvas browser/easel view (pushed on the stack), or null. */
-export let brwsView = null;
-export let brwsCleanup = null; // session teardown (GL dispose, snapshot restore)
-export const setBrwsView = (v) => (brwsView = v);
-export const setBrwsCleanup = (f) => (brwsCleanup = f);
+/** The modal slot lives in modal.ts; these re-exports keep the legacy names
+ *  (brwsView/brwsCleanup/closeBrowser/…) live-bound for existing call sites. */
+export { modalView as brwsView, modalCleanup as brwsCleanup, setModalView as setBrwsView, setModalCleanup as setBrwsCleanup, closeModal as closeBrowser, ModalView };
 
 export function showBrowser(kind, items = null) { // open a canvas browser over the studio
-  closeBrowser();
-  brwsView = new BrowserView(kind, items);
-  ui.push(brwsView, 'none');
+  closeModal();
+  setModalView(new BrowserView(kind, items));
+  ui.push(modalView, 'none');
 }
-
-export function closeBrowser() { // BRWN->Close; also tears down any easel overlay
-  sounds.stopPreview();
-  brwsCleanup?.(); brwsCleanup = null;
-  if (brwsView) {
-    const v = brwsView; brwsView = null;
-    if (ui.topView === v) ui.pop('none');
-    else { const i = ui.stack.indexOf(v); if (i >= 0) { ui.stack.splice(i, 1); v.parent = v.root = null; ui._rebuild(); } }
-    v.onExit(); // pop() doesn't fire onExit — run teardown after stack removal
-  }
-}
-
-/** Esc inside a browser or easel closes it (browser.cht maps Escape to the cancel
- * button's cid). Easels may route Escape to their own _onEsc (e.g. sorter cancel). */
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && brwsView) (brwsView._onEsc || closeBrowser)();
-});
