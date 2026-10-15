@@ -23,6 +23,8 @@ import { StudioButton, TextElement } from './widgets.ts';
 import { textureCache } from './textureCache.ts';
 import { studioHost } from './studio.ts';
 import { localizer } from '../localization.ts';
+import { CURSORS } from './cursorManager.ts';
+import { uiSounds } from './uiSounds.ts';
 
 // --- scene sorter easel ------------------------------------------------------
 // Panel at (20,65) 600x350; 6 frame cells 185x126 at (10+c*193,12+r*141);
@@ -40,7 +42,7 @@ class SorterCell extends Element {
   constructor(easel, i) {
     const cx = SORTER_X + 10 + (i % 3) * 193, cy = SORTER_Y + 12 + (i / 3 | 0) * 141;
     super(cx, cy, 185, 126);
-    this.easel = easel; this.i = i; this.cursor = 'pointer';
+    this.easel = easel; this.i = i; this.cursor = CURSORS.pointer;
     /** @type {any} */ this._drag = null;
     this.transitionButtons = T4.map((tt, j) => {
       const b = new StudioButton(`e3trn${j + 1}`, `e3trn${j + 1}s`, cx + 156, cy + 11 + 22 * j, 20, 17,
@@ -104,12 +106,14 @@ export class SorterEasel extends EaselView {
 
     this.hand = new StudioButton('e3hand', 'e3handc', SORTER_X + 25, SORTER_Y + 298, 50, 48, () => { this.tool = 'hand'; this.syncTools(); });
     this.nuke = new StudioButton('e3rmsn', 'e3rmsm', SORTER_X + 80, SORTER_Y + 298, 50, 48, () => { this.tool = 'nuke'; this.syncTools(); });
+    this.hand.clickSound = this.nuke.clickSound = 'sectool';
     this.add(this.hand); this.add(this.nuke);
     this.sup = new ScrollButton('e3up', SORTER_X + 580, SORTER_Y + 2, 17, 19, () => this.scroll(-3));
     this.sdn = new ScrollButton('e3down', SORTER_X + 580, SORTER_Y + 273, 17, 19, () => this.scroll(3));
+    this.sup.stepSound = 'pageup'; this.sdn.stepSound = 'pagedn';
     this.add(this.sup); this.add(this.sdn);
 
-    this.makeButton('e3port', 'e3portc', SORTER_X + 135, SORTER_Y + 298, 50, 48, () => this.importMovie()); // import another movie's scenes
+    this.makeButton('e3port', 'e3portc', SORTER_X + 135, SORTER_Y + 298, 50, 48, () => this.importMovie()).clickSound = 'pfopen'; // import another movie's scenes
     this._onEsc = () => this.dismiss(); // Escape cancels like the cancel button
     this.makeButton('e3can', 'e3canc', SORTER_X + 465, SORTER_Y + 298, 50, 48, () => this.dismiss());
     this.makeButton('e3okay', 'e3okayc', SORTER_X + 515, SORTER_Y + 298, 50, 48, () => this.applySort());
@@ -157,6 +161,7 @@ export class SorterEasel extends EaselView {
     const cellIndex = this.topIndex + i;
     if (cellIndex >= this.items.length) return;
     if (this.tool === 'nuke') { // drop the scene, keep the selection valid
+      uiSounds.play('nukesn');
       this.items.splice(cellIndex, 1);
       if (cellIndex < this.currentIndex) this.currentIndex--;
       if (this.currentIndex >= this.items.length) this.currentIndex = this.items.length - 1;
@@ -170,6 +175,7 @@ export class SorterEasel extends EaselView {
 
   /** Start a cell drag — show the ghost and drop bar at the selected cell. */
   dragStart(i) {
+    uiSounds.play('grabsn'); // the grab sound while the thumb rides the mouse
     const cell = this.cells[i];
     this.ghost.visible = true;
     this.ghost.x = cell.x; this.ghost.y = cell.y; this.ghost.dirty();
@@ -201,7 +207,7 @@ export class SorterEasel extends EaselView {
     const dr = cell._drag; cell._drag = null; if (!dr) return;
     clearTimeout(dr.scrollTm); this.bar.visible = false; this.ghost.visible = false;
     const tt = Math.min(dr.to, this.items.length); // the drop lands at to-1 when moving forward
-    if (tt !== this.currentIndex) { const item = this.items.splice(this.currentIndex, 1)[0]; const at = tt > this.currentIndex ? tt - 1 : tt; this.items.splice(at, 0, item); this.currentIndex = at; }
+    if (tt !== this.currentIndex) { uiSounds.play('dropsn'); const item = this.items.splice(this.currentIndex, 1)[0]; const at = tt > this.currentIndex ? tt - 1 : tt; this.items.splice(at, 0, item); this.currentIndex = at; }
     this.sync();
   }
 
@@ -295,7 +301,8 @@ export class RecorderEasel extends EaselView {
       if (this.rec?.state === 'recording') { this.stopRec(); this.syncMike(); }
       else { appState.soundQueue.ensure(); await this.startRec(); this.syncMike(); }
     });
-    this.makeButton('e5play', 'e5plays', 265, 269, 50, 48, () => { this.stopRec(); if (this.recording?.buf) appState.soundQueue.preview({ buf: this.recording.buf }); });
+    this.mikeBtn.clickSound = 'mike';
+    this.makeButton('e5play', 'e5plays', 265, 269, 50, 48, () => { this.stopRec(); if (this.recording?.buf) appState.soundQueue.preview({ buf: this.recording.buf }); }).clickSound = 'rplay';
     this.makeButton('e5can', 'e5canc', 329, 269, 50, 48, () => this.done(false));
     this.makeButton('e5okay', 'e5okayc', 379, 269, 50, 48, () => this.done(true));
     setTimeout(() => this.nameInput.focus(), 0);
@@ -404,6 +411,7 @@ export class ListenerEasel extends EaselView {
     this.add(sld);
     colEls.push(sld, sld.th);
     colEls.push(this.makeButton('e4nuke', 'e4nukec', X + nx, Y + 123, 21, 20, () => { // delete + hide the column
+      uiSounds.play('nukesn');
       if (a) a.fDeleteSndCore(sty, mm); else soundEdits.removeSceneSound(sty);
       for (const el of colEls) { el.visible = false; el.dirty?.(); }
       this.invalidate();
@@ -420,8 +428,8 @@ export class WordsDialog extends EaselView {
   constructor() {
     super();
     this.makeImage('book9', 132, 48, 376, 209);
-    this.makeButton('e6stor', 'e6stors', 174, 97, 136, 78, () => { modalSlot.close(); textboxEdits.insertTextbox(true); });   // story box
-    this.makeButton('e6scr1', 'e6scr1s', 329, 96, 136, 78, () => { modalSlot.close(); textboxEdits.insertTextbox(false); }); // credits box
+    this.makeButton('e6stor', 'e6stors', 174, 97, 136, 78, () => { modalSlot.close(); textboxEdits.insertTextbox(true); }).clickSound = 'pselect';   // story box
+    this.makeButton('e6scr1', 'e6scr1s', 329, 96, 136, 78, () => { modalSlot.close(); textboxEdits.insertTextbox(false); }).clickSound = 'pselect'; // credits box
     this.makeButton('cancel', 'cancelc', 430, 205, 50, 48, modalSlot.close);
   }
 }
@@ -493,11 +501,11 @@ export class SpletterEasel extends EaselView {
     this.popup = null; // {kind, pageIndex, background, cells}
     // font/shape/texture open their popups; transmogrify picks a random
     // shape+font+material; rotate cycles the preset orientations
-    this.makeButton('e1font', 'e1fonts', 97, 322, 50, 48, () => this.showPopup('font'));
-    this.makeButton('e1shap', 'e1shaps', 147, 322, 50, 48, () => this.showPopup('shape'));
-    this.makeButton('e1text', 'e1texts', 197, 322, 50, 48, () => this.showPopup('mtrl'));
-    this.makeButton('e1tran', 'e1trans', 247, 322, 50, 48, () => this.transmogrify()); // random shape+font+material
-    this.makeButton('e1rot', 'e1rots', 320, 322, 50, 48, () => { this.state.iview = (this.state.iview + 1) % 5; this.rebuild(); }); // cycle the view
+    this.makeButton('e1font', 'e1fonts', 97, 322, 50, 48, () => this.showPopup('font')).clickSound = 'dropdn';
+    this.makeButton('e1shap', 'e1shaps', 147, 322, 50, 48, () => this.showPopup('shape')).clickSound = 'dropdn';
+    this.makeButton('e1text', 'e1texts', 197, 322, 50, 48, () => this.showPopup('mtrl')).clickSound = 'dropdn';
+    this.makeButton('e1tran', 'e1trans', 247, 322, 50, 48, () => this.transmogrify()).clickSound = 'random'; // random shape+font+material
+    this.makeButton('e1rot', 'e1rots', 320, 322, 50, 48, () => { this.state.iview = (this.state.iview + 1) % 5; this.rebuild(); }).clickSound = 'spin'; // cycle the view
     this.makeButton('e1can', 'e1canc', 443, 322, 50, 48, modalSlot.close);
     this.makeButton('e1okay', 'e1okayc', 493, 322, 50, 48, () => this.commit());
     this.nameInput.oninput = () => { this.state.text = this.nameInput.value; this.rebuild(); }; // typing rebuilds the preview
@@ -571,6 +579,7 @@ export class SpletterEasel extends EaselView {
     items.slice(popup.pageIndex * def.itemsPerPage, popup.pageIndex * def.itemsPerPage + def.itemsPerPage).forEach((item, i) => {
       const cellIndex = popup.pageIndex * def.itemsPerPage + i;
       const b = new PopupCell(def.x, def.y + i * def.cellHeight, def.w, def.cellHeight, def, item, () => this.popupPick(item));
+      b.clickSound = 'pselect';
       b.selected = cellIndex === currentIndex;
       this.add(b);
       popup.cells.push(b);
@@ -579,6 +588,7 @@ export class SpletterEasel extends EaselView {
     for (const [skin, offset, targetPage] of ([['d1up', 0, 0], ['d1dn', def.w / 2, last]] as [string, number, number][])) { // up = first page, dn = last
       const b = new StudioButton(skin, skin + 's', def.x + offset, def.y + def.arrowY, def.w / 2, def.h - def.arrowY,
         () => { if (this.popup.pageIndex !== targetPage) { this.popup.pageIndex = targetPage; this.popupCells(); } });
+      b.clickSound = skin === 'd1up' ? 'pageup' : 'pagedn';
       this.add(b);
       popup.cells.push(b);
     }
@@ -646,7 +656,7 @@ export class SpletterEasel extends EaselView {
       modalSlot.close();
     } else { // new text: the insert happens at the drop point
       appState.setPendingPlacement({ tdt: { text, tdts: spletter.tdts, tagTdf: spletter.tagTdf, tagMtrl: spletter.mtrlDirty ? spletter.tagMtrl : null } });
-      if (appState.editorTools.view) appState.editorTools.view.cursor = 'crosshair';
+      if (appState.editorTools.view) appState.editorTools.view.cursor = CURSORS.crosshair;
       modalSlot.close(); playbackLoop.drawFrame();
     }
   }
@@ -692,6 +702,7 @@ export class ActionBrowser extends EaselView {
    *  [{anid,name}] from the actor's template. */
   constructor(a, actions) {
     super();
+    this.openSound = 'pbrowse'; // the action browser opens like an asset picker
     this.a = a; this.actions = actions;
     const X = 62, Y = 100; // panel origin — child positions are relative to it
     this.makeImage('book5', X, Y, 516, 372);
@@ -719,15 +730,15 @@ export class ActionBrowser extends EaselView {
     for (let i = 0; i < itemsPerPage; i++) { // name cells at rel (15+143c, 32+28r)
       const c = i % 2, r = Math.floor(i / 2);
       const b = new ActionCell(X + 15 + c * 143, Y + 32 + r * 28, (cell) => this.pick(cell));
-      b.cellIndex = i;
+      b.cellIndex = i; b.clickSound = 'brwzpic';
       this.add(b); this.cells.push(b);
     }
     this.cycleTimer = setInterval(() => { if (this.cycling) { this.celn = (this.celn + 1) % this.ccel; this.pose(); } }, 1000 / FPS); // the preview cycles cels
     modalSlot.cleanup = () => { clearInterval(this.cycleTimer); previewRenderer.dispose(); };
-    this.makeButton('fwd', 'fwdc', X + 204, Y + 320, 59, 46, () => { this.pageIndex = Math.min(this.pageCount() - 1, this.pageIndex + 1); this.render(); });
-    this.makeButton('bback', 'bbackc', X + 54, Y + 320, 59, 46, () => { this.pageIndex = Math.max(0, this.pageIndex - 1); this.render(); });
-    this.makeButton('b5celbk', 'b5celbks', X + 447, Y + 290, 27, 16, () => this.step(-1));
-    this.makeButton('b5celfw', 'b5celfws', X + 475, Y + 290, 27, 16, () => this.step(1));
+    this.makeButton('fwd', 'fwdc', X + 204, Y + 320, 59, 46, () => { this.pageIndex = Math.min(this.pageCount() - 1, this.pageIndex + 1); this.render(); }).clickSound = 'pagedn';
+    this.makeButton('bback', 'bbackc', X + 54, Y + 320, 59, 46, () => { this.pageIndex = Math.max(0, this.pageIndex - 1); this.render(); }).clickSound = 'pageup';
+    this.makeButton('b5celbk', 'b5celbks', X + 447, Y + 290, 27, 16, () => this.step(-1)).clickSound = 'systepb';
+    this.makeButton('b5celfw', 'b5celfws', X + 475, Y + 290, 27, 16, () => this.step(1)).clickSound = 'systepf';
     this.makeButton('okay', 'okayc', X + 431, Y + 320, 50, 48, () => this.commit());
     this.makeButton('cancel', 'cancelc', X + 381, Y + 320, 50, 48, modalSlot.close);
     this.render();
@@ -834,7 +845,7 @@ export class CostumeEasel extends EaselView {
     this.makeImage('e2par', 102, 100, 436, 347);
     const pcv = offscreenCanvas(416, 230); // preview frame (10,9)-(426,239) rel to the panel
     this.previewElement = new CanvasEl(pcv, 112, 109, 416, 230);
-    this.previewElement.pickable = true; this.previewElement.cursor = 'pointer';
+    this.previewElement.pickable = true; this.previewElement.cursor = CURSORS.pointer;
     this.add(this.previewElement);
     this.nameInput = this.domInput(110, 415, 420, 24);
     this.nameInput.maxLength = 50; this.nameInput.value = a.data.name || '';
@@ -856,9 +867,10 @@ export class CostumeEasel extends EaselView {
     modalSlot.cleanup = () => previewRenderer.dispose();
     this.costB = new CostumeModeButton('e2cost', 'e2costs', 134, false, this);
     this.accB = new CostumeModeButton('e2acc', 'e2accs', 218, true, this);
+    this.costB.clickSound = 'costume'; this.accB.clickSound = 'acesory';
     this.add(this.costB); this.add(this.accB);
     this.syncModes();
-    this.makeButton('e2rot', 'e2rots', 302, 356, 50, 48, () => { this.viewAng += Math.PI / 4; this.pose(); }); // orbit the view
+    this.makeButton('e2rot', 'e2rots', 302, 356, 50, 48, () => { this.viewAng += Math.PI / 4; this.pose(); }).clickSound = 'spin'; // orbit the view
     this.makeButton('e2can', 'e2canc', 406, 356, 50, 48, modalSlot.close);
     this.makeButton('e2okay', 'e2okayc', 456, 356, 50, 48, () => this.commit()); // commit costume events + name
     this.pose();
@@ -948,7 +960,7 @@ export class CostumeEasel extends EaselView {
     this.ndc.set((e.x - this.previewElement.x) / this.previewElement.w * 2 - 1, 1 - (e.y - this.previewElement.y) / this.previewElement.h * 2);
     this.ray.setFromCamera(this.ndc, this.previewCamera);
     const hit = this.ray.intersectObjects(this.meshes.filter(Boolean), false)[0];
-    if (hit) this.incCmtl(this.template.ibsets[hit.object.userData.ipar]);
+    if (hit) { uiSounds.play('sectool'); this.incCmtl(this.template.ibsets[hit.object.userData.ipar]); }
   }
   /** Refresh both mode buttons' faces. */
   syncModes() { this.costB.syncMode(); this.accB.syncMode(); }

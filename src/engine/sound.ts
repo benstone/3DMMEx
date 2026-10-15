@@ -239,6 +239,39 @@ export class SoundQueue {
     }
   }
 
+  /** Decode-and-cache an interface sound — the wavs under `public/snd/` are
+   *  UI feedback (clicks, opens, tool sounds), not movie content. `ui` is a
+   *  dedicated channel: one-shots preempt, `loop` repeats until stopUi. */
+  _uiBuffer(name) {
+    this.uiBuffers ??= new Map(); // name -> Promise<AudioBuffer|null>
+    if (!this.uiBuffers.has(name)) {
+      this.uiBuffers.set(name, (async () => {
+        try {
+          const r = await fetch(`${import.meta.env.BASE_URL}snd/${name}.wav`);
+          if (!r.ok) { this._warn(`missing UI sound snd/${name}.wav`); return null; }
+          return this._decode(new Uint8Array(await r.arrayBuffer()));
+        } catch { return null; }
+      })());
+    }
+    return this.uiBuffers.get(name);
+  }
+
+  /** Play an interface sound — `loop: true` repeats until stopUi() (e.g. the
+   *  rotate-tool drone while the button is held). No-op while muted or before
+   *  the AudioContext exists (UI sounds only fire from gestures anyway). */
+  async playUi(name, { loop = false } = {}) {
+    if (this.muted || !this.ensure()) return;
+    const buf = await this._uiBuffer(name);
+    if (buf) this._enqueue('ui', buf, 1, loop, false);
+  }
+
+  /** Stop the interface-sound channel (a looping tool sound on release). */
+  stopUi() {
+    const ch = this.channels.get('ui');
+    if (ch?.current) { try { ch.current.stop(); } catch { /* done */ } ch.current = null; }
+    ch?.queue && (ch.queue.length = 0);
+  }
+
   /** One-shot preview for the sound browsers: MSND {cno} or user {buf}. */
   async preview(it) {
     if (this.muted || !this.ensure()) return;
@@ -290,9 +323,9 @@ export class SoundQueue {
     else if (isPlaying) this.ctx.resume();
   }
 
-  /** True while any non-preview channel has a live source or queued items (_pmsq->FPlaying). */
+  /** True while any movie channel has a live source or queued items (_pmsq->FPlaying). */
   playing() {
-    for (const [k, ch] of this.channels) if (k !== 'preview' && (ch.current || ch.queue.length)) return true;
+    for (const [k, ch] of this.channels) if (k !== 'preview' && k !== 'ui' && (ch.current || ch.queue.length)) return true;
     return false;
   }
 

@@ -3,6 +3,7 @@ import { appState } from '../appState.ts';
 import { SPRM } from '../../format/content.ts';
 import { playbackLoop } from '../playbackLoop.ts';
 import { editHistory } from '../editHistory.ts';
+import { CURSORS, cur } from '../ui/cursorManager.ts';
 // Textbox editing — selection/focus bookkeeping, resize-anchor hit-testing,
 // insert/remove, rich-text property edits, and the text-typing undo bursts.
 // Picker tables mirror the .3th content files: TCTH text colors, TBTH fill
@@ -66,10 +67,9 @@ export class TextboxEdits {
 }
   /** True when a border-local point is inside the border band (not the text interior). */
   inTextboxBorder = (xp, yp, w, h) => xp < this.TEXTBOX_BORDER || yp < this.TEXTBOX_BORDER || xp > w - this.TEXTBOX_BORDER || yp > h - this.TEXTBOX_BORDER;
-  /** Anchor -> cursor texture name. */
-  TEXTBOX_ANCHOR_CURSORS = { up: 'tboxvert', down: 'tboxvert', left: 'tboxhor', right: 'tboxhor', upLeft: 'tboxfall', downRight: 'tboxfall', upRight: 'tboxrise', downLeft: 'tboxrise', move: 'repositi' };
-  /** Cursor name -> 'x y' hotspot inside the texture. */
-  TEXTBOX_ANCHOR_HOTSPOTS = { tboxvert: '8 7', tboxhor: '8 5', tboxfall: '7 7', tboxrise: '6 5', repositi: '8 1' };
+  /** Anchor -> cursor spec (cursorManager.ts), hotspots read from the .cur art. */
+  TEXTBOX_ANCHOR_CURSORS = { up: cur('tboxvert', 8, 7), down: cur('tboxvert', 8, 7), left: cur('tboxhor', 8, 5), right: cur('tboxhor', 8, 5),
+    upLeft: cur('tboxfall', 7, 7), downRight: cur('tboxfall', 7, 7), upRight: cur('tboxrise', 6, 5), downLeft: cur('tboxrise', 6, 5), move: cur('repositi', 8, 1) };
   // --- snapshot/restore for document+rect ops -------------------------------
   /** Deep snapshot of a textbox's rect + document — the undo unit. */
   textboxSnapshotOf = (textbox) => ({ l: textbox.l, t: textbox.t, r: textbox.r, b: textbox.b, fStory: textbox.fStory, rtxt: structuredClone(textbox.rtxt) });
@@ -120,7 +120,7 @@ export class TextboxEdits {
       s.startEvents.push({ sevt: SEVT.AddTbox, nfrm, data: chid }); // AddTbox always goes on the start list
       this.setSelectedTextbox(chid); appState.setSelectedChildId(-1);
       appState.setTextboxAttachment({ textbox: s.textboxes.get(chid), moved: false }); // box tracks the cursor until a click plants it
-      if (appState.editorTools.view) appState.editorTools.view.cursor = 'none';
+      if (appState.editorTools.view) appState.editorTools.view.cursor = CURSORS.textboxCreate;
     } else {
       s.textboxes.delete(chid);
       for (const l of [s.startEvents, s.frameEvents])
@@ -128,7 +128,7 @@ export class TextboxEdits {
       if (appState.selectedTextboxId === chid) this.setSelectedTextbox(-1);
       if (appState.focusedTextboxId === chid) this.setFocusedTextbox(-1);
       appState.textboxSelections.delete(chid);
-      appState.setTextboxAttachment(null); if (appState.editorTools.view) appState.editorTools.view.cursor = '';
+      appState.setTextboxAttachment(null); if (appState.editorTools.view) appState.editorTools.view.cursor = null;
     }
     appState.moviePlayer.gotoFrame(appState.moviePlayer.frame); playbackLoop.drawFrame();
   };

@@ -1,7 +1,9 @@
 import { SEVT, AET } from '../../format/movie.ts';
 import { textboxEdits } from '../edit/textboxEdits.ts';
 import { appState, useUiState, useEditState } from '../appState.ts';
-import { elementById, cursorUrl } from '../resources.ts';
+import { elementById } from '../resources.ts';
+import { CURSORS, cur } from './cursorManager.ts';
+import { uiSounds } from './uiSounds.ts';
 import { DWR_NIL } from '../../engine/actor.ts';
 import { FPS } from '../../engine/player.ts';
 import { hitTestTextbox } from '../../render/textbox.ts';
@@ -145,7 +147,7 @@ export class StudioView extends View {
     if (scrubSession) { endSoonerLater(); appState.editorTools.toolButtons?.['2comp']?.onclick(); }
     const [px, py] = appState.setLastViewPoint(viewPixelPos(rawEvent));
     if (appState.textboxAttachment) { // a new textbox attached to the mouse is dropped where this click lands
-      const { textbox, moved } = appState.textboxAttachment; appState.setTextboxAttachment(null); view.cursor = '';
+      const { textbox, moved } = appState.textboxAttachment; appState.setTextboxAttachment(null); view.cursor = null;
       if (moved) textboxEdits.textboxOperation(textbox, () => {}); // commit the mouse-tracked rect as one undo op
       playbackLoop.drawFrame();
       return;
@@ -154,7 +156,7 @@ export class StudioView extends View {
     const textboxHit = textboxEdits.pickTextbox(px, py);
     if (textboxHit && (textboxEdits.TEXTBOX_TOOLS[appState.editorTools.tool] || appState.editorTools.tool === 'nuke')) { // textbox tools claim clicks that land on a box
       const lx = px - textboxHit.l, ly = py - textboxHit.t, w = textboxHit.r - textboxHit.l, h = textboxHit.b - textboxHit.t;
-      if (appState.editorTools.tool === 'nuke') { textboxEdits.removeTextbox(textboxHit); return; } // nuke deletes the clicked box outright
+      if (appState.editorTools.tool === 'nuke') { uiSounds.play('remwbox'); textboxEdits.removeTextbox(textboxHit); return; } // nuke deletes the clicked box outright
       if (textboxEdits.inTextboxBorder(lx, ly, w, h)) { // border band: select + start a move/resize drag (works for every tool)
         if ((appState.editorTools.tool === 'textboxStory' || appState.editorTools.tool === 'textboxCredit') && appState.selectedTextboxId !== textboxEdits.textboxIdOf(textboxHit)) { // scroll-type tools only accept the already-selected box
           textboxEdits.setSelectedTextbox(-1); playbackLoop.drawFrame(); return; // deselect instead
@@ -183,7 +185,7 @@ export class StudioView extends View {
     if (appState.pendingPlacement) {
       const p = appState.sceneRenderer.groundPoint(nx, ny, 0);
       if (p) (appState.pendingPlacement.tdt ? movieEdits.insert3dText : movieEdits.placeActor)(appState.pendingPlacement.tdt ?? appState.pendingPlacement, { x: p.x, y: 0, z: p.z });
-      appState.setPendingPlacement(null); view.cursor = ''; playbackLoop.drawFrame();
+      appState.setPendingPlacement(null); view.cursor = null; playbackLoop.drawFrame();
       return;
     }
     const a = appState.sceneRenderer.pickActor(nx, ny);
@@ -195,19 +197,21 @@ export class StudioView extends View {
     }
     playbackLoop.drawFrame();
     if (SOUND_TOOLS[appState.editorTools.tool]) { // sound-attach tools:
+      const toolSound = appState.editorTools.tool === 'looper' ? 'sloop' : appState.editorTools.tool === 'matcher' ? 'sact' : 'splay';
       if (!a) {                 // no actor under the cursor -> scene sound; hit -> actor sound
         if (appState.editorTools.tool === 'matcher') { if (appState.editorTools.soundTag) console.warn('[sound] motion-match needs an actor'); }
-        else if (appState.editorTools.soundTag) soundEdits.addBackgroundSound(appState.editorTools.tool === 'looper', e.metaKey || e.ctrlKey); // cmd/ctrl queues instead of replacing
-      } else if (a.onStage && appState.editorTools.soundTag) soundEdits.addActorSound(a, appState.editorTools.tool === 'looper', e.metaKey || e.ctrlKey, appState.editorTools.tool === 'matcher');
+        else if (appState.editorTools.soundTag) { uiSounds.play(toolSound); soundEdits.addBackgroundSound(appState.editorTools.tool === 'looper', e.metaKey || e.ctrlKey); } // cmd/ctrl queues instead of replacing
+      } else if (a.onStage && appState.editorTools.soundTag) { uiSounds.play(toolSound); soundEdits.addActorSound(a, appState.editorTools.tool === 'looper', e.metaKey || e.ctrlKey, appState.editorTools.tool === 'matcher'); }
       return;
     }
     if (appState.editorTools.tool === 'listener') { ListenerEasel.show(a || null); return; } // listener opens its easel on click
     if (!a || !a.onStage) return;
     if (appState.editorTools.tool === 'action') { ActionBrowser.show(); return; } // action tool opens the action browser on click
     if (appState.editorTools.tool === 'costume') { (a.template.isTdt ? SpletterEasel.show : CostumeEasel.show)(a); return; } // 3D-text actors get the spletter, others the costume easel
-    if (appState.editorTools.tool === 'cut') { movieEdits.cutSelectedActor(e.shiftKey); return; } // shift cuts all of the actor's subroutes
-    if (appState.editorTools.tool === 'nuke') { movieEdits.nukeSelectedActor(); return; }         // remove the actor entirely
+    if (appState.editorTools.tool === 'cut') { uiSounds.play('cut'); movieEdits.cutSelectedActor(e.shiftKey); return; } // shift cuts all of the actor's subroutes
+    if (appState.editorTools.tool === 'nuke') { uiSounds.play('remactr'); movieEdits.nukeSelectedActor(); return; }         // remove the actor entirely
     if (appState.editorTools.tool === 'rotnorm') { // normalize-rotation tool: undoable event rewrite
+      uiSounds.play('cbackr');
       const eventsBefore = structuredClone(a.data.events);
       a.fNormalizeRot();
       const eventsAfter = structuredClone(a.data.events);
@@ -218,10 +222,12 @@ export class StudioView extends View {
       return;
     }
     if (ROT_AXIS[appState.editorTools.tool]) { // rotate tools start a drag-rotation session on the clicked actor
+      uiSounds.loop('rotate'); // the rotate drone loops until the drag ends
       rotation = { actor: a, lastX: rawEvent.x, lastY: rawEvent.y, axis: ROT_AXIS[appState.editorTools.tool], eventsBefore: structuredClone(a.data.events) };
       return;
     }
     if (appState.editorTools.tool === 'sizenorm') { // normalize-size tool: undoable event rewrite
+      uiSounds.play('cbacks');
       const eventsBefore = structuredClone(a.data.events);
       a.fNormalizeSize();
       const eventsAfter = structuredClone(a.data.events);
@@ -232,14 +238,16 @@ export class StudioView extends View {
       return;
     }
     if (XFM_TOOL[appState.editorTools.tool]) { // squash/stretch and resize start a transform drag on the clicked actor
-      transformDrag = { actor: a, lastX: rawEvent.x, lastY: rawEvent.y, kind: XFM_TOOL[appState.editorTools.tool], eventsBefore: structuredClone(a.data.events) };
+      transformDrag = { actor: a, lastX: rawEvent.x, lastY: rawEvent.y, kind: XFM_TOOL[appState.editorTools.tool], lastSound: 0, eventsBefore: structuredClone(a.data.events) };
       return;
     }
     if (appState.editorTools.tool === 'sooner') { // sooner/later: press grabs the actor; the scrub buttons appear on release
+      uiSounds.play('sfreeze');
       pendingScrubActor = a;
       return;
     }
     if (appState.editorTools.tool !== 'compose' && appState.editorTools.tool !== 'record') return;
+    uiSounds.play('select'); // grabbing an actor with the select/move tool
     const wp = { x: a.xyz.x + a.dxyzRte.x, y: a.xyz.y + a.dxyzRte.y, z: a.xyz.z + a.dxyzRte.z };
     const pt = appState.editorTools.xy ? appState.sceneRenderer.viewPlanePoint(nx, ny, wp) : appState.sceneRenderer.groundPoint(nx, ny, wp.y);
     if (!pt) return;
@@ -270,6 +278,7 @@ export class StudioView extends View {
       recording.timer = setInterval(() => { // one recording tick per frame
         recording.ticks++;
         if (!recording.started) return;
+        uiSounds.play('recframe'); // the recording metronome ticks once per advanced frame
         const s = appState.moviePlayer.scene, last = a.route[a.rtel.irpt]; // record tip — NOT route end (tail subroute may follow)
         const curl = { x: recording.current.x - recording.startOffset.x, y: recording.current.y - recording.startOffset.y, z: recording.current.z - recording.startOffset.z }; // route-local cursor
         const dl = { x: curl.x - last.x, y: curl.y - last.y, z: curl.z - last.z }; // cumulative displacement to cursor (dxrWld)
@@ -361,6 +370,10 @@ export class StudioView extends View {
     if (transformDrag) { // squash/stretch or resize drag: scale factor = 1 + (dx+dy)*0.001
       const delta = (rawEvent.x - transformDrag.lastX) + (rawEvent.y - transformDrag.lastY);
       transformDrag.lastX = rawEvent.x; transformDrag.lastY = rawEvent.y;
+      if (delta && performance.now() - transformDrag.lastSound > 150) { // rate-limited grow/shrink/squash/stretch chirps
+        transformDrag.lastSound = performance.now();
+        uiSounds.play(transformDrag.kind === 'sqsh' ? (delta < 0 ? 'squash' : 'stretch') : (delta > 0 ? 'grow' : 'shrink'));
+      }
       if (transformDrag.kind === 'sqsh') { const brs = 1 + -delta * 0.001; if (brs) transformDrag.actor.fPull(brs, 1 / brs, brs); } // squash: no-op at factor 0
       else transformDrag.actor.fScale(1 + delta * 0.001);
       playbackLoop.drawFrame();
@@ -411,6 +424,7 @@ export class StudioView extends View {
       return;
     }
     if (rotation) { // rotation events were merged live; commit as one undoable op
+      uiSounds.stop(); // end the rotate drone
       const { actor, eventsBefore } = rotation, eventsAfter = structuredClone(actor.data.events);
       const applyEvents = (events) => { actor.data.events = actor.events = structuredClone(events); actor.nfrmCur = null; appState.moviePlayer.gotoFrame(appState.moviePlayer.frame); playbackLoop.drawFrame(); };
       rotation = null;
@@ -435,6 +449,7 @@ export class StudioView extends View {
     dragSession = null;
     if (start.x === current.x && start.y === current.y && start.z === current.z) return;
     const delta = { x: current.x - start.x, y: current.y - start.y, z: current.z - start.z };
+    uiSounds.play(fShift ? 'moveall' : fCmd ? 'move1' : 'move'); // subroute / tweak / plain move
     // Compose-drag commit: cmd anchors a Tweak event at this route spot only,
     // shift translates the subroute's Add event, plain inserts a cumulative Move
     // at the cursor — "move the actor just from this frame on".
@@ -460,48 +475,50 @@ export class StudioView extends View {
   view.onPointerUp = endDrag;
   // Armed tools show their cursor only while hovering an actor; the cut and
   // nuke cursors have fixed (8,10)/(11,3) hotspots baked into their .cur art.
-  const TOOL_CURSORS = { cut: `url(${cursorUrl('cutactor')}) 8 10, auto`, nuke: `url(${cursorUrl('nukscen')}) 11 3, auto`,
-    costume: `url(${cursorUrl('costume')}) 0 6, auto`, rotx: `url(${cursorUrl('rotatex')}) 8 15, auto`,
-    roty: `url(${cursorUrl('rotatey')}) 14 7, auto`, rotz: `url(${cursorUrl('rotatez')}) 10 15, auto`,
-    rotnorm: `url(${cursorUrl('normaliz')}) 0 0, auto`,
-    sqsh: `url(${cursorUrl('squashst')}) 7 7, auto`, size: `url(${cursorUrl('sizevenl')}) 7 8, auto`,
-    sizenorm: `url(${cursorUrl('normaliz')}) 0 0, auto`,
-    sooner: `url(${cursorUrl('squashst')}) 7 7, auto`, // sooner/later reuses the squash/stretch cursor art
-    sounder: `url(${cursorUrl('cur00003')}) 7 12, auto`, looper: `url(${cursorUrl('cur00002')}) 5 10, auto`,
-    matcher: `url(${cursorUrl('cur00001')}) 3 12, auto`, listener: `url(${cursorUrl('listen')}) 4 4, auto`,
-    textboxPaintText: `url(${cursorUrl('fontextc')}) 0 3, auto`, textboxFont: `url(${cursorUrl('fontextc')}) 0 3, auto`,
-    textboxSize: `url(${cursorUrl('fontextc')}) 0 3, auto`, textboxStyle: `url(${cursorUrl('fontextc')}) 0 3, auto`,
-    textboxFill: `url(${cursorUrl('textback')}) 2 15, auto`, textboxStory: `url(${cursorUrl('textback')}) 2 15, auto`,
-    textboxCredit: `url(${cursorUrl('textback')}) 2 15, auto` };
+  const TOOL_CURSORS = { cut: cur('cutactor', 8, 10), nuke: cur('nukscen', 11, 3),
+    costume: cur('costume', 0, 6), rotx: cur('rotatex', 8, 15),
+    roty: cur('rotatey', 14, 7), rotz: cur('rotatez', 10, 15),
+    rotnorm: cur('normaliz'),
+    action: cur('actions2', 0, 5), // the action browser's wand
+    sqsh: cur('squashst', 7, 7), size: cur('sizevenl', 7, 8),
+    sizenorm: cur('normaliz'),
+    sooner: cur('squashst', 7, 7), // sooner/later reuses the squash/stretch cursor art
+    compose: cur('repositi', 8, 1), record: cur('repositi', 8, 1), // select/move + route recording
+    sounder: cur('cur00003', 7, 12), looper: cur('cur00002', 5, 10),
+    matcher: cur('cur00001', 3, 12), listener: cur('listen', 4, 4),
+    textboxSelect: cur('repositi', 8, 1),
+    textboxPaintText: cur('fontextc', 0, 3), textboxFont: cur('fontextc', 0, 3),
+    textboxSize: cur('fontextc', 0, 3), textboxStyle: cur('fontextc', 0, 3),
+    textboxFill: cur('textback', 2, 15), textboxStory: cur('textback', 2, 15),
+    textboxCredit: cur('textback', 2, 15) };
   const viewCursor = view.onPointerMove;
   view.onPointerMove = (rawEvent) => { // tool cursors first, then the dragSession machinery
     const e = rawEvent.src || rawEvent;
     const [px, py] = appState.setLastViewPoint(viewPixelPos(rawEvent));
     if (!dragSession && !recording && !rotation && !transformDrag) {
-      if (appState.textboxAttachment) { view.cursor = 'none'; viewCursor(rawEvent); return; }
+      if (appState.textboxAttachment) { view.cursor = CURSORS.textboxCreate; viewCursor(rawEvent); return; }
       const cur = TOOL_CURSORS[appState.editorTools.tool];
       if (textboxEdits.TEXTBOX_TOOLS[appState.editorTools.tool] || (appState.editorTools.tool === 'nuke' && textboxEdits.pickTextbox(px, py))) { // textbox tools pick their cursor by hover position
         const textbox = textboxEdits.pickTextbox(px, py);
-        if (!textbox) { view.cursor = appState.editorTools.tool === 'textboxSelect' ? `url(${cursorUrl('repositi')}) 8 1, auto` : (cur || ''); viewCursor(rawEvent); return; }
+        if (!textbox) { view.cursor = appState.editorTools.tool === 'textboxSelect' ? TOOL_CURSORS.textboxSelect : (cur ?? null); viewCursor(rawEvent); return; }
         if (appState.editorTools.tool === 'nuke') { view.cursor = TOOL_CURSORS.nuke; viewCursor(rawEvent); return; }
         const lx = px - textbox.l, ly = py - textbox.t, w = textbox.r - textbox.l, h = textbox.b - textbox.t;
         if (appState.editorTools.tool === 'textboxSelect') { // border anchor cursors; ibeam over the text
           if (textboxEdits.inTextboxBorder(lx, ly, w, h)) {
-            const c = textboxEdits.TEXTBOX_ANCHOR_CURSORS[textboxEdits.textboxAnchor(lx, ly, w, h)];
-            view.cursor = `url(${cursorUrl(`${c}`)}) ${textboxEdits.TEXTBOX_ANCHOR_HOTSPOTS[c]}, auto`;
-          } else view.cursor = `url(${cursorUrl('ibeam')}) 5 3, auto`;
+            view.cursor = textboxEdits.TEXTBOX_ANCHOR_CURSORS[textboxEdits.textboxAnchor(lx, ly, w, h)];
+          } else view.cursor = CURSORS.ibeam;
           viewCursor(rawEvent); return;
         }
-        view.cursor = cur || ''; // paint/fill/scroll tools show their cursor over the box
+        view.cursor = cur ?? null; // paint/fill/scroll tools show their cursor over the box
         viewCursor(rawEvent); return;
       }
-      if (cur === undefined) { view.cursor = ''; viewCursor(rawEvent); return; }
-      if (appState.playing) { view.cursor = ''; viewCursor(rawEvent); return; }
+      if (cur === undefined) { view.cursor = null; viewCursor(rawEvent); return; }
+      if (appState.playing) { view.cursor = null; viewCursor(rawEvent); return; }
       const [nx, ny] = viewNdc(rawEvent);
       const a = appState.sceneRenderer.pickActor(nx, ny);
       // Sound-attach tools show their cursor anywhere on the view once a tool
       // sound is loaded; the listener always shows (and auditions on hover)
-      if (SOUND_TOOLS[appState.editorTools.tool]) { view.cursor = appState.editorTools.soundTag ? cur : ''; viewCursor(rawEvent); return; }
+      if (SOUND_TOOLS[appState.editorTools.tool]) { view.cursor = appState.editorTools.soundTag ? cur : null; viewCursor(rawEvent); return; }
       if (appState.editorTools.tool === 'listener') {
         view.cursor = cur;
         if (a !== hoveredEarActor) { // hover changed actor -> audition that side's frame sounds
@@ -512,13 +529,13 @@ export class StudioView extends View {
         }
         viewCursor(rawEvent); return;
       }
-      view.cursor = a ? cur : '';
+      view.cursor = a ? cur : null;
     }
     viewCursor(rawEvent);
   };
   /** Pointer left the stage — clear any armed-tool cursor (a live session
    *  keeps its own cursor until pointerup). */
-  view.onPointerLeave = () => { if (TOOL_CURSORS[appState.editorTools.tool] !== undefined || textboxEdits.TEXTBOX_TOOLS[appState.editorTools.tool]) view.cursor = ''; };
+  view.onPointerLeave = () => { if (TOOL_CURSORS[appState.editorTools.tool] !== undefined || textboxEdits.TEXTBOX_TOOLS[appState.editorTools.tool]) view.cursor = null; };
   /** First user click anywhere marks the player as user-interacted, which lets
    *  sound playback resume (browsers gate audio behind a gesture). */
   document.addEventListener('pointerdown', () => { if (appState.moviePlayer) appState.moviePlayer.clk = true; }, true);
@@ -561,16 +578,16 @@ export class StudioView extends View {
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
     if (appState.textboxAttachment) { // drop the mouse-attached box at its current spot
-      const { textbox, moved } = appState.textboxAttachment; appState.setTextboxAttachment(null); view.cursor = '';
+      const { textbox, moved } = appState.textboxAttachment; appState.setTextboxAttachment(null); view.cursor = null;
       if (moved) textboxEdits.textboxOperation(textbox, () => {});
       playbackLoop.drawFrame();
       return;
     }
     if (appState.textboxSelection && appState.focusedTextboxId >= 0) { appState.setTextboxSelection({ anchor: appState.textboxSelection.other, other: appState.textboxSelection.other }); playbackLoop.drawFrame(); } // collapse to a caret before disarming
-    if (appState.pendingPlacement) { appState.setPendingPlacement(null); view.cursor = ''; return; }
+    if (appState.pendingPlacement) { appState.setPendingPlacement(null); view.cursor = null; return; }
     if (TOOL_CURSORS[appState.editorTools.tool] !== undefined || textboxEdits.TEXTBOX_TOOLS[appState.editorTools.tool]) { // disarm an armed tool — selecting another tool is the other way out
       textboxEdits.endTextboxSnapshot();
-      appState.editorTools.tool = 'none'; view.cursor = ''; endSoonerLater(); hoveredEarActor = undefined;
+      appState.editorTools.tool = 'none'; view.cursor = null; endSoonerLater(); hoveredEarActor = undefined;
       for (const tab of TOOLBAR_DEFS) for (const o of Object.values<any>(tab.secondaryButtons || {})) { o.classList.remove('on'); o.syncFace?.(); }
       for (const o of cameraPopupCells) o.syncFace?.();
     }
@@ -589,7 +606,7 @@ export class StudioView extends View {
     // DOM input floated over the canvas (real text entry stays DOM until the
     // canvas gets an IME-capable input element)
     const nameEl = namedElements.stname;
-    nameEl.pickable = true; nameEl.cursor = 'text';
+    nameEl.pickable = true; nameEl.cursor = CURSORS.ibeam;
     nameEl.onClick = () => {
       const nm = elementById('stnameInp'); if (nm) return;
       const inp = document.createElement('input');
@@ -633,20 +650,20 @@ export class StudioView extends View {
   appState.soundQueue.setVolume(parseFloat(localStorage.getItem('vol3dmm') || '1'));
   (V as any)._stSliders = stSliders;
   const ACTIONS = {
-    frmRWEnd: () => { if (!appState.moviePlayer.scene) return; playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmFirst); playbackLoop.drawFrame(); },
-    frmRW: () => { if (!appState.moviePlayer.scene) return; playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.frame - 1); playbackLoop.drawFrame(); },
-    frmFW: () => { if (!appState.moviePlayer.scene) return; playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.frame + 1); playbackLoop.drawFrame(); },
-    frmFWEnd: () => { if (!appState.moviePlayer.scene) return; playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmLast); playbackLoop.drawFrame(); },
-    scnRWEnd: () => { playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(0); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
-    scnRW: () => { playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(Math.max(0, appState.moviePlayer.sceneIndex - 1)); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
-    scnFW: () => { playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(Math.min(appState.moviePlayer.movie.scenes.length - 1, appState.moviePlayer.sceneIndex + 1)); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
-    scnFWEnd: () => { playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(appState.moviePlayer.movie.scenes.length - 1); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
-    play: () => { appState.soundQueue.ensure(); playbackLoop.setPlaying(!appState.playing); },
-    undo: () => { const b = namedElements.stb_undo; if (!b.enabled) return; (editHistory.mode === 'u' ? editHistory.undo : editHistory.redo)(); playbackLoop.drawFrame(); },
+    frmRWEnd: () => { if (!appState.moviePlayer.scene) return; uiSounds.play('gofrstf'); playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmFirst); playbackLoop.drawFrame(); },
+    frmRW: () => { if (!appState.moviePlayer.scene) return; uiSounds.play('goprevf'); playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.frame - 1); playbackLoop.drawFrame(); },
+    frmFW: () => { if (!appState.moviePlayer.scene) return; uiSounds.play('gonextf'); playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.frame + 1); playbackLoop.drawFrame(); },
+    frmFWEnd: () => { if (!appState.moviePlayer.scene) return; uiSounds.play('golastf'); playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmLast); playbackLoop.drawFrame(); },
+    scnRWEnd: () => { uiSounds.play('gofrsts'); playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(0); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
+    scnRW: () => { uiSounds.play('goprevs'); playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(Math.max(0, appState.moviePlayer.sceneIndex - 1)); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
+    scnFW: () => { uiSounds.play('gonexts'); playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(Math.min(appState.moviePlayer.movie.scenes.length - 1, appState.moviePlayer.sceneIndex + 1)); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
+    scnFWEnd: () => { uiSounds.play('golasts'); playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(appState.moviePlayer.movie.scenes.length - 1); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
+    play: () => { appState.soundQueue.ensure(); uiSounds.play(appState.playing ? 'stop' : 'play'); playbackLoop.setPlaying(!appState.playing); },
+    undo: () => { const b = namedElements.stb_undo; if (!b.enabled) return; uiSounds.play(editHistory.mode === 'u' ? 'undo' : 'redo'); (editHistory.mode === 'u' ? editHistory.undo : editHistory.redo)(); playbackLoop.drawFrame(); },
     ccp: () => toggleCameraPopup(),
     port: () => togglePortalPopup(),
-    book: () => { const u = new URL(location.href); u.searchParams.set('mode', 'theatre'); window.open(u.href, '_blank'); },
-    map: () => window.open('https://github.com/permpkin/3dmm-web', '_blank'),
+    book: () => { uiSounds.play('exit'); const u = new URL(location.href); u.searchParams.set('mode', 'theatre'); window.open(u.href, '_blank'); },
+    map: () => { uiSounds.play('sectool'); window.open('https://github.com/permpkin/3dmm-web', '_blank'); },
   };
   for (const [id, up, dn, x, y, w, h] of STUDIO_BTNS) {
     const b = new StudioButton(up, dn, x, y, w, h, ACTIONS[id] ? () => ACTIONS[id]() : null, TIP_IDS.has(id) ? id : null);
@@ -684,6 +701,7 @@ const cameraPopupCells = [];
     if (!tool) { b.alpha = 0.35; b.enabled = false; continue; }
     b.toolId = tool; // pressed face (bmp+'c') also shows while the tool stays armed
     b.syncFace = () => { b.faceOverride = `${bmp}${appState.editorTools.tool === tool || b.isDown ? 'c' : ''}`; b.dirty(); };
+    b.clickSound = 'sectool';
     b.onclick = () => { // cell click: clear any armed actor tool, arm ours, close the popup
       for (const tab of TOOLBAR_DEFS) for (const o of Object.values<any>(tab.secondaryButtons || {})) { o.classList.remove('on'); o.syncFace?.(); }
       appState.editorTools.tool = tool;
@@ -695,6 +713,7 @@ const cameraPopupCells = [];
   /** Show or hide the cut/copy/paste popup, syncing its toggle button face and
    *  the outside-click dismissal list. */
   const setCameraPopup = (open) => {
+    if (open && !cameraPopupBg.visible) uiSounds.play('dropdn'); // the popup drop-down sound
     cameraPopupBg.visible = open;
     for (const b of cameraPopupCells) { b.visible = open; b.syncFace?.(); }
     const b = namedElements.stb_ccp; if (b) { b.classList.toggle('on', open); b.syncFace(); }
@@ -712,19 +731,21 @@ const cameraPopupCells = [];
     V.add(portalPopupBg);
 const portalPopupCells = [];
   const portalPopup = ({ name: 'portal', elements: [portalPopupBg], toggle: null } as {name:string,elements:any[],toggle:any});
-  for (const [up, dn, y, fn] of ([
-    ['p1new', 'p1news', 198, () => movieDocument.newMovie()],        // new movie
-    ['p1open', 'p1openc', 250, () => movieDocument.openMovieFile()], // open movie file
-    ['p1save', 'p1saves', 302, () => movieDocument.saveMovie()],     // save movie
-    ['p1svas', 'p1svass', 354, () => movieDocument.saveMovie(true)], // save movie as
-  ] as [string,string,number,() => void][])) {
+  for (const [up, dn, y, snd, fn] of ([
+    ['p1new', 'p1news', 198, 'fnew', () => movieDocument.newMovie()],        // new movie
+    ['p1open', 'p1openc', 250, 'pfopen', () => movieDocument.openMovieFile()], // open movie file
+    ['p1save', 'p1saves', 302, 'fsave', () => movieDocument.saveMovie()],     // save movie
+    ['p1svas', 'p1svass', 354, 'fsaveas', () => movieDocument.saveMovie(true)], // save movie as
+  ] as [string,string,number,string,() => void][])) {
     const b = new StudioButton(up, dn, 477, y, 112, 52, () => { setPortalPopup(false); fn(); }); // close the popup, then run the command
+    b.clickSound = snd;
     b.visible = false; b.popup = portalPopup;
     portalPopupCells.push(b); portalPopup.elements.push(b);
     V.add(b);
   }
   /** Show or hide the portfolio popup, syncing the briefcase button face. */
   const setPortalPopup = (open) => {
+    if (open && !portalPopupBg.visible) uiSounds.play('dropdn');
     portalPopupBg.visible = open;
     for (const b of portalPopupCells) b.visible = open;
     const b = namedElements.stb_port; if (b) { b.classList.toggle('on', open); b.syncFace(); } // selected face while open
@@ -750,6 +771,7 @@ const rotatePopupCells = [];
     b.visible = false; b.popup = rotatePopup;
     rotatePopupCells.push(b); rotatePopup.elements.push(b);
     b.syncFace = () => { b.faceOverride = `${bmp}${appState.editorTools.tool === tool || b.isDown ? 's' : ''}`; b.dirty(); };
+    b.clickSound = 'sectool';
     b.onclick = () => { // cell click: deselect the old tool, arm ours, select the rotate toggle, close
       for (const tab of TOOLBAR_DEFS) for (const o of Object.values<any>(tab.secondaryButtons || {})) { o.classList.remove('on'); o.syncFace?.(); }
       appState.editorTools.tool = tool;
@@ -763,6 +785,7 @@ const rotatePopupCells = [];
   const rotateToggleButton = () => TOOLBAR_DEFS.find((tab) => tab.id === 'actors')?.secondaryButtons?.['2rot'];
   /** Show or hide the rotate popup, syncing the toggle's selected face. */
   const setRotatePopup = (open) => {
+    if (open && !rotatePopupBg.visible) uiSounds.play('dropdn');
     rotatePopupBg.visible = open;
     for (const b of rotatePopupCells) { b.visible = open; b.syncFace(); }
     const rb = rotateToggleButton(); if (rb && open) { rb.classList.add('on'); rb.syncFace(); }
@@ -786,6 +809,7 @@ const transitionPopupCells = [];
     b.visible = false; b.popup = transitionPopup;
     transitionPopupCells.push(b); transitionPopup.elements.push(b);
     b.syncFace = () => { b.faceOverride = `${bmp}${appState.editorTools.tool === tool || b.isDown ? 's' : ''}`; b.dirty(); };
+    b.clickSound = 'sectool';
     b.onclick = () => { // cell click: deselect the old tool, arm ours, select the transform toggle, close
       for (const tab of TOOLBAR_DEFS) for (const o of Object.values<any>(tab.secondaryButtons || {})) { o.classList.remove('on'); o.syncFace?.(); }
       appState.editorTools.tool = tool;
@@ -799,6 +823,7 @@ const transitionPopupCells = [];
   const transitionToggleButton = () => TOOLBAR_DEFS.find((tab) => tab.id === 'actors')?.secondaryButtons?.['2tran'];
   /** Show or hide the transform popup, syncing the toggle's selected face. */
   const setTransitionPopup = (open) => {
+    if (open && !transitionPopupBg.visible) uiSounds.play('dropdn');
     transitionPopupBg.visible = open;
     for (const b of transitionPopupCells) { b.visible = open; b.syncFace(); }
     const tb2 = transitionToggleButton(); if (tb2 && open) { tb2.classList.add('on'); tb2.syncFace(); }
@@ -846,6 +871,7 @@ const transitionPopupCells = [];
     if (target < appState.moviePlayer.scene.nfrmFirst || target > appState.moviePlayer.scene.nfrmLast) { // out of scene bounds -> end and revert to compose
       endSoonerLater(); appState.editorTools.toolButtons?.['2comp']?.onclick(); return;
     }
+    uiSounds.play(direction > 0 ? 'systepf' : 'systepb'); // each scrub step ticks
     scrubSession.actor.fSoonerLater(direction);
     appState.moviePlayer.gotoFrame(target); // the view follows the shifted events
     playbackLoop.drawFrame();
@@ -872,11 +898,12 @@ const transitionPopupCells = [];
     V.add(scrollPopupBg);
 const scrollPopupCells = [];
   const scrollPopup = ({ name: 'scroll', elements: [scrollPopupBg], toggle: null } as {name:string,elements:any[],toggle:any});
-  for (const [bmp, y, tool] of ([['p7scrl', 100, 'textboxCredit'], ['p7nscr', 144, 'textboxStory']] as [string,number,string][])) {
+  for (const [bmp, y, tool, snd] of ([['p7scrl', 100, 'textboxCredit', 'wscron'], ['p7nscr', 144, 'textboxStory', 'wscroff']] as [string,number,string,string][])) {
     const b = new StudioButton(bmp, bmp + 's', 480, y, 46, 44, null);
     b.visible = false; b.popup = scrollPopup;
     scrollPopupCells.push(b); scrollPopup.elements.push(b);
     b.syncFace = () => { b.faceOverride = `${bmp}${appState.editorTools.tool === tool || b.isDown ? 's' : ''}`; b.dirty(); };
+    b.clickSound = snd; // scroll-on / scroll-off arm sounds
     b.onclick = () => { // cell click: arm the scroll tool, close the popup, keep 4scrl selected
       textboxEdits.endTextboxSnapshot();
       appState.editorTools.tool = tool;
@@ -890,6 +917,7 @@ const scrollPopupCells = [];
   const scrollToggleButton = () => TOOLBAR_DEFS.find((tab) => tab.id === 'words')?.secondaryButtons?.['4scrl'];
   /** Show or hide the scroll-type popup, syncing the toggle's selected face. */
   const setScrollPopup = (open) => {
+    if (open && !scrollPopupBg.visible) uiSounds.play('dropdn');
     scrollPopupBg.visible = open;
     for (const b of scrollPopupCells) { b.visible = open; b.syncFace(); }
     const sb = scrollToggleButton();
@@ -927,7 +955,9 @@ const scrollPopupCells = [];
   const textPopupButton = () => TOOLBAR_DEFS.find((tab) => tab.id === 'words')?.secondaryButtons?.[TEXT_POPUP_BUTTONS[textPopup.kind]];
   /** Arm a textbox paint tool and immediately apply the armed value to the
    *  textbox under the last view point, if any. */
+  const PAINT_TOOL_SOUNDS = { textboxPaintText: 'wcolor', textboxFill: 'wbgclr', textboxFont: 'wfont', textboxSize: 'wsize', textboxStyle: 'wstyle' };
   function armTextboxPaint(tool) {
+    uiSounds.play(PAINT_TOOL_SOUNDS[tool] || 'sectool');
     textboxEdits.endTextboxSnapshot();
     appState.editorTools.tool = tool;
     syncTextboxFaces();
@@ -939,7 +969,7 @@ const scrollPopupCells = [];
   class ToolPopupCell extends Element {
     constructor(def, item, i, action) {
       super(def.x, def.y + i * def.rowHeight, item.iscr !== undefined ? 102 : def.w, def.rowHeight);
-      this.item = item; this.action = action; this.hover = false; this.cursor = 'pointer';
+      this.item = item; this.action = action; this.hover = false; this.cursor = CURSORS.pointer;
     }
     /** Paint the frame + the item's swatch/sample. */
     draw(ctx) {
@@ -976,6 +1006,7 @@ const scrollPopupCells = [];
    *  'style', or 'font' — from `TEXT_POPUP_DEFS`. */
   function showTextPopup(kind) {
     if (textPopup.kind === kind) { closeTextPopup(); return; }
+    uiSounds.play('dropdn');
     closeTextPopup();
     const def = TEXT_POPUP_DEFS[kind];
     textPopup.kind = kind; textPopup.pageIndex = 0;
@@ -999,7 +1030,7 @@ const scrollPopupCells = [];
     const def = TEXT_POPUP_DEFS[textPopup.kind];
     def.items.slice(textPopup.pageIndex * def.itemsPerPage, textPopup.pageIndex * def.itemsPerPage + def.itemsPerPage).forEach((item, i) => {
       const b = new ToolPopupCell(def, item, i, textPopupPick);
-      b.popup = textPopupGroup;
+      b.popup = textPopupGroup; b.clickSound = 'pselect';
       V.add(b);
       textPopup.cells.push(b); textPopupGroup.elements.push(b);
     });
@@ -1008,7 +1039,7 @@ const scrollPopupCells = [];
       for (const [bmp, dn] of ([['d8dn', 1], ['d8up', -1]] as [string,number][])) {
         const b = new StudioButton(bmp, bmp + 's', def.x + (dn > 0 ? 0 : def.w / 2), def.y + def.itemsPerPage * def.rowHeight, def.w / 2, 21,
           () => { textPopup.pageIndex = Math.max(0, Math.min(textPopup.pageIndex + dn, pages - 1)); buildTextPopupCells(); });
-        b.popup = textPopupGroup;
+        b.popup = textPopupGroup; b.clickSound = dn > 0 ? 'pagedn' : 'pageup';
         V.add(b);
         textPopup.cells.push(b); textPopupGroup.elements.push(b);
       }
@@ -1046,7 +1077,7 @@ const scrollPopupCells = [];
   class RollCallCell extends Element {
     constructor(list, i) {
       super(list.x, 98 + i * 74, 42, 74);
-      this.list = list; this.i = i; this.cursor = 'pointer';
+      this.list = list; this.i = i; this.cursor = CURSORS.pointer;
     }
     /** Paint the cell's frame + the actor's thumbnail. */
     draw(ctx) {
@@ -1059,12 +1090,12 @@ const scrollPopupCells = [];
       }
     }
     /** Click — select the cell's actor/prop in the editor. */
-    onClick() { const a = thumbnails.rollCallActors(this.list)[this.list.offset + this.i]; if (a) { this.list.selected = this.list.offset + this.i; appState.setSelectedChildId(movieEdits.childIdOf(a)); studioHost.syncRollCall(); playbackLoop.drawFrame(); } }
+    onClick() { const a = thumbnails.rollCallActors(this.list)[this.list.offset + this.i]; if (a) { uiSounds.play('select'); this.list.selected = this.list.offset + this.i; appState.setSelectedChildId(movieEdits.childIdOf(a)); studioHost.syncRollCall(); playbackLoop.drawFrame(); } }
   }
   class RollCallArrow extends Element {
     constructor(list, img, x, w, scroll) {
       super(x, 394, w, 17);
-      this.img = img; this.scroll = scroll; this.cursor = 'pointer'; this.list = list;
+      this.img = img; this.scroll = scroll; this.cursor = CURSORS.pointer; this.list = list;
       this.enabled = false; this._dn = false;
     }
     /** Paint the arrow — disabled ('d'), pressed ('c'), or normal face. */
@@ -1091,6 +1122,7 @@ const scrollPopupCells = [];
     }
     const up = new RollCallArrow(list, list.upFace, list.x, 21, () => list.offset--);
     const dn = new RollCallArrow(list, list.downFace, list.x + 20, 20, () => list.offset++);
+    up.clickSound = 'pageup'; dn.clickSound = 'pagedn';
     up.list = dn.list = list;
     V.add(up); V.add(dn);
     list.arrows.push(up, dn);
@@ -1103,8 +1135,8 @@ const scrollPopupCells = [];
   const TOOLBAR_DEFS: any[] = [ // per-tab layout: insert buttons + secondary row buttons
     { id: 'scenes', cov: 'covr1', cx: 0,   row: '1par', def: null, door: 5, dx: 375,
       ins: [['1back', 18, 'bkgd']],
-      sec: [['1view', 199, 0, 'cam'], ['p3rmbk', 256, 0, () => soundEdits.sceneChop(false)],
-            ['p3rmfw', 315, 0, () => soundEdits.sceneChop(true)], ['1scen', 390, 0, () => SorterEasel.show()]] },
+      sec: [['1view', 199, 0, 'cam'], ['p3rmbk', 256, 0, () => { uiSounds.play('rembfr'); soundEdits.sceneChop(false); }],
+            ['p3rmfw', 315, 0, () => { uiSounds.play('remaftr'); soundEdits.sceneChop(true); }], ['1scen', 390, 0, () => SorterEasel.show()]] },
     { id: 'actors', cov: 'covr2', cx: 100, row: '2par', def: '2comp', door: 6, dx: 374,
       ins: [['2actr', 114, 'actor'], ['2prop', 180, 'prop'], ['2splt', 246, () => SpletterEasel.show(null)]],
       sec: [['2comp', 41], ['2acts', 98, 0, undefined, ['2act01', '2act02', '2act03', '2act04', '2act05', '2act06']],
@@ -1131,6 +1163,7 @@ const scrollPopupCells = [];
   const makeToolbarButton = (up, x, y, w, h, onclick) => {
     const dn = TB_DOWN[up] || up + 's';
     const b = new StudioButton(up, dn, x, y, w, h, onclick, TIP_IDS.has(up) ? up : null);
+    b.clickSound = 'sectool'; // the secondary-tool click
     b.syncFace = () => { b.faceOverride = null; b.dirty(); };
     return b;
   };
@@ -1159,13 +1192,15 @@ const scrollPopupCells = [];
         if (act === 'tog:pause') { // pause-sound toggle: two faces by state, not a tool
           b.syncFace = () => { b.faceOverride = appState.editorTools.pauseSound ? '1notes' : '1note';
             b.dim = b.isDown; b.dirty(); };
-          b.onclick = () => soundEdits.editPause(!appState.editorTools.pauseSound);
+          b.onclick = () => { uiSounds.play('rswitch'); soundEdits.editPause(!appState.editorTools.pauseSound); };
+          b.clickSound = null; // state-dependent sound plays inside onclick
         } else {
           const key = act.slice(4); // toggle faces: 'xy'/'ground' state keys on editorTools
           b.syncFace = () => { const on = appState.editorTools[key];
             b.faceOverride = on === (key === 'ground') ? bmp : bmp + 's';
             b.dim = b.isDown; b.dirty(); };
-          b.onclick = () => { appState.editorTools[key] = !appState.editorTools[key]; b.syncFace(); };
+          b.onclick = () => { appState.editorTools[key] = !appState.editorTools[key]; uiSounds.play(appState.editorTools[key] ? 'stateon' : 'stateoff'); b.syncFace(); };
+          b.clickSound = null;
         }
         b.syncFace();
       } else if (typeof act === 'string') b.onclick = () => AssetBrowserView.show(act);
@@ -1174,7 +1209,7 @@ const scrollPopupCells = [];
         b.classList.add('on'); b.syncFace();
         appState.editorTools.tool = { '2comp': 'compose', '2cont': 'record', '2acts': 'action', '2cost': 'costume', '2soon': 'sooner',
           '3sing': 'sounder', '3loop': 'looper', '3rpt': 'matcher', '3ear': 'listener', '4ins': 'textboxSelect' }[bmp] || 'none';
-        for (const o of cameraPopupCells) o.syncFace?.(); setRotatePopup(false); setTransitionPopup(false); setScrollPopup(false); closeTextPopup(); endSoonerLater(); hoveredEarActor = undefined; view.cursor = ''; }; // picking a tool disarms everything else and closes popups
+        for (const o of cameraPopupCells) o.syncFace?.(); setRotatePopup(false); setTransitionPopup(false); setScrollPopup(false); closeTextPopup(); endSoonerLater(); hoveredEarActor = undefined; view.cursor = null; }; // picking a tool disarms everything else and closes popups
       tab.rowEl.add(b);
       tab.secondaryButtons[bmp] = b;
       if (!act) (appState.editorTools.toolButtons ||= {})[bmp] = b; // registered for programmatic tool select (e.g. action apply arms 2cont)
@@ -1193,13 +1228,13 @@ const scrollPopupCells = [];
       tab.doorEl.dirty();
       tab.doorZone.visible = !tab.all;
     };
-    tab.doorZone.onclick = () => { if (!appState.moviePlayer?.scene) return; tab.all = true; paintDoor(); }; // doors stay shut while tools are locked
+    tab.doorZone.onclick = () => { if (!appState.moviePlayer?.scene) return; uiSounds.play('cover'); tab.all = true; paintDoor(); }; // doors stay shut while tools are locked
     paintDoor(); tab.paintDoor = paintDoor;
     // Cover tab — drawn on top of the insert buttons; open = hidden.
     tab.covEl = new ImageElement(`${tab.cov}c`, tab.cx, 0, tab.cov === 'covr1' ? 99 : tab.cov === 'covr2' ? 223 : tab.cov === 'covr3' ? 220 : 98, 43);
-    tab.covEl.pickable = true; tab.covEl.cursor = 'pointer';
+    tab.covEl.pickable = true; tab.covEl.cursor = CURSORS.pointer;
     V.add(tab.covEl);
-    tab.covEl.onClick = () => { if (!tab.locked) setCover(tab.id); }; // locked (no scene) covers show a disabled face and ignore clicks
+    tab.covEl.onClick = () => { if (!tab.locked) { uiSounds.play('cover'); setCover(tab.id); } }; // locked (no scene) covers show a disabled face and ignore clicks
   }
   /** Open one cover tab ('scenes'/'actors'/'sounds'/'words') and close the
    *  others, showing its secondary tool row. Each tab arms its default tool —
@@ -1213,7 +1248,7 @@ const scrollPopupCells = [];
     const tab = TOOLBAR_DEFS.find((t) => t.id === id);
     if (tab?.def) appState.editorTools.toolButtons?.[tab.def]?.onclick();
     else { // no default tool -> nil tool, no face selected
-      textboxEdits.endTextboxSnapshot(); appState.editorTools.tool = 'none'; view.cursor = '';
+      textboxEdits.endTextboxSnapshot(); appState.editorTools.tool = 'none'; view.cursor = null;
       for (const tab of TOOLBAR_DEFS) for (const o of Object.values<any>(tab.secondaryButtons || {})) { o.classList.remove('on'); o.syncFace?.(); }
       for (const o of cameraPopupCells) o.syncFace?.();
     }
@@ -1241,7 +1276,7 @@ const scrollPopupCells = [];
       if (tab.id === 'scenes') continue;
       tab.locked = noScene;
       tab.covEl.name = `${tab.cov}${noScene ? 'd' : 'c'}`;
-      tab.covEl.cursor = noScene ? 'default' : 'pointer';
+      tab.covEl.cursor = noScene ? CURSORS.arrow : CURSORS.pointer;
       tab.covEl.dirty();
     }
     if (noScene) {

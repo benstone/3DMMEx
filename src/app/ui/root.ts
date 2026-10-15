@@ -5,6 +5,8 @@
 import { Element } from './element.ts';
 import { Animator, EASE } from './animator.ts';
 import { appState, useUiState } from '../appState.ts';
+import { cursorManager } from './cursorManager.ts';
+import { uiSounds } from './uiSounds.ts';
 
 /** Virtual canvas size — every element works in this space; the canvas is
  *  CSS-stretched to fill the stage. */
@@ -49,6 +51,7 @@ export class UiRoot extends Element {
     this._raf = 0;
     canvas.width = UI_WIDTH; canvas.height = UI_HEIGHT;
     canvas.style.pointerEvents = 'none'; // passive until a view asks for input
+    cursorManager.attach(canvas);
     this._bindInput();
   }
 
@@ -118,7 +121,7 @@ export class UiRoot extends Element {
     const on = !!this.stack.length;
     this.canvas.style.pointerEvents = on && this.topView?.interactive !== false ? 'auto' : 'none';
     this.canvas.style.display = on ? '' : 'none';
-    if (!on) { this.hover = null; this.captured = null; this.canvas.style.cursor = ''; }
+    if (!on) { this.hover = null; this.captured = null; cursorManager.reset(); }
     else this.start();
   }
 
@@ -194,9 +197,7 @@ export class UiRoot extends Element {
       if (this.captured) { this._walkUp(this.captured, 'onPointerMove', p); return; }
       const hit = this.topView?.hitTest(p.x, p.y) || null;
       if (hit !== this.hover) { this.hover?.onPointerLeave(); hit?.onPointerEnter(); this.hover = hit; }
-      let cur = null, el = hit;
-      while (el && !cur) { cur = el.cursor; el = el.parent; }
-      c.style.cursor = cur || '';
+      cursorManager.apply(hit);
       if (hit) this._walkUp(hit, 'onPointerMove', p);
     });
     const up = (e) => {
@@ -204,12 +205,12 @@ export class UiRoot extends Element {
       const hit = this.captured;
       if (hit) { this._walkUp(hit, 'onPointerUp', p); }
       const over = this.topView?.hitTest(p.x, p.y);
-      if (hit && hit === over) this._walkUp(hit, 'onClick', p);
+      if (hit && hit === over) { if (hit.clickSound) uiSounds.play(hit.clickSound); this._walkUp(hit, 'onClick', p); }
       this.captured = null;
     };
     c.addEventListener('pointerup', up);
     c.addEventListener('pointercancel', up);
-    c.addEventListener('pointerleave', () => { this.hover?.onPointerLeave(); this.hover = null; });
+    c.addEventListener('pointerleave', () => { this.hover?.onPointerLeave(); this.hover = null; cursorManager.reset(); });
   }
 
   /** Dispatch to el then bubble up ancestors until one returns true. */

@@ -1,6 +1,7 @@
 // Shared canvas UI widgets — texture-backed button, slider, image, text link,
 // and the GL movie screen blit.
 import { Element } from './element.ts';
+import { CURSORS } from './cursorManager.ts';
 import { textureCache } from './textureCache.ts';
 import { elementById } from '../resources.ts';
 import { localizer } from '../localization.ts';
@@ -28,7 +29,7 @@ export class ImageButton extends Element {
   constructor(upFace, downFace, x, y, w, h, onClick) {
     super(x, y, w, h);
     this.upFace = upFace; this.downFace = downFace; this.action = onClick;
-    this.pressed = false; this.cursor = 'pointer';
+    this.pressed = false; this.cursor = CURSORS.pointer;
   }
   /** The texture name to draw — the function face, or pressed->downFace. */
   face() { return typeof this.upFace === 'function' ? this.upFace() : (this.pressed && this.downFace ? this.downFace : this.upFace); }
@@ -55,7 +56,7 @@ export class TextLink extends Element {
     super(x, y, w, h);
     this.text = text; this.action = onClick;
     this.size = size; this.color = color; this.align = align;
-    this.hover = false; this.cursor = 'pointer';
+    this.hover = false; this.cursor = CURSORS.pointer;
   }
   /** Paint the link text + hover underline. */
   draw(ctx) {
@@ -86,7 +87,7 @@ export class StudioButton extends Element {
     this.upFace = upFace; this.downFace = downFace;
     this.onclick = onclick;
     this.tooltipId = tipId;
-    this.cursor = 'pointer';
+    this.cursor = CURSORS.pointer;
     this.enabled = true;            // disabled buttons draw the 'd' face when set
     this.dim = false;           // 'brightness(.6)' down-face filter
     this.alpha = 1;

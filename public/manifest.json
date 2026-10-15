@@ -431,12 +431,16 @@
   "vsld.png"
  ],
  "cur": [
+  "actions2.cur",
   "costume.cur",
+  "creatbox.cur",
   "cur00001.cur",
   "cur00002.cur",
   "cur00003.cur",
   "cutactor.cur",
+  "default.cur",
   "fontextc.cur",
+  "hotspot.cur",
   "ibeam.cur",
   "listen.cur",
   "normaliz.cur",
@@ -451,7 +455,8 @@
   "tboxhor.cur",
   "tboxrise.cur",
   "tboxvert.cur",
-  "textback.cur"
+  "textback.cur",
+  "wait.cur"
  ],
  "movies": []
 }

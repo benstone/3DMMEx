@@ -6,6 +6,7 @@ import { RecorderEasel } from './ui/easels.ts';
 import { tooltips } from './ui/tooltips.ts';
 import { uiRoot } from './ui/root.ts';
 import { modalSlot } from './ui/modal.ts';
+import { cursorManager, CURSORS } from './ui/cursorManager.ts';
 import { MoviePlayer } from '../engine/player.ts';
 import { ChunkyFile } from '../format/chunky.ts';
 import { serializeMovie } from '../format/movie.ts';
@@ -203,13 +204,16 @@ class MovieDocument {
   openMovieFile = () => {
     const inp = document.createElement('input');
     inp.type = 'file';
-    inp.onchange = async () => { const f = inp.files[0]; if (f) this.openMovie(await f.arrayBuffer(), f.name); };
+    inp.onchange = async () => { const f = inp.files[0]; if (f) await this._busy(async () => this.openMovie(await f.arrayBuffer(), f.name)); };
     inp.click();
   };
 
+  /** Run `job` with the wait cursor up — long parse/serialize spans. */
+  async _busy(job) { cursorManager.setOverride(CURSORS.wait); cursorManager.apply(null); try { return await job(); } finally { cursorManager.setOverride(null); cursorManager.reset(); } }
+
   /** Save — to the remembered file handle when we have one (saveAs=false),
    *  else the save-file picker, else a download fallback. */
-  saveMovie = async (saveAs = false) => {
+  saveMovie = async (saveAs = false) => this._busy(async () => {
     const name = `${appState.moviePlayer.movie.name || localizer.translate('doc.untitled')}.3mm`;
     try {
       if (!saveAs && this.saveFileHandle) {
@@ -229,12 +233,12 @@ class MovieDocument {
       }
       toastHost.show(localizer.translate('doc.saved', { name: this.saveFileHandle?.name || name }));
     } catch (e) { if (e.name !== 'AbortError') toastHost.show(localizer.translate('doc.saveFailed', { err: e.message })); }
-  };
+  });
 
   /** Open a movie by URL — bare names resolve under movies/ (the ?3mm=
    *  param), full URLs fetch as-is. Returns null on success, else a friendly
    *  error string for the open-failed dialog. */
-  openMovieUrl = async (urlOrName, cacheDoc = true) => {
+  openMovieUrl = async (urlOrName, cacheDoc = true) => this._busy(async () => {
     let url;
     try { url = /^[\w.-]+$/.test(urlOrName) ? `${baseUrl}movies/${urlOrName}` : new URL(urlOrName, location.href).href; }
     catch { return `that doesn't look like a movie link`; }
@@ -254,7 +258,7 @@ class MovieDocument {
     const ok = this.openMovie(buf, name, cacheDoc);
     if (ok) this.lastMovieUrl = url;
     return ok ? null : `couldn't load that movie`;
-  };
+  });
 }
 
 export const movieDocument = new MovieDocument();

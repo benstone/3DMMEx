@@ -3,6 +3,7 @@ import { baseUrl } from '../resources.ts';
 import { uiRoot, UI_WIDTH, UI_HEIGHT } from './root.ts';
 import { Element } from './element.ts';
 import { localizer } from '../localization.ts';
+import { CURSORS } from './cursorManager.ts';
 // Dwell tooltips — callout balloons drawn from 9-slice skins (cobllnN.png)
 // with the red arrow baked in; the skin's reg point is the arrow tip. Hovering
 // a control ~1.2s shows its tip (suppressed while playing). ------------
@@ -97,7 +98,7 @@ class Balloon extends Element {
     const lay = layoutRuns(parts, Math.min(W - bl - br - 22, 200), ctx2);
     this.lay = lay; this.bl = bl; this.bt = bt; this.br = br; this.bb = bb;
     this.xEl = (new Element(W - br - 18, H - bb - 18, 16, 16) as Element & {_dn: boolean}); // the balloon's close button
-    this.xEl.cursor = 'pointer';
+    this.xEl.cursor = CURSORS.pointer;
     this.xEl._dn = false;
     this.xEl.draw = (ctx) => {
       const image = new Image(); image.src = baseUrl + `textures/cancbtn${this.xEl._dn ? '3' : '1'}.png`;

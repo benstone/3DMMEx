@@ -17,7 +17,8 @@ export class Element {
     this.visible = true;
     this.pickable = true;   // participates in hit-testing
     this.opacity = 1;
-    this.cursor = null;     // css cursor string while hovering
+    this.cursor = null;     // CursorSpec (cursorManager.ts) while hovering
+    this.clickSound = null; // uiSounds name played on a completed click
     this._uiRoot = null;
     this._root = null;      // opaque back-ref for view-owned anonymous elements
     /** @type {any} */ this._pop = null; // popup group this element belongs to (studio)

@@ -5,6 +5,7 @@ import { TextElement } from './widgets.ts';
 import { textureCache } from './textureCache.ts';
 import { modalSlot } from './modal.ts';
 import { localizer } from '../localization.ts';
+import { uiSounds } from './uiSounds.ts';
 // --- talent book -----------------------------------------------------------
 // Corkboard book + per-page portrait collage + spiral-ring overlay. The pages
 // were "found" collectibles gated behind the building hub in the shipped
@@ -85,6 +86,7 @@ class BioText extends TextElement {
 export class TalentBookView extends EaselView {
   constructor(pageIndex = talentBook.state.page) {
     super();
+    this.openSound = 'tbkopen'; // the talent book has its own opening sound
     this.makeImage('biopage', 0, 0, 640, 480);
     this.page = new BioPage(pageIndex);
     this.add(this.page);
@@ -94,12 +96,12 @@ export class TalentBookView extends EaselView {
     this.pageText = new TextElement('', 299, 427, 40, 22, { size: 12 }); // fits the gap between the nav arrows
     this.add(this.pageText);
     this.makeButton('bioback', 'biobackc', 229, 410, 69, 50, () => {
-      if (this.page.pageIndex > 1) { this.page.pageIndex--; this.render(); }
+      if (this.page.pageIndex > 1) { uiSounds.play(Math.random() < 0.5 ? 'tbpageb1' : 'tbpageb2'); this.page.pageIndex--; this.render(); }
     });
     this.makeButton('biofwd', 'biofwdc', 339, 410, 69, 50, () => {
-      if (this.page.pageIndex < TALENT_BOOK_PAGE_COUNT - 1) { this.page.pageIndex++; this.render(); }
+      if (this.page.pageIndex < TALENT_BOOK_PAGE_COUNT - 1) { uiSounds.play(Math.random() < 0.5 ? 'tbpagef1' : 'tbpagef2'); this.page.pageIndex++; this.render(); }
     });
-    this.makeButton('biocan', 'biocanc', 511, 415, 48, 47, modalSlot.close);
+    this.makeButton('biocan', 'biocanc', 511, 415, 48, 47, modalSlot.close).clickSound = 'cancel';
     this.render();
   }
   /** Repaint the current page — persists the position and refreshes the

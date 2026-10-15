@@ -10,6 +10,8 @@ import { ImageElement, StudioButton } from './widgets.ts';
 import { textureCache } from './textureCache.ts';
 import { elementById } from '../resources.ts';
 import { ModalView, modalSlot } from './modal.ts';
+import { CURSORS } from './cursorManager.ts';
+import { uiSounds } from './uiSounds.ts';
 
 /** Blits an offscreen canvas (GL preview, baked thumb) into its rect. */
 export class CanvasEl extends Element {
@@ -30,7 +32,7 @@ export class ScrollButton extends Element {
    *  runs once per step. */
   constructor(up, x, y, w, h, onStep) {
     super(x, y, w, h);
-    this.cursor = 'pointer'; this.faceName = up; this.onStep = onStep; this.pressed = false;
+    this.cursor = CURSORS.pointer; this.faceName = up; this.onStep = onStep; this.pressed = false;
     /** @type {any} */ this.repeatTimer = null;
   }
   /** Paint the face (pressed variant while held). */
@@ -38,14 +40,17 @@ export class ScrollButton extends Element {
     const image = textureCache.image(`${this.faceName}${this.pressed ? 'c' : ''}`, () => this.dirty());
     if (textureCache.isReady(image)) ctx.drawImage(image, 0, 0, this.w, this.h);
   }
-  /** Press — steps once, then auto-repeats with accelerating delay. */
+  /** Press — steps once, then auto-repeats with accelerating delay. Each
+   *  step plays `stepSound` when set (the gadget page-up/down sounds). */
   onPointerDown() {
-    this.pressed = true; this.dirty(); this.onStep();
+    this.pressed = true; this.dirty(); this.step();
     let del = 250;
-    const go = () => { this.onStep(); del = Math.max(80, del - 20); this.repeatTimer = setTimeout(go, del); };
+    const go = () => { this.step(); del = Math.max(80, del - 20); this.repeatTimer = setTimeout(go, del); };
     this.repeatTimer = setTimeout(go, del);
     return true;
   }
+  /** Run one step — plays the step sound then calls onStep. */
+  step() { if (this.stepSound) uiSounds.play(this.stepSound); this.onStep(); }
   /** Release — drops the face and stops the repeat. */
   onPointerUp() { this.release(); }
   /** Cancel the repeat when the pointer slides off. */
@@ -71,7 +76,7 @@ export class Thermometer extends Element {
 export class NamePlate extends Element {
   constructor(x, y, w, h, label, onClick) {
     super(x, y, w, h);
-    this.cursor = 'pointer'; this.label = label; this.action = onClick; this.pressed = false;
+    this.cursor = CURSORS.pointer; this.label = label; this.action = onClick; this.pressed = false;
   }
   /** Paint the plate face + centered label. */
   draw(ctx) {
@@ -96,7 +101,7 @@ export class NamePlate extends Element {
 export class ListenerSlider extends Element {
   constructor(x, y, w, h, vlm, onCommit) {
     super(x, y, w, h);
-    this.cursor = 'pointer';
+    this.cursor = CURSORS.pointer;
     this.yp = 100 - Math.round(vlm * 101); // volume 0..1 maps to thumb y 100..0
     this.onCommit = onCommit;
     this.th = new ImageElement('e4vol1', 5, this.yp, 21, 11); // the thumb tracks yp
@@ -127,7 +132,7 @@ export class FramedCell extends Element {
    *  `onClick` gets the cell. */
   constructor(face, x, y, w, h, onClick) {
     super(x, y, w, h);
-    this.cursor = 'pointer'; this.face = face; this.action = onClick;
+    this.cursor = CURSORS.pointer; this.face = face; this.action = onClick;
     this.hover = false; this.selected = false;
   }
   /** Paint the frame face (hover/selected variant) then the inner content. */
@@ -149,6 +154,8 @@ export class FramedCell extends Element {
 }
 
 export class EaselView extends ModalView { // modal semantics live in ModalView (modal.ts)
+  /** Easels play the slide-open sound when pushed onto the modal slot. */
+  openSound = 'ezlopen';
   /** Float a DOM element over the UI canvas at logical 640x480 coords. */
   static overlayElement(el, x, y, w, h) {
     el.style.position = 'absolute';
@@ -160,8 +167,13 @@ export class EaselView extends ModalView { // modal semantics live in ModalView 
   }
   /** Add an ImageElement and return it. */
   makeImage(n, x, y, w, h) { const image = new ImageElement(n, x, y, w, h); this.add(image); return image; }
-  /** Add a StudioButton and return it. */
-  makeButton(up, dn, x, y, w, h, act, tip = null) { const b = new StudioButton(up, dn, x, y, w, h, act, tip); this.add(b); return b; }
+  /** Add a StudioButton and return it — face names ending 'okay'/'can'
+   *  ('cancel') automatically adopt the ok/cancel click sounds. */
+  makeButton(up, dn, x, y, w, h, act, tip = null) {
+    const b = new StudioButton(up, dn, x, y, w, h, act, tip);
+    if (/okay$/.test(up)) b.clickSound = 'ok'; else if (/can$|cancel$/.test(up)) b.clickSound = 'cancel';
+    this.add(b); return b;
+  }
   /** Create a DOM text input floated over the canvas at logical coords —
    *  auto-registered for hide/pop with the view. */
   domInput(x, y, w, h, cls = 'spltInp') {

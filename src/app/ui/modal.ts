@@ -4,6 +4,7 @@
 // finishes initializing before its consumers.
 import { View, uiRoot } from './root.ts';
 import { appState } from '../appState.ts';
+import { uiSounds } from './uiSounds.ts';
 
 /** Shared modal semantics — the view that owns the modal slot: Escape
  *  routing (modalSlot.view._onEsc || modalSlot.close) and DOM-overlay teardown.
@@ -29,9 +30,11 @@ class ModalSlot {
   view = null;    // pushed ModalView, or null
   cleanup = null; // session teardown run on close
 
-  /** Push a browser/easel — closes whatever is up first. */
+  /** Push a browser/easel — closes whatever is up first and plays the
+   *  view's open sound ('pbrowse' browsers, 'ezlopen' easels, 'tbkopen' book). */
   open = (view) => {
     this.close(); this.view = view; uiRoot.push(view, 'none');
+    if (view.openSound) uiSounds.play(view.openSound);
   };
 
   /** Close the current browser/easel — stops sound previews, runs session

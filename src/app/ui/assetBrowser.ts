@@ -15,6 +15,8 @@ import { localizer } from '../localization.ts';
 // The recorder entry is click-time only — a lazy easels import keeps this
 // module out of the easel import cycle.
 import { ModalView, modalSlot } from './modal.ts';
+import { CURSORS } from './cursorManager.ts';
+import { uiSounds } from './uiSounds.ts';
 const easels = () => import('./easels.ts');
 
 /** Per-kind browser layouts — book skin, grid geometry, and button slots,
@@ -39,7 +41,8 @@ class BrowserCell extends Element {
   constructor(view, def, i) {
     const col = i % def.columns, row = Math.floor(i / def.columns);
     super(def.x + def.gridX + col * def.cellStepX, def.y + def.gridY + row * def.cellStepY, def.frameWidth, def.frameHeight);
-    this.def = def; this.view = view; this.cursor = 'pointer';
+    this.def = def; this.view = view; this.cursor = CURSORS.pointer;
+    this.clickSound = 'brwzpic'; // the cell-pick sound
     this.cellIndex = i; this.hover = false; this.selected = false;
   }
   /** The item this cell currently shows — page + grid slot into the list. */
@@ -92,6 +95,7 @@ export class AssetBrowserView extends ModalView {
   /** Build the book, cells, page controls, and kind-specific buttons. */
   constructor(kind, importItems = null) {
     super();
+    this.openSound = 'pbrowse'; // the page-flip browser-open sound
     this.kind = kind; this.importItems = importItems;
     const def = this.def = BROWSER_DEFS[kind];
     this.items = importItems || (kind === 'scene' ? appState.moviePlayer.movie.scenes.map((s, i) => ({ s, i }))
@@ -103,7 +107,7 @@ export class AssetBrowserView extends ModalView {
     this.pickable = false; // cells carry their own hit rects; clicks outside must not fall through:
     this.veil = new Element(0, 0, 640, 480);
     this.veil.draw = () => {};
-    this.veil.onPointerDown = () => true;
+    this.veil.onPointerDown = () => { uiSounds.play('splot'); return true; }; // background clicks splat
     this.add(this.veil);
     this.add(new ImageElement(def.bookSkin, def.x, def.y, 516, 372));
     this.pageTextEl = new Element(def.x + def.pageText[0], def.y + def.pageText[1], 64, 29);
@@ -119,9 +123,9 @@ export class AssetBrowserView extends ModalView {
       const cell = new BrowserCell(this, def, i);
       this.cells.push(cell); this.add(cell);
     }
-    const makeButton = (up, dn, x, y, w, h, act) => { const b = new StudioButton(up, dn, x, y, w, h, act); this.add(b); return b; };
-    makeButton('fwd', 'fwdc', def.x + def.forwardButton[0], def.y + def.forwardButton[1], 59, 46, () => { this.pageIndex = Math.min(this.pageCount() - 1, this.pageIndex + 1); this.invalidate(); });
-    makeButton('bback', 'bbackc', def.x + def.backButton[0], def.y + def.backButton[1], 59, 46, () => { this.pageIndex = Math.max(0, this.pageIndex - 1); this.invalidate(); });
+    const makeButton = (up, dn, x, y, w, h, act, clickSound = 'brwzbtn') => { const b = new StudioButton(up, dn, x, y, w, h, act); b.clickSound = clickSound; this.add(b); return b; };
+    makeButton('fwd', 'fwdc', def.x + def.forwardButton[0], def.y + def.forwardButton[1], 59, 46, () => { this.pageIndex = Math.min(this.pageCount() - 1, this.pageIndex + 1); this.invalidate(); }, 'pagedn');
+    makeButton('bback', 'bbackc', def.x + def.backButton[0], def.y + def.backButton[1], 59, 46, () => { this.pageIndex = Math.max(0, this.pageIndex - 1); this.invalidate(); }, 'pageup');
     if (def.okButton) makeButton('okay', 'okayc', def.x + def.okButton[0], def.y + def.okButton[1], 50, 48, () => {
       if (importItems) { // import pick -> into the browser's list
         if (this.selectedIndex < 0) return;
@@ -129,10 +133,10 @@ export class AssetBrowserView extends ModalView {
       }
       soundEdits.setSoundTag(kind, this.selectedIndex >= 0 ? this.items[this.selectedIndex] : null); // OK loads the tool sound
       modalSlot.close();                                              // (empty pick clears the tool sound)
-    });
-    makeButton('cancel', 'cancelc', def.x + def.cancelButton[0], def.y + def.cancelButton[1], 50, 48, () => importItems ? (modalSlot.close(), AssetBrowserView.show(kind)) : modalSlot.close());
-    if (def.recordButton && !importItems) makeButton('mike', 'mikes', def.x + def.recordButton[0], def.y + def.recordButton[1], 50, 48, () => easels().then((m) => m.RecorderEasel.show(kind)));
-    if (def.importButton && !importItems) makeButton('sndport', 'sndports', def.x + def.importButton[0], def.y + def.importButton[1], 50, 48, () => soundSources.importSoundFiles(kind));
+    }, 'ok');
+    makeButton('cancel', 'cancelc', def.x + def.cancelButton[0], def.y + def.cancelButton[1], 50, 48, () => importItems ? (modalSlot.close(), AssetBrowserView.show(kind)) : modalSlot.close(), 'cancel');
+    if (def.recordButton && !importItems) makeButton('mike', 'mikes', def.x + def.recordButton[0], def.y + def.recordButton[1], 50, 48, () => easels().then((m) => m.RecorderEasel.show(kind)), 'mike');
+    if (def.importButton && !importItems) makeButton('sndport', 'sndports', def.x + def.importButton[0], def.y + def.importButton[1], 50, 48, () => soundSources.importSoundFiles(kind), 'pfopen');
     this.invalidate();
   }
   /** Page count for the current items. */
@@ -153,7 +157,7 @@ export class AssetBrowserView extends ModalView {
     else if (kind === 'cam') movieEdits.editCamera(item.cameraIndex); // rewrites the current ChngCamera event
     else if (kind === 'actor' || kind === 'prop') { // pick template -> click stage to place
       appState.setPendingPlacement({ cno: item.cno, name: item.name });
-      if (appState.editorTools.view) appState.editorTools.view.cursor = 'crosshair';
+      if (appState.editorTools.view) appState.editorTools.view.cursor = CURSORS.crosshair;
     } else if (kind === 'scene') { playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(item.sceneIndex); }
     modalSlot.close(); playbackLoop.drawFrame();
   }
