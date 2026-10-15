@@ -543,6 +543,30 @@ export class Renderer {
    *  transition dissolves from. Call before loadScene. */
   snapshot(moviePlayer) { this._drawScene(moviePlayer, this.prevRT); }
 
+  /** Render the player's current frame into a w×h 2D canvas — the sorter's
+   *  scene-preview path. Draws through a private RT (curRT stays owned by
+   *  transitions), reads the pixels back, and flips Y (GL rows are
+   *  bottom-up); the selection box is suppressed. */
+  frameCanvas(moviePlayer, w, h) {
+    const rt = this._thumbRT ||= new THREE.WebGLRenderTarget(WIDTH, HEIGHT, { depthBuffer: true });
+    const sel = this.selActor; this.selActor = null;
+    try { this._drawScene(moviePlayer, rt); } finally { this.selActor = sel; }
+    const W = rt.width, H = rt.height;
+    const buf = new Uint8Array(W * H * 4);
+    this.gl.readRenderTargetPixels(rt, 0, 0, W, H, buf);
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'), img = x.createImageData(W, H);
+    for (let row = 0; row < H; row++) {
+      const s = (H - 1 - row) * W * 4;
+      img.data.set(buf.subarray(s, s + W * 4), row * W * 4);
+    }
+    for (let i = 3; i < img.data.length; i += 4) img.data[i] = 255; // opaque frame, not clear-alpha
+    x.putImageData(img, 0, 0);
+    const out = document.createElement('canvas'); out.width = w; out.height = h;
+    out.getContext('2d').drawImage(c, 0, 0, w, h);
+    return out;
+  }
+
   /** Render a frame — scene + background into the target (through the
    *  transition compositor when one's active), then MSAA resolve and the
    *  textbox overlay. `t` in [0,1] interpolates toward the current step. */

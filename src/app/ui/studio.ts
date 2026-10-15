@@ -698,7 +698,7 @@ const cameraPopupCells = [];
     const b = new StudioButton(bmp, bmp + 'c', 224 + x - 24, 354, 49, 52, null, TIP_IDS.has(bmp) ? bmp : null); // cells are positioned on a 24px grid offset
     b.visible = false; b.popup = cameraPopup;
     cameraPopupCells.push(b); cameraPopup.elements.push(b);
-    if (!tool) { b.alpha = 0.35; b.enabled = false; continue; }
+    if (!tool) { b.alpha = 0.35; b.enabled = false; V.add(b); continue; } // unimplemented cells show dimmed
     b.toolId = tool; // pressed face (bmp+'c') also shows while the tool stays armed
     b.syncFace = () => { b.faceOverride = `${bmp}${appState.editorTools.tool === tool || b.isDown ? 'c' : ''}`; b.dirty(); };
     b.clickSound = 'sectool';

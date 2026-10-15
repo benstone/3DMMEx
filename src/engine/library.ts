@@ -56,6 +56,7 @@ export class Library {
   /** Point the library at a movie file — its chunks then resolve sid-0 tags,
    *  and movie-scoped cache entries + runtime templates are dropped. */
   setMovie(chunkyFile) {
+    if (this.movieFile === chunkyFile) return; // same file — keep caches and runtime templates
     this.movieFile = chunkyFile;
     for (const m of [this._tmpl, this._bkgd, this._msnd]) for (const k of [...m.keys()]) if (k.startsWith('movie:')) m.delete(k);
     this._rtmpl.clear(); // runtime TDTs live in the movie's autosave CRF — a new movie gets a fresh one

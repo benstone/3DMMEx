@@ -24,7 +24,7 @@ uiRoot.push(view, 'none');
 uiRoot.canvas.style.background = '#000';
 
 appState.setContentLibrary(await Library.load(`${baseUrl}data`));
-appState.setSocialPalette(new Uint8Array(await (await fetch(`${baseUrl}data/socpal.palette`)).arrayBuffer()));
+appState.setSocialPalette(new Uint8Array(await (await fetch(`${baseUrl}data/socpal.pal`)).arrayBuffer()));
 appState.setSceneRenderer(new Renderer(elementById('view'), appState.socialPalette));
 appState.setSoundQueue(new SoundQueue(appState.contentLibrary));
 appState.sceneRenderer.setOpts(renderOptions);

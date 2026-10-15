@@ -86,7 +86,7 @@ export class StudioButton extends Element {
     super(x, y, w, h);
     this.upFace = upFace; this.downFace = downFace;
     this.onclick = onclick;
-    this.tooltipId = tipId;
+    this.tip = tipId; // localization key — the tooltip walk reads el.tip up the parent chain
     this.cursor = CURSORS.pointer;
     this.enabled = true;            // disabled buttons draw the 'd' face when set
     this.dim = false;           // 'brightness(.6)' down-face filter

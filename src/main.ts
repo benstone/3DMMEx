@@ -56,7 +56,7 @@ appState.setContentLibrary(await Library.load(`${baseUrl}data`, (n, got, tot) =>
   libraryParts.set(n, tot ? got / tot : 1);
   libraryProgress([...libraryParts.values()].reduce((a, b) => a + b, 0) / CONTENT_FILES.length, `loading ${n.toLowerCase()}`);
 }));
-appState.setSocialPalette(new Uint8Array(await (await fetch(`${baseUrl}data/socpal.palette`)).arrayBuffer()));
+appState.setSocialPalette(new Uint8Array(await (await fetch(`${baseUrl}data/socpal.pal`)).arrayBuffer()));
 bootSequence.advanceMiscTick(localizer.translate('boot.palette'));
 appState.setSceneRenderer(new Renderer(elementById('view'), appState.socialPalette));
 appState.setSoundQueue(new SoundQueue(appState.contentLibrary));

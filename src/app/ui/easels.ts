@@ -1,7 +1,7 @@
 import * as M from '../../engine/mat34.ts';
 import * as THREE from 'three';
 import { Actor } from '../../engine/actor.ts';
-import { FPS } from '../../engine/player.ts';
+import { FPS, MoviePlayer } from '../../engine/player.ts';
 import { ChunkyFile } from '../../format/chunky.ts';
 import { parseMbmp, STY, TDTS, makeTdtTemplate, templateCmtl } from '../../format/content.ts';
 import { parseMovie } from '../../format/movie.ts';
@@ -120,21 +120,39 @@ export class SorterEasel extends EaselView {
     this.syncTools(); this.sync();
   }
 
-  /** A scene's 143x80 thumbnail canvas — the stored THUM bitmap, or a name
-   *  placeholder; cached on the scene record. */
+  /** A scene's 143x80 thumbnail canvas — the stored THUM bitmap, else a live
+   *  render of the scene's first frame, else a name placeholder; cached on
+   *  the scene record. */
   thumbCv(scene) {
     if (!scene._tcv) {
       const c = offscreenCanvas(143, 80);
       const x = c.getContext('2d');
       if (scene.thumb) { try { x.drawImage(thumbnails.mbmpToCanvas(parseMbmp(scene.thumb), 143, 80), 0, 0); } catch { x.fillStyle = '#111'; x.fillRect(0, 0, 143, 80); } }
-      else { // no stored thumbnail — name placeholder
-        x.fillStyle = '#111'; x.fillRect(0, 0, 143, 80); x.fillStyle = '#ccc';
-        x.font = '12px "Comic Sans MS", cursive'; x.textAlign = 'center'; x.textBaseline = 'middle';
-        x.fillText((scene.name || 'scene').slice(0, 20), 71, 40);
+      else { // no stored thumbnail — render the scene's first frame
+        const rendered = this.renderedThumb(scene);
+        if (rendered) x.drawImage(rendered, 0, 0);
+        else {
+          x.fillStyle = '#111'; x.fillRect(0, 0, 143, 80); x.fillStyle = '#ccc';
+          x.font = '12px "Comic Sans MS", cursive'; x.textAlign = 'center'; x.textBaseline = 'middle';
+          x.fillText((scene.name || 'scene').slice(0, 20), 71, 40);
+        }
       }
       scene._tcv = c;
     }
     return scene._tcv;
+  }
+
+  /** Render `scene`'s first frame offscreen through a throwaway MoviePlayer
+   *  sharing the working movie's chunky file — the live player's state is
+   *  untouched. Imported scenes (not in the movie list) return null. */
+  renderedThumb(scene) {
+    const i = appState.moviePlayer.movie.scenes.indexOf(scene);
+    if (i < 0) return null;
+    try {
+      if (!this._thumbPlayer) this._thumbPlayer = new MoviePlayer(appState.contentLibrary.movieFile, appState.contentLibrary);
+      this._thumbPlayer.loadScene(i);
+      return appState.sceneRenderer.frameCanvas(this._thumbPlayer, 143, 80);
+    } catch { return null; }
   }
 
   /** Refresh cell faces + scroll-arrow visibility after items/topIndex change. */

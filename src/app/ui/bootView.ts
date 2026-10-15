@@ -36,17 +36,20 @@ class BootView extends View {
     this.add(this.artEl);
     this.add(new class extends Element { // progress bar + caption, bottom-center
       constructor() { super(0, 0, UI_WIDTH, UI_HEIGHT); this.pickable = false; }
-      /** Paint the progress bar + caption (nothing while progress < 0). */
+      /** Paint the progress bar + caption (nothing while progress < 0). The
+       *  bar sits at 27%/72% like the shipped boot — the gap between the
+       *  film-strip art and the credits block. */
       draw(ctx) {
         const r = this._root;
         if (r.progress < 0) return;
-        const bw = 260, bh = 14, bx = (UI_WIDTH - bw) / 2, by = UI_HEIGHT - 60;
-        ctx.fillStyle = '#000a'; ctx.fillRect(bx - 2, by - 2, bw + 4, bh + 4);
-        ctx.fillStyle = '#333'; ctx.fillRect(bx, by, bw, bh);
-        ctx.fillStyle = '#6a5'; ctx.fillRect(bx, by, bw * Math.min(1, r.progress), bh);
+        const bw = 294, bh = 16, bx = 173, by = 346; // left 27%, top 72% of 640x480
+        ctx.fillStyle = '#0c0c0c'; ctx.fillRect(bx, by, bw, bh);
+        ctx.fillStyle = '#0a56c8'; ctx.fillRect(bx, by, bw * Math.min(1, r.progress), bh);
+        ctx.strokeStyle = '#555'; ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1); // sunken bevel: dark top/left...
+        ctx.strokeStyle = '#d8d8d8'; ctx.beginPath(); ctx.moveTo(bx + bw - 0.5, by + 0.5); ctx.lineTo(bx + bw - 0.5, by + bh - 0.5); ctx.lineTo(bx + 0.5, by + bh - 0.5); ctx.stroke(); // ...light bottom/right
         if (r.caption) {
-          ctx.fillStyle = '#eee'; ctx.font = "12px 'Comic Sans MS', cursive, sans-serif";
-          ctx.textAlign = 'center'; ctx.fillText(r.caption, UI_WIDTH / 2, by + bh + 16);
+          ctx.fillStyle = '#666'; ctx.font = "bold 13px 'Comic Sans MS', cursive, sans-serif";
+          ctx.textAlign = 'center'; ctx.fillText(r.caption, UI_WIDTH / 2, by + bh + 22);
         }
       }
     })._root = this;
