@@ -45,9 +45,9 @@ class SorterCell extends Element {
     this.easel = easel; this.i = i; this.cursor = CURSORS.pointer;
     /** @type {any} */ this._drag = null;
     this.transitionButtons = T4.map((tt, j) => {
-      const b = new StudioButton(`e3trn${j + 1}`, `e3trn${j + 1}s`, cx + 156, cy + 11 + 22 * j, 20, 17,
+      const b = new StudioButton(`e3trn${j + 1}`, `e3trn${j + 1}s`, 156, 11 + 22 * j, 20, 17,
         () => { const item = this.item(); if (item) { item.trans = T4[j]; easel.sync(); } }); // pick this scene's transition
-      easel.add(b);
+      this.add(b); // cell children — they paint over the cell's frame
       return b;
     });
   }
