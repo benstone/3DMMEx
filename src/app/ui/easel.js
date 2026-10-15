@@ -7,6 +7,7 @@
 import { View, ui } from './root.js';
 import { Element } from './element.js';
 import { Img, StBtn } from './widgets.js';
+import { texImg, imgReady } from './img.js';
 import { $ } from '../res.js';
 import { setBrwsView, closeBrowser } from './browser.js';
 
@@ -18,6 +19,103 @@ export class CvEl extends Element {
 
 /** Offscreen GL preview canvas — a canvas that never enters the DOM. */
 export const offCv = (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h });
+
+// --- shared easel widgets ----------------------------------------------------
+
+/** Auto-repeat scroll arrow (e3up/e3down): pressed face + accelerating repeat. */
+export class ScrollBtn extends Element {
+  constructor(up, x, y, w, h, onStep) {
+    super(x, y, w, h);
+    this.cursor = 'pointer'; this.up = up; this.onStep = onStep; this.dn = false;
+    /** @type {any} */ this.tm = null;
+  }
+  draw(ctx) {
+    const im = texImg(`${this.up}${this.dn ? 'c' : ''}`, () => this.dirty());
+    if (imgReady(im)) ctx.drawImage(im, 0, 0, this.w, this.h);
+  }
+  onPointerDown() {
+    this.dn = true; this.dirty(); this.onStep();
+    let del = 250;
+    const go = () => { this.onStep(); del = Math.max(80, del - 20); this.tm = setTimeout(go, del); };
+    this.tm = setTimeout(go, del);
+    return true;
+  }
+  onPointerUp() { this.release(); }
+  onPointerLeave() { this.release(); }
+  release() { this.dn = false; this.dirty(); clearTimeout(this.tm); }
+}
+
+/** Recorder thermometer — a colored fill that tracks recording progress. */
+export class Therm extends Element {
+  constructor(x, y, w, h) {
+    super(x, y, w, h); this.pickable = false; this.f = 0;
+  }
+  draw(ctx) {
+    ctx.fillStyle = '#cfe8ff'; ctx.fillRect(0, 0, this.w, this.h);
+    ctx.fillStyle = '#3465a4'; ctx.fillRect(0, 0, this.w * Math.min(1, this.f), this.h);
+    ctx.strokeStyle = '#222'; ctx.strokeRect(0.5, 0.5, this.w - 1, this.h - 1);
+  }
+}
+
+/** e4audit name plate — press face + centered label; click auditions. */
+export class NamePlate extends Element {
+  constructor(x, y, w, h, label, onClick) {
+    super(x, y, w, h);
+    this.cursor = 'pointer'; this.label = label; this.act = onClick; this.dn = false;
+  }
+  draw(ctx) {
+    const im = texImg(`e4audit${this.dn ? 'c' : ''}`, () => this.dirty());
+    if (imgReady(im)) ctx.drawImage(im, 0, 0, this.w, this.h);
+    ctx.fillStyle = '#222'; ctx.font = "bold 9px 'Comic Sans MS', cursive, sans-serif";
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(this.label, this.w / 2, this.h / 2, this.w - 6);
+  }
+  onPointerDown() { this.dn = true; this.dirty(); }
+  onPointerUp() { this.dn = false; this.dirty(); }
+  onPointerLeave() { this.dn = false; this.dirty(); }
+  onClick() { this.act?.(); }
+}
+
+/** e4vol listener slider — track with a travelling thumb; commit on release.
+ * vlm 0..1 maps to yp 100..0; dragging below the line (yp>100) means silent. */
+export class LisSlider extends Element {
+  constructor(x, y, w, h, vlm, onCommit) {
+    super(x, y, w, h);
+    this.cursor = 'pointer';
+    this.yp = 100 - Math.round(vlm * 101); // yPos = yNuke - vlm*FullDisplay/kvlmFull
+    this.onCommit = onCommit;
+    this.th = new Img('e4vol1', 5, this.yp, 21, 11); // MoveAbsGob(kxpSliderThumb=5, yPos)
+    this.th.pickable = false;
+    this.add(this.th);
+  }
+  vlm() { return this.yp > 100 ? -1 : Math.max(0, (101 - this.yp) / 101); }
+  move(p) {
+    this.yp = Math.max(0, Math.min(108, p.y - (this.abs()[1]))); // p is view-space
+    this.th.y = this.yp; this.th.dirty();
+  }
+  onPointerDown(p) { this.move(p); return true; }
+  onPointerMove(p) { this.move(p); }
+  onPointerUp() { this.onCommit(this.vlm()); }
+}
+
+/** Framed pick cell — d1frm/frame5 face with hover+selected states and a
+ * drawInner(ctx) hook for the content (thumb, name). */
+export class FrmCell extends Element {
+  constructor(face, x, y, w, h, onClick) {
+    super(x, y, w, h);
+    this.cursor = 'pointer'; this.face = face; this.act = onClick;
+    this.hov = false; this.sel = false;
+  }
+  draw(ctx) {
+    const im = texImg(`${this.face}${this.sel || this.hov ? 'h' : ''}`, () => this.dirty());
+    if (imgReady(im)) ctx.drawImage(im, 0, 0, this.w, this.h);
+    this.drawInner(ctx);
+  }
+  drawInner(ctx) {} // eslint-disable-line no-unused-vars
+  onPointerEnter() { this.hov = true; this.dirty(); }
+  onPointerLeave() { this.hov = false; this.dirty(); }
+  onClick() { this.act?.(this); }
+}
 
 /** Float a DOM element over the UI canvas at logical 640x480 coords. */
 export function domOverlay(el, x, y, w, h) {

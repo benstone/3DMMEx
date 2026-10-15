@@ -89,13 +89,15 @@ class View3D extends MovieScreen {
   constructor(x, y, w, h) { super(x, y, w, h); this.pickable = true; }
 }
 
-export const studioView = new View();
-export const studioEl = /** @returns {any} */ (id) => /** @type {any} */ (studioView)._els?.[id];
-/** @type {Record<string, any>} */
-const els = /** @type {any} */ (studioView)._els = {};
+export let studioView = null; // the mounted StudioView instance
+export const studioEl = /** @returns {any} */ (id) => studioView?._els?.[id];
 
-export function initStudio() {
-  const V = studioView;
+export class StudioView extends View {
+  constructor() {
+    super();
+    /** @type {Record<string, any>} */
+    const els = this._els = {};
+  const V = this;
   const glv = $('view'); if (glv) glv.style.display = 'none'; // GL canvas lives offscreen; MovieScreen blits it
   // The studio sits UNDER whatever is on the stack (boot view pops to reveal it;
   // theatre/embed replace() discards it).
@@ -1192,9 +1194,12 @@ const scrlCells = [];
     if (sl && !slEls.includes(hit)) { endSoonerLater(); ed.toolBtns?.['2comp']?.onclick(); }
   };
   setCover('scenes');
+  }
 }
+export function initStudio() { studioView = new StudioView(); }
 export function syncStudio() { // reflect player state into the studio bar (called from updateUi)
-  if (!studioView.children.length) return;
+  if (!studioView?.children.length) return;
+  const els = studioView._els;
   els.stfnum.textContent = player.scene ? player.frame - player.scene.nfrmFirst + 1 : '–';
   els.stsnum.textContent = player.sceneIndex >= 0 ? player.sceneIndex + 1 : '–';
   const nm = els.stname;

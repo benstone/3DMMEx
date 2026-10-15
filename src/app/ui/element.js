@@ -18,15 +18,17 @@ export class Element {
   clear() { for (const c of this.children) { c.parent = c.root = null; } this.children.length = 0; }
   contains(px, py) { return px >= this.x && py >= this.y && px < this.x + this.w && py < this.y + this.h; }
 
-  /** Deepest visible pickable element under (px,py) in absolute coords.
-      pickable=false only exempts *this* element — children still test. */
+  /** Deepest visible pickable element under (px,py), coords in this element's
+      PARENT space (children are positioned locally, matching paintTree's
+      translate). pickable=false only exempts *this* element — children still test. */
   hitTest(px, py) {
     if (!this.visible) return null;
+    const lx = px - this.x, ly = py - this.y; // into this element's local space
     for (let i = this.children.length - 1; i >= 0; i--) {
-      const hit = this.children[i].hitTest(px, py);
+      const hit = this.children[i].hitTest(lx, ly);
       if (hit) return hit;
     }
-    if (this.pickable && this.contains(px, py)) return this;
+    if (this.pickable && lx >= 0 && ly >= 0 && lx < this.w && ly < this.h) return this;
     return null;
   }
 
