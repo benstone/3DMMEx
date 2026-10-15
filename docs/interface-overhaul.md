@@ -73,7 +73,7 @@ src/
     appState.ts               zustand stores: runtime singletons + editor state
     ui-dom/                ← temporary home for current DOM UI, verbatim
       studio.ts            the ~1,200-line studio chrome block
-      browsers.ts          AssetAssetBrowserView.show/brwsShell/scene sorter
+      browsers.ts          AssetBrowserView.show/brwsShell/scene sorter
       easels.ts            recorder/listener/words/spletter/action/costume
       talentBook.ts               talent book
       tooltips.ts              callouts/guide

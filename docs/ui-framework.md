@@ -28,7 +28,7 @@ canvas by `domOverlay()` (z-index 57, inside `#studio`), the settings dialog
 | `widgets.ts` | `ImageElement`, `StudioButton`, `TextElement`, `MovieScreen`, `VerticalSlider`, links |
 | `easel.ts` | `EaselView`, `domOverlay`, `CvEl`, `offCv`, shared widgets (`ScrollButton`, `Thermometer`, `NamePlate`, `ListenerSlider`, `FramedCell`) |
 | `modal.ts` | `ModalView` + the shared modal slot (`modalSlot.view`/`modalSlot.cleanup`/`modalSlot.close`) — leaf module, kept out of import cycles so `extends` bases always init first |
-| `assetBrowser.ts` | `AssetBrowserView`, `AssetAssetBrowserView.show`; `modalSlot.view`/`modalSlot.close`/`modalSlot` re-export the modal.ts slot |
+| `assetBrowser.ts` | `AssetBrowserView`, `AssetBrowserView.show`; `modalSlot.view`/`modalSlot.close`/`modalSlot` re-export the modal.ts slot |
 | `easels.ts` | `SorterEasel`, `RecorderEasel`, `ListenerEasel`, `WordsDlg`, `SpletterEasel`, `ActionBrowser`, `CostumeEasel` |
 | `studio.ts` | `StudioView` (editor chrome), `studioEl`, `syncStudio`, `syncRollCall` |
 | `talentBook.ts` | `TalentBookView`, `BioPage`, `BioText` |
@@ -63,7 +63,7 @@ DOM inputs, pops remove them).
 
 The studio is inserted under everything once at boot
 (`uiRoot.stack.unshift(studioView)`). Easels/browsers share the `modalSlot.view` modal
-slot — `modalSlot.open()`/`AssetAssetBrowserView.show()` `modalSlot.close()` first, then push.
+slot — `modalSlot.open()`/`AssetBrowserView.show()` `modalSlot.close()` first, then push.
 Escape routes through `modalSlot.view._onEsc || modalSlot.close`.
 
 `UiRoot._rebuild()` also mirrors `{topView, stackDepth}` into the `useUi`

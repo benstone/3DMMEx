@@ -60,5 +60,5 @@ resource name.
 Browsers enumerate categories via `BROWSER_DEFS` (`ui/browser.ts`) +
 `scanThumbFile` (`thumbnails.ts`). A pack only needs to ship the right `.NTH`
 name to slot into an existing browser; a genuinely new category needs a
-`BROWSER_DEFS` entry, a `kind` in `AssetAssetBrowserView.show`, and the `.NTH` naming
+`BROWSER_DEFS` entry, a `kind` in `AssetBrowserView.show`, and the `.NTH` naming
 convention — see the add-easel skill for the UI side.
