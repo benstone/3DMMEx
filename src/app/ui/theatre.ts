@@ -7,9 +7,8 @@ import { Element } from './element.ts';
 import { ImageElement, ImageButton, TextLink, VerticalSlider, MovieScreen } from './widgets.ts';
 import { appState } from '../appState.ts';
 import { playbackLoop } from '../playbackLoop.ts';
-import { optionsDialog } from './optionsDialog.ts';
+import { OptionsEasel } from './optionsEasel.ts';
 import { streamer } from '../stream.ts';
-import { DevicePicker } from './devicePicker.ts';
 import { localizer } from '../localization.ts';
 
 /** Rewind button — seek to scene 1 + play; delegates to the stream host when
@@ -83,8 +82,8 @@ export class TheatreView extends View {
     this.add(new ImageButton('threw', 'threwc', 293, 7, 24, 51, theatreRewind));
     this.vol = makeVolumeSlider(9, 110, 12, 74);
     this.add(this.vol);
-    this.add(new TextLink(localizer.translate('ui.settings'), 4, 4, 60, 14, () => optionsDialog.show()));
-    this.add(new TextLink(localizer.translate('ui.playOn'), 4, 22, 90, 14, () => DevicePicker.show()));
+    this.add(new TextLink(localizer.translate('ui.settings'), 4, 4, 60, 14, () => OptionsEasel.show()));
+    this.add(new TextLink(localizer.translate('ui.playOn'), 4, 22, 90, 14, () => streamer.pick()));
     appState.setModeSync(() => {                                 // lights dim while rolling
       this.bg.name = appState.playing ? 'the1dark' : 'theatre1';
       this.playB.sync();
@@ -113,7 +112,7 @@ export class EmbedView extends View {
     this.add(new ImageButton('threw', 'threwc', 556, 405, 30, 60, theatreRewind));
     this.playB = new ImageButton(theatrePlayFace, null, 594, 405, 30, 60, theatreTogglePlay);
     this.add(this.playB);
-    this.add(new TextLink(localizer.translate('ui.settings'), 4, 4, 60, 14, () => optionsDialog.show()));
+    this.add(new TextLink(localizer.translate('ui.settings'), 4, 4, 60, 14, () => OptionsEasel.show()));
     appState.setModeSync(() => { this.playB.sync(); this.invalidate(); });
     appState.modeSync?.();
   }

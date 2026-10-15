@@ -15,25 +15,7 @@ html, body { margin: 0; height: 100%; height: 100dvh; background: #000; color: #
 body { display: flex; flex-direction: column; }
 #stage { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
 #studio { position: relative; touch-action: none; aspect-ratio: 640 / 480; height: min(100%, 75vw); margin: auto; overflow: hidden; container-type: size; }
-.optModal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; pointer-events: none; }
-.optBox { background: #1a1a1a; border: 1px solid #444; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;
-  font: 12px monospace; color: #ccc; max-width: min(92vw, 420px); pointer-events: auto; }
-.optBar { display: flex; align-items: center; justify-content: space-between; margin: -12px -14px 0; padding: 5px 8px 5px 12px;
-  background: #111; border-bottom: 1px solid #444; cursor: move; user-select: none; color: #888;
-  font-size: 10px; text-transform: uppercase; letter-spacing: .6px; }
-.optX { background: none; border: 0; color: #999; font: inherit; font-size: 15px; line-height: 1; padding: 0 3px; cursor: pointer; }
-.optX:hover { color: #fff; }
-.optPanel { overflow-y: auto; max-height: 62vh; max-height: 62dvh; display: flex; flex-direction: column; gap: 4px; }
-.optPanel[hidden] { display: none; }
-.optPanel label { display: flex; gap: 6px; align-items: center; cursor: pointer; white-space: nowrap; }
-.optPanel .optCat { color: #777; font-size: 10px; text-transform: uppercase; letter-spacing: .6px; margin-top: 3px; }
-.optPanel .optCat:first-of-type { margin-top: 0; }
-.optPanel .optSub { display: flex; flex-direction: column; gap: 3px; padding-left: 20px; }
-.optPanel .optSub label { color: #aaa; font-size: 11px; justify-content: space-between; }
-.optPanel .optSub label.optCheck { justify-content: flex-start; }
-.optPanel label.optRange { justify-content: space-between; }
-.optPanel label.optRange input[type=range] { width: 130px; }
-.optPanel .optSub input[type=range] { width: 110px; }
+
 #view { position: absolute; image-rendering: pixelated; touch-action: none; }
 #rotMsg { position: fixed; inset: 0; z-index: 90; background: #000; display: none; align-items: center; justify-content: center;
   color: #888; font: bold 16px 'Comic Sans MS', cursive, sans-serif; text-align: center; padding: 2em; }

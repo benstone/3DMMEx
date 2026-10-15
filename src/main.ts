@@ -2,11 +2,11 @@ import { movieDocument } from './app/movieDocument.ts';
 import { playbackLoop } from './app/playbackLoop.ts';
 import { bootSequence } from './app/bootstrap.ts';
 import { bootView } from './app/ui/bootView.ts';
-import { renderOptions, renderOptionsPanel } from './app/renderOptions.ts';
+import { renderOptions } from './app/renderOptions.ts';
 import { expansionPacks } from './app/expansionPacks.ts';
 import { soundSources} from './app/soundSources.ts';
 import { thumbnails } from './app/thumbnails.ts';
-import { optionsDialog } from './app/ui/optionsDialog.ts';
+import { OptionsEasel } from './app/ui/optionsEasel.ts';
 import { TheatreView, EmbedView } from './app/ui/theatre.ts';
 import { studioHost } from './app/ui/studio.ts';
 import { injectAppStyles } from './app/ui/styles.ts';
@@ -75,8 +75,8 @@ document.addEventListener('keydown', (e) => { // Space = play/pause in theatre/e
 
 // --- URL params: render options, menu, movie source, theatre/embed ------------
 const queryParams = new URLSearchParams(location.search);
-if (queryParams.get('renderOptions')) { for (const k of queryParams.get('renderOptions').split(',')) if (typeof renderOptions[k] === 'boolean') { renderOptions[k] = true; if (renderOptionsPanel.controls[k]) { renderOptionsPanel.controls[k].checked = true; if (renderOptionsPanel.controls[k]._sub) renderOptionsPanel.controls[k]._sub.hidden = false; } } appState.sceneRenderer.setOpts(renderOptions); }
-if (queryParams.has('menu')) setTimeout(optionsDialog.show, 600);
+if (queryParams.get('renderOptions')) { for (const k of queryParams.get('renderOptions').split(',')) if (typeof renderOptions[k] === 'boolean') renderOptions[k] = true; appState.sceneRenderer.setOpts(renderOptions); }
+if (queryParams.has('menu')) setTimeout(OptionsEasel.show, 600);
 // Startup: the autosaved working doc opens straight into the studio; no doc
 // means a blank movie. ?3mm=url loads a remote movie, replacing the working doc
 // on success; on failure we fall back to the normal boot and show the error

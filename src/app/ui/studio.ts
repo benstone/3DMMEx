@@ -17,8 +17,8 @@ import { editHistory } from '../editHistory.ts';
 import { talentBook } from './talentBook.ts';
 import { AssetBrowserView } from './assetBrowser.ts';
 import { modalSlot } from './modal.ts';
-import { optionsDialog } from './optionsDialog.ts';
-import { DevicePicker } from './devicePicker.ts';
+import { OptionsEasel } from './optionsEasel.ts';
+import { streamer } from '../stream.ts';
 import { ListenerEasel, ActionBrowser, SpletterEasel, CostumeEasel, SorterEasel, WordsDialog } from './easels.ts';
 import { localizer } from '../localization.ts';
 import { View, uiRoot, UI_WIDTH, UI_HEIGHT } from './root.ts';
@@ -601,7 +601,7 @@ export class StudioView extends View {
     const ver = new StudioText('stver', 584, 466, 51, 14, { size: 9, color: '#555' });
     ver.textContent = localizer.translate('ui.version', { version });
     V.add(ver);
-    V.add(new TextLink(localizer.translate('ui.settings'), 470, 466, 108, 14, () => optionsDialog.show(), { size: 9, align: 'right' }));
+    V.add(new TextLink(localizer.translate('ui.settings'), 470, 466, 108, 14, () => OptionsEasel.show(), { size: 9, align: 'right' }));
   }
   { // the movie-name field doubles as the rename control — clicking swaps in a
     // DOM input floated over the canvas (real text entry stays DOM until the
@@ -663,7 +663,7 @@ export class StudioView extends View {
     undo: () => { const b = namedElements.stb_undo; if (!b.enabled) return; uiSounds.play(editHistory.mode === 'u' ? 'undo' : 'redo'); (editHistory.mode === 'u' ? editHistory.undo : editHistory.redo)(); playbackLoop.drawFrame(); },
     ccp: () => toggleCameraPopup(),
     port: () => togglePortalPopup(),
-    book: () => DevicePicker.show(),
+    book: () => streamer.pick(),
     map: () => { uiSounds.play('sectool'); window.open('https://github.com/permpkin/3dmm-web', '_blank'); },
   };
   for (const [id, up, dn, x, y, w, h] of STUDIO_BTNS) {

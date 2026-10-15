@@ -11,8 +11,9 @@
 //    controls become remote commands. Remote Playback (video.remote.prompt())
 //    remains as a last-resort fallback, but only mirrors audio for streams.
 //  - the CAF receiver app — same native-render idea but through a registered
-//    CAF app id (cast.google.com/publish) — pass ?castid= to override.
-// The device picker (ui/devicePicker.ts) lists whatever this browser offers.
+//    CAF app id (cast.google.com/publish) — pass ?castid= to override; a
+//    configured id gets the Cast SDK's own Chrome cast menu.
+// pick() routes straight to the native picker — no in-app device list.
 import { toastHost, elementById, baseUrl } from './resources.ts';
 import { localizer } from './localization.ts';
 import { movieDocument } from './movieDocument.ts';
@@ -154,17 +155,17 @@ class StreamHost {
     return this._video = v;
   };
 
-  /** Device rows for the picker — only mechanisms this browser supports,
-   *  plus the CAF app (which lazily probes on click). */
-  devices = () => {
+  /** Straight to the browser's native device picker — the AirPlay sheet on
+   *  Safari, the Chrome cast menu on Chrome (the Cast SDK's own picker when
+   *  a CAF app id is configured, else the Presentation API device dialog),
+   *  and the local theatre tab when the browser offers nothing. */
+  pick = () => {
     const probe: any = document.createElement('video');
-    const list = [{ id: 'local', name: localizer.translate('ui.streamLocal'), note: '' }];
-    if (typeof probe.webkitShowPlaybackTargetPicker === 'function' && this._mseMime())
-      list.push({ id: 'airplay', name: 'AirPlay', note: this.airPlayAvailable === false ? localizer.translate('ui.streamSearching') : '' });
-    if ((window as any).PresentationRequest || probe.remote)
-      list.push({ id: 'remote', name: localizer.translate('ui.streamRemote'), note: '' });
-    list.push({ id: 'castapp', name: localizer.translate('ui.streamCastApp'), note: movieDocument.lastMovieUrl ? '' : localizer.translate('ui.streamNeedsUrl') });
-    return list;
+    if (typeof probe.webkitShowPlaybackTargetPicker === 'function' && this._mseMime()) return this.pickAirPlay();
+    const qp = new URLSearchParams(location.search);
+    if (qp.get('castid') || localStorage.getItem('castAppId')) return this.pickCastApp();
+    if ((window as any).PresentationRequest || probe.remote) return this.pickRemote();
+    return this.pickLocal();
   };
 
   /** Local screen — the old theatre button behavior (theatre in a new tab). */
