@@ -21,7 +21,8 @@ export class UiRoot extends Element {
     this.ctx.imageSmoothingEnabled = false; // pixel-perfect scaling of the bitmap art
     this.root = this;
     this.stack = [];            // View objects, top = last
-    this.leaving = [];          // views animating out (still painted, not hit-tested)
+    this.leaving = [];          // popped views fading out — painted ON TOP of the stack
+    this.leavingUnder = [];     // replaced views fading out — painted UNDER the stack
     this.toast = new Toast();   // say() overlay — always on top
     this.toast._ui = this;
     this.toast.root = this;
@@ -41,7 +42,7 @@ export class UiRoot extends Element {
 
   get topView() { return this.stack[this.stack.length - 1] || null; }
 
-  _rebuild() { this.children = [...this.stack, ...this.leaving, this.tips, this.toast]; }
+  _rebuild() { this.children = [...this.leavingUnder, ...this.stack, ...this.leaving, this.tips, this.toast]; }
 
   /** Push a view. anim: 'fade'|'none' */
   push(view, anim = 'fade') {
@@ -71,15 +72,16 @@ export class UiRoot extends Element {
     this._syncInput();
   }
 
-  /** Replace the whole stack with one view (e.g. boot -> studio). */
+  /** Replace the whole stack with one view (e.g. boot -> studio). Old views
+   *  fade out UNDER the incoming view so it never renders behind them. */
   replace(view, anim = 'fade') {
     const old = this.stack.splice(0);
-    this.leaving.push(...old);
+    this.leavingUnder.push(...old);
     this.stack.push(view); view.root = this; view.parent = this;
     this._rebuild();
     this.invalidate();
     const drop = () => {
-      for (const v of old) { const i = this.leaving.indexOf(v); if (i >= 0) this.leaving.splice(i, 1); v.parent = v.root = null; }
+      for (const v of old) { const i = this.leavingUnder.indexOf(v); if (i >= 0) this.leavingUnder.splice(i, 1); v.parent = v.root = null; }
       this._rebuild(); this.invalidate();
     };
     if (anim === 'fade') { view.opacity = 0; this.anim.tween(view, { opacity: 1 }, { dur: 220, done: drop }); }
@@ -112,7 +114,7 @@ export class UiRoot extends Element {
       this.anim.tick(now);
       this._walkFrame(this, now);
       if (this.dirtyAll || this.dirtyRects.length || this.anim.active) this.repaint();
-      this._raf = this.stack.length || this.anim.active || this.leaving.length
+      this._raf = this.stack.length || this.anim.active || this.leaving.length || this.leavingUnder.length
         ? requestAnimationFrame(step) : 0;
     };
     this._raf = requestAnimationFrame(step);
