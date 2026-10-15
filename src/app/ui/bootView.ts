@@ -1,5 +1,5 @@
-// Boot splash view — replaces the #boot DOM overlay. Draws the homelogo /
-// splash art cover-fit, with the progress bar + caption once segment() is armed.
+// Boot splash view — replaces the #boot DOM overlay. Draws the splash art
+// cover-fit, with the progress bar + caption once segment() is armed.
 import { View, UI_WIDTH, UI_HEIGHT, uiRoot } from './root.ts';
 import { Element } from './element.ts';
 import { textureCache } from './textureCache.ts';
@@ -12,7 +12,7 @@ class BootView extends View {
   constructor() {
     super();
     this.interactive = true; // swallow clicks while booting
-    this.art = 'homelogo';
+    this.art = 'splash';
     this.progress = -1;  // <0 hidden
     this.caption = '';
     this.artEl = new class extends Element {
@@ -56,9 +56,6 @@ class BootView extends View {
   }
 
   segments: { w: number; f: number }[] = [];
-
-  /** Swap the splash art ('homelogo' | 'splash'). */
-  show = (name) => { this.art = name; this.invalidate(); };
 
   /** Dismiss the splash — fades the canvas BootView off the stack. */
   done = () => uiRoot.pop('fade');

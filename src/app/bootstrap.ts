@@ -1,8 +1,8 @@
 import { elementById, baseUrl } from './resources.ts';
 import { uiRoot } from './ui/root.ts';
 import { bootView } from './ui/bootView.ts';
-// Boot splash orchestration — the logo rides early init, then the splash
-// stays up while the content files load; afterwards the app goes straight to
+// Boot splash orchestration — the splash stays up while the content files
+// load; afterwards the app goes straight to
 // the studio (autosaved doc) or the building menu. index.html's #boot div is
 // only the pre-JS "loading..." placeholder — removed as soon as the canvas
 // BootView mounts below.

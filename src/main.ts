@@ -44,14 +44,11 @@ bootSequence.manifestPromise.then(async (manifest) => {
     }
   }));
 }).catch(() => {});
-bootView.show('homelogo'); // the logo rides the early init
-const bootT0 = performance.now();
+bootSequence.progressBar.hidden = false;
+const splashT0 = performance.now();
 
 const libraryProgress = bootView.segment(0.74);
 const libraryParts = new Map(); // per-.3CN byte fraction
-await sleep(Math.max(0, 700 - (performance.now() - bootT0))); // hold the logo for a beat
-bootView.show('splash'); bootSequence.progressBar.hidden = false;
-const splashT0 = performance.now();
 appState.setContentLibrary(await Library.load(`${baseUrl}data`, (n, got, tot) => {
   libraryParts.set(n, tot ? got / tot : 1);
   libraryProgress([...libraryParts.values()].reduce((a, b) => a + b, 0) / CONTENT_FILES.length, `loading ${n.toLowerCase()}`);
