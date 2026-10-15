@@ -146,7 +146,7 @@ function smoothNormalsGeometry(geo) {
   return g;
 }
 const TRANS_FS = `precision highp float; in vec2 vUv; uniform sampler2D uPrev, uCur;
-uniform int uMode; uniform float uT;
+uniform int uMode; uniform float uT, uPixel;
 out vec4 outColor;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 void main(){
@@ -154,7 +154,7 @@ void main(){
   vec4 cur = texture(uCur, vUv);
   if (uMode == 1) outColor = mix(prev, vec4(0.0, 0.0, 0.0, 1.0), uT);        // fade to black
   else if (uMode == 2) outColor = mix(prev, vec4(1.0, 1.0, 1.0, 1.0), uT);  // fade to white
-  else if (uMode == 3) outColor = hash(gl_FragCoord.xy) < uT ? cur : prev;  // dissolve
+  else if (uMode == 3) outColor = hash(floor(gl_FragCoord.xy / uPixel)) < uT ? cur : prev; // dissolve — flips logical pixels, not physical samples
   else if (uMode == 4) outColor = vec4(0.0, 0.0, 0.0, 1.0);                 // black
   else outColor = cur;
 }`;
@@ -210,7 +210,7 @@ export class Renderer {
     this.prevRT = new THREE.WebGLRenderTarget(WIDTH, HEIGHT, { depthBuffer: true });
     this.curRT = new THREE.WebGLRenderTarget(WIDTH, HEIGHT, { depthBuffer: true });
     this.transMat = new THREE.ShaderMaterial({ glslVersion: THREE.GLSL3, vertexShader: BG_VS, fragmentShader: TRANS_FS,
-      uniforms: { uPrev: { value: this.prevRT.texture }, uCur: { value: this.curRT.texture }, uMode: { value: 0 }, uT: { value: 0 } },
+      uniforms: { uPrev: { value: this.prevRT.texture }, uCur: { value: this.curRT.texture }, uMode: { value: 0 }, uT: { value: 0 }, uPixel: { value: 1 } },
       depthTest: false, depthWrite: false });
     this.transMesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.transMat);
     this.transMesh.frustumCulled = false;
@@ -581,6 +581,7 @@ export class Renderer {
       gl.clear();
       this.transMat.uniforms.uMode.value = trans.trans;
       this.transMat.uniforms.uT.value = Math.min(1, (trans.frame + t) / trans.dur);
+      this.transMat.uniforms.uPixel.value = (out ? out.width : this.gl.domElement.width) / WIDTH; // dissolve block = one logical view pixel
       gl.render(this.transScene, this.bgCam);
     } else {
       this._drawScene(moviePlayer, out, t);
