@@ -42,6 +42,20 @@ class StreamHost {
   airPlayAvailable = null; // null = unknown, bool from the watch events
   remoteAvailable = null;
 
+  /** Pre-warm the AirPlay pipeline on the first real user gesture —
+   *  webkitShowPlaybackTargetPicker() silently no-ops on an element that
+   *  isn't a loaded media resource yet, so the hidden MSE video must exist
+   *  BEFORE the cast click (building it inside the click leaves the picker
+   *  nothing to attach to — the first click appeared dead). Deferred a
+   *  tick so the sound queue's own gesture handlers run first and the
+   *  audio track makes it into the stream. */
+  constructor() {
+    if (typeof document === 'undefined') return;
+    const probe: any = document.createElement('video');
+    if (typeof probe.webkitShowPlaybackTargetPicker === 'function')
+      document.addEventListener('pointerdown', () => setTimeout(() => this._mseVideo(), 0), { once: true });
+  }
+
   /** True while a cast session is live — the theatre switches to remote mode. */
   isActive = () => this.state.active;
 
@@ -64,13 +78,17 @@ class StreamHost {
    *  the record→MSE path (needed for AirPlay) isn't supported here. The codec
    *  list must match the stream's actual tracks: declaring audio when the
    *  stream has none makes the demuxer reject the init segment. */
+  /** iPhone Safari ships ManagedMediaSource, not MediaSource. */
+  _mseClass = () => (window as any).MediaSource || (window as any).ManagedMediaSource || null;
+
   _mseMime = (stream?: MediaStream) => {
-    if (typeof MediaRecorder === 'undefined' || typeof MediaSource === 'undefined') return null;
-    const audio = !stream || stream.getAudioTracks().length > 0; // assume audio for the devices() probe
+    const MS = this._mseClass();
+    if (typeof MediaRecorder === 'undefined' || !MS) return null;
+    const audio = !stream || stream.getAudioTracks().length > 0; // assume audio for the pick() probe
     const cands = audio
       ? ['video/mp4;codecs="avc1.42E01E,mp4a.40.2"', 'video/webm;codecs=h264,opus', 'video/webm;codecs=vp8,opus', 'video/webm']
       : ['video/mp4;codecs="avc1.42E01E"', 'video/webm;codecs=vp8', 'video/webm'];
-    return cands.find((m) => MediaRecorder.isTypeSupported(m) && MediaSource.isTypeSupported(m)) || null;
+    return cands.find((m) => MediaRecorder.isTypeSupported(m) && MS.isTypeSupported(m)) || null;
   };
 
   // --- AirPlay (Safari) -----------------------------------------------------
@@ -86,7 +104,7 @@ class StreamHost {
     const v = document.createElement('video');
     v.playsInline = true; v.muted = true; // muted until a remote target connects
     v.style.cssText = 'position:fixed;left:-9px;top:-9px;width:2px;height:2px;opacity:.01;pointer-events:none;';
-    const ms = new MediaSource();
+    const ms = new (this._mseClass() as any)();
     v.src = URL.createObjectURL(ms);
     const queue = [];
     let sb = null;
@@ -99,7 +117,7 @@ class StreamHost {
     ms.addEventListener('sourceopen', () => {
       // the recorder's reported mime wins when MSE accepts it (its codec
       // params may differ from the request); else the probed candidate
-      const sm = rec.mimeType && MediaSource.isTypeSupported(rec.mimeType) ? rec.mimeType : mime;
+      const sm = rec.mimeType && this._mseClass().isTypeSupported(rec.mimeType) ? rec.mimeType : mime;
       try { sb = ms.addSourceBuffer(sm); } catch { return; } // unsupported mid-flight — nothing streams
       sb.mode = 'sequence';
       sb.addEventListener('updateend', drain);
@@ -114,24 +132,30 @@ class StreamHost {
     rec.start(800);
     playbackLoop.drawFrame?.(); // captureStream only emits on repaint — seed a frame so paused casting still has video
     this._rec = rec;
+    // Warmup only needs the element loaded — once it's had a moment to
+    // buffer, pause the recorder + playback so an idle pre-warmed video
+    // costs nothing. Both resume when a wireless target connects.
+    setTimeout(() => { if (!this.remotePlaying && this._rec === rec) { try { rec.pause(); } catch { /* unsupported */ } v.pause(); } }, 2500);
     return this._video = v;
   };
 
   /** Reflect the remote-target state — while connected the video unmutes so
    *  the TV gets sound and the local speaker tap mutes (no double audio).
-   *  On AirPlay disconnect the recorder tears down (rebuilt on next pick). */
+   *  On disconnect the pipeline idles (paused, not torn down) so the next
+   *  picker click still has a ready element. */
   _syncRemote = () => {
     const v = this._video; if (!v) return;
     const on = v.webkitCurrentPlaybackTargetIsWireless === true || v.remote?.state === 'connected';
     const was = this.remotePlaying; this.remotePlaying = on;
     v.muted = !on;
     appState.soundQueue.setLocalMute?.(on);
-    if (on && !was && v.seekable.length) v.currentTime = v.seekable.end(v.seekable.length - 1); // join at the live edge
-    if (was && !on && this._rec) {
-      try { this._rec.stop(); } catch { /* already stopped */ }
-      this._rec = null; this._video = null;
-      if (v.src.startsWith('blob:')) URL.revokeObjectURL(v.src);
-      v.remove();
+    if (on) {
+      try { this._rec?.resume?.(); } catch { /* not paused */ }
+      v.play().catch(() => {});
+      if (!was && v.seekable.length) v.currentTime = v.seekable.end(v.seekable.length - 1); // join at the live edge
+    } else if (was && this._rec) {
+      try { this._rec.pause(); } catch { /* already stopped */ }
+      v.pause();
     }
   };
 
@@ -176,6 +200,13 @@ class StreamHost {
     const v = this._mseVideo();
     if (!v?.webkitShowPlaybackTargetPicker) return toastHost.show(localizer.translate('ui.castUnavailable'));
     v.webkitShowPlaybackTargetPicker();
+    // If the pipeline only just started (no warmup), the element may not be
+    // a loaded resource yet — retry once it can play; still inside the
+    // click's transient-activation window on current Safari.
+    if (!v.webkitCurrentPlaybackTargetIsWireless && v.readyState < 2)
+      v.addEventListener('canplay', () => setTimeout(() => {
+        if (!v.webkitCurrentPlaybackTargetIsWireless) v.webkitShowPlaybackTargetPicker();
+      }, 60), { once: true });
   };
 
   /** Chrome — Presentation API first (opens receiver.html on the device);
