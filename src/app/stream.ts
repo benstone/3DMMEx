@@ -42,19 +42,25 @@ class StreamHost {
   airPlayAvailable = null; // null = unknown, bool from the watch events
   remoteAvailable = null;
 
+  _beat: any = null; // frame heartbeat while a remote target is connected
+
   /** Pre-warm the AirPlay pipeline on the first real user gesture —
    *  webkitShowPlaybackTargetPicker() silently no-ops on an element that
    *  isn't a loaded media resource yet, so the hidden MSE video must exist
    *  BEFORE the cast click (building it inside the click leaves the picker
-   *  nothing to attach to — the first click appeared dead). Deferred a
-   *  tick so the sound queue's own gesture handlers run first and the
-   *  audio track makes it into the stream. */
+   *  nothing to attach to — the first click appeared dead). Runs inside
+   *  the gesture itself so the audio tap's AudioContext.resume() is
+   *  allowed — a deferred call would leave the audio track silent. */
   constructor() {
     if (typeof document === 'undefined') return;
     const probe: any = document.createElement('video');
     if (typeof probe.webkitShowPlaybackTargetPicker === 'function')
-      document.addEventListener('pointerdown', () => setTimeout(() => this._mseVideo(), 0), { once: true });
+      document.addEventListener('pointerdown', () => this._mseVideo(), { once: true });
   }
+
+  /** Lifecycle diagnostics — check the console in Web Inspector when a
+   *  cast "connects" but nothing plays. */
+  _log = (...a: any[]) => console.log('[stream]', ...a);
 
   /** True while a cast session is live — the theatre switches to remote mode. */
   isActive = () => this.state.active;
@@ -118,13 +124,17 @@ class StreamHost {
       // the recorder's reported mime wins when MSE accepts it (its codec
       // params may differ from the request); else the probed candidate
       const sm = rec.mimeType && this._mseClass().isTypeSupported(rec.mimeType) ? rec.mimeType : mime;
-      try { sb = ms.addSourceBuffer(sm); } catch { return; } // unsupported mid-flight — nothing streams
+      try { sb = ms.addSourceBuffer(sm); this._log('sourceBuffer', sm); }
+      catch (err) { this._log('addSourceBuffer failed', sm, err); return; }
       sb.mode = 'sequence';
       sb.addEventListener('updateend', drain);
       drain();
     });
     const rec = new MediaRecorder(stream, { mimeType: mime });
-    rec.addEventListener('dataavailable', (e) => { e.data.arrayBuffer().then((b) => { if (b.byteLength) { queue.push(b); drain(); } }); });
+    let chunks = 0;
+    rec.addEventListener('dataavailable', (e) => { e.data.arrayBuffer().then((b) => { if (b.byteLength) { queue.push(b); drain(); if (!(++chunks % 10)) this._log('chunks', chunks, 'bufferedEnd', sb?.buffered?.length ? sb.buffered.end(sb.buffered.length - 1).toFixed(1) : 0); } }); });
+    rec.addEventListener('error', (e) => this._log('recorder error', e));
+    this._log('video', mime, 'tracks', stream.getTracks().map(t => t.kind).join('+'));
     v.addEventListener('webkitcurrentplaybacktargetiswirelesschanged', () => this._syncRemote());
     v.addEventListener('webkitplaybacktargetavailabilitychanged', (e) => { this.airPlayAvailable = (e as any).availability === 'available'; });
     document.body.appendChild(v);
@@ -150,9 +160,19 @@ class StreamHost {
     v.muted = !on;
     appState.soundQueue.setLocalMute?.(on);
     if (on) {
-      try { this._rec?.resume?.(); } catch { /* not paused */ }
-      v.play().catch(() => {});
-      if (!was && v.seekable.length) v.currentTime = v.seekable.end(v.seekable.length - 1); // join at the live edge
+      this._log('remote on — rec', this._rec?.state, 'readyState', v.readyState, 'paused', v.paused,
+        'buffered', v.buffered.length ? v.buffered.end(v.buffered.length - 1).toFixed(1) : 'empty');
+      if (this._rec?.state === 'paused') { try { this._rec.resume(); } catch { /* not paused */ } }
+      else if (this._rec?.state === 'inactive') { try { this._rec.start(800); } catch { /* busy */ } }
+      v.play().catch((err) => this._log('play() rejected', err));
+      if (!was && v.seekable.length) v.currentTime = Math.max(0, v.seekable.end(v.seekable.length - 1) - 0.5); // join near the live edge
+      // keep the canvas capture emitting — it only produces frames on
+      // repaint, and a static view would starve the stream on the TV
+      if (!this._beat) this._beat = setInterval(() => {
+        if (!this.remotePlaying) { clearInterval(this._beat); this._beat = null; return; }
+        playbackLoop.drawFrame?.();
+        (this._stage?.getVideoTracks()[0] as any)?.requestFrame?.();
+      }, 400);
     } else if (was && this._rec) {
       try { this._rec.pause(); } catch { /* already stopped */ }
       v.pause();
