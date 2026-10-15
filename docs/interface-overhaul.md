@@ -271,7 +271,7 @@ Chromecast**. CAF (Cast Application Framework) receivers are hosted web
 pages; Chrome tab-mirroring casts everything. To cast "only the movie":
 
 - ✅ **Receiver entry point** — `receiver.html`/`src/receiver.js`, a second
-  Vite entry booting a `CastView`: movie render only, no editor chrome.
+  Vite entry booting a `ReceiverView`: movie render only, no editor chrome.
 - ✅ Sender side (`src/app/cast.js`): Cast sender SDK loaded lazily, "Cast"
   link in theatre mode launches the receiver with `{url, scene, frame,
   play, packs}` on `urn:x-cast:com.3dmmweb.movie`.

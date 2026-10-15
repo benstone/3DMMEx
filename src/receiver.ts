@@ -1,6 +1,7 @@
-// Chromecast receiver entry (receiver.html) — minimal boot: no studio, no
-// editor. Loads the app stack, pushes a CastView, then takes movies over the
-// CAF custom namespace (or ?3mm= for standalone testing).
+// CAF receiver entry (receiver.html) — minimal boot: no studio, no editor.
+// Loads the app stack, pushes a ReceiverView, then takes movies over the CAF
+// custom namespace (or ?3mm= for standalone testing). This is the Chromecast
+// app backend for the stream picker — AirPlay/Remote Playback don't use it.
 import { movieDocument } from './app/movieDocument.ts';
 import { playbackLoop } from './app/playbackLoop.ts';
 import { renderOptions } from './app/renderOptions.ts';
@@ -12,14 +13,14 @@ import {baseUrl, elementById } from './app/resources.ts';
 import { appState } from './app/appState.ts';
 import { localizer } from './app/localization.ts';
 import { uiRoot } from './app/ui/root.ts';
-import { CastView } from './app/ui/castView.ts';
+import { ReceiverView } from './app/ui/receiverView.ts';
 import { injectAppStyles } from './app/ui/styles.ts';
-import { CAST_NS } from './app/chromecast.ts';
+import { CAST_NS } from './app/stream.ts';
 
 injectAppStyles();
 document.getElementById('boot').remove(); // receiver shows the canvas immediately
 document.getElementById('studio').style.height = '100vh'; // receiver fills the TV viewport
-const view = new CastView();
+const view = new ReceiverView();
 uiRoot.push(view, 'none');
 uiRoot.canvas.style.background = '#000';
 

@@ -1,4 +1,4 @@
-// Cast receiver view — receiver.html pushes this and nothing else: a
+// CAF receiver view — receiver.html pushes this and nothing else: a
 // letterboxed MovieScreen plus a status line while waiting for a movie.
 import { View, UI_WIDTH, UI_HEIGHT } from './root.ts';
 import { ImageElement, MovieScreen, TextElement } from './widgets.ts';
@@ -7,9 +7,9 @@ import { playbackLoop } from '../playbackLoop.ts';
 import { ImageButton } from './widgets.ts';
 import { localizer } from '../localization.ts';
 
-/** Cast-receiver view — a letterboxed MovieScreen plus a status line and a
+/** CAF-receiver view — a letterboxed MovieScreen plus a status line and a
  *  play/stop button; receiver.html pushes this and nothing else. */
-export class CastView extends View {
+export class ReceiverView extends View {
   /** Build the letterboxed screen + status text + play button. */
   constructor() {
     super();

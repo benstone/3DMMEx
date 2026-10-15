@@ -24,7 +24,7 @@ src/app/
   appState.ts          `appState` singleton facade over zustand stores (useAppState/useUiState/useEditState)
   resources.ts         baseUrl/packTextures/textureUrl/cursorUrl/elementById/sleep + toastHost
   editHistory.ts  bootstrap.ts  expansionPacks.ts  thumbnails.ts  movieDocument.ts
-  playbackLoop.ts  renderOptions.ts  soundSources.ts  chromecast.ts  localization.ts
+  playbackLoop.ts  renderOptions.ts  soundSources.ts  stream.ts  localization.ts
   edit/                movieEdits.ts / soundEdits.ts / textboxEdits.ts (singleton classes)
   ui/                  canvas UI — the ONLY UI layer (ui-dom/ is gone)
     root.ts            UiRoot (`uiRoot`): 640x480 canvas, view stack, pointer dispatch, toast, tips layer
@@ -36,7 +36,7 @@ src/app/
     easel.ts/easels.ts EaselView shell + easels, each with a static `.show()`:
                        SorterEasel RecorderEasel ListenerEasel WordsDialog
                        SpletterEasel ActionBrowser CostumeEasel (GL previews via CanvasEl)
-    talentBook.ts  tooltips.ts  bootView.ts  theatre.ts  castView.ts  optionsDialog.ts
+    talentBook.ts  tooltips.ts  bootView.ts  theatre.ts  receiverView.ts  optionsDialog.ts
     textureCache.ts    `textureCache` singleton (image cache + decode prewarm)
     styles.ts          injectAppStyles() — all app CSS lives here (no style.css)
 src/engine/            chunky-file parse, library, player, sound (spessasynth MIDI)
@@ -61,7 +61,7 @@ src/render/            three.js renderer (renders into #view)
   `soundSources`, `thumbnails`, `editHistory`, `movieEdits`, `textboxEdits`,
   `soundEdits`, `studioHost`, `modalSlot`, `tooltips`, `talentBook`,
   `optionsDialog`, `toastHost`, `textureCache`, `bootSequence`, `bootView`,
-  `playbackLoop`, `castSender`, `expansionPacks`, `renderOptionsPanel`).
+  `playbackLoop`, `streamer`, `expansionPacks`, `renderOptionsPanel`).
   Modals open via `modalSlot.open(view)` or `SomeEasel.show()`. Free functions
   are factories, boot wiring, or pure utilities only.
 - **Modal slot.** `modalSlot` in `modal.ts` (leaf module — never import app/ui

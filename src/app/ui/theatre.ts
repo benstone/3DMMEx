@@ -8,20 +8,21 @@ import { ImageElement, ImageButton, TextLink, VerticalSlider, MovieScreen } from
 import { appState } from '../appState.ts';
 import { playbackLoop } from '../playbackLoop.ts';
 import { optionsDialog } from './optionsDialog.ts';
-import { castSender } from '../chromecast.ts';
+import { streamer } from '../stream.ts';
+import { DevicePicker } from './devicePicker.ts';
 import { localizer } from '../localization.ts';
 
-/** Rewind button — seek to scene 1 + play; delegates to the cast sender when
- *  casting is live. */
+/** Rewind button — seek to scene 1 + play; delegates to the stream host when
+ *  a CAF cast session is live. */
 const theatreRewind = () => {
-  if (castSender.state.active) return void castSender.rewind(); // remote: seek+play on the TV
+  if (streamer.state.active) return void streamer.rewind(); // remote: seek+play on the TV
   if (!appState.moviePlayer?.movie.scenes.length) return;
   appState.moviePlayer.loadScene(0); appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmFirst); playbackLoop.setPlaying(true);
 };
-/** Play/stop toggle — delegates to the cast sender when casting is live. */
-const theatreTogglePlay = () => castSender.state.active ? void castSender.togglePlayback() : playbackLoop.setPlaying(!appState.playing);
+/** Play/stop toggle — delegates to the stream host when casting is live. */
+const theatreTogglePlay = () => streamer.state.active ? void streamer.togglePlayback() : playbackLoop.setPlaying(!appState.playing);
 /** The play/stop face texture name — follows cast state when casting. */
-const theatrePlayFace = () => (castSender.state.active ? castSender.state.playing : appState.playing) ? 'thstop' : 'thplay';
+const theatrePlayFace = () => (streamer.state.active ? streamer.state.playing : appState.playing) ? 'thstop' : 'thplay';
 
 /** Transparent click filter over the movie — no editing in theatre/embed. */
 class Veil extends Element {
@@ -83,7 +84,7 @@ export class TheatreView extends View {
     this.vol = makeVolumeSlider(9, 110, 12, 74);
     this.add(this.vol);
     this.add(new TextLink(localizer.translate('ui.settings'), 4, 4, 60, 14, () => optionsDialog.show()));
-    this.add(new TextLink(localizer.translate('ui.cast'), 4, 22, 60, 14, () => castSender.castMovie()));
+    this.add(new TextLink(localizer.translate('ui.playOn'), 4, 22, 90, 14, () => DevicePicker.show()));
     appState.setModeSync(() => {                                 // lights dim while rolling
       this.bg.name = appState.playing ? 'the1dark' : 'theatre1';
       this.playB.sync();

@@ -34,7 +34,7 @@ canvas by `domOverlay()` (z-index 57, inside `#studio`), the settings dialog
 | `talentBook.ts` | `TalentBookView`, `BioPage`, `BioText` |
 | `theatre.ts` | `TheatreView`, `EmbedView`, `enterTheatre`, `enterEmbed` |
 | `bootView.ts` | `BootView` splash |
-| `castView.ts` | `CastView` sender-side remote |
+| `receiverView.ts` | `ReceiverView` receiver-side movie view |
 | `tooltips.ts` | callout balloons in the `uiRoot.tips` layer |
 | `optionsDialog.ts` | settings modal (DOM, outside the canvas) |
 

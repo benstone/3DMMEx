@@ -18,6 +18,7 @@ import { talentBook } from './talentBook.ts';
 import { AssetBrowserView } from './assetBrowser.ts';
 import { modalSlot } from './modal.ts';
 import { optionsDialog } from './optionsDialog.ts';
+import { DevicePicker } from './devicePicker.ts';
 import { ListenerEasel, ActionBrowser, SpletterEasel, CostumeEasel, SorterEasel, WordsDialog } from './easels.ts';
 import { localizer } from '../localization.ts';
 import { View, uiRoot, UI_WIDTH, UI_HEIGHT } from './root.ts';
@@ -662,7 +663,7 @@ export class StudioView extends View {
     undo: () => { const b = namedElements.stb_undo; if (!b.enabled) return; uiSounds.play(editHistory.mode === 'u' ? 'undo' : 'redo'); (editHistory.mode === 'u' ? editHistory.undo : editHistory.redo)(); playbackLoop.drawFrame(); },
     ccp: () => toggleCameraPopup(),
     port: () => togglePortalPopup(),
-    book: () => { uiSounds.play('exit'); const u = new URL(location.href); u.searchParams.set('mode', 'theatre'); window.open(u.href, '_blank'); },
+    book: () => DevicePicker.show(),
     map: () => { uiSounds.play('sectool'); window.open('https://github.com/permpkin/3dmm-web', '_blank'); },
   };
   for (const [id, up, dn, x, y, w, h] of STUDIO_BTNS) {
