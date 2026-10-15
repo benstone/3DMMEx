@@ -2,7 +2,7 @@
 // dialog, drawn in the device-picker panel style: a beveled plate with a
 // title strip, category headers, checkbox rows, drag sliders, and a
 // click-to-cycle selector for the AA mode. Options apply live (same fan-out
-// as before); OK commits, Cancel/Esc restores the snapshot taken at open.
+// as before); OK/Esc just close — there is no revert.
 import { EaselView } from './easel.ts';
 import { modalSlot } from './modal.ts';
 import { Element } from './element.ts';
@@ -162,11 +162,9 @@ class OptCycle extends OptRow {
 /** The render-settings easel — rows generated from RENDER_OPTION_DEFS. */
 export class OptionsEasel extends EaselView {
   static show = () => modalSlot.open(new OptionsEasel());
-  /** Build the panel, rows, and OK/Cancel — snapshotting options for revert. */
+  /** Build the panel, rows, and the lone OK. */
   constructor() {
     super();
-    this._snapshot = structuredClone(renderOptions);
-    this._committed = false;
     const rows = [];
     for (const [cat, defs] of RENDER_OPTION_DEFS) {
       rows.push({ cat });
@@ -194,17 +192,6 @@ export class OptionsEasel extends EaselView {
         else this.add(new OptCheck(r.key, px + 16, y, PW - 32, ind, en));
       }
     });
-    this.makeButton('okay', 'okayc', px + PW - 124, py + ph - 54, 50, 48, () => { this._committed = true; modalSlot.close(); });
-    this.makeButton('cancel', 'cancelc', px + PW - 66, py + ph - 54, 50, 48, modalSlot.close);
-  }
-
-  /** Closing without OK restores the open-time snapshot (Cancel/Esc). */
-  onModalClose() {
-    if (this._committed) return;
-    Object.assign(renderOptions, this._snapshot);
-    localStorage.setItem('opts3dmm', JSON.stringify(renderOptions));
-    appState.sceneRenderer.setOpts(renderOptions);
-    if (appState.playing) playbackLoop.setPlaying(true);
-    playbackLoop.drawFrame();
+    this.makeButton('okay', 'okayc', px + PW - 66, py + ph - 54, 50, 48, modalSlot.close);
   }
 }
