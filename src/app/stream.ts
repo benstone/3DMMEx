@@ -43,6 +43,7 @@ class StreamHost {
   remoteAvailable = null;
 
   _beat: any = null; // frame heartbeat while a remote target is connected
+  _idleT: any = null;  // debounce for the flapping wireless-target flag
 
   /** Pre-warm the AirPlay pipeline on the first real user gesture —
    *  webkitShowPlaybackTargetPicker() silently no-ops on an element that
@@ -109,7 +110,9 @@ class StreamHost {
     if (!mime || !stream) return null;
     const v = document.createElement('video');
     v.playsInline = true; v.muted = true; // muted until a remote target connects
-    v.style.cssText = 'position:fixed;left:-9px;top:-9px;width:2px;height:2px;opacity:.01;pointer-events:none;';
+    // kept ON-screen (2px, fully rendered) — an off-screen or invisible
+    // element may never be composited for the AirPlay output
+    v.style.cssText = 'position:fixed;right:2px;bottom:2px;width:2px;height:2px;opacity:1;pointer-events:none;';
     const ms = new (this._mseClass() as any)();
     v.src = URL.createObjectURL(ms);
     const queue = [];
@@ -157,14 +160,15 @@ class StreamHost {
     const v = this._video; if (!v) return;
     const on = v.webkitCurrentPlaybackTargetIsWireless === true || v.remote?.state === 'connected';
     const was = this.remotePlaying; this.remotePlaying = on;
-    v.muted = !on;
-    appState.soundQueue.setLocalMute?.(on);
     if (on) {
+      clearTimeout(this._idleT); this._idleT = null; // a flapped off never pauses
       this._log('remote on — rec', this._rec?.state, 'readyState', v.readyState, 'paused', v.paused,
         'buffered', v.buffered.length ? v.buffered.end(v.buffered.length - 1).toFixed(1) : 'empty');
       if (this._rec?.state === 'paused') { try { this._rec.resume(); } catch { /* not paused */ } }
       else if (this._rec?.state === 'inactive') { try { this._rec.start(800); } catch { /* busy */ } }
-      v.play().catch((err) => this._log('play() rejected', err));
+      v.play().catch((err) => this._log('play() rejected', err)); // muted play is always allowed
+      v.muted = false;
+      appState.soundQueue.setLocalMute?.(true);
       if (!was && v.seekable.length) v.currentTime = Math.max(0, v.seekable.end(v.seekable.length - 1) - 0.5); // join near the live edge
       // keep the canvas capture emitting — it only produces frames on
       // repaint, and a static view would starve the stream on the TV
@@ -173,9 +177,22 @@ class StreamHost {
         playbackLoop.drawFrame?.();
         (this._stage?.getVideoTracks()[0] as any)?.requestFrame?.();
       }, 400);
-    } else if (was && this._rec) {
-      try { this._rec.pause(); } catch { /* already stopped */ }
-      v.pause();
+    } else if (was) {
+      // the wireless flag flaps during AirPlay negotiation — only idle the
+      // pipeline after the target has stayed gone for a real disconnect
+      this._log('remote off (debounced)');
+      clearTimeout(this._idleT);
+      this._idleT = setTimeout(() => {
+        this._idleT = null;
+        const now = v.webkitCurrentPlaybackTargetIsWireless === true || (v as any).remote?.state === 'connected';
+        if (now) return;
+        this._log('remote off — idling');
+        v.muted = true;
+        appState.soundQueue.setLocalMute?.(false);
+        if (!this._rec) return;
+        try { this._rec.pause(); } catch { /* already stopped */ }
+        v.pause();
+      }, 1500);
     }
   };
 
