@@ -148,7 +148,7 @@ export function closeBrowser() { // BRWN->Close; also tears down any easel overl
   if (brwsView) {
     const v = brwsView; brwsView = null;
     if (ui.topView === v) ui.pop('none');
-    else { const i = ui.stack.indexOf(v); if (i >= 0) { ui.stack.splice(i, 1); ui._rebuild(); } }
+    else { const i = ui.stack.indexOf(v); if (i >= 0) { ui.stack.splice(i, 1); v.parent = v.root = null; ui._rebuild(); } }
     v.onExit(); // pop() doesn't fire onExit — run teardown after stack removal
   }
 }

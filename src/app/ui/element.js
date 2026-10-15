@@ -9,11 +9,17 @@ export class Element {
     this.pickable = true;   // participates in hit-testing
     this.opacity = 1;
     this.cursor = null;     // css cursor string while hovering
-    this.root = null;
+    this._uiRoot = null;
     this._root = null;      // opaque back-ref for view-owned anonymous elements
     /** @type {any} */ this._pop = null; // popup group this element belongs to (studio)
   }
-  add(el) { el.parent = this; el.root = this.root; this.children.push(el); for (const c of el.children) c.root = this.root; return el; }
+
+  /** Owning UiRoot — setter propagates to the whole subtree so dirty() works
+   *  on elements added before the view was attached to the root. */
+  set root(v) { this._uiRoot = v; for (const c of this.children) c.root = v; }
+  get root() { return this._uiRoot; }
+
+  add(el) { el.parent = this; el.root = this.root; this.children.push(el); return el; }
   remove(el) { const i = this.children.indexOf(el); if (i >= 0) { el.parent = el.root = null; this.children.splice(i, 1); } return el; }
   clear() { for (const c of this.children) { c.parent = c.root = null; } this.children.length = 0; }
   contains(px, py) { return px >= this.x && py >= this.y && px < this.x + this.w && py < this.y + this.h; }

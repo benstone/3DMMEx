@@ -24,8 +24,10 @@ export class UiRoot extends Element {
     this.leaving = [];          // views animating out (still painted, not hit-tested)
     this.toast = new Toast();   // say() overlay — always on top
     this.toast._ui = this;
+    this.toast.root = this;
     this.tips = new Element(0, 0, UI_W, UI_H); // callout balloons — above views, under toast
     this.tips.pickable = false;
+    this.tips.root = this;
     this.dirtyRects = [];
     this.dirtyAll = false;
     this.hover = null;
