@@ -14,13 +14,16 @@ import { toastHost, baseUrl } from './resources.ts';
 import { editHistory } from './editHistory.ts';
 import { localizer } from './localization.ts';
 
+/** Uint8Array -> base64 (chunked to dodge the arg-count limit). */
 export const toBase64 = (u8) => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s); };
+/** base64 -> Uint8Array. */
 export const fromBase64 = (s) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
 /** IndexedDB wrapper for the autosave record — falls back to the
  *  localStorage mirror (get() returns the newer of the two). */
 class AutosaveDatabase {
   _db = null;
+  /** Open the 'doc' store — resolves null when IndexedDB is blocked. */
   open() {
     if (this._db) return Promise.resolve(this._db);
     return new Promise((res) => {
@@ -33,6 +36,7 @@ class AutosaveDatabase {
       rq.onerror = () => res(null);
     });
   }
+  /** Write the autosave record — resolves after commit or failure. */
   async put(rec) {
     const db = await this.open(); if (!db) return;
     await new Promise<void>((res) => {
@@ -43,7 +47,9 @@ class AutosaveDatabase {
       } catch (e) { console.warn('[autosave] idb put failed:', e.message); res(); }
     });
   }
-  async get() { // newer of the IDB record and the localStorage mirror wins
+  /** Read the autosave — the newer of the IDB record and the localStorage
+   *  mirror wins. */
+  async get() {
     const db = await this.open();
     const idb = db ? await new Promise<any>((res) => {
       try {
@@ -55,20 +61,24 @@ class AutosaveDatabase {
     if (idb && ls) return idb.t >= ls.t ? idb : ls;
     return idb || ls;
   }
+  /** Synchronous localStorage mirror write — survives page teardown that
+   *  would kill the async IDB put. */
   _saveLocal(rec) { try { localStorage.setItem(DOC_AUTOSAVE_KEY, JSON.stringify({ ...rec, bytes: toBase64(rec.bytes) })); return true; } catch { return false; } }
+  /** Read the localStorage mirror — null when absent/corrupt. */
   _loadLocal() { try { const r = JSON.parse(localStorage.getItem(DOC_AUTOSAVE_KEY) || 'null'); return r ? { ...r, bytes: fromBase64(r.bytes) } : null; } catch { return null; } }
 }
 
-// synchronous localStorage keys — the mirror lands even when the
-// pagehide/async-IDB write is killed, and covers contexts without indexedDB
+// Synchronous localStorage keys — the mirror lands even when the
+// pagehide/async-IDB write is killed, and covers contexts without indexedDB.
 export const DOC_AUTOSAVE_KEY = 'mmsdoc.autosave';
-export const DOC_POSITION_KEY = 'mmsdoc.pos'; // {scene, frame} — refreshed on every navigation
+/** {scene, frame} of the last viewed position — refreshed on every navigation. */
+export const DOC_POSITION_KEY = 'mmsdoc.pos';
 
 /** The working movie document: open/save portfolio commands plus the
- *  autosave loop (the original's pfniUserDoc — we keep the serialized .3MM
- *  in IndexedDB with a synchronous localStorage mirror). */
+ *  autosave loop — the serialized .3MM lives in IndexedDB with a synchronous
+ *  localStorage mirror. */
 class MovieDocument {
-  saveFileHandle = null;   // FileSystemFileHandle for cidSave (FGetFniSave result)
+  saveFileHandle = null;   // FileSystemFileHandle for plain save (set by Save As)
   lastMovieUrl = null;     // URL the open movie came from (for cast hand-off)
   documentDirty = false;
   documentFlushing = false;
@@ -76,14 +86,18 @@ class MovieDocument {
   autosaveTimer = null;
   documentDatabase = new AutosaveDatabase();
 
+  /** Load a .3MM buffer as the working movie — rebuilds the player, wires
+   *  sound/transition callbacks, restores editor state, and marks the doc
+   *  dirty. Prompts before discarding unsaved edits; returns false on cancel
+   *  or parse failure (the old movie stays open). */
   openMovie = (buffer, name, cacheDoc = true) => {
     playbackLoop.setPlaying(false);
     appState.soundQueue.stopAll();
-    // MVU::FCloseDoc keep-changes check: unsaved ops prompt before replacing
+    // keep-changes check: unsaved ops prompt before replacing the doc
     if (appState.moviePlayer && (editHistory.undos.length || editHistory.redos.length) && !confirm(localizer.translate('doc.discard'))) return false;
     let p;
     try { p = new MoviePlayer(new ChunkyFile(buffer, name), appState.contentLibrary); }
-    catch (e) { // _FLoadMovie restore: a failed load leaves the old movie open
+    catch (e) { // a failed load leaves the old movie open
       toastHost.show(e.message);
       return false;
     }
@@ -97,7 +111,7 @@ class MovieDocument {
       get movieBytes() { return movieDocument.movieBytes; }, showCallout: tooltips.showCallout, uiRoot, modalSlot };
     appState.moviePlayer.onSound = (ev) => appState.soundQueue.play(ev);
     appState.moviePlayer.onSoundStop = () => appState.soundQueue.stopLoops();
-    appState.moviePlayer.isSoundPlaying = () => appState.soundQueue.playing(); // witUntilSnd polls the queue
+    appState.moviePlayer.isSoundPlaying = () => appState.soundQueue.playing(); // sound-wait events poll the queue
     appState.soundQueue.userSnd = async (key) => { // resolve 'usr' tags (imported/recorded sounds)
       const u = soundSources.userSounds.find((x) => x.key === key);
       if (u && !u.buf && u.bytes && !u.midi) u.buf = await soundSources.wavToBuffer(u.bytes);
@@ -120,25 +134,34 @@ class MovieDocument {
     return true;
   };
 
-  // --- portfolio commands (cidNew/cidOpen/cidSave/cidSaveAs, MVIE::FSave*) ----
+  // --- portfolio commands (new / open / save / save-as) ----------------------
+  /** Serialize the working movie to .3MM bytes — 'rt' runtime templates and
+   *  'usr' imported sounds resolve through the given lookups. */
   movieBytes = () => serializeMovie(appState.moviePlayer.movie, {
     rtmpl: (cno) => appState.contentLibrary._rtmpl.get(cno) || null,
     userSnd: (key) => soundSources.userSounds.find((u) => u.key === key) || null,
   });
 
-  newMovie = () => { // cidNew -> FLoadMovie(nil): PmvieNew(nil) = NO scenes (_iscen ivNil)
+  /** New document — a sceneless movie; the guide tip follows on boot or New. */
+  newMovie = () => {
     this.openMovie(serializeMovie({ name: localizer.translate('doc.untitled'), scenes: [] }), localizer.translate('doc.untitled') + '.3mm'); // idsEngineDefaultTitle
-    setTimeout(tooltips.showGuideTip, 450); // a sceneless doc gets the CO guide tip, on boot or via New
+    setTimeout(tooltips.showGuideTip, 450); // a sceneless doc gets the guide tip
   };
 
+  /** Persist {scene, frame} so a reload lands where the user was. */
   savePlaybackPosition = () => { try { localStorage.setItem(DOC_POSITION_KEY, JSON.stringify({ scene: appState.moviePlayer.sceneIndex, frame: appState.moviePlayer.frame, t: Date.now() })); } catch { /* quota */ } };
+  /** The last persisted position, or null. */
   savedPlaybackPosition = () => { try { return JSON.parse(localStorage.getItem(DOC_POSITION_KEY) || 'null'); } catch { return null; } };
 
-  markDocumentDirty = () => { // an edit happened — flush soon; the leave handlers are a backstop
+  /** Mark the doc edited and debounce a flush — the leave handlers are the
+   *  backstop for the interval. */
+  markDocumentDirty = () => {
     this.documentDirty = true;
     clearTimeout(this.autosaveTimer); this.autosaveTimer = setTimeout(this.flushDocument, 1200);
   };
 
+  /** Serialize the working movie into the autosave stores — localStorage
+   *  mirror first (sync), then IndexedDB. Safe to call on page teardown. */
   flushDocument = async () => {
     if (!this.documentDirty || this.documentFlushing || !appState.moviePlayer) return;
     this.documentFlushing = true;
@@ -175,14 +198,18 @@ class MovieDocument {
     }, true);
   };
 
-  openMovieFile = () => { // cidOpen -> file picker (FGetFniOpen); any .3MM is accepted, openMovie() validates CHN2
+  /** Open -> file picker; any file is accepted, `openMovie` validates the
+   *  chunky header. */
+  openMovieFile = () => {
     const inp = document.createElement('input');
     inp.type = 'file';
     inp.onchange = async () => { const f = inp.files[0]; if (f) this.openMovie(await f.arrayBuffer(), f.name); };
     inp.click();
   };
 
-  saveMovie = async (saveAs = false) => { // MVIE::FSave / FGetFniSave
+  /** Save — to the remembered file handle when we have one (saveAs=false),
+   *  else the save-file picker, else a download fallback. */
+  saveMovie = async (saveAs = false) => {
     const name = `${appState.moviePlayer.movie.name || localizer.translate('doc.untitled')}.3mm`;
     try {
       if (!saveAs && this.saveFileHandle) {
@@ -204,7 +231,10 @@ class MovieDocument {
     } catch (e) { if (e.name !== 'AbortError') toastHost.show(localizer.translate('doc.saveFailed', { err: e.message })); }
   };
 
-  openMovieUrl = async (urlOrName, cacheDoc = true) => { // ?3mm= — returns null on success, else a friendly error
+  /** Open a movie by URL — bare names resolve under movies/ (the ?3mm=
+   *  param), full URLs fetch as-is. Returns null on success, else a friendly
+   *  error string for the open-failed dialog. */
+  openMovieUrl = async (urlOrName, cacheDoc = true) => {
     let url;
     try { url = /^[\w.-]+$/.test(urlOrName) ? `${baseUrl}movies/${urlOrName}` : new URL(urlOrName, location.href).href; }
     catch { return `that doesn't look like a movie link`; }

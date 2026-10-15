@@ -2,10 +2,13 @@
 // works synchronously at module-eval time. ?lang=xx loads public/lang/xx.json
 // at boot and merges over en; missing keys fall back to English (then to the
 // raw key, so a typo surfaces visibly rather than silently).
-// Call sites: translate('doc.saved', { name }) -> 'saved my.3mm'
+// Call sites: localizer.translate('doc.saved', { name }) -> 'saved my.3mm'
 import en from '../lang/en.json';
 import { baseUrl } from './resources.ts';
 
+/** String-table owner — `translate(key, args)` resolves dotted keys with
+ *  {arg} interpolation; `setLanguage` swaps dictionaries; `initialize` picks
+ *  the boot language. */
 class Localizer {
   language = 'en';
   dictionary: Record<string, any> = { ...en };
@@ -13,6 +16,8 @@ class Localizer {
    *  navigator.language at init. Add codes here when new json files land. */
   languages = ['en', 'auto'];
 
+  /** Merge `src` into `dst` recursively — arrays/scalars overwrite, plain
+   *  objects merge key by key. Returns dst. */
   _deepMerge(dst, src) {
     for (const [k, v] of Object.entries(src || {})) {
       if (v && typeof v === 'object' && !Array.isArray(v)) { dst[k] = this._deepMerge(dst[k] || {}, v); }
@@ -21,6 +26,7 @@ class Localizer {
     return dst;
   }
 
+  /** Dotted-key lookup on a dictionary — undefined on miss. */
   _lookup(d, key) { return key.split('.').reduce((o, k) => o?.[k], d); }
 
   /** Translate key with {arg} interpolation; falls back to en then the key itself. */

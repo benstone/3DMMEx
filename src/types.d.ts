@@ -7,7 +7,7 @@ export {}; // module marker — required for `declare global` below to apply
 /** A 4-char chunky-file tag ('MVIE', 'SCEN', 'GST ' …) */
 export type Ctg = string;
 
-/** Index record for one chunk in a CHN2 file (format/chunky.js). */
+/** Index record for one chunk in a CHN2 file (format/chunky.ts). */
 interface Chunk {
   ctg: Ctg;
   cno: number;           // chunk number — instance id under a ctg
@@ -17,7 +17,7 @@ interface Chunk {
   name: string;
 }
 
-/** Decoded chunky container (format/chunky.js ChunkyFile). */
+/** Decoded chunky container (format/chunky.ts ChunkyFile). */
 export interface ChunkyFileHandle {
   name: string;
   bytes: Uint8Array;
@@ -29,7 +29,7 @@ export interface ChunkyFileHandle {
   ofType(ctg: Ctg): Iterable<Chunk>;
 }
 
-/** Indexed-color bitmap decoded from an MBMP chunk (render/thumbs). */
+/** Indexed-color bitmap decoded from an MBMP chunk (app/thumbnails.ts). */
 export interface Mbmp {
   width: number; height: number;
   /** palette-indexed pixels; resolve through the owning GLCR */
@@ -37,7 +37,7 @@ export interface Mbmp {
   regX: number; regY: number; // registration point
 }
 
-/** Browser-grid item shown by ui/browser.js BrowserCell. */
+/** Browser-grid item shown by ui/assetBrowser.ts BrowserCell. */
 export interface BrwsItem {
   name?: string;
   mbmp?: Mbmp;          // pre-rendered thumbnail (from .NTH)
@@ -46,9 +46,9 @@ export interface BrwsItem {
   [k: string]: unknown;
 }
 
-// Window globals the app installs at boot (doc.ts sets window.moviePlayer etc
-// for console debugging; __mms is the test/automation hook; cast/chrome
-// are the Google Cast SDK globals).
+// Window globals the app installs at boot (movieDocument.ts sets
+// window.moviePlayer etc for console debugging; __mms is the test/automation
+// hook; cast/chrome are the Google Cast SDK globals).
 declare global {
   interface Window {
     moviePlayer?: any; soundQueue?: any; sceneRenderer?: any; contentLibrary?: any;

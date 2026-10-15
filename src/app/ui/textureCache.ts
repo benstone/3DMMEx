@@ -1,11 +1,16 @@
 // Cached texture images for the canvas UI. textureCache.image() returns an Image
 // that may still be loading — draw sites call it every frame and it becomes
-// drawable when complete; Element.drawFrame() helpers skip incomplete images.
+// drawable when complete; draw helpers skip incomplete images.
 import { textureUrl } from '../resources.ts';
 
+/** Texture-image cache — `image(name)` returns the cached <img> (loading or
+ *  ready), `warm(name)` pre-decodes during boot, `isReady(image)` tells draw
+ *  sites whether it's safe to blit. */
 class TextureCache {
   cache = new Map();
 
+  /** Cached <img> for a texture name — starts loading on first call; `onload`
+   *  fires immediately if already decoded. */
   image = (name, onload?) => {
     let image = this.cache.get(name);
     if (!image) {
@@ -18,6 +23,7 @@ class TextureCache {
     return image;
   };
 
+  /** True when an image has decoded pixels to draw. */
   isReady = (image) => image.complete && image.naturalWidth > 0;
 
   /** Boot prewarm — create the cached Image now and await decode, so the first

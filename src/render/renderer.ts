@@ -2,8 +2,10 @@
 import * as THREE from 'three';
 import { drawTextboxes } from './textbox.ts';
 
+/** Scene render size — the camera's native resolution, upscaled by the UI. */
 export const WIDTH = 544, HEIGHT = 306;
 
+/** Convert a 3DMM 3x4 row-major matrix to a three.js Matrix4. */
 export const toMatrix4 = (m) => new THREE.Matrix4().set(
   m[0], m[3], m[6], m[9], m[1], m[4], m[7], m[10], m[2], m[5], m[8], m[11], 0, 0, 0, 1);
 
@@ -111,6 +113,9 @@ void main(){ outColor = vec4(uAid / 255.0, 0.0, 0.0, 1.0); }`;
 
 // smooth-shaded variant: average face normals across ALL coincident vertices,
 // so lighting is continuous across index seams and UV-split duplicates
+/** Clone a geometry with welded smooth normals — vertices sharing a position
+ *  accumulate their face normals (area-weighted) and get the normalized sum.
+ *  Used by the 'smooth verts' render option. */
 function smoothNormalsGeometry(geo) {
   const g = geo.clone();
   const pos = g.getAttribute('position'), idx = g.index.array;
@@ -154,8 +159,16 @@ void main(){
   else outColor = cur;
 }`;
 
+/** WebGL scene renderer reproducing 3DMM's 8-bit palette pipeline — indexed
+ *  background image + depth, palette-mapped actor shading, light-space shadow
+ *  maps, scene transitions, antialiasing, and the textbox overlay.
+ *  `render(moviePlayer, t)` draws a frame; `beginFrame`/`snapshot` bracket
+ *  interpolation and transitions; `pickActor`/`groundPoint`/`viewPlanePoint`/
+ *  `actorScreenRect` are the editor's pointer helpers. */
 export class Renderer {
   [k: string]: any; // transient fields — real declarations can replace incrementally
+  /** Build the GL pipeline on `canvas` — render targets, shader scenes, and
+   *  caches. `basePalette` is the content file's 256-entry RGB table. */
   constructor(canvas, basePalette) {
     this.gl = new THREE.WebGLRenderer({ canvas, antialias: false, preserveDrawingBuffer: true }); // preserve so the UI canvas can blit this canvas between renders
     this.gl.setPixelRatio(1);
@@ -234,7 +247,7 @@ export class Renderer {
     this._ndc = new THREE.Vector2();
     this._pv = new THREE.Vector3(); this._pv2 = new THREE.Vector3();
     this._pm4 = new THREE.Matrix4();
-    // selection: 3D bounding box in world space (BODY::_PrepareToRender sizes a box model to the actor's bounds)
+    // selection: 3D bounding box in world space around the selected actor
     this.selActor = null;
     this._selHelper = new THREE.Box3Helper(new THREE.Box3(), 0xffffff);
     this._selHelper.visible = false;
@@ -275,6 +288,8 @@ export class Renderer {
     this._prevCam = this._curCam;
   }
 
+  /** Load the base palette plus a background's palette overlay (at indexBase)
+   *  into the palette texture — also refreshes `palColors` for 2D drawing. */
   setPalette(bkgd) {
     const p = this.paletteData;
     for (let i = 0; i < 256; i++) { p[i * 4] = this.basePalette[i * 3]; p[i * 4 + 1] = this.basePalette[i * 3 + 1]; p[i * 4 + 2] = this.basePalette[i * 3 + 2]; p[i * 4 + 3] = 255; }
@@ -284,6 +299,9 @@ export class Renderer {
     for (let i = 0; i < 256; i++) this.palColors.push([p[i * 4], p[i * 4 + 1], p[i * 4 + 2]]);
   }
 
+  /** Point the background pass at a camera's index/depth images, upload its
+   *  palette + lights, and set the camera's fov/clips/orientation. No-op while
+   *  the camera chunk is unchanged. */
   _setBackground(bkgd, cam) {
     const key = `${bkgd.chunkyFile.name}:${cam.cno}`;
     if (key === this.bgKey) return;
@@ -311,6 +329,7 @@ export class Renderer {
     this.camera.matrixWorldInverse.copy(this.camera.matrixWorld).invert();
   }
 
+  /** three.js BufferGeometry for a parsed model — built once and cached. */
   _geometry(model) {
     let g = this.geoms.get(model);
     if (!g) {
@@ -324,6 +343,8 @@ export class Renderer {
     return g;
   }
 
+  /** Index texture for a TMAP — rows unpacked from cbRow stride; cached by
+   *  texture id. */
   _texture(tmap) {
     let t = this.texs.get(tmap.id);
     if (!t) {
@@ -337,18 +358,24 @@ export class Renderer {
     return t;
   }
 
+  /** Depth-pass material stamping occluder id `aid` — per-id so a mesh never
+   *  samples the shadow map it's currently writing. */
   _depthMat(aid) {
     let m = this._depthMats.get(aid);
     if (!m) { m = new THREE.ShaderMaterial({ glslVersion: THREE.GLSL3, vertexShader: DEPTH_VS, fragmentShader: DEPTH_FS, uniforms: { uAid: { value: aid } } }); this._depthMats.set(aid, m); }
     return m;
   }
 
+  /** Smooth-normal geometry variant — built once and cached. */
   _geometrySmooth(model) {
     let g = this.geomsS.get(model);
     if (!g) { g = smoothNormalsGeometry(this._geometry(model)); this.geomsS.set(model, g); }
     return g;
   }
 
+  /** Shading material for a material chunk + occluder id pair — palette,
+   *  texture, light and shadow uniforms. Cached; `uLights` is refreshed each
+   *  use since the light count varies per scene. */
   _material(mtrl, aid) {
     const key = `${mtrl ? mtrl.id : 'default'}@${aid}`;
     let m = this.mats.get(key);
@@ -462,7 +489,6 @@ export class Renderer {
     gl.setRenderTarget(null);
   }
 
-  /** Capture the outgoing frame for a scene transition (call before loadScene). */
   // --- editor picking helpers ---------------------------------------------
   /** Actor under NDC point (nx,ny in -1..1), or null. */
   pickActor(nx, ny) {
@@ -513,8 +539,13 @@ export class Renderer {
     return any ? { x0, y0, x1, y1 } : null;
   }
 
+  /** Capture the current frame into prevRT — the outgoing image a scene
+   *  transition dissolves from. Call before loadScene. */
   snapshot(moviePlayer) { this._drawScene(moviePlayer, this.prevRT); }
 
+  /** Render a frame — scene + background into the target (through the
+   *  transition compositor when one's active), then MSAA resolve and the
+   *  textbox overlay. `t` in [0,1] interpolates toward the current step. */
   render(moviePlayer, t = 1) {
     const gl = this.gl;
     if (moviePlayer.sceneIndex !== this._sceneIdx) { this._sceneIdx = moviePlayer.sceneIndex; this._prevW.clear(); this._prevCam = null; }
@@ -531,7 +562,7 @@ export class Renderer {
       this._drawScene(moviePlayer, out, t);
     }
     if (out) { gl.setRenderTarget(null); gl.clear(); gl.render(this.copyScene, this.bgCam); }
-    // text box overlay (suppressed during scene transitions, like the original)
+    // textbox overlay — suppressed during scene transitions
     const textboxes = trans ? [] : moviePlayer.textboxes || [];
     drawTextboxes(this.ovCtx, textboxes, this.palColors, WIDTH, HEIGHT, this.textboxChrome);
     if (textboxes.length) { this.ovTex.needsUpdate = true; gl.render(this.ovScene, this.bgCam); }

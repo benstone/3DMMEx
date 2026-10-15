@@ -2,13 +2,16 @@ import { appState } from '../appState.ts';
 import { playbackLoop } from '../playbackLoop.ts';
 import { renderOptions, renderOptionsPanel } from '../renderOptions.ts';
 import { localizer } from '../localization.ts';
-// --- render-settings modal — app chrome that deliberately lives OUTSIDE the
-// 640x480 canvas (it's a draggable OS-style dialog, not a 3DMM bitmap panel).
+// Render-settings modal — app chrome that deliberately lives OUTSIDE the
+// 640x480 canvas (it's a draggable OS-style dialog, not a bitmap panel).
+/** Draggable settings dialog — `show()` toggles it open, `close(keep)`
+ *  commits or reverts the session's option changes. */
 class OptionsDialog {
   view = null;
   snapshot = null;
 
-  show = () => { // book button + theatre/embed settings link -> render settings modal
+  /** Open the dialog — toggles closed (committing) when already open. */
+  show = () => {
     if (this.view) { this.close(true); return; } // it's a toggle — second call commits
     this.snapshot = structuredClone(renderOptions);
     const ov = this.view = document.createElement('div');
@@ -43,7 +46,9 @@ class OptionsDialog {
     document.body.appendChild(ov);
   };
 
-  close = (keep) => { // OK commits; Cancel/Esc reverts the session's changes
+  /** Close — `keep` commits the session's changes; otherwise revert to the
+   *  snapshot taken at open. */
+  close = (keep) => {
     if (!this.view) return;
     this.view.remove(); this.view = null; renderOptionsPanel.panel.hidden = true;
     if (keep) return;
@@ -53,6 +58,7 @@ class OptionsDialog {
     if (appState.playing) playbackLoop.setPlaying(true); playbackLoop.drawFrame();
   };
 
+  /** Esc closes the dialog (reverting). */
   installEscapeRoute = () => {
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && this.view) this.close(false); });
   };

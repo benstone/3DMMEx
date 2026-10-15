@@ -1,12 +1,13 @@
 import { elementById, baseUrl } from './resources.ts';
 import { uiRoot } from './ui/root.ts';
 import { bootView } from './ui/bootView.ts';
-// --- boot splash -------------------------------------------------------------
-// UTEST.CPP APP::_FInit: the Microsoft Home logo rides the early init, then the
-// splash screen stays up while _FInitCrm reads the content chunkies; afterwards
-// GetPortfolioDoc goes straight to the studio (autosaved doc) or the building's
-// menu. index.html's #boot div is only the pre-JS "loading..." placeholder —
-// removed as soon as the canvas BootView mounts below.
+// Boot splash orchestration — the logo rides early init, then the splash
+// stays up while the content files load; afterwards the app goes straight to
+// the studio (autosaved doc) or the building menu. index.html's #boot div is
+// only the pre-JS "loading..." placeholder — removed as soon as the canvas
+// BootView mounts below.
+/** Boot-progress bookkeeping — the manifest fetch plus the misc segment the
+ *  palette + thumbnail loads tick through. */
 export class BootSequence {
   /** Shim: callers toggle .hidden like the old DOM progress div. */
   progressBar = {
@@ -14,11 +15,14 @@ export class BootSequence {
     set hidden(v) { bootView.progress = v ? -1 : 0; bootView.invalidate(); },
   };
 
+  /** Texture manifest fetch — resolves the manifest JSON or null. */
   manifestPromise = fetch(`${baseUrl}manifest.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
 
   miscTickCount = 0;
   miscSegment = bootView.segment(0.08);
-  advanceMiscTick = (cap) => this.miscSegment(++this.miscTickCount / 6, cap); // socialPalette + 5 thumbnail-file fetches
+  /** Advance the misc-load segment — the palette + 5 thumbnail-file fetches
+   *  tick this to completion. */
+  advanceMiscTick = (cap) => this.miscSegment(++this.miscTickCount / 6, cap);
 }
 
 export const bootSequence = new BootSequence();

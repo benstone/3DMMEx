@@ -1,4 +1,6 @@
-// Kauai chunky file (CHN2) reader. See kauai/SRC/CHUNK.CPP.
+// Kauai chunky file (CHN2) reader/writer — the container format shared by the
+// content files (.3CN) and movie files (.3MM): an index of typed chunks, each
+// with children (kids), an optional name, and optional KCDC compression.
 import { Reader, ctgToStr, strToCtg, readStn, Writer, writeStn } from './binary.ts';
 import { decodeKCDC, decodeKCD2 } from './kcdc.ts';
 
@@ -7,6 +9,8 @@ const FCRP_FOREST = 0x10;
 const CB_CRPBG = 32;
 const CB_CRPSM = 20;
 
+/** A parsed chunky file — `has`/`get`/`data`/`kid`/`kidsOf`/`ofType` query the
+ *  chunk index; `adopt` copies a chunk subtree in with fresh chunk numbers. */
 export class ChunkyFile {
   [k: string]: any; // transient fields — real declarations can replace incrementally
   constructor(buffer, name = '') {
@@ -17,8 +21,12 @@ export class ChunkyFile {
     this._parse();
   }
 
+  /** Map key for a (ctg, cno) chunk identifier. */
   static key(ctg, cno) { return `${ctg}:${cno}`; }
 
+  /** Walk the file's chunk index and build the `chunks` map — reads the CFP
+   *  header, the GG of chunk-reference entries (big or small form), each
+   *  entry's kid list, and its name string. */
   _parse() {
     const r = new Reader(this.bytes);
     const magic = String.fromCharCode(...this.bytes.subarray(0, 4));
@@ -33,7 +41,7 @@ export class ChunkyFile {
     const fpIndex = r.i32();
     const cbIndex = r.i32();
     if (fpIndex <= 0 || fpIndex + cbIndex > this.bytes.length) throw new Error('bad chunky index');
-    // index is a GG of CRPs
+    // the index is a generic group of chunk-reference entries
     const gg = readGG(this.bytes.subarray(fpIndex, fpIndex + cbIndex));
     for (const e of gg.entries) {
       if (!e) continue;
@@ -45,8 +53,8 @@ export class ChunkyFile {
       if (gg.cbFixed === CB_CRPBG) {
         cb = er.i32();
         ckid = er.i32();
-        er.i32(); // ccrpRef
-        er.i32(); // rti
+        er.i32(); // reference count (unused)
+        er.i32(); // runtime id (unused)
         grfcrp = er.u32();
       } else if (gg.cbFixed === CB_CRPSM) {
         const lu = er.u32();
@@ -69,14 +77,17 @@ export class ChunkyFile {
     }
   }
 
+  /** Whether the file holds a (ctg, cno) chunk. */
   has(ctg, cno) { return this.chunks.has(ChunkyFile.key(ctg, cno)); }
+  /** The chunk record for (ctg, cno) — {ctg, cno, fp, cb, kids, name, ...}. */
   get(ctg, cno) { return this.chunks.get(ChunkyFile.key(ctg, cno)); }
 
+  /** Iterate every chunk of a given type. */
   *ofType(ctg) {
     for (const c of this.chunks.values()) if (c.ctg === ctg) yield c;
   }
 
-  /** Decompressed chunk data as Uint8Array */
+  /** A chunk's data as a Uint8Array — unpacked on first read and cached. */
   data(ctg, cno) {
     const k = ChunkyFile.key(ctg, cno);
     if (this._cache.has(k)) return this._cache.get(k);
@@ -88,13 +99,14 @@ export class ChunkyFile {
     return raw;
   }
 
-  /** Find a child chunk of (ctg,cno) of type kidCtg with the given chid */
+  /** Find a child reference of chunk (ctg,cno) of type `kidCtg` with the given chid. */
   kid(ctg, cno, kidCtg, chid = 0) {
     const c = this.get(ctg, cno);
     if (!c) return null;
     return c.kids.find((k) => k.ctg === kidCtg && k.chid === chid) || null;
   }
 
+  /** All child references of chunk (ctg,cno), optionally filtered by type. */
   kidsOf(ctg, cno, kidCtg = null, chid = null) {
     const c = this.get(ctg, cno);
     if (!c) return [];
@@ -102,9 +114,9 @@ export class ChunkyFile {
   }
 
   /**
-   * Copy a chunk subtree from srcCf into this file with fresh CNOs (the
-   * runtime half of CFL::FClone/FAdoptChild — used when the scene sorter
-   * appends another movie's scenes). Returns the new chunk record or null.
+   * Copy a chunk subtree from `srcCf` into this file with fresh chunk numbers —
+   * used when the scene sorter appends another movie's scenes. Returns the new
+   * chunk record or null.
    */
   adopt(srcCf, ctg, cno) {
     const src = srcCf.get(ctg, cno);
@@ -126,6 +138,7 @@ export class ChunkyFile {
   }
 }
 
+/** Unpack a packed chunk body — dispatches on the KCDC/KCD2 codec tag. */
 export function unpack(raw) {
   const dv = new DataView(raw.buffer, raw.byteOffset, raw.byteLength);
   const cfmt = ctgToStr(dv.getUint32(0, false));
@@ -188,8 +201,8 @@ export function readAL(bytes) {
   return { le: r.le, cbEntry, entries };
 }
 
-// ---- writing (CFL::FSaveACopy / _FWriteIndex semantics) ----------------------
-const KOSK = 0x0303;
+// ---- writing ----------------------------------------------------------------
+const KOSK = 0x0303; // string encoding kind: single-byte latin1
 
 /** Serialize a GL chunk body: bo,osk,cbEntry,ivMac + entries. */
 export function buildGL(entries) {
@@ -229,7 +242,8 @@ export function buildGST(cbEntry, entries) {
 }
 
 /**
- * Write a complete CHN2 file.
+ * Write a complete chunky (CHN2) file: 128-byte header, chunk data, then the
+ * index (a GG of chunk-reference entries).
  * chunks: [{ctg, cno, data:Uint8Array, kids:[{ctg,cno,chid}], name, loner}]
  * opts: {creator, dverCur, dverBack, osk}
  */
@@ -237,7 +251,7 @@ export function writeChunkyFile(chunks, opts: any = {}) {
   const { creator = 'SOC ', dverCur = 5, dverBack = 4, osk = KOSK } = opts;
   const body = new Writer();
   const crps = [];
-  body.pad(128); // CFP header
+  body.pad(128); // file header — patched after the chunks are laid out
   for (const c of chunks) {
     const fp = body.len, cb = c.data.length;
     body.bytes(c.data);
@@ -246,7 +260,7 @@ export function writeChunkyFile(chunks, opts: any = {}) {
     if (c.name) variable.bytes(writeStn(c.name));
     const fixed = new Writer();
     fixed.ctg(c.ctg).u32(c.cno).i32(fp).i32(cb).i32((c.kids || []).length)
-      .i32(1).i32(0).u32(c.loner ? 0x02 : 0); // ccrpRef, rti, grfcrp
+      .i32(1).i32(0).u32(c.loner ? 0x02 : 0); // refcount, runtime id, flags
     crps.push({ fixed: fixed.out(), variable: variable.out() });
   }
   const index = buildGG(32, crps);
@@ -261,7 +275,7 @@ export function writeChunkyFile(chunks, opts: any = {}) {
   dv.setUint16(12, 0x0001, true); dv.setInt16(14, osk, true);
   dv.setInt32(16, fpMac, true); dv.setInt32(20, fpIndex, true);
   dv.setInt32(24, index.length, true);
-  dv.setInt32(28, fpMac, true); dv.setInt32(32, 0, true); // fpMap, cbMap
+  dv.setInt32(28, fpMac, true); dv.setInt32(32, 0, true); // no free-space map
   return out;
 }
 

@@ -12,12 +12,10 @@ import { studioHost } from './app/ui/studio.ts';
 import { injectAppStyles } from './app/ui/styles.ts';
 import { textureCache } from './app/ui/textureCache.ts';
 import { tooltips } from './app/ui/tooltips.ts';
-// 3DMM Web — boot orchestrator. Everything else lives in src/app/: state
-// (shared lets+setters), res (paths/DOM helpers), undo, boot (splash), packs
-// (?packs= expansions), thumbs (.3th scan), doc (open/save/autosave), loop
-// (play loop + draw), renderOptions (render settings), sndsrc (sound browsers),
-// edit/ (movie/sound/tbox mutations), ui-dom/ (studio, browsers, easels,
-// bio, tips, theatre/embed modes).
+// 3DMM Web — boot orchestrator. The app lives in src/app/ (state, resources,
+// editHistory, bootstrap, expansion packs, thumbnails, movieDocument,
+// playbackLoop, renderOptions, soundSources, edit/ mutations) and
+// src/app/ui/ (studio, browsers, easels, bio, tooltips, theatre/embed).
 import { Library, CONTENT_FILES } from './engine/library.ts';
 import { SoundQueue } from './engine/sound.ts';
 import { Renderer } from './render/renderer.ts';
@@ -26,8 +24,7 @@ import { appState } from './app/appState.ts';
 import { localizer } from './app/localization.ts';
 
 
-/* @@boot.js:25@@ */
-/* @@packs.js:53@@ */
+// --- boot: splash, texture warm, content library -------------------------------
 injectAppStyles();
 const warmupProgress = bootView.segment(0.18);
 bootSequence.manifestPromise.then(async (manifest) => {
@@ -47,19 +44,18 @@ bootSequence.manifestPromise.then(async (manifest) => {
     }
   }));
 }).catch(() => {});
-bootView.show('homelogo'); // _FDisplayHomeLogo — the original's first screen
+bootView.show('homelogo'); // the logo rides the early init
 const bootT0 = performance.now();
 
 const libraryProgress = bootView.segment(0.74);
 const libraryParts = new Map(); // per-.3CN byte fraction
-await sleep(Math.max(0, 700 - (performance.now() - bootT0))); // a beat on the logo (kdtsHomeLogo)
+await sleep(Math.max(0, 700 - (performance.now() - bootT0))); // hold the logo for a beat
 bootView.show('splash'); bootSequence.progressBar.hidden = false;
 const splashT0 = performance.now();
 appState.setContentLibrary(await Library.load(`${baseUrl}data`, (n, got, tot) => {
   libraryParts.set(n, tot ? got / tot : 1);
   libraryProgress([...libraryParts.values()].reduce((a, b) => a + b, 0) / CONTENT_FILES.length, `loading ${n.toLowerCase()}`);
 }));
-/* @@boot.js:95@@ */
 appState.setSocialPalette(new Uint8Array(await (await fetch(`${baseUrl}data/socpal.palette`)).arrayBuffer()));
 bootSequence.advanceMiscTick(localizer.translate('boot.palette'));
 appState.setSceneRenderer(new Renderer(elementById('view'), appState.socialPalette));
@@ -67,31 +63,12 @@ appState.setSoundQueue(new SoundQueue(appState.contentLibrary));
 
 await thumbnails.loadBuiltinThumbnails();
 await expansionPacks.applyAll();
-/* @@thumbs.js:200@@ */
-// --- editor undo/redo moved to app/undo.js
 
-/* @@edit/movie.js:255@@ */
-/* @@edit/sound.js:382@@ */
-/* @@sndsrc.js:473@@ */
-/* @@edit/sound.js:481@@ */
-/* @@edit/tbox.js:525@@ */
-/* @@loop.js:726@@ */
-/* @@renderOptions.js:742@@ */
-/* @@loop.js:747@@ */
-/* @@renderOptions.js:775@@ */
+// --- editor: renderer options, strings, then the studio itself -----------------
 appState.sceneRenderer.setOpts(renderOptions);
-await localizer.initialize(); // ?lang= dictionary before any UI strings bake
-/* @@doc.js:873@@ */
+await localizer.initialize(); // the ?lang= dictionary loads before any UI strings bake
 studioHost.initialize();
-/* @@ui-dom/browsers.js:2290@@ */
-/* @@sndsrc.js:2305@@ */
-/* @@thumbs.js:2408@@ */
-/* @@ui-dom/browsers.js:2423@@ */
-/* @@ui-dom/easels.js:2578@@ */
-/* @@ui-dom/bio.js:3326@@ */
-/* @@ui-dom/tips.js:3378@@ */
-/* @@ui-dom/modes.js:3504@@ */
-document.addEventListener('keydown', (e) => { // Space = play/pause in theatre/embed (editor owns Space for tbox typing)
+document.addEventListener('keydown', (e) => { // Space = play/pause in theatre/embed (the editor owns Space for textbox typing)
   if (e.code !== 'Space' || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
   if (!document.getElementById('theatre') && !document.getElementById('embed')) return;
   if (!appState.moviePlayer?.movie?.scenes.length) return;
@@ -99,13 +76,14 @@ document.addEventListener('keydown', (e) => { // Space = play/pause in theatre/e
   playbackLoop.setPlaying(!appState.playing);
 });
 
+// --- URL params: render options, menu, movie source, theatre/embed ------------
 const queryParams = new URLSearchParams(location.search);
 if (queryParams.get('renderOptions')) { for (const k of queryParams.get('renderOptions').split(',')) if (typeof renderOptions[k] === 'boolean') { renderOptions[k] = true; if (renderOptionsPanel.controls[k]) { renderOptionsPanel.controls[k].checked = true; if (renderOptionsPanel.controls[k]._sub) renderOptionsPanel.controls[k]._sub.hidden = false; } } appState.sceneRenderer.setOpts(renderOptions); }
 if (queryParams.has('menu')) setTimeout(optionsDialog.show, 600);
-// startup mirrors the original: GetPortfolioDoc -> FLoadMovie(pfniUserDoc) — the
-// autosaved working doc opens straight into the studio; no doc -> FLoadMovie()
-// blank doc. ?3mm=url loads a remote movie, replacing the working doc on success;
-// on failure we fall back to the normal boot and show the error after the splash.
+// Startup: the autosaved working doc opens straight into the studio; no doc
+// means a blank movie. ?3mm=url loads a remote movie, replacing the working doc
+// on success; on failure we fall back to the normal boot and show the error
+// after the splash.
 let bootComplete = false, bootError = null;
 const remoteMovie = queryParams.get('3mm');
 if (remoteMovie) {
@@ -126,7 +104,7 @@ if (!bootComplete) {
     if (!bootComplete) console.warn('[autosave] cached movie failed to open — starting a new movie');
   }
 }
-await sleep(Math.max(0, 500 - (performance.now() - splashT0))); // don't flash the splash on a warm cache (kdtsSplashScreen, scaled way down)
+await sleep(Math.max(0, 500 - (performance.now() - splashT0))); // keep the splash up briefly so it doesn't flash
 if (!bootComplete) movieDocument.newMovie(); // straight to the editor — no menu
 bootView.done();
 [bootError, ...expansionPacks.packNotes].filter(Boolean).forEach((n, i) => setTimeout(() => toastHost.show(n), 400 + i * 3400)); // toasts after the splash fades

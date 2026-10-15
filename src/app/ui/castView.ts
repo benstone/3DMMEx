@@ -7,7 +7,10 @@ import { playbackLoop } from '../playbackLoop.ts';
 import { ImageButton } from './widgets.ts';
 import { localizer } from '../localization.ts';
 
+/** Cast-receiver view — a letterboxed MovieScreen plus a status line and a
+ *  play/stop button; receiver.html pushes this and nothing else. */
 export class CastView extends View {
+  /** Build the letterboxed screen + status text + play button. */
   constructor() {
     super();
     this.add(new MovieScreen(0, 60, UI_WIDTH, 360)); // 544:306 scaled to 640 wide, letterboxed
@@ -19,6 +22,8 @@ export class CastView extends View {
     this.add(this.playB);
     appState.setModeSync(() => { this.playB.sync(); this.invalidate(); });
   }
+  /** Update the status line — '' hides it. */
   setStatus(s) { this.status.text = s || ''; this.status.dirty(); this.invalidate(); }
+  /** View-pop hook — release the mode-sync callback. */
   onExit() { appState.setModeSync(null); }
 }

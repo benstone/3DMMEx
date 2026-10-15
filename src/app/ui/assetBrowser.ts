@@ -1,6 +1,6 @@
-// Canvas item-browser view — port of ui-dom/browsers.js AssetBrowserView.show().
-// browser.cht: modal book panel + frame grid + page controls. Pushed onto the
-// UiRoot stack; studio stays mounted underneath.
+// Canvas item-browser view — a modal book panel with a frame grid and page
+// controls. Pushed onto the uiRoot stack via the modal slot; the studio stays
+// mounted underneath.
 import { View, uiRoot } from './root.ts';
 import { Element } from './element.ts';
 import { ImageElement, StudioButton } from './widgets.ts';
@@ -12,34 +12,39 @@ import { playbackLoop } from '../playbackLoop.ts';
 import { soundSources} from '../soundSources.ts';
 import { thumbnails } from '../thumbnails.ts';
 import { localizer } from '../localization.ts';
-// easel->browser->easels->easel was an eval-time import cycle; modal.ts owns
-// ModalView+the slot (a leaf), and the recorder entry is click-time only, so
-// a lazy import keeps this module out of the cycle entirely.
+// The recorder entry is click-time only — a lazy easels import keeps this
+// module out of the easel import cycle.
 import { ModalView, modalSlot } from './modal.ts';
 const easels = () => import('./easels.ts');
 
+/** Per-kind browser layouts — book skin, grid geometry, and button slots,
+ *  — the pickers' fixed 640x480 layouts. */
 export const BROWSER_DEFS = {
-  // kidBrwsBackground/kidBrwsSceneFrames: book1 at (62,48) via reg (258,370); frames 136x78, cells +4.
+  // scene + backdrop pickers share the book1 layout at (62,48); 136x78 frames.
   scene: { bookSkin: 'book1', x: 62, y: 48, frameWidth: 136, frameHeight: 78, cellFrameSkin: 'frame1', columns: 3, rows: 3, gridX: 40, gridY: 40, cellStepX: 150, cellStepY: 87, forwardButton: [303, 320], backButton: [155, 320], pageText: [226, 345], cancelButton: [437, 320] },
   bkgd: { bookSkin: 'book1', x: 62, y: 48, frameWidth: 136, frameHeight: 78, cellFrameSkin: 'frame1', columns: 3, rows: 3, gridX: 40, gridY: 40, cellStepX: 150, cellStepY: 87, forwardButton: [303, 320], backButton: [155, 320], pageText: [226, 345], cancelButton: [437, 320] },
-  // kidBrwsCamera: book2 at (62,100), same grid, frame2 cells
+  // camera picker: book2 at (62,100), same grid, frame2 cells
   cam:  { bookSkin: 'book2', x: 62, y: 100, frameWidth: 136, frameHeight: 78, cellFrameSkin: 'frame2', columns: 3, rows: 3, gridX: 40, gridY: 40, cellStepX: 150, cellStepY: 87, forwardButton: [303, 320], backButton: [155, 320], pageText: [226, 345], cancelButton: [437, 320] },
   actor: { bookSkin: 'book3', x: 62, y: 47, frameWidth: 80, frameHeight: 80, cellFrameSkin: 'frame3', columns: 5, rows: 3, gridX: 30, gridY: 38, cellStepX: 94, cellStepY: 94, forwardButton: [304, 322], backButton: [155, 322], pageText: [228, 342], cancelButton: [437, 320] },
   prop: { bookSkin: 'book4', x: 62, y: 47, frameWidth: 80, frameHeight: 80, cellFrameSkin: 'frame4', columns: 5, rows: 3, gridX: 30, gridY: 38, cellStepX: 94, cellStepY: 94, forwardButton: [304, 322], backButton: [155, 322], pageText: [228, 342], cancelButton: [437, 320] },
-  // sound name-list browsers (browser.cht kidBrwsSounds*): book6=midi, book7=fx, book8=speech
+  // sound name-list browsers: book6=midi, book7=fx, book8=speech
   fx:     { bookSkin: 'book7', x: 62, y: 48, frameWidth: 138, frameHeight: 25, cellFrameSkin: 'frame5', columns: 3, rows: 10, columnMajor: true, gridX: 31, gridY: 34, cellStepX: 158, cellStepY: 28, forwardButton: [303, 320], backButton: [154, 320], pageText: [230, 341], okButton: [437, 320], cancelButton: [387, 320], recordButton: [29, 320], importButton: [79, 320] },
   speech: { bookSkin: 'book8', x: 62, y: 48, frameWidth: 138, frameHeight: 25, cellFrameSkin: 'frame5', columns: 3, rows: 10, columnMajor: true, gridX: 31, gridY: 34, cellStepX: 158, cellStepY: 28, forwardButton: [303, 320], backButton: [154, 320], pageText: [230, 341], okButton: [437, 320], cancelButton: [387, 320], recordButton: [29, 320], importButton: [79, 320] },
   music:  { bookSkin: 'book6', x: 62, y: 48, frameWidth: 138, frameHeight: 25, cellFrameSkin: 'frame5', columns: 3, rows: 10, columnMajor: true, gridX: 31, gridY: 34, cellStepX: 158, cellStepY: 28, forwardButton: [303, 320], backButton: [154, 320], pageText: [230, 341], okButton: [437, 320], cancelButton: [387, 320], importButton: [79, 320] },
 };
 
-class BrowserCell extends Element { // frame img + content (mbmp thumb or text label)
+/** A grid cell — frame image plus content (thumbnail or name label). */
+class BrowserCell extends Element {
+  /** `view` is the owning browser, `def` the layout, `i` the grid slot. */
   constructor(view, def, i) {
     const col = i % def.columns, row = Math.floor(i / def.columns);
     super(def.x + def.gridX + col * def.cellStepX, def.y + def.gridY + row * def.cellStepY, def.frameWidth, def.frameHeight);
     this.def = def; this.view = view; this.cursor = 'pointer';
     this.cellIndex = i; this.hover = false; this.selected = false;
   }
+  /** The item this cell currently shows — page + grid slot into the list. */
   item() { return this.view.items[this.view.pageIndex * this.view.itemsPerPage + this.cellIndex]; }
+  /** Paint the frame + the item's thumbnail, or the scene/sound label. */
   draw(ctx) {
     const item = this.item();
     const frameImage = textureCache.image(`${this.def.cellFrameSkin}${this.selected || this.hover ? 'h' : ''}`, () => this.dirty());
@@ -63,9 +68,13 @@ class BrowserCell extends Element { // frame img + content (mbmp thumb or text l
     }
     ctx.restore();
   }
-  onPointerDown() { this.hover = true; this.dirty(); } // 'h' face is a press state, not hover
+  /** Press — the 'h' face is a press state, not hover. */
+  onPointerDown() { this.hover = true; this.dirty(); }
+  /** Release the press. */
   onPointerUp() { this.hover = false; this.dirty(); }
+  /** Cancel the press when the pointer slides off. */
   onPointerLeave() { this.hover = false; this.dirty(); }
+  /** Pick this cell's item. */
   onClick() { this.view.pick(this); }
 }
 
@@ -74,11 +83,13 @@ class BrowserCell extends Element { // frame img + content (mbmp thumb or text l
  *  inputs (EaselView.domInput) are tracked in _dom: hidden while the modal is
  *  covered by a nested push, removed when it actually leaves the stack. */
 export class AssetBrowserView extends ModalView {
-  /** Open a canvas browser over the studio. */
+  /** Open a browser over the studio — `kind` selects a BROWSER_DEFS layout;
+   *  `items` overrides the list (import candidates). */
   static show(kind, items = null) {
     if (!BROWSER_DEFS[kind]) { console.warn(`[browser] unknown kind: ${kind}`); return; }
     modalSlot.open(new AssetBrowserView(kind, items));
   }
+  /** Build the book, cells, page controls, and kind-specific buttons. */
   constructor(kind, importItems = null) {
     super();
     this.kind = kind; this.importItems = importItems;
@@ -89,7 +100,7 @@ export class AssetBrowserView extends ModalView {
       : thumbnails.browserTemplates[kind === 'bkgd' ? 'scene' : kind]);
     this.itemsPerPage = def.columns * def.rows;
     this.pageIndex = 0; this.selectedIndex = -1;
-    this.pickable = false; // cells carry their own hit rects; clicks outside them still must not fall through:
+    this.pickable = false; // cells carry their own hit rects; clicks outside must not fall through:
     this.veil = new Element(0, 0, 640, 480);
     this.veil.draw = () => {};
     this.veil.onPointerDown = () => true;
@@ -116,7 +127,7 @@ export class AssetBrowserView extends ModalView {
         if (this.selectedIndex < 0) return;
         soundSources.addUserSound(kind, this.items[this.selectedIndex]); modalSlot.close(); AssetBrowserView.show(kind); return;
       }
-      soundEdits.setSoundTag(kind, this.selectedIndex >= 0 ? this.items[this.selectedIndex] : null); // BRWN::FCmdOk -> MVU::SetTagTool
+      soundEdits.setSoundTag(kind, this.selectedIndex >= 0 ? this.items[this.selectedIndex] : null); // OK loads the tool sound
       modalSlot.close();                                              // (empty pick clears the tool sound)
     });
     makeButton('cancel', 'cancelc', def.x + def.cancelButton[0], def.y + def.cancelButton[1], 50, 48, () => importItems ? (modalSlot.close(), AssetBrowserView.show(kind)) : modalSlot.close());
@@ -124,7 +135,11 @@ export class AssetBrowserView extends ModalView {
     if (def.importButton && !importItems) makeButton('sndport', 'sndports', def.x + def.importButton[0], def.y + def.importButton[1], 50, 48, () => soundSources.importSoundFiles(kind));
     this.invalidate();
   }
+  /** Page count for the current items. */
   pageCount() { return Math.max(1, Math.ceil(this.items.length / this.itemsPerPage)); }
+  /** A cell's click — sound browsers select+preview for OK; other kinds run
+   *  their edit (backdrop/camera pick, actor placement arm, scene jump) and
+   *  close. */
   pick(cell) {
     const item = cell.item(), kind = this.kind, def = this.def;
     if (!item) return;
@@ -134,8 +149,8 @@ export class AssetBrowserView extends ModalView {
       soundSources.previewSoundItem(item);
       return;
     }
-    if (kind === 'bkgd') movieEdits.editBackground(item.cno, item.name); // FSetBkgdCore: fill empty scene else insert new
-    else if (kind === 'cam') movieEdits.editCamera(item.cameraIndex); // kidBrwsCamera -> ChngCamera event
+    if (kind === 'bkgd') movieEdits.editBackground(item.cno, item.name); // fills an empty scene, else inserts a new one
+    else if (kind === 'cam') movieEdits.editCamera(item.cameraIndex); // rewrites the current ChngCamera event
     else if (kind === 'actor' || kind === 'prop') { // pick template -> click stage to place
       appState.setPendingPlacement({ cno: item.cno, name: item.name });
       if (appState.editorTools.view) appState.editorTools.view.cursor = 'crosshair';

@@ -1,12 +1,18 @@
 import { appState } from './appState.ts';
 import { playbackLoop } from './playbackLoop.ts';
 import { localizer } from './localization.ts';
-// --- options ---------------------------------------------------------------
+// Render options — the settings object read by the renderer plus the DOM
+// control panel inside the render-settings dialog.
+/** Live render options — persisted to localStorage on every change, pushed
+ *  into the renderer via `setOpts`. */
 export const renderOptions: Record<string, any> = { fps24: false, modernLighting: false, shadows: false, castOnOthers: false, selfShadow: false, smoothTex: false, smoothVerts: false, scale2x: false, aa: false, aaMode: 4, wireframe: false, lightInt: 1, selfShadowOp: 0.65 };
-try { Object.assign(renderOptions, JSON.parse(localStorage.getItem('opts3dmm') || '{}')); delete renderOptions.mute; } catch { /* bad saved renderOptions */ }
-if (renderOptions.aa && typeof renderOptions.aa !== 'boolean') { renderOptions.aaMode = renderOptions.aa; renderOptions.aa = true; } // migrate old numeric aa value
+try { Object.assign(renderOptions, JSON.parse(localStorage.getItem('opts3dmm') || '{}')); delete renderOptions.mute; } catch { /* bad saved options */ }
+if (renderOptions.aa && typeof renderOptions.aa !== 'boolean') { renderOptions.aaMode = renderOptions.aa; renderOptions.aa = true; } // migrate the old numeric aa value
 
 
+/** Settings-dialog layout — [categoryKey, [[optKey, label, subKind?, subDef?]]];
+ *  'range' = standalone slider (fraction 0-1), array = checkbox sub-options,
+ *  'sel' = dropdown. */
 export const RENDER_OPTION_DEFS: any[] = [
   ['catPlayback', [
     ['fps24', ''],
@@ -30,11 +36,14 @@ export const RENDER_OPTION_DEFS: any[] = [
     ['', ''],
   ]],
 ];
-class RenderOptionsPanel { // the DOM controls shown inside the render-settings dialog
+/** The DOM controls inside the render-settings dialog — built lazily on
+ *  first open so ?lang= has loaded. */
+class RenderOptionsPanel {
   panel = Object.assign(document.createElement('div'), { className: 'optPanel', hidden: true });
   controls: Record<string, any> = {}; // checkboxes, resynced on dialog revert
   inputs: any[] = [];                 // range/select controls
   built = false;
+  /** Push the live options back into the controls (dialog revert). */
   syncControls = () => {
     for (const [k, cb] of Object.entries(this.controls)) { cb.checked = !!renderOptions[k]; if (cb._sub) cb._sub.hidden = !cb.checked; }
     for (const [k, el] of this.inputs) el.value = el.type === 'range' ? Math.round(renderOptions[k] * 100) : String(renderOptions[k]);

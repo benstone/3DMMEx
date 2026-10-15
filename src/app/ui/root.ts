@@ -6,15 +6,26 @@ import { Element } from './element.ts';
 import { Animator, EASE } from './animator.ts';
 import { appState, useUiState } from '../appState.ts';
 
+/** Virtual canvas size — every element works in this space; the canvas is
+ *  CSS-stretched to fill the stage. */
 export const UI_WIDTH = 640, UI_HEIGHT = 480;
 
+/** A full-canvas screen — pushed onto `uiRoot.stack`; `interactive` means the
+ *  canvas takes pointer events while the view is on top. `onEnter`/`onExit`
+ *  fire on push/pop and cover/uncover. */
 export class View extends Element {
-  constructor() { super(0, 0, UI_WIDTH, UI_HEIGHT); this.interactive = true; } // interactive: canvas takes pointer-events
-  onEnter() {}   // pushed / uncovered
-  onExit() {}    // popped / covered
+  constructor() { super(0, 0, UI_WIDTH, UI_HEIGHT); this.interactive = true; }
+  /** Lifecycle — pushed onto the stack or uncovered by a pop. */
+  onEnter() {}
+  /** Lifecycle — popped or covered by a push. */
+  onExit() {}
 }
 
+/** The canvas-UI root — owns the view stack, dirty-rect repaint loop, tween
+ *  animator, toast overlay, and pointer routing (capture, hover, bubbling).
+ *  Created as the `uiRoot` singleton at module eval. */
 export class UiRoot extends Element {
+  /** Bind to the `#ui` canvas — installs listeners and the repaint loop. */
   constructor(canvas) {
     super(0, 0, UI_WIDTH, UI_HEIGHT);
     this.canvas = canvas;
@@ -41,8 +52,11 @@ export class UiRoot extends Element {
     this._bindInput();
   }
 
+  /** The top view — receives pointer input. */
   get topView() { return this.stack[this.stack.length - 1] || null; }
 
+  /** Reassemble the element children from the view layers — leaving-under,
+   *  stack, leaving-over, tips, toast — and publish stack depth to the store. */
   _rebuild() {
     this.children = [...this.leavingUnder, ...this.stack, ...this.leaving, this.tips, this.toast];
     // publish the stack into useUiState — view transitions / "is a dialog open"
@@ -98,6 +112,8 @@ export class UiRoot extends Element {
     this._syncInput();
   }
 
+  /** Enable/disable canvas pointer events and visibility per the stack —
+   *  empty stack means the canvas is passive. */
   _syncInput() {
     const on = !!this.stack.length;
     this.canvas.style.pointerEvents = on && this.topView?.interactive !== false ? 'auto' : 'none';
@@ -107,6 +123,8 @@ export class UiRoot extends Element {
   }
 
   // --- dirty-region repaint -------------------------------------------------
+  /** Queue a repaint — a rect in virtual coords, or the whole canvas when
+   *  called bare. */
   invalidate(x?, y?, w?, h?) {
     if (x === undefined) this.dirtyAll = true;
     else {
@@ -116,6 +134,8 @@ export class UiRoot extends Element {
     this.start();
   }
 
+  /** Ensure the RAF loop is running — it ticks the animator, walks frame()
+   *  hooks, repaints dirty regions, and stops itself when idle. */
   start() {
     if (this._raf) return;
     const step = (now) => {
@@ -128,12 +148,14 @@ export class UiRoot extends Element {
     this._raf = requestAnimationFrame(step);
   }
 
+  /** Run the per-frame hook down the visible subtree. */
   _walkFrame(el, now) {
     if (!el.visible) return;
     el.frame(now);
     for (const c of el.children) this._walkFrame(c, now);
   }
 
+  /** Redraw — clipped to the union of dirty rects when not a full repaint. */
   repaint() {
     const { ctx } = this;
     ctx.save();
@@ -150,11 +172,14 @@ export class UiRoot extends Element {
   }
 
   // --- input -----------------------------------------------------------------
+  /** Map a DOM pointer event to virtual 640x480 coords. */
   _toVirtual(e) {
     const r = this.canvas.getBoundingClientRect();
     return { x: (e.clientX - r.left) / r.width * UI_WIDTH, y: (e.clientY - r.top) / r.height * UI_HEIGHT, src: e };
   }
 
+  /** Install the pointer handlers — capture on down, hover + cursor on move,
+   *  click on up-over-same-element. */
   _bindInput() {
     const c = this.canvas;
     c.addEventListener('pointerdown', (e) => {
@@ -192,12 +217,14 @@ export class UiRoot extends Element {
     for (let e = el; e; e = e.parent) if (e[method]?.(p)) break;
   }
 
-  /** PushErc-style notice — transient toast bottom-left. */
+  /** Show a transient toast notice, bottom-left. */
   showToast(msg) { this.toast.showToast(msg); this.invalidate(); this.start(); }
 }
 
+/** The toast pill — bottom-left, auto-fades after ~3s. */
 class Toast extends Element {
   constructor() { super(6, 452, 340, 22); this.pickable = false; this.msg = ''; /** @type {any} */ this._tm = 0; /** @type {any} */ this._ui = null; }
+  /** Show a message — re-arms the fade timer. */
   showToast(msg) {
     this.msg = msg;
     this.visible = true; this.opacity = 1;
@@ -207,6 +234,7 @@ class Toast extends Element {
       uiRoot?.anim.tween(this, { opacity: 0 }, { dur: 300, done: () => { this.visible = false; } });
     }), 3000 as any);
   }
+  /** Draw the pill + text. */
   draw(ctx) {
     if (!this.msg) return;
     ctx.font = "bold 12px 'Comic Sans MS', cursive, sans-serif";

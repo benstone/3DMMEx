@@ -1,7 +1,9 @@
-// 3DMM MIDS chunk: a raw MIDI event stream — varint delta times already in
-// milliseconds (PmidsReadNative converts ticks->ms at import), then status
-// byte + params (running status allowed). See kauai/src/midi.cpp MSTP::FGetEvent.
+// MIDS chunk parser — a raw MIDI event stream: varint delta times already in
+// milliseconds, then status byte + params (running status allowed).
 
+/** Parse a MIDS payload into [{ ts, msg }] — absolute millisecond timestamps
+ *  and raw MIDI message bytes (status + 1-2 params). Sysex/meta events are
+ *  skipped; an end-of-track meta terminates the stream. */
 export function parseMids(d) {
   const evs = []; // {ts(ms, absolute), msg:[status, p1, p2?]}
   let i = 0, status = 0, ts = 0;

@@ -5,42 +5,56 @@ import { playbackLoop } from '../playbackLoop.ts';
 import { appState } from '../appState.ts';
 import { editHistory } from '../editHistory.ts';
 import { textboxEdits } from './textboxEdits.ts';
-// --- sound editing (movie.cpp toolSounder/Looper/Matcher + scene.cpp FAddSnd/
-// FPauseCore + actrsnd.cpp FSetSndCore) ----------------------------------------
+// Sound editing — the sounder/looper/matcher tools, scene pause events, the
+// listener easel's query/set/remove, and scene chopping (forward/back).
+/** Sound and scene-length edits — all undoable via `editHistory`. */
 export class SoundEdits {
+  /** Picker kind -> sound style id. */
   SOUND_STYLES = { fx: STY.Sfx, speech: STY.Speech, music: STY.Midi };
-  soundTagFor = (kind, it) => { // browser pick -> MVU _tagTool + resolved sty/vlm
+  /** Resolve a picker item into the tool's sound tag — user items get a
+   *  'usr' tag, builtin items resolve their MSND's style/volume. */
+  soundTagFor = (kind, it) => {
   if (it.user || it.buf != null) return { tag: { sid: 'usr', ctg: 'MSND', cno: it.key }, sty: this.SOUND_STYLES[kind], vlm: 1, name: it.name };
   const tag = { sid: 2, ctg: 'MSND', cno: it.cno };
   const msnd = appState.contentLibrary.msnd(tag);
   return { tag, sty: msnd?.sty ?? this.SOUND_STYLES[kind], vlm: msnd?.vlm ?? 1, name: it.name };
 };
-  setSoundTag = (kind, it) => { // MVU::SetTagTool — browser OK loads the tool sound
+  /** Load the picked sound into the sound tool — arming Play-Once unless
+   *  Looping or (non-midi) motion-match is already armed. */
+  setSoundTag = (kind, it) => {
   appState.editorTools.soundTag = it ? this.soundTagFor(kind, it) : null;
   if (!it) return;
-  // _ApplySelection: arm PlayOnce unless Looping is armed, or AttachToCell is
-  // armed and the pick isn't midi (midi can't motion-match)
+  // arm play-once unless looping is armed, or motion-match is armed and the
+  // pick isn't midi (midi can't motion-match)
   if (appState.editorTools.tool === 'looper' || (appState.editorTools.tool === 'matcher' && appState.editorTools.soundTag.sty !== STY.Midi)) return;
-  appState.editorTools.toolBtns['3sing']?.onclick();
+  appState.editorTools.toolButtons['3sing']?.onclick();
 }
-  actorEvents = (a) => { // snapshot -> reval pattern used by all actor-edit ops
+  /** Snapshot an actor's event list + build a restore function — the
+   *  snapshot/reval pattern all actor-edit ops share. */
+  actorEvents = (a) => {
   const evs0 = structuredClone(a.data.events);
   const reval = (evs) => { a.data.events = a.events = structuredClone(evs); a.nfrmCur = null; appState.moviePlayer.gotoFrame(appState.moviePlayer.frame); playbackLoop.drawFrame(); };
   return [evs0, reval];
 };
-  addActorSound = (a, fLoop, fQueue, fMM) => { // MVIE::FAddActrSnd -> ACTR::FSetSndCore
+  /** Sounder tool on an actor — records a sound event with the tool tag's
+   *  loop/queue/motion-match flags. */
+  addActorSound = (a, fLoop, fQueue, fMM) => {
   const t = appState.editorTools.soundTag;
   if (!t) return;
   const [evs0, reval] = this.actorEvents(a);
   editHistory.executeOperation({ do: () => { a.fSetSnd(t.tag, fLoop, fQueue, fMM, t.vlm, t.sty); playbackLoop.drawFrame(); }, undo: () => reval(evs0) });
 }
-  sceneEvents = () => { // snapshot/restore the scene's frameEvents in place
+  /** Snapshot the scene's frame events + build an in-place restore
+   *  function. */
+  sceneEvents = () => {
   const s = appState.moviePlayer.scene, evs0 = structuredClone(s.frameEvents);
   const reval = (evs) => { const c = structuredClone(evs); s.frameEvents.length = 0; s.frameEvents.push(...c); appState.moviePlayer.gotoFrame(appState.moviePlayer.frame); playbackLoop.drawFrame(); };
   return [evs0, reval];
 };
-  addBackgroundSound = (fLoop, fQueue) => { // MVIE::FAddBkgdSnd -> SCEN::FAddSndCore:
-  const t = appState.editorTools.soundTag;                       // same-sty PlaySnd this frame -> queue or replace
+  /** Sounder tool on the background — a same-style PlaySnd at this frame
+   *  either queues onto the existing event's chain or replaces it. */
+  addBackgroundSound = (fLoop, fQueue) => {
+  const t = appState.editorTools.soundTag;
   if (!t || !appState.moviePlayer.scene) return;
   const s = appState.moviePlayer.scene, nfrm = appState.moviePlayer.frame;
   const [evs0, reval] = this.sceneEvents();
@@ -57,12 +71,14 @@ export class SoundEdits {
       if (hit >= 0) s.frameEvents.splice(hit, 1, ev); else s.frameEvents.push(ev);
       s.frameEvents.sort((x, y) => x.nfrm - y.nfrm);
     }
-    appState.soundQueue.play({ scope: 'scene', data: { vlm: t.vlm, sty: t.sty, fLoop, tags: [{ ...t.tag }] } }); // FAddSndCore enqueues the new appState.soundQueue only
+    appState.soundQueue.play({ scope: 'scene', data: { vlm: t.vlm, sty: t.sty, fLoop, tags: [{ ...t.tag }] } }); // only the new sound plays — queued ones wait
   };
   editHistory.executeOperation({ do: () => { apply(); reval(s.frameEvents); }, undo: () => reval(evs0) });
 }
-  editPause = (on) => { // cidPauseForSound/cidClearPause -> SCEN::FPauseCore:
-  const s = appState.moviePlayer.scene, nfrm = appState.moviePlayer.frame;   // pause event at this frame -> replace/remove/insert
+  /** Pause-until-sound toggle — `on` inserts/replaces a Pause event at this
+   *  frame, `off` removes any pause there. */
+  editPause = (on) => {
+  const s = appState.moviePlayer.scene, nfrm = appState.moviePlayer.frame;
   if (!s) return;
   const [evs0, reval] = this.sceneEvents();
   const apply = () => {
@@ -70,12 +86,14 @@ export class SoundEdits {
     if (on) {
       const ev = { sevt: SEVT.Pause, nfrm, data: { wit: WIT.UntilSnd, dts: 0 } };
       if (i >= 0) s.frameEvents[i] = ev; else { s.frameEvents.push(ev); s.frameEvents.sort((x, y) => x.nfrm - y.nfrm); }
-    } else if (i >= 0) s.frameEvents.splice(i, 1); // witNil -> remove any pause here
+    } else if (i >= 0) s.frameEvents.splice(i, 1); // clearing removes any pause here
     appState.editorTools.pauseSound = on;
   };
   editHistory.executeOperation({ do: () => { apply(); reval(s.frameEvents); }, undo: () => reval(evs0) });
 }
-// SCEN::FQuerySnd/SetSndVlmCore/RemSndCore — scene-side listener-easel ops
+  // --- scene-side listener-easel ops -----------------------------------------
+  /** The PlaySnd event of style `sty` at the current frame, or null —
+   *  listener easel's query. */
   querySceneSound = (sty) => {
   if (!appState.moviePlayer.scene) return null;
   for (const e of appState.moviePlayer.scene.frameEvents)
@@ -83,12 +101,15 @@ export class SoundEdits {
       return { tags: e.data.tags.slice(), vlm: e.data.vlm, fLoop: e.data.fLoop };
   return null;
 };
+  /** Listener easel volume slider — retargets the style's PlaySnd volume at
+   *  the current frame. */
   setSceneVolume = (sty, vlm) => {
   if (!appState.moviePlayer.scene) return;
   for (const e of appState.moviePlayer.scene.frameEvents)
     if (e.nfrm === appState.moviePlayer.frame && e.sevt === SEVT.PlaySnd && e.data.sty === sty) e.data.vlm = vlm;
 };
-  removeSceneSound = (sty) => { // RemSndCore removes the sty's PlaySnd at this frame
+  /** Remove the style's PlaySnd at the current frame. */
+  removeSceneSound = (sty) => {
   const s = appState.moviePlayer.scene;
   if (!s) return;
   for (let i = s.frameEvents.length - 1; i >= 0; i--) {
@@ -98,7 +119,10 @@ export class SoundEdits {
   }
 };
 
-  sceneChop = (fwd) => { // SCEN::FChop (p3rmfw: truncate at cur) / FChopBack (p3rmbk: drop before cur)
+  /** Scene chop — `fwd` truncates the scene at the current frame; `!fwd`
+   *  drops everything before it, collapsing on-stage actors' pre-current
+   *  state into fresh Add+Actn events at the frame. */
+  sceneChop = (fwd) => {
   const s = appState.moviePlayer.scene, i = appState.moviePlayer.sceneIndex, f = appState.moviePlayer.frame;
   if (fwd ? f >= s.nfrmLast : f <= s.nfrmFirst) return;
   const before = structuredClone(s), after = structuredClone(s);
@@ -123,7 +147,7 @@ export class SoundEdits {
       a.nfrmFirst = Math.max(a.nfrmFirst, f);
       a.events = a.events.filter((e) => e.nfrm > f);
       const rt = appState.moviePlayer.actors.get(c), rot = s.actors.get(c).events.find((e) => e.aet === AET.Add)?.data || {};
-      if (rt?.onStage) { // collapse pre-cur state into Add+Actn at f (FChopBackCore)
+      if (rt?.onStage) { // collapse pre-current state into Add+Actn at f
         const p0 = a.route[0] || { x: 0, y: 0, z: 0 }, su = rt.dxyzSubRte;
         a.events.unshift(
           { aet: AET.Add, nfrm: f, rtel: { irpt: 0, dwrOffset: 0, dnfrm: 0 },
@@ -132,7 +156,7 @@ export class SoundEdits {
       } else if (!a.events.length) after.actors.delete(c);
     }
     for (const c of reAdd) if (after.actors.has(c) && !hasSev(after.frameEvents, c)) after.frameEvents.push({ sevt: SEVT.AddActr, nfrm: f, data: c });
-    for (const [c, t] of [...after.textboxes]) { // SCEN: visible textboxes get start shifted to cur
+    for (const [c, t] of [...after.textboxes]) { // visible textboxes get their start shifted to cur
       if (t.nfrmMax <= f) { after.textboxes.delete(c); continue; }
       if (t.nfrmFirst < f) { t.nfrmFirst = f; if (!after.frameEvents.some((e) => e.sevt === SEVT.AddTbox && e.data === c)) after.frameEvents.push({ sevt: SEVT.AddTbox, nfrm: f, data: c }); }
     }

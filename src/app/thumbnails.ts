@@ -4,24 +4,33 @@ import { parseMbmp } from '../format/content.ts';
 import { bootSequence } from './bootstrap.ts';
 import { baseUrl } from './resources.ts';
 import { appState } from './appState.ts';
+/** Thumbnail catalogs — parses .3th files into browser-picker grids
+ *  (actors/props/scenes), background camera-angle thumbs, spletter easel
+ *  thumbs, and the roll-call strip images. Feeds `studio` and the easels. */
 export class Thumbnails {
-// roll call thumbnails: TMTH/PRTH (TFC template cno) -> GOKD -> MBMP, from actor.3th / prop.3th
-rollCallTemplateThumbs = new Map();
-browserTemplates = { actor: [], prop: [], scene: [] }; // selector grids: {cno, name, mbmp} in .3th order
-backgroundThumbCatalogs = new Map(); // bkgd cno -> Map(chid -> mbmp): camera-angle thumbs, social palette
-// spletter easel thumbs (easels.cht kctgTfth/kctgTsth/kctgMtth): the THD body is
-// bo+i16+ctg+i32 — TFTH/MTTH carry a content tag, TSTH carries '....' + the tdts
-spletterThumbs = { font: [], shape: [], mtrl: [] }; // {tag,mbmp} | {tdts,mbmp}
-contentName = (ctg, cno) => // display name from whichever content file holds the chunk
+  /** Template cno -> parsed MBMP, for roll-call strips (from actor/prop .3th). */
+  rollCallTemplateThumbs = new Map();
+  /** Selector grids — {cno, name, mbmp} entries in .3th order, per picker kind. */
+  browserTemplates = { actor: [], prop: [], scene: [] };
+  /** Background cno -> Map(camera chid -> mbmp) — camera-angle picker thumbs. */
+  backgroundThumbCatalogs = new Map();
+  /** Spletter easel thumbs — font/material entries carry a content tag,
+   *  shape entries carry the shape id. {tag,mbmp} | {tdts,mbmp}. */
+  spletterThumbs = { font: [], shape: [], mtrl: [] };
+  /** Display name for a chunk from whichever loaded content file holds it. */
+  contentName = (ctg, cno) =>
   appState.contentLibrary.content.find((chunkyFile) => chunkyFile.has(ctg, cno))?.get(ctg, cno)?.name || '';
-scanThumbnailFile = (th, packPal = null) => { // one .3th -> browser grids + easel thumbs (builtin data/ + asset packs); packPal = pack's 768-byte RGB palette (expansion thumbs index their own social palette)
+  /** Scan one .3th file into the catalogs — used for builtin data/ files and
+   *  expansion packs. `packPal` is a pack's 768-byte RGB palette (pack thumbs
+   *  index their own palette). */
+  scanThumbnailFile = (th, packPal = null) => {
   const pm = (cno) => { const m = parseMbmp(th.data('MBMP', cno)); if (packPal) (m as any).palette = packPal; return m; };
   for (const [ctg, kind] of [['TMTH', 'actor'], ['PRTH', 'prop'], ['BKTH', 'scene']]) {
     for (const t of th.ofType(ctg)) {
       const d = th.data(ctg, t.cno);
       const gk = t.kids.find((k) => k.ctg === 'GOKD');
       const mk = gk && th.get('GOKD', gk.cno).kids.find((k) => k.ctg === 'MBMP');
-      if (mk && ctg === 'BKTH') { // BRWC browses the BKTH's CATH kids (chid = icam)
+      if (mk && ctg === 'BKTH') { // the camera picker browses the BKTH's per-camera CATH kids
         const m = new Map();
         for (const k of t.kids) if (k.ctg === 'CATH') {
           const g2 = th.get('CATH', k.cno)?.kids.find((x) => x.ctg === 'GOKD');
@@ -51,6 +60,7 @@ scanThumbnailFile = (th, packPal = null) => { // one .3th -> browser grids + eas
     }
   }
 }
+/** Fetch and scan the builtin .3th files under data/ — called during boot. */
 loadBuiltinThumbnails = async () => {
 for (const file of ['actor.3th', 'prop.3th', 'bkgds.3th', 'actresl.3th', 'mtrl.3th']) {
   try { this.scanThumbnailFile(new ChunkyFile(await (await fetch(`${baseUrl}data/${file}`)).arrayBuffer())); }
@@ -59,7 +69,10 @@ for (const file of ['actor.3th', 'prop.3th', 'bkgds.3th', 'actresl.3th', 'mtrl.3
 }
 }
 
-rollCallThumbCache = new Map(); // template cno (or 'a'+arid for TDT) -> 38x70 canvas
+/** Template cno (or 'a'+arid for 3D text) -> 38x70 canvas. */
+rollCallThumbCache = new Map();
+/** 38x70 roll-call thumbnail for a template chunk number — bitmap centered and
+ *  clipped in the cell; 3D-text actors draw their name as wrapped text. */
 rollCallThumbFor = (cno, actor) => {
   const key = actor?.template?.isTdt ? 'a' + actor.data.arid : cno;
   if (!this.rollCallThumbCache.has(key)) {
@@ -67,7 +80,7 @@ rollCallThumbFor = (cno, actor) => {
     const m = this.rollCallTemplateThumbs.get(cno);
     if (m) {
       const src = document.createElement('canvas'); src.width = m.width; src.height = m.height;
-      const P = m.palette || appState.socialPalette; // pack thumbs carry their own palette
+      const P = m.palette || appState.socialPalette;
       const x = src.getContext('2d'), image = x.createImageData(m.width, m.height);
       for (let i = 0; i < m.pixels.length; i++) {
         const p = m.pixels[i];
@@ -75,13 +88,13 @@ rollCallThumbFor = (cno, actor) => {
         image.data[i * 4] = P[p * 3]; image.data[i * 4 + 1] = P[p * 3 + 1]; image.data[i * 4 + 2] = P[p * 3 + 2]; image.data[i * 4 + 3] = 255;
       }
       x.putImageData(image, 0, 0);
-      // original centers the bitmap in the 38x70 frame and clips (BRWR::_FSetThumFrame) — crop, don't stretch
+      // the cell centers the bitmap and clips — crop, never stretch
       const sw = Math.min(38, m.width), sh = Math.min(70, m.height);
       c.getContext('2d').drawImage(src,
         Math.max(0, (m.width - 38) >> 1), Math.max(0, (m.height - 70) >> 1), sw, sh,
         Math.max(0, (38 - m.width) >> 1), Math.max(0, (70 - m.height) >> 1), sw, sh);
     } else if (actor?.template?.isTdt) {
-      // TDT actors have no MBMP — original draws their name as a text gob (TGOB)
+      // 3D-text actors have no bitmap — draw their name as wrapped text
       const ctx = c.getContext('2d');
       const txt = (actor.data.name || actor.template.text || actor.template.name || '').trim();
       let size = 20, lines = [];
@@ -105,18 +118,22 @@ rollCallThumbFor = (cno, actor) => {
   }
   return this.rollCallThumbCache.get(key);
 }
-// roll call lists: actors on the left strip (x=3), props on the right (x=594) — pos3.chh/browser.cht
+/** Roll-call strip definitions — actors on the left edge (x=3), props on the
+ *  right (x=594), each with cell texture prefix, arrow faces, and filter. */
 rollCallLists = [
   { x: 3, cellPrefix: 'rcact', upFace: 'rcaup', downFace: 'rcadwn', filter: (a) => !a.template.isProp, offset: 0, selected: -1, syncKey: '', cells: [], arrows: [] },
   { x: 594, cellPrefix: 'rcp', upFace: 'rcpup', downFace: 'rcpdwn', filter: (a) => a.template.isProp, offset: 0, selected: -1, syncKey: '', cells: [], arrows: [] },
 ];
+/** Actors of a roll-call list — filtered from the player's live actor map. */
 rollCallActors = (L) => { return appState.moviePlayer ? [...appState.moviePlayer.actors.values()].filter(L.filter) : []; }
 
 
-mbmpToCanvas = (m, w, h) => { // draw an MBMP scaled into wxh — all baked thumbs index the social palette
+/** Draw an MBMP scaled into a w×h canvas — pixels index the social palette
+ *  unless the thumb carries its own (expansion packs). */
+mbmpToCanvas = (m, w, h) => {
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const src = document.createElement('canvas'); src.width = m.width; src.height = m.height;
-  const P = m.palette || appState.socialPalette; // asset-pack thumbs carry their own palette (e.g. NICK3D.CHK GLCR)
+  const P = m.palette || appState.socialPalette; // pack thumbs carry their own palette
   const x = src.getContext('2d'), image = x.createImageData(m.width, m.height);
   for (let i = 0; i < m.pixels.length; i++) {
     const p = m.pixels[i];

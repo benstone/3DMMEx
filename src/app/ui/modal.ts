@@ -1,8 +1,7 @@
 // Shared modal layer — leaf module (imports nothing that can reach back into
-// browsers/easels). easel.ts's `extends ModalView` is an eval-time edge, so
-// ModalView and the modal slot must live somewhere that always finishes
-// initializing before its consumers; keeping them in browser.ts put them
-// inside the browser->sound->undo->studio->bio->easel import cycle (TDZ).
+// the browser/easel modules). easel.ts's `extends ModalView` is an eval-time
+// edge, so ModalView and the modal slot must live somewhere that always
+// finishes initializing before its consumers.
 import { View, uiRoot } from './root.ts';
 import { appState } from '../appState.ts';
 
@@ -11,12 +10,16 @@ import { appState } from '../appState.ts';
  *  DOM inputs hide while covered and are removed once actually popped. */
 export class ModalView extends View {
   constructor() { super(); this._onEsc = null; this._dom = []; }
+  /** View-pop hook — DOM overlays hide while the view's covered and are
+   *  removed once it's actually off the stack. */
   onExit() {
     const gone = !uiRoot.stack.includes(this);
     for (const el of this._dom) gone ? el.remove() : (el.style.display = 'none');
     if (gone) this._dom.length = 0;
   }
+  /** View-enter hook — DOM overlays resurface. */
   onEnter() { for (const el of this._dom) el.style.display = ''; }
+  /** Register a DOM overlay element so it hides/pops with the view. */
   addDom(el) { this._dom.push(el); return el; }
 }
 
@@ -26,11 +29,14 @@ class ModalSlot {
   view = null;    // pushed ModalView, or null
   cleanup = null; // session teardown run on close
 
-  open = (view) => { // browser/easel push: closes whatever is up, then pushes
+  /** Push a browser/easel — closes whatever is up first. */
+  open = (view) => {
     this.close(); this.view = view; uiRoot.push(view, 'none');
   };
 
-  close = () => { // BRWN->Close; also tears down any easel overlay
+  /** Close the current browser/easel — stops sound previews, runs session
+   *  teardown, pops the view (or splices it out when it isn't on top). */
+  close = () => {
     appState.soundQueue?.stopPreview();
     this.cleanup?.(); this.cleanup = null;
     if (this.view) {
@@ -41,9 +47,9 @@ class ModalSlot {
     }
   };
 
-  installEscapeRoute = () => { // Esc inside a browser or easel closes it
-    // (browser.cht maps Escape to the cancel button's cid). Easels may route
-    // Escape to their own _onEsc (e.g. sorter cancel).
+  /** Esc inside a browser or easel closes it — easels may route Escape to
+   *  their own _onEsc (e.g. sorter cancel) instead. */
+  installEscapeRoute = () => {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this.view) (this.view._onEsc || this.close)();
     });

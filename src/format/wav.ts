@@ -1,7 +1,8 @@
-// MS-ADPCM (WAVE fmt tag 2) decoder — 3DMM's WAVE chunks are all
+// MS-ADPCM (WAVE fmt tag 2) decoder — the movie content's WAVE chunks are
 // mono 22050Hz ADPCM, which AudioContext.decodeAudioData can't read.
 
 const ADAPT = [230, 230, 230, 230, 307, 409, 512, 614, 768, 614, 512, 409, 307, 230, 230, 230];
+/** Big-endian RIFF chunk id ('RIFF', 'fmt ', 'data') as a u32. */
 const ID = (s) => (s.charCodeAt(0) << 24) | (s.charCodeAt(1) << 16) | (s.charCodeAt(2) << 8) | s.charCodeAt(3);
 
 /**

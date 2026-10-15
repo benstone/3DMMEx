@@ -3,11 +3,14 @@ import { baseUrl } from '../resources.ts';
 import { uiRoot, UI_WIDTH, UI_HEIGHT } from './root.ts';
 import { Element } from './element.ts';
 import { localizer } from '../localization.ts';
-// --- showCallout tips (the original's HBAL: kgobCalloutBalloonN — a cobllnN.bmp
-// skin tiled by GORT with the red arrow baked in; reg point = the arrow tip.
-// Dwell on a control to get its tip (suppressed while appState.playing, like the
-// original pushing kpridToolTipDelay to 0x0FFFFFFF during FCmdPlay)) ---------
-export const CALLOUT_SKINS = { // bmp w,h, arrow-tip reg (x,y), borders LTRB, horz+vert tile rows
+// Dwell tooltips — callout balloons drawn from 9-slice skins (cobllnN.png)
+// with the red arrow baked in; the skin's reg point is the arrow tip. Hovering
+// a control ~1.2s shows its tip (suppressed while playing). ------------
+/** Balloon skin table, keyed by arrow direction — [bitmap w,h, arrow-tip
+ *  reg (x,y), borders L,T,R,B, horizontal tile row, vertical tile row].
+ *  Arrows: 1/2/3 = up-left/mid/right, 4 = right, 5/6/7 = down-right/mid/left,
+ *  8 = left. */
+export const CALLOUT_SKINS = {
   0: [167, 122,  83,  61,  5,  4,  5,  4, [8, 151, 8, 0,  0,  0, 8], [8, 106, 8, 0,  0,  0, 8]],
   1: [190, 143,   1,   1, 29, 28,  8,  8, [36, 146, 8, 0,  0,  0, 8], [32, 103, 8, 0,  0,  0, 8]],
   2: [168, 156,  83,   1,  4, 41,  8,  8, [8,  58,  8, 35, 60, 8, 8], [42, 108, 8, 0,  0,  0, 8]],
@@ -17,14 +20,18 @@ export const CALLOUT_SKINS = { // bmp w,h, arrow-tip reg (x,y), borders LTRB, ho
   6: [168, 157,  83, 155,  4,  3,  8, 38, [8,  60, 8, 33, 60, 8, 8], [8, 105, 8, 0, 0, 0, 44]],
   7: [191, 147,   0, 147, 30,  3,  8, 28, [34, 149, 8, 0, 0, 0, 8],  [8, 101, 8, 0,  0, 0, 38]],
   8: [203, 122,   0,  66, 32,  3,  8,  8, [42, 150, 8, 0,  0,  0, 8], [8,  40, 4, 34, 32, 4, 8]],
-}; // arrows: 1/2/3 = up-left/mid/right, 4 = right, 5/6/7 = down-right/mid/left, 8 = left
+};
+// Balloon skin images — loaded eagerly from public/textures.
 const calloutImages: Record<number, HTMLImageElement> = {};
-for (const n of [0, 1, 2, 3, 4, 5, 6, 7, 8]) { // skins live under public/textures
+for (const n of [0, 1, 2, 3, 4, 5, 6, 7, 8]) {
   const image = new Image(); image.src = baseUrl + 'textures/coblln' + n + '.png'; calloutImages[n] = image;
 }
 const calloutImagesReady = Promise.all(Object.values(calloutImages).map((image) =>
   image.complete ? 0 : new Promise((r) => { image.onload = image.onerror = r; })));
-export function gortFlexSegments(t, D) { // GORT::_ComputeFlexZp + Draw — [srcOff,srcLen,dstOff,dstLen][]
+/** Stretch a 9-slice tile row to length D — the row is [cap-len, flex-len,
+ *  flex-min, mid-len, flex2-len, flex2-min, cap-len]; returns
+ *  [srcOff,srcLen,dstOff,dstLen][] segments to blit. */
+export function gortFlexSegments(t, D) {
   const [l, lf, li, m, rf, ri, r] = t;
   let rfD = Math.max(0, D - l - m - r);
   let lfD = lf + rf ? Math.floor(rfD * lf / (lf + rf)) : 0;
@@ -41,15 +48,19 @@ export function gortFlexSegments(t, D) { // GORT::_ComputeFlexZp + Draw — [src
   s += rf; seg(r, r);
   return segs;
 }
-export function gortFlexMap(t, D, v) { // map a source coord through the flexed axis to dest
+/** Map a source coord through the flexed axis to its dest coord — used to
+ *  place the balloon so the skin's arrow-tip reg lands on the target. */
+export function gortFlexMap(t, D, v) {
   for (const [s, sl, d] of gortFlexSegments(t, D)) if (v < s + sl) return d + v - s;
   return D;
 }
 
-// The tip layer sits above the view stack (added to UiRoot._rebuild children).
+// The tip layer sits above the view stack (added in UiRoot._rebuild).
 const tooltipLayer = () => uiRoot.tips;
 
+/** Run-class styles — 't' is the bold title, 'hot'/1 the link-blue runs. */
 const RUN_STYLE = { 't': { bold: true, color: '#1a1a1a' }, 'hot': { bold: false, color: '#1332be' }, 1: { bold: false, color: '#1332be' } };
+/** Tip font for a run's bold flag. */
 const TIP_FONT = (b) => `${b ? 'bold ' : ''}10px 'Comic Sans MS', cursive, sans-serif`;
 
 /** Wrap styled runs into lines: returns {lines:[[{text,bold,color,x}]..], w, h}. */
@@ -76,6 +87,8 @@ function layoutRuns(parts, maxW, ctx) {
   return { lines, w: Math.max(0, ...lines.map((l) => l.length ? l[l.length - 1].x + l[l.length - 1].w : 0)), h: lines.length * 12 };
 }
 
+/** A callout balloon — 9-slice tiled skin, wrapped text runs, and the close
+ *  button in the corner. `sticky` balloons stay until dismissed. */
 class Balloon extends Element {
   constructor(dir, gx, gy, W, H, parts, sticky, ctx2) {
     super(Math.round(gx), Math.round(gy), Math.round(W), Math.round(H));
@@ -83,7 +96,7 @@ class Balloon extends Element {
     const [, , , , bl, bt, br, bb, thz, tvz] = CALLOUT_SKINS[dir];
     const lay = layoutRuns(parts, Math.min(W - bl - br - 22, 200), ctx2);
     this.lay = lay; this.bl = bl; this.bt = bt; this.br = br; this.bb = bb;
-    this.xEl = (new Element(W - br - 18, H - bb - 18, 16, 16) as Element & {_dn: boolean}); // kgobCancelButton — cancbtn1.bmp
+    this.xEl = (new Element(W - br - 18, H - bb - 18, 16, 16) as Element & {_dn: boolean}); // the balloon's close button
     this.xEl.cursor = 'pointer';
     this.xEl._dn = false;
     this.xEl.draw = (ctx) => {
@@ -95,6 +108,7 @@ class Balloon extends Element {
     this.xEl.onClick = () => tooltips.dismiss();
     this.add(this.xEl);
   }
+  /** Paint the 9-slice skin stretched to fit, then the text runs. */
   draw(ctx) {
     const img = calloutImages[this.dir];
     if (!img.complete || !img.naturalWidth) return;
@@ -113,8 +127,10 @@ class Balloon extends Element {
 }
 
 const measCtx = document.createElement('canvas').getContext('2d');
-/** -> Balloon element or null; target: Element (uses abs()) or {x,y,w,h} logical.
- * parts: [text, hot?][] */
+/** Show a balloon at `target` (Element or {x,y,w,h} logical rect) — tries
+ *  arrow directions in preference order until one fits onscreen. `parts` are
+ *  [text, hot?][] runs; `sticky` balloons stay until clicked. Returns the
+ *  element or null. */
 function showCalloutImpl(target, parts, sticky) {
   let tx, ty;
   if (target instanceof Element) { const [ax, ay] = target.abs(); tx = ax + target.w / 2; ty = ay + target.h / 2; }
@@ -131,39 +147,46 @@ function showCalloutImpl(target, parts, sticky) {
     if (gx < 2 || gy < 2 || gx + W > 638 || gy + H > 478) continue;
     const img = calloutImages[dir];
     if (!img.complete || !img.naturalWidth) continue;
-    const gob = new Balloon(dir, gx, gy, W, H, parts, sticky, measCtx);
-    tooltipLayer().add(gob);
+    const balloon = new Balloon(dir, gx, gy, W, H, parts, sticky, measCtx);
+    tooltipLayer().add(balloon);
     uiRoot.invalidate();
-    return gob;
+    return balloon;
   }
   return null;
 }
+/** Dwell-tooltip manager — tracks the hovered control, schedules its balloon
+ *  after ~1.2s, and owns the guide tip. Suppressed while playing. */
 class TooltipManager {
-  element = null;
-  source = null;
+  element = null; // the live balloon, if any
+  source = null;  // the element the balloon is pointing at
   timer: any = 0;
 
+  /** Remove the live balloon and cancel a pending dwell. */
   dismiss = () => {
     clearTimeout(this.timer); this.timer = 0;
     if (this.element) { tooltipLayer().remove(this.element); uiRoot.invalidate(); }
     this.element = null; this.source = null;
   };
 
-  show = (el) => { // HBAL::PhbalNew — the control's topic balloon, arrow at the control
+  /** Show a control's tip — resolves `el.tip` as a localization key (raw
+   *  text works too, for callers passing strings). */
+  show = (el) => {
     this.dismiss();
     const tipId = el.tip ?? el.dataset?.tip;
     if (!tipId) return;
     this.source = el;
-    const tip = el.tip ? localizer.translate(`tip.${tipId}`) : tipId; // canvas elements hold ids; legacy callers pass text
+    const tip = el.tip ? localizer.translate(`tip.${tipId}`) : tipId; // elements hold tip ids; a raw string works too
     calloutImagesReady.then(() => { if (this.source === el && !appState.playing)
       this.element = this.showCallout(el, typeof tip === 'string' // 'Title\nBody' -> title run + body
         ? tip.split('\n').map((l, i) => [l + '\n', i ? '' : 't']) : tip, false); });
   };
 
+  /** Low-level balloon API — see `showCalloutImpl`. */
   showCallout = showCalloutImpl;
+  /** The element layer balloons attach to. */
   layer = tooltipLayer;
 
-  /** first-boot guide — the original's CO tip for the scenes cover */
+  /** First-boot guide — points at the scenes-cover button on an empty movie. */
   showGuideTip = () => {
     const b = { x: 18, y: 1, w: 62, h: 40 }; // 1back insert button rect (logical)
     calloutImagesReady.then(() => { if (this.element || appState.moviePlayer?.movie.scenes.length) return;
@@ -172,7 +195,9 @@ class TooltipManager {
       setTimeout(() => { if (this.element?.sticky) this.dismiss(); }, 15000); });
   };
 
-  _hitInTip = (e) => { // pointer inside the balloon doesn't dismiss it
+  /** True when a DOM pointer event lands inside the live balloon — keeps a
+   *  click/move inside it from dismissing it. */
+  _hitInTip = (e) => {
     if (!this.element) return false;
     const r = uiRoot.canvas.getBoundingClientRect();
     const [ax, ay] = this.element.abs();
@@ -180,9 +205,11 @@ class TooltipManager {
     return vx >= ax && vy >= ay && vx < ax + this.element.w && vy < ay + this.element.h;
   };
 
+  /** Install the global listeners — mouse dwell (~1.2s) and touch
+   *  press-and-hold (~700ms) on a tipped control schedule its balloon. */
   installListeners = () => {
     // Dwell tracking: the UI canvas computes the hit element; a tip id on it
-    // (or an ancestor) schedules the balloon after ~1.2s (kdtimToolTipDelay ~1.5s).
+    // (or an ancestor) schedules the balloon.
     document.addEventListener('pointermove', (e) => {
       if (this.element?.sticky) return; // guide stays until click/X
       let el = null;
@@ -196,7 +223,7 @@ class TooltipManager {
       if (this.element) { tooltipLayer().remove(this.element); uiRoot.invalidate(); this.element = null; }
       this.source = el;
       if (el && !appState.playing && !e.buttons)
-        this.timer = setTimeout(() => { if (this.source === el && !appState.playing) this.show(el); }, 1200); // kdtimToolTipDelay ~1.5s
+        this.timer = setTimeout(() => { if (this.source === el && !appState.playing) this.show(el); }, 1200);
     }, true);
     document.addEventListener('pointerdown', this.dismiss, true);
     // Touch has no hover — a ~700ms press-and-hold on a tipped control is its dwell.

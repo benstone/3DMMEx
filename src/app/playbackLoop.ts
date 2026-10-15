@@ -14,15 +14,16 @@ class PlaybackLoop {
   acc = 0;
   last = 0;
 
+  /** Repaint the studio chrome for the current player state. */
   syncUi = () => { if (appState.moviePlayer) studioHost.sync(); };
 
   /** Render the current frame + editor overlays, then resync studio chrome. */
   drawFrame = () => {
     const { sceneRenderer, moviePlayer, playing, textboxAttachment, textboxSelection } = appState;
     sceneRenderer.selActor = movieEdits.selectedActor();
-    // tbox editor overlay: the border-selected box gets the TBXB frame/anchors;
-    // the interior-focused box shows its cp selection + caret (they can differ —
-    // TBXG interior clicks never move PtboxSelected in the original)
+    // Textbox editor overlay: the border-selected box gets the frame/anchors;
+    // the interior-focused box shows its text selection + caret — the two can
+    // be different boxes, since interior clicks never move the border selection.
     const chromeTb = !playing && (textboxAttachment?.tb || textboxEdits.selectedTextbox());
     const editTb = !playing && !textboxAttachment && textboxEdits.focusedTextbox();
     sceneRenderer.textboxChrome = (chromeTb || editTb)
@@ -35,6 +36,8 @@ class PlaybackLoop {
     this.syncUi();
   };
 
+  /** rAF tick for the smooth-playback path — accumulates real time into whole
+   *  movie steps, then renders at the fractional remainder. */
   _tick = (now) => {
     const { moviePlayer, sceneRenderer } = appState;
     if (!appState.playing) return;
@@ -50,11 +53,15 @@ class PlaybackLoop {
     this.raf = requestAnimationFrame(this._tick);
   };
 
+  /** Start the frame clock — rAF accumulation when the 24fps option is on,
+   *  a plain ~6fps interval otherwise. */
   _startClock = () => {
     if (renderOptions.fps24) { this.acc = 0; this.last = performance.now(); this.raf = requestAnimationFrame(this._tick); }
     else this.timer = setInterval(() => { if (!appState.moviePlayer.step()) this.setPlaying(false); this.drawFrame(); }, 1000 / FPS);
   };
 
+  /** Toggle playback — wakes or suspends the audio queue, starts/stops the
+   *  frame clock, and notifies studio + theatre chrome. */
   setPlaying = (p) => {
     appState.setPlaying(p); clearInterval(this.timer); if (this.raf) cancelAnimationFrame(this.raf);
     if (p) { appState.soundQueue.ensure(); this._startClock(); }

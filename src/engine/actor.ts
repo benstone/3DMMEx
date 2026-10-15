@@ -1,14 +1,22 @@
-// Actor playback, ported from SRC/ENGINE/ACTOR.CPP (FGotoFrame/_FDoFrm/_FDoAevCore)
+// Actor playback — per-frame evaluation of an actor's event list: route
+// walking, actions/cels, transforms, costumes, and motion-matched sounds.
 import { AET } from '../format/movie.ts';
 import { templateAction, templateModel, templateCmtl } from '../format/content.ts';
 import * as M from './mat34.ts';
 
+/** "No step" sentinel for an actor's route step length. */
 export const DWR_NIL = -1;
+/** Fresh route cursor — start of the route, zero offset. */
 const RTEL0 = () => ({ irpt: 0, dwrOffset: 0, dnfrm: 0 });
+/** Route-position ordering: point index, then distance into the segment, then frame offset. */
 const cmpRtel = (a, b) => a.irpt - b.irpt || a.dwrOffset - b.dwrOffset || a.dnfrm - b.dnfrm;
-const FACTN_ROTX = 1, FACTN_ROTY = 2, FACTN_ROTZ = 4, FACTN_STATIC = 8;
-const faet = { Tweak: 1 << AET.Tweak, RotF: 1 << AET.RotF, Freeze: 1 << AET.Freeze, Step: 1 << AET.Step };
+const FACTN_ROTX = 1, FACTN_ROTY = 2, FACTN_ROTZ = 4, FACTN_STATIC = 8; // action flags controlling path orientation
+const faet = { Tweak: 1 << AET.Tweak, RotF: 1 << AET.RotF, Freeze: 1 << AET.Freeze, Step: 1 << AET.Step }; // event-type mask bits for _prepXfrmFill
 
+/** A placed actor — evaluates its event list frame-by-frame to produce world
+ *  matrices per body part. Editor operations (drag, rotate, scale, record,
+ *  sound attach, costume) all funnel through `addDoAev` so the event list is
+ *  the single source of truth and seeks replay correctly. */
 export class Actor {
   [k: string]: any; // transient fields — real declarations can replace incrementally
   constructor(data, template, contentLibrary) {
@@ -27,6 +35,8 @@ export class Actor {
     this._rewind();
   }
 
+  /** Reset all runtime state to "before the first event" — used on seek-back
+   *  and when the actor's events are rewritten. */
   _rewind() {
     this.onStage = false;
     this.frozen = false;
@@ -41,7 +51,7 @@ export class Actor {
     this.iaevActnCur = -1;
     this.iaevAddCur = -1;
     this.iaevFrmMin = 0;
-    this.smm = []; // _pglsmm: motion-match sounds latched for the current action
+    this.smm = []; // motion-match sounds latched for the current action
     this.dwrStep = 0;
     this.dxyzSubRte = { x: 0, y: 0, z: 0 };
     this.useCur = true;
@@ -52,17 +62,22 @@ export class Actor {
     this._setDefaultCost();
   }
 
+  /** Reset the transform block (forward/heading rotation, pull, step scale)
+   *  and path-orientation angles — done at rewind and on each Add event. */
   _initXfrm() {
     this.xfrm = { fwd: M.identity(), cur: M.identity(), pull: { x: 1, y: 1, z: 1 }, scaleStep: 1 };
-    this.pathAng = { xa: 0, ya: 0, za: 0 }; // _xfrm.xaPath/yaPath/zaPath — last path orientation applied
+    this.pathAng = { xa: 0, ya: 0, za: 0 }; // last path orientation applied to the forward matrix
     if (!this._cost) this._cost = {}; // per-ibset costume state (_setDefaultCost fills it per Add)
   }
 
+  /** Recompute the total route offset (full-route offset + subroute offset). */
   _updateXyzRte() {
     const f = this.data.dxyzFullRte, s = this.dxyzSubRte;
     this.dxyzRte = { x: f.x + s.x, y: f.y + s.y, z: f.z + s.z };
   }
 
+  /** Evaluate the actor at frame `nfrm` — rewinds on a backward seek, then
+   *  steps frame-by-frame applying events in order. */
   gotoFrame(nfrm) {
     if (nfrm === this.nfrmCur) return;
     if (this.nfrmCur === null || nfrm < this.nfrmCur) {
@@ -83,8 +98,11 @@ export class Actor {
   }
 
   // --- template helpers -------------------------------------------------
+  /** Look up action `anid` on the actor's template. */
   _actn(anid) { return templateAction(this.template, anid); }
 
+  /** Apply action `anid` cel `celn` to the part list — per-part models and
+   *  body-local matrices from the cel. */
   _setActnCel(anid, celn) {
     const actn = this._actn(anid);
     if (!actn || !actn.cels.length) return;
@@ -102,6 +120,7 @@ export class Actor {
     }
   }
 
+  /** Route distance one cel of action `anid` covers — the actor's step length. */
   _celDwr(anid, celn) {
     const actn = this._actn(anid);
     if (!actn || !actn.cels.length) return 0;
@@ -110,6 +129,7 @@ export class Actor {
     return actn.cels[icel].dwr;
   }
 
+  /** Apply a costume-material list to the parts whose ibset it targets. */
   _applyCmtl(cmtl) {
     if (!cmtl) return;
     let k = 0;
@@ -122,6 +142,7 @@ export class Actor {
     }
   }
 
+  /** Reset every part set to its template's default costume. */
   _setDefaultCost() {
     for (let ibset = 0; ibset < this.template.cbset; ibset++) {
       const cmid = this.template.cmids[ibset]?.[0];
@@ -130,6 +151,8 @@ export class Actor {
   }
 
   // --- route --------------------------------------------------------------
+  /** World position at a route cursor — a route point, or an interpolated
+   *  point along the segment when dwrOffset is mid-segment. */
   _xyzFromRtel(rtel) {
     const r = this.route;
     if (rtel.dwrOffset === 0 || rtel.irpt + 1 >= r.length) {
@@ -141,6 +164,8 @@ export class Actor {
     return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f, z: a.z + (b.z - a.z) * f };
   }
 
+  /** Walk the route cursor `dwrStep` units forward this frame, snapping to any
+   *  Step/Actn event rtel it passes. Returns true when the route is exhausted. */
   _advanceRtel(dwrStep) {
     const rtel = this.rtel;
     if (this.nfrmCur <= this.nfrmFirst) {
@@ -172,11 +197,14 @@ export class Actor {
     return false;
   }
 
+  /** Step length for this frame — the cel's natural step unless a Step event
+   *  overrode it, scaled by the actor's size. */
   _getDwrPlay() {
     const d = this.dwrStep === DWR_NIL ? this._celDwr(this.anid, this.celn) : this.dwrStep;
     return d * this.xfrm.scaleStep;
   }
 
+  /** Whether no events remain in the current subroute after `iaev`/`rtel`. */
   _isDoneAevSub(iaev, rtel) {
     for (; iaev < this.events.length; iaev++) {
       const ev = this.events[iaev];
@@ -187,8 +215,11 @@ export class Actor {
   }
 
   // --- frame stepping -------------------------------------------------------
+  /** Advance one frame: walk the route by the step length, apply every event
+   *  that lands (Adds by frame, others by route position), advance the cel,
+   *  and — when `fPositionBody` — rebuild world matrices and fire sounds. */
   _doFrm(fPositionBody) {
-    this._fpb = fPositionBody;
+    this._positionsBody = fPositionBody;
     const xyzOld = this.xyz;
     let freezeThisCel = this.frozen;
     const dwr = this._getDwrPlay();
@@ -231,7 +262,7 @@ export class Actor {
     if (xyzOld.x !== this.xyz.x || xyzOld.y !== this.xyz.y || xyzOld.z !== this.xyz.z) this.positionDirty = true;
 
     if (fPositionBody) {
-      // _FEnqueueSmmInMsq: fire latched motion-match sounds that hit this cel
+      // fire latched motion-match sounds that hit this cel
       if (this.onStage && this.nfrmCur <= (this.data.nfrmLast ?? this.nfrmLast ?? Infinity)) this._enqueueSmm();
       if (this.positionDirty) {
         this._positionBody();
@@ -244,12 +275,14 @@ export class Actor {
     if (this.onStage) this.groundY = Math.min(this.groundY, this.dxyzRte.y + this.xyz.y);
   }
 
+  /** Execute the event at the processing cursor and advance it. */
   _doAevCur() {
     this._doAevCore(this.iaevCur);
     this.iaevCur++;
   }
 
-  // _FInsertSmm: latch a motion-match sound; one entry per (celn, sty)
+  /** Latch a motion-match sound — one entry per (cel, style); a second entry
+   *  for the same pair replaces the first. */
   _insertSmm(iaev) {
     const data = this.events[iaev].data;
     const i = this.smm.findIndex((s) => s.data.celn === data.celn && s.data.sty === data.sty);
@@ -257,13 +290,14 @@ export class Actor {
     else this.smm.push({ data });
   }
 
-  // _FEnqueueSmmInMsq: fire smm entries that land on the current cel
+  /** Fire any latched motion-match sounds that land on the current cel. */
   _enqueueSmm() {
     const ccel = this.ccel || 1, celn = ((this.celn % ccel) + ccel) % ccel;
     for (const s of this.smm) if (s.data.celn === celn && !s.data.fNoSound) this.onSound?.(this, { ...s.data, mm: true });
   }
 
-  // FReplayFrame: re-fire this frame's sounds — listener-tool hover audition
+  /** Re-fire this frame's actor sounds — used by the listener tool's hover
+   *  audition. */
   replaySnd() {
     if (!this.onStage) return;
     for (let i = this.iaevFrmMin; i < this.iaevCur; i++) {
@@ -273,12 +307,14 @@ export class Actor {
     this._enqueueSmm();
   }
 
+  /** Apply one event to the actor's runtime state — the per-type behavior
+   *  table behind `gotoFrame` and `addDoAev`. */
   _doAevCore(iaev) {
     const ev = this.events[iaev];
     const d = ev.data;
     switch (ev.aet) {
       case AET.Actn: {
-        // a changed action empties the motion-match sound list (_FDoAevCore)
+        // a changed action empties the motion-match sound list
         if (d.anid !== this.anid) this.smm.length = 0;
         this._setActnCel(d.anid, d.celn);
         this.celn = d.celn;
@@ -332,18 +368,19 @@ export class Actor {
         this._updateXyzRte();
         break;
       case AET.Snd:
-        // _FEnqueueSnd: motion-match sounds (celn != smmNil) latch into the smm
-        // instead of playing now; plain sounds enqueue on the positioning frame
+        // motion-match sounds (celn set) latch for their cel instead of
+        // playing now; plain sounds enqueue on the positioning frame
         if (d.celn !== -1) this._insertSmm(iaev);
-        else if (this._fpb && !d.fNoSound) this.onSound?.(this, d);
+        else if (this._positionsBody && !d.fNoSound) this.onSound?.(this, d);
         break;
       default:
         break;
     }
   }
 
-  // --- event editing (actor.cpp _FAddDoAev/_MergeAev/FSetActionCore) ----------
+  // --- event editing ----------------------------------------------------------
   // Index bookkeeping so runtime cursors stay valid when events are spliced.
+  /** Shift runtime cursors after inserting an event at index `i`. */
   _onInsertAev(i) {
     if (i < this.iaevCur) this.iaevCur++;
     if (i <= this.iaevActnCur) this.iaevActnCur++;
@@ -351,6 +388,7 @@ export class Actor {
     if (i < this.iaevFrmMin) this.iaevFrmMin++;
   }
 
+  /** Shift runtime cursors back after removing the event at index `i`. */
   _onRemoveAev(i) {
     if (i < this.iaevCur) this.iaevCur--;
     if (i < this.iaevActnCur) this.iaevActnCur--;
@@ -358,10 +396,13 @@ export class Actor {
     if (i < this.iaevFrmMin) this.iaevFrmMin--;
   }
 
+  /** Remove the event at index `i`, keeping the cursors consistent. */
   _removeAev(i) { this.events.splice(i, 1); this._onRemoveAev(i); }
 
-  // _MergeAev: a same-aet event already processed this frame is consumed —
-  // same rtel replaces its data, different rtel deletes it outright.
+  /** Merge a just-inserted event against same-frame predecessors: a same-type
+   *  event already processed this frame is consumed — same route position
+   *  replaces its data, different position deletes it. Returns the index the
+   *  surviving event landed at. */
   _mergeAev(iaevFirst, iaevNew) {
     const evNew = this.events[iaevNew];
     for (let i = iaevFirst; i < iaevNew; i++) {
@@ -369,14 +410,14 @@ export class Actor {
       if (ev.aet === AET.Rem && evNew.aet === AET.Add && evNew.nfrm !== ev.nfrm) { // re-add on a new
         this._removeAev(i); i--; iaevNew--; continue; // frame supersedes the Rem
       }
-      if (ev.aet === AET.Add) continue; // never merge into an Add (costume/orientation info must survive)
-      if (ev.aet === AET.RotH) { // RotF nukes same-frame RotH ("forward wins, visibly")
+      if (ev.aet === AET.Add) continue; // never merge into an Add — costume/orientation info must survive
+      if (ev.aet === AET.RotH) { // a same-frame forward-rotate supersedes a heading rotate
         if (evNew.aet === AET.RotF && evNew.nfrm === ev.nfrm) { this._removeAev(i); i--; iaevNew--; continue; }
         if (evNew.aet !== AET.RotH) continue;
       } else if (ev.aet === AET.RotF && evNew.aet === AET.RotF) { // forward-rotate replaces outright
         this._removeAev(i); i--; iaevNew--; continue;
       }
-      if (ev.aet === AET.Snd && evNew.aet === AET.Snd) { // same SqnActr (sty) replaces —
+      if (ev.aet === AET.Snd && evNew.aet === AET.Snd) { // same style replaces —
         if (ev.data.sty !== evNew.data.sty) continue;   // queued newcomers coexist instead
         if (evNew.data.fQueue) continue;
         const k = this.smm.findIndex((s) => s.data.sty === ev.data.sty && s.data.celn === ev.data.celn);
@@ -397,14 +438,16 @@ export class Actor {
     return iaevNew;
   }
 
-  // _FAddDoAev: insert at the processing cursor, merge within the frame, execute now
+  /** Insert an event at the processing cursor, merge it within the frame, and
+   *  execute it immediately — the single entry point for every actor edit.
+   *  Returns the index the (possibly merged) event landed at. */
   addDoAev(aet, data) {
     const iaev = this.iaevCur;
     this.events.splice(iaev, 0, { aet, nfrm: this.nfrmCur, rtel: { ...this.rtel }, data });
     this._onInsertAev(iaev);
     const iaevNew = this._mergeAev(this.iaevFrmMin, iaev);
-    if (aet === AET.Move) { // BUG1870: merge accumulates Move data, so re-executing
-      const d = this.dxyzSubRte; // the merged event would double-apply — add delta once
+    if (aet === AET.Move) { // merging accumulates Move data — re-executing
+      const d = this.dxyzSubRte; // the merged event would double-apply, so add the delta once
       this.dxyzSubRte = { x: d.x + data.x, y: d.y + data.y, z: d.z + data.z };
       this._updateXyzRte();
     } else this._doAevCore(iaevNew);
@@ -413,11 +456,12 @@ export class Actor {
     return iaevNew;
   }
 
-  setStep(dwr) { return this.addDoAev(AET.Step, dwr); } // FSetStep
+  /** Set the route step length at the cursor (DWR_NIL = resume template step). */
+  setStep(dwr) { return this.addDoAev(AET.Step, dwr); }
 
-  // FSetActionCore — insert Actn at the cursor, drop superseded forward events,
-  // then Freeze(done?) and Step(-1) so a paused actor resumes (_FRemoveAevMm/
-  // _FAddAevDefMm motion-match sounds unported)
+  /** Set the actor's action at the cursor — inserts an Actn event, drops
+   *  superseded forward events, then adds Freeze + Step events so a paused
+   *  actor resumes. `fFreeze` records the action frozen (no cel animation). */
   setActionCore(anid, celn, fFreeze) {
     const fStatic = this.iaevActnCur < 0 || !!((this._actn(anid)?.grfactn || 0) & FACTN_STATIC);
     let anidChain = this.anid;
@@ -440,10 +484,11 @@ export class Actor {
     if (!fStatic && !this.template.isTdt && !done()) this.setStep(DWR_NIL);
   }
 
-  // --- transform fills (actor.cpp _PrepXfrmFill/_PrepCostFill) ----------------
-  // _PrepXfrmFill: delete forward <aet> events the new value supersedes —
-  // consecutive duplicates of the previous effective value, then duplicates of
-  // the new value; stop at the first differing one. Bounded by the next Add.
+  // --- transform fills --------------------------------------------------------
+  /** Delete forward `aet` events the new value `pvVar` supersedes —
+   *  consecutive duplicates of the previous effective value, then duplicates of
+   *  the new one; stop at the first differing value. `grfaet` also clears
+   *  selected event types (Tweak/RotH/Freeze/Step) in the same span. */
   _prepXfrmFill(aet, pvVar, grfaet = 0) {
     let pvVarCmp, fReplacePrev = true;
     for (let i = 0; i < this.iaevCur - 1; i++) if (this.events[i].aet === aet) pvVarCmp = this.events[i].data;
@@ -453,21 +498,22 @@ export class Actor {
     for (let i = this.iaevCur; i < this.events.length; i++) {
       const ev = this.events[i];
       if (ev.aet === AET.Add) break;
-      let fDelete = false;
+      let shouldDelete = false;
       if (ev.aet === aet && (aet === AET.Size || aet === AET.Pull || aet === AET.RotF)) {
         if (fReplacePrev) {
-          if (eq(ev.data, pvVarCmp)) fDelete = true;
-          else { fReplacePrev = false; pvVarCmp = pvVar; if (eq(ev.data, pvVarCmp)) fDelete = true; else break; }
-        } else if (eq(ev.data, pvVarCmp)) fDelete = true; else break;
-      } else if (ev.aet === AET.Tweak && (grfaet & faet.Tweak) && cmpRtel(ev.rtel, this.rtel) >= 0) fDelete = true;
-      else if (ev.aet === AET.RotH && (grfaet & faet.RotF) && cmpRtel(ev.rtel, this.rtel) === 0) fDelete = true;
-      else if (ev.aet === AET.Freeze && (grfaet & faet.Freeze) && cmpRtel(ev.rtel, this.rtel) >= 0) fDelete = true;
-      else if (ev.aet === AET.Step && (grfaet & faet.Step) && cmpRtel(ev.rtel, this.rtel) >= 0) fDelete = true;
-      if (fDelete) { this._removeAev(i); i--; }
+          if (eq(ev.data, pvVarCmp)) shouldDelete = true;
+          else { fReplacePrev = false; pvVarCmp = pvVar; if (eq(ev.data, pvVarCmp)) shouldDelete = true; else break; }
+        } else if (eq(ev.data, pvVarCmp)) shouldDelete = true; else break;
+      } else if (ev.aet === AET.Tweak && (grfaet & faet.Tweak) && cmpRtel(ev.rtel, this.rtel) >= 0) shouldDelete = true;
+      else if (ev.aet === AET.RotH && (grfaet & faet.RotF) && cmpRtel(ev.rtel, this.rtel) === 0) shouldDelete = true;
+      else if (ev.aet === AET.Freeze && (grfaet & faet.Freeze) && cmpRtel(ev.rtel, this.rtel) >= 0) shouldDelete = true;
+      else if (ev.aet === AET.Step && (grfaet & faet.Step) && cmpRtel(ev.rtel, this.rtel) >= 0) shouldDelete = true;
+      if (shouldDelete) { this._removeAev(i); i--; }
     }
   }
 
-  // _PrepCostFill: same dedup, scoped to Cost events for this ibset
+  /** Same forward-dedup as `_prepXfrmFill`, scoped to Cost events for the
+   *  costume's ibset. */
   _prepCostFill(iaevMin, aevcost) {
     let cmp = this._cost[aevcost.ibset], fReplacePrev = true;
     const same = (e) => e.fCmtl === cmp?.fCmtl && (e.fCmtl ? e.cmid === cmp.cmid : e.tag === cmp.tag);
@@ -481,8 +527,9 @@ export class Actor {
     }
   }
 
-  // FSetCostumeCore: cmtl costumes take their ibset from the CMTL itself;
-  // dedup forward costumes for the part set, then insert+execute at the cursor
+  /** Apply a costume at the cursor — material-list costumes take their ibset
+   *  from the material list itself; forward costume events for the part set are
+   *  deduplicated, then the Cost event is inserted and executed. */
   setCostumeCore(ibsetClicked, tag, cmid, fCmtl) {
     let ibsetApply = ibsetClicked;
     if (fCmtl) {
@@ -496,14 +543,15 @@ export class Actor {
     return true;
   }
 
-  // FRotate: xa/ya/za are radians on the rotated axis (only one non-zero per
-  // call). fFromHereFwd (cmd) writes aetRotF — forward rotation with path
-  // orientation applied concurrently; otherwise aetRotH — this frame only.
+  /** Rotate the actor — `xa`/`ya`/`za` are radians on the rotated axis (one
+   *  non-zero per call). `fFromHereFwd` (cmd/ctrl held) writes a forward
+   *  rotation with path orientation applied concurrently; otherwise a
+   *  heading-relative rotation affecting this frame only. */
   fRotate(xa, ya, za, fFromHereFwd) {
     let aet, m;
     if (fFromHereFwd) {
       aet = AET.RotF;
-      if (this.useCur) { // bmat34Cur was last used — back the path orientation out
+      if (this.useCur) { // the heading matrix was last applied — back the path orientation out
         m = this.xfrm.cur.slice();
         if (this.pathAng.za) m = M.mul(m, M.rotZ(-this.pathAng.za));
         if (this.pathAng.ya) m = M.mul(m, M.rotY(-this.pathAng.ya));
@@ -519,9 +567,8 @@ export class Actor {
     return true;
   }
 
-  // FNormalizeCore(fnormRotate): reset both rotation matrices to identity and
-  // write a RotF so the reset applies forward (single-frame RotH isn't enough —
-  // the actor must stay normalized on later frames too)
+  /** Reset both rotation matrices to identity and write a forward rotation so
+   *  the reset persists — a single-frame heading rotation isn't enough. */
   fNormalizeRot() {
     this.xfrm.fwd = M.identity();
     this.xfrm.cur = M.identity();
@@ -531,8 +578,8 @@ export class Actor {
     return true;
   }
 
-  // FPull: squash/stretch — per-call factors bounded [0.1,10], accumulated pull
-  // bounded [0.25,4] (krScaleMinFactor/krScaleMaxFactor, krPullMin/krPullMax)
+  /** Squash/stretch the actor — per-call factors clamped to [0.1,10], the
+   *  accumulated pull to [0.25,4]. */
   fPull(rx, ry, rz) {
     const B = (v) => Math.min(10, Math.max(0.1, v));
     const P = (v) => Math.min(4, Math.max(0.25, v));
@@ -544,8 +591,9 @@ export class Actor {
     return true;
   }
 
-  // FScale: uniform scale — per-call [0.1,10], accumulated rScaleStep [0.25,10];
-  // a size change that clamps removes forward Tweaks (faetTweak)
+  /** Uniformly scale the actor — per-call factor clamped to [0.1,10], the
+   *  accumulated step scale to [0.25,10]. A size change that clamps also
+   *  removes forward Tweak events. */
   fScale(rScale) {
     rScale = Math.min(10, Math.max(0.1, rScale));
     this.xfrm.scaleStep = Math.min(10, Math.max(0.25, this.xfrm.scaleStep * rScale));
@@ -556,7 +604,7 @@ export class Actor {
     return true;
   }
 
-  // FNormalizeCore(fnormSize): pull -> 1,1,1 and rScaleStep -> 1 via aetPull+aetSize
+  /** Reset squash/stretch and scale — pull back to (1,1,1) and step scale to 1. */
   fNormalizeSize() {
     const step0 = this.xfrm.scaleStep;
     this.xfrm.pull = { x: 1, y: 1, z: 1 };
@@ -570,9 +618,10 @@ export class Actor {
     return true;
   }
 
-  // FSoonerLater: slide the actor's schedule dnfrm frames in time. Sooner (dnfrm<0)
-  // walks the already-processed events backward; later walks the current subroute
-  // and beyond forward — subroute gaps between Add events eat into the shift.
+  /** Slide the actor's schedule `dnfrm` frames in time. Sooner (negative)
+   *  walks already-processed events backward; later walks the current subroute
+   *  and beyond forward — subroute gaps between Add events absorb part of the
+   *  shift. */
   fSoonerLater(dnfrm) {
     if (!dnfrm) return true;
     const evs = this.events;
@@ -602,10 +651,10 @@ export class Actor {
     return true;
   }
 
-  // --- deletion (actor.cpp _DeleteFwdCore/FDelete/_FDeleteEntireSubrte) ---------
-  // _AdjustAevForRteDel: retarget event rtels for a route point about to be
-  // deleted. Events anchored on the point itself die with it when it was a
-  // subroute end (dwr 0); otherwise they fold into the previous segment.
+  // --- deletion -----------------------------------------------------------------
+  /** Retarget event route references for a route point about to be deleted.
+   *  Events anchored on the point itself die with it when it was a subroute end
+   *  (zero step); otherwise they fold into the previous segment. */
   _adjustAevForRteDel(irptAdjust, iaevMin) {
     const dwrBack = irptAdjust > 0 ? this.route[irptAdjust - 1].dwr : 0;
     const dwrFwd = this.route[irptAdjust].dwr;
@@ -620,9 +669,9 @@ export class Actor {
     }
   }
 
-  // _TruncateSubRte: rtel is mid-segment — shorten the segment to the current
-  // offset, move the next node onto the cut point, and drop the rest of the
-  // subroute up to irptDelLim.
+  /** Truncate the current subroute at the mid-segment cursor — shorten the
+   *  segment to the current offset, move the next node onto the cut point, and
+   *  drop the rest of the subroute up to `irptDelLim`. */
   _truncateSubRte(irptDelLim) {
     if (this.rtel.dwrOffset === 0) return;
     const irpt = this.rtel.irpt;
@@ -642,9 +691,9 @@ export class Actor {
     }
   }
 
-  // _DeleteFwdCore: delete all events forward of the cursor (bounded by the
-  // next Add unless fAll) plus the route points they governed. Returns whether
-  // the actor still has events (alive).
+  /** Delete all events forward of the cursor (bounded by the next Add unless
+   *  `fAll`) plus the route points they governed. Returns whether the actor
+   *  still has events — i.e. is still alive. */
   _deleteFwdCore(fAll, iaevScan = this.iaevCur) {
     let iaevDelLim = this.events.length, irptDelLim = this.route.length;
     if (!fAll) {
@@ -669,8 +718,8 @@ export class Actor {
     return true;
   }
 
-  // _DelAddFrame: delete the remaining Add-frame events [iaevAdd, iaevLim) and
-  // the Add's route point unless the previous event still references it.
+  /** Delete the remaining Add-frame events [iaevAdd, iaevLim) and the Add's
+   *  route point unless the previous event still references it. */
   _delAddFrame(iaevAdd, iaevLim) {
     const irptAdd = this.events[iaevAdd].rtel.irpt;
     for (let i = iaevLim - 1; i >= iaevAdd; i--) this._removeAev(i);
@@ -683,8 +732,8 @@ export class Actor {
     if (this.rtel.irpt > irptAdd) this.rtel.irpt--;
   }
 
-  // _FDeleteEntireSubrte: delete the whole current subroute (called when the
-  // current frame is the subroute's Add frame).
+  /** Delete the whole current subroute — used when the current frame is the
+   *  subroute's Add frame, so the actor's later presence disappears entirely. */
   _deleteEntireSubrte() {
     this._deleteFwdCore(false);
     this._delAddFrame(this.iaevAddCur, this.iaevCur);
@@ -698,9 +747,9 @@ export class Actor {
     }
   }
 
-  // FDelete: delete forward from the current frame — rewinds one frame first so
-  // the cut removes "from this point on". fAll (shift) extends the cut across
-  // the next Add boundary. Returns whether the actor still has events.
+  /** Delete forward from the current frame — rewinds one frame first so the
+   *  cut removes "from this point on". `fAll` (shift) extends the cut across
+   *  the next Add boundary. Returns whether the actor still has events. */
   fDelete(fAll) {
     const addEv = this.iaevAddCur >= 0 ? this.events[this.iaevAddCur] : null;
     if (addEv && !fAll && this.nfrmCur === addEv.nfrm) {
@@ -714,8 +763,8 @@ export class Actor {
     return this.events.length > 0;
   }
 
-  // FRemFromStageCore: an actor added on this very frame loses its subroute
-  // outright; otherwise a Rem event hides it from here on.
+  /** Remove the actor from the stage — if it was added on this very frame its
+   *  subroute is deleted outright, otherwise a Rem event hides it from here on. */
   remFromStageCore() {
     if (!this.onStage) return;
     const addEv = this.iaevAddCur >= 0 ? this.events[this.iaevAddCur] : null;
@@ -724,6 +773,9 @@ export class Actor {
   }
 
   // --- orientation ------------------------------------------------------------
+  /** Rebuild the rotation part of the actor's matrix — rest pose, pull/scale,
+   *  and either the heading matrix or the forward matrix with path orientation.
+   *  Returns the full orientation matrix (translation applied by caller). */
   _matrixRotUpdate() {
     const [xa, ya, za] = this.template.rest;
     let ts = M.mul(M.mul(M.rotX(xa), M.rotY(ya)), M.rotZ(za));
@@ -738,16 +790,18 @@ export class Actor {
     const rpt = this.route[add.rtel.irpt] || this.route[0];
     if (this.template.isTdt || add.nfrm === this.nfrmCur || rpt.dwr === 0) {
       tr = M.mul(M.mul(M.mul(tr, M.rotX(add.data.xa)), M.rotY(add.data.ya)), M.rotZ(add.data.za));
-      this.pathAng = { xa: add.data.xa, ya: add.data.ya, za: add.data.za }; // path part = Add's orientation
+      this.pathAng = { xa: add.data.xa, ya: add.data.ya, za: add.data.za }; // path orientation = the Add event's own orientation
     } else {
-      tr = this._calcRteOrient(tr); // sets pathAng to the tangent-derived angles
+      tr = this._calcRteOrient(tr); // path orientation from the route tangent
     }
     this.xfrm.cur = tr;
     return M.mul(ts, tr);
   }
 
+  /** Rotate `m` toward the route tangent — averages a few preceding segment
+   *  directions so the actor faces where it's heading. */
   _calcRteOrient(m) {
-    this.pathAng = { xa: 0, ya: 0, za: 0 }; // _CalcRteOrient aZeros the path angles up front
+    this.pathAng = { xa: 0, ya: 0, za: 0 };
     const irptAdd = this.events[this.iaevAddCur].rtel.irpt;
     let irptPrev = this.rtel.dwrOffset > 0 || this.rtel.irpt === irptAdd ? this.rtel.irpt : this.rtel.irpt - 1;
     if (this.route[irptPrev] && this.route[irptPrev].dwr === 0) irptPrev--;
@@ -761,13 +815,15 @@ export class Actor {
     return this._applyRotFromVec(v, m);
   }
 
+  /** Accumulate segment `irpt`'s normalized direction into `v` scaled by `w` —
+   *  the tangent average's per-segment contribution. */
   _updateXyzTan(v, irpt, w) {
     const a = this.route[irpt], b = this.route[irpt + 1];
     if (!a || !b) return;
     const dx = b.x - a.x, dy = b.y - a.y, dz = b.z - a.z;
     const ax = Math.abs(dx), ay = Math.abs(dy), az = Math.abs(dz);
-    // BrsAbsMax3 is the unsigned max; the signed equality tests intentionally
-    // fall through to `else` when the dominant delta is negative (dwr stays > 0)
+    // Unsigned dominant axis picks the normalizer; the signed equality tests
+    // intentionally fall through to `else` when the dominant delta is negative
     let dwr = Math.max(ax, ay, az);
     if (dx === dwr) dwr += Math.max(ay, az) / 2;
     else if (dy === dwr) dwr += Math.max(ax, az) / 2;
@@ -776,19 +832,23 @@ export class Actor {
     v.x += c(dx) * w; v.y += c(dy) * w; v.z += c(dz) * w;
   }
 
+  /** Rotate `m` by the heading/pitch derived from tangent vector `v`,
+   *  constrained by the action's allowed-rotation flags. */
   _applyRotFromVec(v, m) {
     const ax = Math.abs(v.x), ay = Math.abs(v.y), az = Math.abs(v.z);
     const dwr = Math.max(ax, ay, az) + 1;
     const rX = v.x / dwr, rY = v.y / dwr, rZ = v.z / dwr;
     let aRot = 0;
     if (this.grfactn & FACTN_ROTY && (v.x !== 0 || v.z !== 0)) { aRot = Math.atan2(rX, rZ); m = M.mul(m, M.rotY(aRot)); }
-    this.pathAng.ya = aRot; // *pya = aRot (yaw)
+    this.pathAng.ya = aRot; // yaw
     if (this.grfactn & FACTN_ROTX && v.y !== 0) { aRot = Math.atan2(-rY, Math.abs(rX) + Math.abs(rZ)); m = M.mul(M.rotX(aRot), m); }
-    this.pathAng.xa = aRot; // original: *pxa = aRot — the tilt if ROTX ran, else the leftover yaw
-    // *pza is never written in the original (it writes *pxa = aZero twice) — stays 0
+    this.pathAng.xa = aRot; // the tilt if X-rotation ran, else the leftover yaw
+    // za is never written — path roll stays 0
     return m;
   }
 
+  /** Rebuild the actor's root world matrix — orientation from
+   *  `_matrixRotUpdate` plus the route position — and track ground height. */
   _positionBody() {
     const m = this._matrixRotUpdate();
     const t = this.dxyzRte;
@@ -796,7 +856,7 @@ export class Actor {
     this.groundY = Math.min(this.groundY, this.rootMatrix[10]);
   }
 
-  /** World matrices of all body parts (BRender 4x3) */
+  /** World matrices of all body parts (4x3 row-vector convention) — for the renderer. */
   partWorldMatrices() {
     const out = new Array(this.parts.length);
     const { parents } = this.template;
@@ -808,18 +868,18 @@ export class Actor {
     return out;
   }
 
-  // --- sound editing (actrsnd.cpp FSetSndCore/FQuerySnd/FSetVlmSnd/FDeleteSndCore) ---
-  // FSetSndCore: attach a sound event at the cursor. sty 4 (Midi) can't go on
-  // actors; fMM latches it to the current cel (motion-match) instead of playing
-  // at this frame. Inserted via _FAddDoAev so same-sty sounds merge per _MergeAev.
+  // --- sound editing --------------------------------------------------------------
+  /** Attach a sound event at the cursor. Midi-style sounds can't go on actors;
+   *  `fMM` latches the sound to the current cel (motion-match) instead of
+   *  playing at this frame. Same-style sounds merge on insert. */
   fSetSnd(tag, fLoop, fQueue, fMM, vlm, sty) {
-    if (sty === 4) return false; // STY.Midi — ercSocNoActrMidi
+    if (sty === 4) return false; // Midi style can't attach to actors
     const ccel = this.ccel || 1;
     const aevsnd = { fLoop: !!fLoop, fQueue: !!fQueue, vlm,
       celn: fMM ? ((this.celn % ccel) + ccel) % ccel : -1, sty, fNoSound: false, chid: 0, tag };
     this.addDoAev(AET.Snd, aevsnd);
-    for (let i = this.iaevCur; i < this.events.length; i++) { // drop fNoSound placeholders of
-      const e = this.events[i];                                // this sty up to the next real one
+    for (let i = this.iaevCur; i < this.events.length; i++) { // drop no-sound placeholders of
+      const e = this.events[i];                                // this style up to the next real one
       if (e.aet === AET.Add) break;
       if (e.aet !== AET.Snd || e.data.sty !== sty) continue;
       if (!e.data.fNoSound) break;
@@ -829,8 +889,9 @@ export class Actor {
     return true;
   }
 
-  // FQuerySnd: the sty's sound(s) at the current frame — tags + vlm + loop, or null.
-  // Non-MM = plain Snd events applied this frame; MM = the smm entry latched to this cel.
+  /** The sound(s) of a given style at the current frame — tags + volume +
+   *  loop flag, or null. Non-motion-match reads plain Snd events applied this
+   *  frame; motion-match reads the entry latched to the current cel. */
   fQuerySnd(sty, fMM) {
     const tags = [];
     let vlm = 0, fLoop = false;
@@ -850,8 +911,9 @@ export class Actor {
     return tags.length ? { tags, vlm, fLoop } : null;
   }
 
-  // FSetVlmSnd: re-target this frame's sty-matching sounds to vlm (MM also fixes
-  // the latched smm entry plus the matching event back to the last action change)
+  /** Re-target this frame's style-matching sounds to `vlm` — motion-match
+   *  also updates the latched entry plus the matching event back to the last
+   *  action change. */
   fSetVlmSnd(sty, fMM, vlm) {
     const ccel = this.ccel || 1, celn = ((this.celn % ccel) + ccel) % ccel;
     let fActnThisFrame = false, nfrmMM = null;
@@ -863,7 +925,7 @@ export class Actor {
       if ((d.celn !== -1) !== fMM || d.sty !== sty) continue;
       d.vlm = vlm;
     }
-    if (fMM && !fActnThisFrame) { // earlier mm events landing on this cel
+    if (fMM && !fActnThisFrame) { // earlier motion-match events landing on this cel
       for (let i = this.iaevFrmMin - 1; i > 0; i--) {
         const ev = this.events[i];
         if (ev.aet === AET.Actn || (nfrmMM !== null && nfrmMM > ev.nfrm)) break;
@@ -871,15 +933,15 @@ export class Actor {
         const d = ev.data;
         if (d.sty !== sty || d.celn !== celn) continue;
         d.vlm = vlm; nfrmMM = ev.nfrm;
-        break; // no queued mm sounds by spec
+        break; // motion-match sounds don't queue — at most one earlier event
       }
     }
     if (fMM) for (const s of this.smm) if (s.data.sty === sty && s.data.celn === celn) s.data.vlm = vlm;
     return true;
   }
 
-  // FDeleteSndCore: remove this frame's sty-matching sounds (non-MM) or the
-  // current cel's latched sounds back to the last action change (MM + smm)
+  /** Remove this frame's style-matching sounds — plain events for non-MM, or
+   *  the current cel's latched sounds back to the last action change for MM. */
   fDeleteSndCore(sty, fMM) {
     const ccel = this.ccel || 1, celn = ((this.celn % ccel) + ccel) % ccel;
     const lo = fMM ? this.iaevActnCur : this.iaevFrmMin;

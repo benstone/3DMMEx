@@ -3,6 +3,9 @@
 // #view/#ui canvases, DOM-overlay inputs (word text boxes, movie name), the
 // settings dialog, and the portrait rotate prompt. The pre-JS #boot splash is
 // styled inline in index.html/receiver.html — it must render before JS runs.
+/** Inject the app stylesheet — called once at boot; idempotent. Covers the
+ *  DOM the canvas app still uses: layout shell, canvases, overlay inputs, the
+ *  settings dialog, and the rotate prompt. */
 export function injectAppStyles() {
   if (document.getElementById('appStyles')) return;
   const el = document.createElement('style');
@@ -37,7 +40,7 @@ body { display: flex; flex-direction: column; }
 #rotMsg.show { display: flex; }
 #studio .spltInp { position: absolute; box-sizing: border-box; background: #fff8dc; border: 2px inset #888; font: bold 3cqw 'Comic Sans MS', cursive, sans-serif; color: #222; padding: 0 1cqw; }
 #studio .stNameInp { width: 100%; height: 100%; box-sizing: border-box; background: #cfe8ff; border: none; outline: none; font: bold 2cqw 'Comic Sans MS', cursive, sans-serif; color: #222; padding: 0 .4cqw; }
-#studio #selBox { display: none; } /* unused — selection is a 3D Box3Helper in-scene (BODY::_PrepareToRender) */
+#studio #selBox { display: none; } /* unused — selection is a 3D bounding box in-scene */
 #ui { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; z-index: 55; touch-action: none; }
 `;
   document.head.appendChild(el);

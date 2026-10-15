@@ -31,6 +31,8 @@ class ExpansionPacks {
 
   packNotes: string[] = []; // user-visible results, toasted after boot
 
+  /** Fetch every pack's files and merge them into the content library,
+   *  thumbnails, and sound lists — collecting a user-visible note per pack. */
   applyAll = async () => {
     for (const pack of await this.manifestsPromise) {
       const dir = pack ? new URL(pack.url).pathname.replace(/\/[^/]*$/, '').split('/').pop() : null;

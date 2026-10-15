@@ -1,11 +1,14 @@
 // Boot splash view — replaces the #boot DOM overlay. Draws the homelogo /
-// splash art cover-fit, with the progress bar + caption once bootSeg is armed.
+// splash art cover-fit, with the progress bar + caption once segment() is armed.
 import { View, UI_WIDTH, UI_HEIGHT, uiRoot } from './root.ts';
 import { Element } from './element.ts';
 import { textureCache } from './textureCache.ts';
 import { localizer } from '../localization.ts';
 
+/** Boot splash — owns the canvas until `done()` pops it; `show(name)` swaps
+ *  art, `segment(weight)` arms weighted progress tickers. */
 class BootView extends View {
+  /** Build the art + progress-bar elements. */
   constructor() {
     super();
     this.interactive = true; // swallow clicks while booting
@@ -14,10 +17,11 @@ class BootView extends View {
     this.caption = '';
     this.artEl = new class extends Element {
       constructor() { super(0, 0, UI_WIDTH, UI_HEIGHT); this.pickable = false; }
+      /** Paint the splash art cover-fit (placeholder text while it decodes). */
       draw(ctx) {
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, this.w, this.h);
         const image = textureCache.image(this._root.art, () => this._root.invalidate());
-        if (!textureCache.isReady(image)) { // text placeholder until art lands (was index.html "loading...")
+        if (!textureCache.isReady(image)) { // text placeholder until the art lands
           ctx.fillStyle = '#ccc'; ctx.font = '20px sans-serif'; ctx.textAlign = 'center';
           ctx.fillText('loading...', this.w / 2, this.h / 2);
           return;
@@ -32,6 +36,7 @@ class BootView extends View {
     this.add(this.artEl);
     this.add(new class extends Element { // progress bar + caption, bottom-center
       constructor() { super(0, 0, UI_WIDTH, UI_HEIGHT); this.pickable = false; }
+      /** Paint the progress bar + caption (nothing while progress < 0). */
       draw(ctx) {
         const r = this._root;
         if (r.progress < 0) return;

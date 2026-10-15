@@ -23,6 +23,7 @@ class ChromecastSender {
   state = { active: false, playing: false };
   apiPromise = null;
 
+  /** True while a cast session is live — the theatre switches to remote mode. */
   isActive = () => this.state.active;
 
   /** Fire-and-forget control message on the movie namespace. */
@@ -32,18 +33,22 @@ class ChromecastSender {
     catch { return false; }
   };
 
+  /** Toggle play/pause on the receiver and mirror the new state locally. */
   togglePlayback = async () => {
     const p = !this.state.playing;
     if (await this.sendCommand(p ? 'play' : 'pause')) { this.state.playing = p; appState.modeSync?.(); }
     return this.state.playing;
   };
 
-  rewind = async () => { // seek to frame 1 then keep/start playback
+  /** Seek the receiver to frame 1, then keep/start playback. */
+  rewind = async () => {
     await this.sendCommand('seek', { frame: 1 });
     if (!this.state.playing) await this.togglePlayback();
   };
 
-  _loadApi = () => { // resolves true once the Cast framework is ready (Chrome only)
+  /** Lazily inject the Cast sender framework — resolves true once the
+   *  framework is ready (Chrome only; false when unavailable). */
+  _loadApi = () => {
     if (this.apiPromise) return this.apiPromise;
     this.apiPromise = new Promise((res) => {
       (window as any).__onGCastApiAvailable = (ok) => {
@@ -65,7 +70,9 @@ class ChromecastSender {
     return this.apiPromise;
   };
 
-  castMovie = async () => { // sender button in theatre
+  /** Theatre cast button — hands the current movie's URL to the receiver app.
+   *  Only URL-loaded movies are castable; autosave/local files have no URL. */
+  castMovie = async () => {
     const url = movieDocument.lastMovieUrl;
     if (!url) return toastHost.show(localizer.translate('ui.castNeedsUrl')); // autosave/local docs can't be handed off
     if (!(await this._loadApi())) return toastHost.show(localizer.translate('ui.castUnavailable'));

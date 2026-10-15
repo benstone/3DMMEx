@@ -1,14 +1,19 @@
-// Movie / scene / actor parsing. See SRC/ENGINE/MOVIE.CPP, SCENE.CPP, ACTRSAVE.CPP.
+// Movie / scene / actor chunk parsing and serialization — turns a movie file
+// into the runtime document shape the player and editor share, and back.
 import { Reader, Writer, writeStn } from './binary.ts';
 import { readGG, readGL, readGST, buildGG, buildGL, buildGST, writeChunkyFile } from './chunky.ts';
 import { parseTbox } from './content.ts';
 
+/** Scene-event type ids — recorded on GGFR/GGST entries. */
 export const SEVT = { AddActr: 0, PlaySnd: 1, AddTbox: 2, ChngCamera: 3, SetBkgd: 4, Pause: 5 };
+/** Actor-event type ids — recorded on GGAE entries. */
 export const AET = {
   Add: 0, Actn: 1, Cost: 2, RotF: 3, Pull: 4, Size: 5, Snd: 6, Move: 7,
   Freeze: 8, Tweak: 9, Step: 10, Rem: 11, RotH: 12,
 };
 
+/** Parse a movie file into { name, scenes, rollCall, gstSource, chunkyFile } —
+ *  scenes sorted by child id, roll-call names applied to actors. */
 export function parseMovie(chunkyFile) {
   const mvie = chunkyFile.ofType('MVIE').next().value;
   if (!mvie) throw new Error('no MVIE chunk');
@@ -16,7 +21,7 @@ export function parseMovie(chunkyFile) {
     .filter((k) => k.ctg === 'SCEN')
     .sort((a, b) => a.chid - b.chid)
     .map((k) => parseScene(chunkyFile, k.cno));
-  // roll call GST (MVIE kid chid 0): arid -> actor name/template (movie.cpp FReadRollCall)
+  // Roll-call string table (MVIE kid chid 0): arid -> actor name/template
   const rollCall = new Map();
   const gstKid = mvie.kids.find((k) => k.ctg === 'GST ' && k.chid === 0);
   if (gstKid) {
@@ -26,7 +31,7 @@ export function parseMovie(chunkyFile) {
         const er = new Reader(e.extra);
         rollCall.set(er.i32(), { cactRef: er.i32(), grfbrws: er.u32(), tagTmpl: er.tag(), name: e.str });
       }
-    } catch { /* tolerate a bad roll call like MVIE::FReadRollCall's LFail path */ }
+    } catch { /* tolerate a malformed roll call */ }
   }
   const gstSrc = mvie.kids.find((k) => k.ctg === 'GST ' && k.chid === 1);
   for (const s of scenes) for (const [, a] of s.actors) {
@@ -36,7 +41,7 @@ export function parseMovie(chunkyFile) {
   return { chunkyFile, name: mvie.name, scenes, rollCall, gstSource: gstSrc ? chunkyFile.data('GST ', gstSrc.cno) : null };
 }
 
-// SSE: vlm(BRS), sty, fLoop, ctagc + TAGC array {chidden, tag}
+/** Scene sound-event payload: volume, style, loop flag, and tag list. */
 function readSse(vr) {
   const vlm = vr.brs();
   const sty = vr.i32();
@@ -50,6 +55,8 @@ function readSse(vr) {
   return { vlm, sty, fLoop, tags };
 }
 
+/** Read a scene-event group (GGFR frame events or GGST start events) into
+ *  [{ nfrm, sevt, data }]. */
 function readSevs(chunkyFile, ctg, cno) {
   if (!cno && cno !== 0) return [];
   const gg = readGG(chunkyFile.data(ctg, cno));
@@ -71,6 +78,8 @@ function readSevs(chunkyFile, ctg, cno) {
   });
 }
 
+/** Parse one SCEN chunk — header, frame/start event groups, actors,
+ *  textboxes, and the sorter thumbnail. */
 export function parseScene(chunkyFile, cno) {
   const r = new Reader(chunkyFile.data('SCEN', cno));
   r.bo(); r.i16();
@@ -91,12 +100,14 @@ export function parseScene(chunkyFile, cno) {
     frameEvents: frm ? readSevs(chunkyFile, 'GGFR', frm.cno) : [],
     startEvents: st ? readSevs(chunkyFile, 'GGST', st.cno) : [],
     actors, textboxes,
-    thumb: th ? chunkyFile.data('THUM', th.cno) : null, // scene sorter thumbnail MBMP
+    thumb: th ? chunkyFile.data('THUM', th.cno) : null, // scene-sorter thumbnail bitmap
   };
 }
 
+/** Read three fixed-point scalars as an {x,y,z} point. */
 const xyz = (r) => ({ x: r.brs(), y: r.brs(), z: r.brs() });
 
+/** Parse one ACTR chunk — route (PATH), event list (GGAE), template tag, id. */
 export function parseActor(chunkyFile, cno) {
   const d = chunkyFile.data('ACTR', cno);
   const r = new Reader(d);
@@ -138,7 +149,7 @@ export function parseActor(chunkyFile, cno) {
         case AET.Freeze: data = vr.i32() !== 0; break;
         case AET.Move: case AET.Tweak: data = xyz(vr); break;
         case AET.Snd:
-          // AEVSNDF: fLoop,fQueue(tribools),vlm,celn,sty,fNoSound,chid,TAGF
+          // sound-event payload: flags, volume, cel, style, chid, tag
           data = {
             fLoop: vr.i32() !== 0, fQueue: vr.i32() !== 0, vlm: vr.brs(),
             celn: vr.i32(), sty: vr.i32(), fNoSound: vr.i32() !== 0,
@@ -153,11 +164,12 @@ export function parseActor(chunkyFile, cno) {
   return { cno, arid, nfrmFirst, nfrmLast, dxyzFullRte, tagTmpl, route, events, name: chunkyFile.get('ACTR', cno).name };
 }
 
-// ---- serialization (MVIE::FSaveToFni / SCEN::FWrite / ACTR::FWrite / TBOX::FWrite) ---
+// ---- serialization ----------------------------------------------------------
 
-const KLW_MAX = 0x7fffffff;
+const KLW_MAX = 0x7fffffff; // 'no bound' frame marker
 
-// variable data of a scene event (SEV): mirrors the sevt cases in readSevs
+/** Serialize a scene event's variable payload — the inverse of `readSevs`;
+ *  `tagFor` maps a tag to its written form (embedding referenced chunks). */
 function sevData(e, tagFor) {
   const w = new Writer();
   switch (e.sevt) {
@@ -176,7 +188,7 @@ function sevData(e, tagFor) {
   return w.out();
 }
 
-// variable data of an actor event (AEV): mirrors the aet cases in parseActor
+/** Serialize an actor event's variable payload — the inverse of `parseActor`. */
 function aevData(e, tagFor) {
   const w = new Writer(), d = e.data;
   const xyz = (p) => w.brs(p.x).brs(p.y).brs(p.z);
@@ -200,9 +212,11 @@ function aevData(e, tagFor) {
 }
 
 /**
- * Serialize a parsed/edited movie back to a CHN2 (.3MM) file.
+ * Serialize a parsed/edited movie back to a chunky (.3MM) file — rebuilds the
+ * MVIE/SCEN/ACTR/TBOX chunk tree, embedding 'rt' runtime templates and 'usr'
+ * imported sounds, and copying embedded chunks across from the source file.
  * movie: {name, scenes, rollCall?, gstSource?, chunkyFile?}
- * opts.rtmpl(cno): runtime TDT template for 'rt'-sid template tags
+ * opts.rtmpl(cno): runtime template for 'rt'-sid template tags
  * opts.userSnd(key): imported sound record {name, bytes, midi, kind} for 'usr' tags
  */
 export function serializeMovie(movie, opts: any = {}) {
@@ -210,12 +224,13 @@ export function serializeMovie(movie, opts: any = {}) {
   const byKey = new Map();
   let cnoNext = 0;
   if (movie.chunkyFile) for (const k of movie.chunkyFile.chunks.keys()) cnoNext = Math.max(cnoNext, +k.split(':')[1] + 1);
+  /** Append a chunk to the output file, allocating a chunk number. */
   const mk = (ctg, data, kids = [], name = '', loner = false, cno = null) => {
     const c = { ctg, cno: cno ?? cnoNext++, data, kids, name, loner };
     chunks.push(c); byKey.set(`${ctg}:${c.cno}`, c);
     return c;
   };
-  // verbatim copy of an existing chunk subtree (embedded MSNDs/TMPLs)
+  /** Verbatim copy of an existing chunk subtree (embedded MSNDs/TMPLs). */
   const copied = new Set();
   const copySubtree = (chunkyFile, ctg, cno) => {
     const key = `${ctg}:${cno}`;
@@ -231,9 +246,9 @@ export function serializeMovie(movie, opts: any = {}) {
     }
     return c;
   };
-  // tag -> written tag: 'rt' templates get an embedded TMPL+TDT chunk (the
-  // ksidUseCrf write in ACTR::FWrite); 'usr'/sid-0 sounds get an embedded
-  // MSND adopted under the scene (handled by tagFor in each scene)
+  // tag -> written tag: 'rt' runtime templates get an embedded TMPL+TDT chunk;
+  // 'usr'/sid-0 sounds get an embedded MSND adopted under the scene (handled by
+  // tagFor in each scene)
   const wtag = (t) => {
     if (t.sid === 'rt') {
       const key = `rt:${t.cno}`;
@@ -267,8 +282,8 @@ export function serializeMovie(movie, opts: any = {}) {
   const scenKids = [];
   for (const s of movie.scenes) {
     const kids = [];
-    // adopt embedded sounds: embedded (sid 0) copies from movie.chunkyFile, 'usr' builds
-    // — matching SCEN::FWrite's FAdoptChild(msnd, chid) for ksidUseCrf tags
+    // adopt embedded sounds: sid-0 chunks copy from the source movie file,
+    // 'usr' sounds get a fresh MSND built from the imported bytes
     const soundKids = new Map(); // tagKey -> {tag:{sid:0,..cno}, chid}
     let soundChid = 0;
     const tagFor = (t) => {
@@ -304,7 +319,7 @@ export function serializeMovie(movie, opts: any = {}) {
       ];
       const tagTmpl = wtag(a.tagTmpl);
       if (a.tagTmpl.sid === 'rt') ak.push({ ctg: 'TMPL', cno: tagTmpl.cno, chid: 0 });
-      else if (a.tagTmpl.sid === 0 && movie.chunkyFile) { // loaded embedded TDT — copy + adopt (ACTR::FWrite)
+      else if (a.tagTmpl.sid === 0 && movie.chunkyFile) { // embedded template — copy + adopt
         const tm = copySubtree(movie.chunkyFile, 'TMPL', a.tagTmpl.cno);
         if (tm) ak.push({ ctg: 'TMPL', cno: tm.cno, chid: 0 });
       }
@@ -322,7 +337,7 @@ export function serializeMovie(movie, opts: any = {}) {
         .sort((a, b) => ((a.sprm << 24) | (a.cp & 0xffffff)) - ((b.sprm << 24) | (b.cp & 0xffffff)))
         .map((m) => new Writer().u32(((m.sprm & 0xff) << 24) | (m.cp & 0xffffff)).i32(m.lw).out()))).cno, chid: 0 });
       if (rtxt.fonts?.length) rk.push({ ctg: 'AGPA', cno: mk('AGPA', buildGG(4, rtxt.fonts.filter(Boolean).map((f, i) => ({
-        fixed: new Writer().i32(i).out(), // onn — rewritten by OnnMapStn on load
+        fixed: new Writer().i32(i).out(), // font ordinal — remapped on load
         variable: new Writer().i32(i).u16(0x0303).bytes(writeStn(f)).out(),
       })))).cno, chid: 0 });
       const rtCno = mk('RTXT', new Writer().bo().u16(0x0303)
@@ -333,12 +348,12 @@ export function serializeMovie(movie, opts: any = {}) {
         .i32(textbox.l).i32(textbox.r).i32(textbox.t).i32(textbox.b).i32(0).i32(textbox.fStory ? 1 : 0).out(),
         [{ ctg: 'RTXT', cno: rtCno, chid: 0 }]).cno, chid });
     }
-    if (s.thumb) kids.push({ ctg: 'THUM', cno: mk('THUM', s.thumb).cno, chid: 0 }); // SCEN::FWrite keeps the thumbnail
+    if (s.thumb) kids.push({ ctg: 'THUM', cno: mk('THUM', s.thumb).cno, chid: 0 }); // the scene thumbnail is preserved as-is
     scenKids.push({ ctg: 'SCEN', cno: mk('SCEN', new Writer().bo().u16(0x0303)
       .i32(s.nfrmLast).i32(s.nfrmFirst).i32(s.trans ?? 3).out(), kids, s.name || '').cno, chid: scenKids.length });
   }
 
-  // roll call GST (chid 0): MACTRF {arid, cactRef, grfbrws, tagTmpl} + actor name
+  // roll-call string table (chid 0): {arid, refcount, browse flags, template tag} + actor name
   const rc = new Map(); // arid -> {name, cactRef, grfbrws, tagTmpl}
   for (const s of movie.scenes) for (const [, a] of s.actors) {
     const e = rc.get(a.arid) || { name: a.name || '', cactRef: 0, grfbrws: movie.rollCall?.get(a.arid)?.grfbrws || 0, tagTmpl: a.tagTmpl };
@@ -353,7 +368,7 @@ export function serializeMovie(movie, opts: any = {}) {
     })))).cno, chid: 0 },
   ];
   if (movie.gstSource) mvieKids.push({ ctg: 'GST ', cno: mk('GST ', movie.gstSource).cno, chid: 1 });
-  if (movie.chunkyFile) { // preserve movie-level (music) MSNDs adopted under MVIE
+  if (movie.chunkyFile) { // preserve movie-level (music) MSNDs adopted under the MVIE chunk
     const mvie = movie.chunkyFile.ofType('MVIE').next().value;
     for (const k of (mvie?.kids || [])) if (k.ctg === 'MSND') {
       const m = copySubtree(movie.chunkyFile, 'MSND', k.cno);

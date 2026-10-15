@@ -7,6 +7,7 @@ import { AssetBrowserView } from './ui/assetBrowser.ts';
 /** IndexedDB wrapper for user-imported/recorded sounds (survives reloads). */
 class UserSoundDatabase {
   _db = null;
+  /** Open (and lazily create) the 'snds' object store — resolves null on error. */
   open() {
     if (this._db) return Promise.resolve(this._db);
     return new Promise((res) => {
@@ -16,6 +17,7 @@ class UserSoundDatabase {
       rq.onerror = () => res(null);
     });
   }
+  /** All stored records as [{key, ...value}] — resolves [] on error. */
   async all() {
     const db = await this.open(); if (!db) return [];
     return new Promise((res) => {
@@ -24,6 +26,7 @@ class UserSoundDatabase {
       cur.onerror = () => res(out);
     });
   }
+  /** Insert a record — resolves the new auto-increment key, or null. */
   async add(rec) {
     const db = await this.open(); if (!db) return null;
     return new Promise((res) => {
@@ -35,14 +38,16 @@ class UserSoundDatabase {
 }
 
 /** Sound pickers' data source: built-in MSNDs classified by sty
- *  (fx/speech/midi — the original's three browsers) plus imported/recorded
+ *  (fx/speech/midi — the three picker categories) plus imported/recorded
  *  user sounds persisted in IndexedDB. */
 class SoundSources {
-  soundItems = null;
+  soundItems = null; // {fx,music,speech} lists — built once, lazy
   userSounds: any[] = []; // imported/recorded: {kind:'fx'|'speech'|'music', name, buf, midi, key}
   database = new UserSoundDatabase();
 
-  soundName = (tags) => { // first resolvable tag's name for the name plate
+  /** Display name for a sound tag list — the first resolvable tag's name
+   *  (user sounds by key, content sounds by MSND name). */
+  soundName = (tags) => {
     for (const t of tags) {
       if (t.sid === 'usr') return this.userSounds.find((u) => u.key === t.cno)?.name || 'sound';
       const m = appState.contentLibrary.msnd(t);
@@ -51,6 +56,8 @@ class SoundSources {
     return 'sound';
   };
 
+  /** Picker item lists — builtin MSNDs classified by style, plus imported
+   *  user sounds appended per kind. Cached; user sounds merge on each call. */
   getSoundItems = () => {
     if (!this.soundItems) {
       this.soundItems = { fx: [], music: [], speech: [] };
@@ -69,11 +76,15 @@ class SoundSources {
       music: [...this.soundItems.music, ...this.userSounds.filter((u) => u.kind === 'music')] };
   };
 
-  decodeAudioBytes = async (bytes) => { // -> AudioBuffer|null via the live ctx (works while suspended)
+  /** Decode standard audio bytes to an AudioBuffer via the live context
+   *  (works while suspended) — null on failure. */
+  decodeAudioBytes = async (bytes) => {
     try { return await appState.soundQueue.ensure().decodeAudioData(new Uint8Array(bytes).slice().buffer); } catch { return null; }
   };
 
-  wavToBuffer = async (wd) => { // 3DMM ADPCM first, else standard wav decode
+  /** Wav bytes -> AudioBuffer — tries the MS-ADPCM decoder first, then the
+   *  browser's standard decoder. */
+  wavToBuffer = async (wd) => {
     const pcm = decodeWavAdpcm(wd);
     if (pcm) {
       const b = appState.soundQueue.ctx.createBuffer(pcm.channels, pcm.frames, pcm.rate);
@@ -83,25 +94,30 @@ class SoundSources {
     return this.decodeAudioBytes(wd);
   };
 
+  /** Load persisted user sounds from IndexedDB — called during boot; audio
+   *  bytes decode lazily on preview/import. */
   loadUserSounds = async () => {
     for (const r of (await this.database.all()) as any[])
       this.userSounds.push({ user: true, kind: r.kind, name: r.name, buf: null, bytes: r.bytes, midi: !!r.midi, key: r.key }); // buf decoded lazily on preview
   };
 
+  /** Persist an imported/recorded sound — decodes its buffer now, stores the
+   *  raw bytes in IndexedDB, appends to the picker list. */
   addUserSound = async (kind, it) => {
     if (!it.buf && it.bytes && !it.midi) it.buf = await this.wavToBuffer(it.bytes);
     const key = await this.database.add({ kind, name: it.name, bytes: it.bytes, mime: it.mime, midi: !!it.midi });
     this.userSounds.push({ user: true, kind, name: it.name, buf: it.buf, midi: !!it.midi, key });
   };
 
-  previewSoundItem = async (it) => { // browser select = play it (built-in msnd or user/import item)
+  /** Play a picker item — selecting a sound in the browser previews it. */
+  previewSoundItem = async (it) => {
     if (!it.buf && it.bytes && !it.midi) it.buf = await this.wavToBuffer(it.bytes);
     appState.soundQueue.preview(it);
   };
 
-  // the bag button (browser.cht kidBrowserImport): pick a file, list the sounds
-  // found inside, OK imports the picked sound into the browser's list
-  // (original's import browser)
+  /** The import-button path: parse a picked file into candidate sounds —
+   *  chunky files yield each embedded WAVE/MIDS, anything else is one raw
+   *  sound — then show the import picker. */
   importSoundFile = async (kind, file) => {
     appState.soundQueue.ensure();
     const bytes = await file.arrayBuffer();
@@ -126,6 +142,8 @@ class SoundSources {
     else console.warn(`[import] no sounds found in ${file.name}`);
   };
 
+  /** Open the file picker for imports — each picked file runs through
+   *  `importSoundFile`. */
   importSoundFiles = (kind) => {
     const inp = document.createElement('input');
     inp.type = 'file'; inp.multiple = true;

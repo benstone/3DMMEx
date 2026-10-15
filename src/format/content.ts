@@ -1,12 +1,16 @@
-// Parsers for 3DMM content chunks: templates, actions, models, materials,
-// backgrounds, cameras and bitmaps. Struct layouts follow INC/*.H in the
-// Microsoft 3D Movie Maker source.
+// Parsers for the movie content chunks: actor/prop templates, actions,
+// models, materials, backgrounds, cameras, bitmaps, textboxes, 3D fonts and
+// sounds. Chunk layouts match the original file formats.
 import { Reader, readStn } from './binary.ts';
 import { readGL, readGG } from './chunky.ts';
 import * as M from '../engine/mat34.ts';
 
+/** Read a GL's entries as i16 lists — used for parent/index arrays. */
 const shorts = (gl) => gl.entries.map((e) => new Reader(e, 0, gl.le).i16());
 
+/** Parse a TMPL chunk — part parent/ibset tables, costume material lists,
+ *  rest orientation, and flags. A TDT kid means it's 3D text and gets a
+ *  runtime-built template instead. */
 export function parseTemplate(chunkyFile, cno, contentLibrary = null) {
   const r = new Reader(chunkyFile.data('TMPL', cno));
   r.bo(); r.i16();
@@ -39,6 +43,8 @@ export function parseTemplate(chunkyFile, cno, contentLibrary = null) {
   };
 }
 
+/** Action `anid` of a template — parsed on first use and cached; 3D-text
+ *  templates synthesize theirs. */
 export function templateAction(template, anid) {
   if (template._actions.has(anid)) return template._actions.get(anid);
   if (template.isTdt) {
@@ -73,6 +79,8 @@ export function templateAction(template, anid) {
   return actn;
 }
 
+/** Part model `chid` of a template — parsed on first use and cached; 3D-text
+ *  parts resolve to a font glyph model. */
 export function templateModel(template, chid) {
   if (template._models.has(chid)) return template._models.get(chid);
   let m;
@@ -88,9 +96,11 @@ export function templateModel(template, chid) {
   return m;
 }
 
-// TDT default costume material (mtrl.cpp PmtrlNew defaults)
+// Default 3D-text material — flat dark gray, index-mapped
 const TDT_MTRL = { id: 'tdt-default', color: [0, 0, 0], ka: 0.10, kd: 0.60, ks: 0.60, indexBase: 15, indexRange: 15, power: 50, tmap: null, txxf: null };
 
+/** Costume material list `cmid` of a template — parsed on first use and
+ *  cached; 3D-text gets a single default-material costume. */
 export function templateCmtl(template, cmid) {
   if (template._cmtls.has(cmid)) return template._cmtls.get(cmid);
   let c;
@@ -105,8 +115,9 @@ export function templateCmtl(template, cmid) {
   return c;
 }
 
-// --- 3-D fonts (TDF) and 3-D text actors (TDT) -----------------------------
+ // --- 3-D fonts (TDF) and 3-D text actors (TDT) -----------------------------
 
+/** Parse a TDF chunk — per-glyph width/height metrics and max height. */
 export function parseTdf(chunkyFile, cno) {
   const r = new Reader(chunkyFile.data('TDF ', cno));
   r.bo(); r.i16();
@@ -118,19 +129,21 @@ export function parseTdf(chunkyFile, cno) {
   return { chunkyFile, cno, name: chunkyFile.get('TDF ', cno).name, cch, dyrMax, dxr, dyr };
 }
 
-/** Model for a character: BMDL kid of the TDF with chid == char code. */
+/** Glyph model for a character — the font's model kid whose child id equals the char code. */
 export function tdfModel(tdf, chCode) {
   const c = tdf.chunkyFile.get('TDF ', tdf.cno);
   const k = c.kids.find((kid) => kid.ctg === 'BMDL' && kid.chid === chCode);
   return k ? parseModel(tdf.chunkyFile, k.cno) : null;
 }
 
-// 3-D text shapes (inc/tdt.h)
+/** 3-D text shape ids — the layout warps offered by the spletter easel. */
 export const TDTS = { Normal: 0, ArchPositive: 1, CircleY: 2, LargeMiddle: 3, ArchNegative: 4, ArchZ: 5, CircleZ: 6, Vertical: 7, GrowRight: 8, GrowLeft: 9 };
-// 3-D text actions: cel counts per tda (tdt.cpp _CcelOfTda)
+// Cel counts per 3D-text action id
 const TDT_CCEL = [1, 12, 12, 12, 12, 12, 12, 12, 24, 24, 24, 24, 24, 24, 12, 12];
 const TDT_DWR = 5.0, TDT_DWR_WALK = 1.0;
 
+/** Build a template for a TMPL whose TDT kid marks it as 3D text — reads the
+ *  shape id + font tag, then delegates to `makeTdtTemplate`. */
 function buildTdtTemplate(chunkyFile, cno, name, rest, grftmpl, tdtKid, contentLibrary) {
   const r = new Reader(chunkyFile.data('TDT ', tdtKid.cno));
   r.bo(); r.i16();
@@ -139,9 +152,10 @@ function buildTdtTemplate(chunkyFile, cno, name, rest, grftmpl, tdtKid, contentL
   return makeTdtTemplate(contentLibrary, name, tdts, tagTdf, { chunkyFile, cno, rest, grftmpl });
 }
 
-// TDT::PtdtNew — a TDT built at runtime (spletter easel) instead of parsed
-// from a TMPL chunk. Models/actions/materials resolve through contentLibrary like parsed
-// TDTs; chunkyFile/cno stay null until the template is registered (Library.addTmpl).
+/** Build a 3D-text template at runtime (spletter easel) rather than parsing a
+ *  TMPL chunk — models/actions/materials resolve through `contentLibrary` like
+ *  parsed templates; chunkyFile/cno stay null until `Library.addTemplate`
+ *  registers it. */
 export function makeTdtTemplate(contentLibrary, text, tdts, tagTdf, over: any = {}) {
   if (!text.length) text = ' ';
   const cch = text.length;
@@ -157,12 +171,16 @@ export function makeTdtTemplate(contentLibrary, text, tdts, tagTdf, over: any = 
   };
 }
 
+/** Multiply `m` on the left by transform `t` (pre-multiply). */
 const preMul = (m, t) => M.mul(t, m);
+/** Multiply `m` on the right by transform `t` (post-multiply). */
 const postMul = (m, t) => M.mul(m, t);
+/** Shear matrix on the Y axis. */
 const shearY = (sx, sz) => [1, sx, 0, 0, 1, 0, 0, sz, 1, 0, 0, 0];
+/** Shear matrix on the Z axis. */
 const shearZ = (sx, sy) => [1, 0, sx, 0, 1, sy, 0, 0, 1, 0, 0, 0];
 
-// tdt.cpp _ApplyShape
+/** Warp a glyph matrix by the text shape — arches, circles, growth, vertical. */
 function tdtApplyShape(m, tdts, xrChar, dxrText, yrChar, dyrMax, dyrTotal) {
   const PI = Math.PI;
   const dxrTextQuarter = dxrText / 4;
@@ -183,7 +201,8 @@ function tdtApplyShape(m, tdts, xrChar, dxrText, yrChar, dyrMax, dyrTotal) {
   return m;
 }
 
-// tdt.cpp _ApplyAction
+/** Warp a glyph matrix by the text action — spin, wave, walk, hop, stretch,
+ *  etc. `ich`/`icel`/`ccel` identify the glyph and cel within the action. */
 function tdtApplyAction(m, tda, ich, ccel, icel, xrChar, dxrText) {
   const PI = Math.PI;
   const dxrTextHalf = dxrText / 2;
@@ -259,7 +278,8 @@ function tdtApplyAction(m, tda, ich, ccel, icel, xrChar, dxrText) {
   return m;
 }
 
-// tdt.cpp _Pglbmat34Build + _PggcelBuild + _PactnBuild
+/** Synthesize a 3D-text action — per-cel glyph matrices after shape+action
+ *  warps, plus the part assignments binding each glyph model to a matrix. */
 function tdtBuildAction(template, tda) {
   if (tda < 0 || tda > 15 || !template.contentLibrary) return null;
   const tdf = template.contentLibrary.tdf(template.tagTdf);
@@ -298,11 +318,12 @@ function tdtBuildAction(template, tda) {
     }
     cels.push({ chidSnd: 0, dwr: tda === 13 ? TDT_DWR_WALK : TDT_DWR, cps });
   }
-  // factnStatic | factnRotateY
+  // static + rotate-with-path action flags
   return { anid: tda, name: `tda${tda}`, grfactn: 8 | 2, cels, matrices };
 }
 
-const modelCache = new WeakMap();
+const modelCache = new WeakMap(); // file -> cno -> model (parse once)
+/** Parse a BMDL chunk — vertex positions/UVs, triangle indices, smoothing groups. */
 export function parseModel(chunkyFile, cno) {
   let cache = modelCache.get(chunkyFile);
   if (!cache) modelCache.set(chunkyFile, (cache = new Map()));
@@ -334,6 +355,8 @@ export function parseModel(chunkyFile, cno) {
   return m;
 }
 
+/** Parse a CMTL chunk — a costume material list: per-part material + optional
+ *  replacement model, targeted at one ibset. */
 export function parseCmtl(chunkyFile, cno) {
   const r = new Reader(chunkyFile.data('CMTL', cno));
   r.bo(); r.i16();
@@ -353,7 +376,9 @@ export function parseCmtl(chunkyFile, cno) {
   return { cno, ibset, parts };
 }
 
-const mtrlCache = new WeakMap();
+const mtrlCache = new WeakMap(); // file -> cno -> material (parse once)
+/** Parse an MTRL chunk — color, ambient/diffuse/specular, index range, power,
+ *  plus texture map + transform when present. */
 export function parseMtrl(chunkyFile, cno) {
   let cache = mtrlCache.get(chunkyFile);
   if (!cache) mtrlCache.set(chunkyFile, (cache = new Map()));
@@ -384,6 +409,7 @@ export function parseMtrl(chunkyFile, cno) {
   return m;
 }
 
+/** Parse a TMAP chunk body — an indexed texture map (8-bit palette indexes). */
 export function parseTmap(bytes) {
   const r = new Reader(bytes);
   r.bo(); r.i16();
@@ -394,6 +420,7 @@ export function parseTmap(bytes) {
   return { cbRow, type, grftmap, width: dxp, height: dyp, pixels: bytes.subarray(20, 20 + cbRow * dyp) };
 }
 
+/** Parse a BKGD chunk — palette, lights, and the camera chunk-number table. */
 export function parseBkgd(chunkyFile, cno) {
   const r = new Reader(chunkyFile.data('BKGD', cno));
   r.bo(); r.i16();
@@ -416,6 +443,8 @@ export function parseBkgd(chunkyFile, cno) {
   return bkgd;
 }
 
+/** Parse a CAM  chunk — clip planes, FOV, position, orientation matrix, and
+ *  the background image + Z-buffer fills. */
 export function parseCamera(chunkyFile, cno) {
   const r = new Reader(chunkyFile.data('CAM ', cno));
   r.bo(); r.i16();
@@ -434,7 +463,7 @@ export function parseCamera(chunkyFile, cno) {
   };
 }
 
-/** Decode a Kauai MBMP into an indexed bitmap; transparent = -1 (Int16Array). */
+/** Decode an MBMP bitmap — RLE rows of palette indexes; -1 = transparent. */
 export function parseMbmp(bytes) {
   const r = new Reader(bytes);
   r.bo(); r.i16();
@@ -464,6 +493,7 @@ export function parseMbmp(bytes) {
   return { left, top, width, height, pixels };
 }
 
+/** Parse a ZBMP chunk — a 16-bit Z-buffer image used as a camera fill. */
 export function parseZbmp(bytes) {
   const r = new Reader(bytes);
   r.bo(); r.i16();
@@ -474,15 +504,17 @@ export function parseZbmp(bytes) {
   return { left, top, width, height, z };
 }
 
-// --- text boxes (TBOX/RTXT) ------------------------------------------------
+ // --- text boxes (TBOX/RTXT) ------------------------------------------------
 
-// rich-text style changes (kauai rtxt.h sprm*; chp sprms 1-4, pap sprms 128+)
+/** Rich-text style-change ids recorded in a textbox's property list —
+ *  character properties in 1-4, paragraph properties in 128+. */
 export const SPRM = {
   Style: 1, Font: 2, Fore: 3, Back: 4,
   Horz: 128, Vert: 129, After: 130, Object: 192,
 };
 
-// TBOXH: bo,osk,nfrmFirst,nfrmMax,xpLeft,xpRight,ypTop,ypBottom,chid,fStory
+/** Parse a TBOX chunk — frame span, screen rect, child id, story flag, and
+ *  its rich-text document (the RTXT kid matching `chid`). */
 export function parseTbox(chunkyFile, cno) {
   const r = new Reader(chunkyFile.data('TBOX', cno));
   r.bo(); r.i16();
@@ -498,7 +530,8 @@ export function parseTbox(chunkyFile, cno) {
   return { cno, nfrmFirst, nfrmMax, l: xpLeft, t: ypTop, r: xpRight, b: ypBottom, fStory, rtxt };
 }
 
-// RTXT: doc props + font STN, with TEXT / GLMP (mpe GL) / AGPA (font names) kids
+/** Parse an RTXT chunk — the textbox's document: default metrics, background
+ *  color, base font, text (TEXT kid), property list (GLMP), font table (AGPA). */
 export function parseRtxt(chunkyFile, cno) {
   const bytes = chunkyFile.data('RTXT', cno);
   const r = new Reader(bytes);
@@ -538,11 +571,13 @@ export function parseRtxt(chunkyFile, cno) {
   return doc;
 }
 
-// --- movie sounds (MSND) ----------------------------------------------------
+ // --- movie sounds (MSND) ----------------------------------------------------
 
+/** Sound style ids — which mixing channel a sound queues on. */
 export const STY = { Nil: 0, Unused: 1, Sfx: 2, Speech: 3, Midi: 4 };
 
-// MSNDF: bo,osk,sty,vlmDefault,fInvalid + WAVE or MIDS kid
+/** Parse an MSND chunk — style, default volume, invalid flag, and the
+ *  WAVE/MIDS kid chunk numbers holding the actual audio. */
 export function parseMsnd(chunkyFile, cno) {
   const r = new Reader(chunkyFile.data('MSND', cno));
   r.bo(); r.i16();

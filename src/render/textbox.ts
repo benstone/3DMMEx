@@ -1,23 +1,28 @@
-// Rich-text (RTXT) layout + canvas drawing for movie text boxes.
-// A pragmatic port of Kauai's TXTG line layout to 2D canvas.
+// Rich-text (RTXT) layout + canvas drawing for movie text boxes — word wrap,
+// style runs, selection/caret geometry, and chrome, all in 2D canvas space.
 import { SPRM } from '../format/content.ts';
 
-const K_BORDER = 5;   // kdzpBorderTbox
-const K_INDENT = 9;   // kdxpIndentTxtg (kdzpInch / 8)
-const TEXTBOX_SCROLL_PIXELS_PER_SECOND = 200; // kdypScroll(1px) / kdtsScrolling(5ms)
-const KDEN = 256;     // kdenLine / kdenAfter
-const KDXP_TAB = 18;  // kdxpTabDef (kdzpInch / 4)
+const K_BORDER = 5;   // textbox border band width (px)
+const K_INDENT = 9;   // text inset from the border band (px)
+const TEXTBOX_SCROLL_PIXELS_PER_SECOND = 200; // credits scroll rate
+const KDEN = 256;     // line/paragraph spacing units per whole
+const KDXP_TAB = 18;  // default tab/indent step (px)
 
+/** Signed high word of a packed long — style deltas are signed. */
 const swHigh = (lw) => lw >> 16;
+/** Signed low word of a packed long. */
 const swLow = (lw) => (lw << 16) >> 16;
+/** Top byte of a packed long. */
 const b3 = (lw) => (lw >>> 24) & 0xff;
+/** Second byte of a packed long. */
 const b2 = (lw) => (lw >>> 16) & 0xff;
 
-// ACR constants (kauai): RGB colors have top byte 0x01, palette-index 0xfe,
-// kacrClear = 0xffffffff, kacrInvert = 0xff000000, kacrBlack = 0x01000000.
+// ACR (aggregate color ref) encoding: RGB colors carry top byte 0x01,
+// palette-index references carry 0xfe, clear = 0xffffffff, invert = 0xff000000.
 const KACR_BLACK = 0x01000000;
 
-/** Decode an ACR (aggregate color ref). Returns css color, 'invert', or null (clear). */
+/** Decode an ACR (aggregate color ref) against the scene palette —
+ *  returns a css color, 'invert', or null (clear). */
 export function fontAttrToColor(lw, palette) {
   lw = lw >>> 0;
   const top = lw >>> 24;
@@ -33,18 +38,21 @@ export function fontAttrToColor(lw, palette) {
   return `rgb(${(lw >> 16) & 255},${(lw >> 8) & 255},${lw & 255})`;
 }
 
-const black = () => 'rgb(0,0,0)';
-const KACR_YELLOW = 'rgb(255,255,0)'; // kacrYellow — TBXG::_FetchChp maps kacrBlack text to yellow
+const KACR_YELLOW = 'rgb(255,255,0)'; // black text is drawn yellow — the default look
 
+/** Base character properties of a document — font/size from the RTXT header,
+ *  yellow-on-clear colors, no offset. */
 function defaultChp(doc) {
   return {
     font: doc.font || 'Comic Sans MS', dyp: doc.dypFont || 14, grfont: 0,
     fore: KACR_YELLOW, back: null, off: 0,
   };
 }
-const fixFore = (c) => (c === 'rgb(0,0,0)' || !c) ? KACR_YELLOW : c; // acrBlack -> kacrYellow
+/** Black or unset foreground resolves to the default yellow. */
+const fixFore = (c) => (c === 'rgb(0,0,0)' || !c) ? KACR_YELLOW : c;
 
-/** Group mpes by sprm, each sorted by cp (GL is stored sprm-major already). */
+/** Group a document's property entries by sprm id, each sorted by character
+ *  position (the stored list is already sprm-major). */
 function groupMpes(doc) {
   const groups = new Map();
   for (const m of doc.mpes) {
@@ -56,9 +64,10 @@ function groupMpes(doc) {
 }
 
 /**
- * Per-character resolved styles. Port of TXRD::FetchChp: each sprm's value
- * comes from its latest mpe <= cp (mpe.lw is absolute; 0 restores default).
- * Fore/back colors are stored as offsets from kacrBlack/kacrClear.
+ * Resolve per-character styles for a document — for each sprm group the value
+ * comes from its latest entry at or before the character position (the entry's
+ * lw is absolute; 0 restores the default). Fore/back colors are stored as
+ * offsets from black/clear, which `fontAttrToColor` decodes.
  */
 export function resolveTextStyles(doc, palette) {
   const def = defaultChp(doc);
@@ -69,7 +78,7 @@ export function resolveTextStyles(doc, palette) {
     [SPRM.Style]: (lw) => { cur.grfont = lw & 0xff; cur.off = (lw << 16) >> 24; cur.dyp = def.dyp + swHigh(lw); },
     [SPRM.Font]: (lw) => { cur.font = lw > 0 ? doc.fonts[lw - 1] || def.font : def.font; },
     [SPRM.Fore]: (lw) => { const c = fontAttrToColor((KACR_BLACK + lw) | 0, palette); if (c !== 'invert') cur.fore = fixFore(c); },
-    [SPRM.Back]: (lw) => { cur.back = fontAttrToColor((lw - 1) | 0, palette); }, // kacrClear + lw
+    [SPRM.Back]: (lw) => { cur.back = fontAttrToColor((lw - 1) | 0, palette); }, // offsets sit on the 'clear' ref
   };
   const groups = groupMpes(doc);
   const pos = new Map();
@@ -88,7 +97,9 @@ export function resolveTextStyles(doc, palette) {
   return chps;
 }
 
-/** Paragraph property lookup (FetchPap): returns fn(cp) -> pap. */
+/** Paragraph-property resolver — returns a function mapping a character
+ *  position to the paragraph properties in effect there (justify, indent,
+ *  tab step, line/after spacing). */
 function resolvePaps(doc) {
   const def = { jc: 0, nd: 0, dxpTab: KDXP_TAB, numLine: KDEN, dypExtraLine: 0, numAfter: KDEN, dypExtraAfter: 0 };
   const apply = {
@@ -113,9 +124,11 @@ function resolvePaps(doc) {
   };
 }
 
+/** Canvas font string for a resolved style — italic/bold flags + size + family. */
 const fontKey = (s) => `${s.grfont & 2 ? 'italic ' : ''}${s.grfont & 1 ? 'bold ' : ''}${s.dyp}px ${JSON.stringify(s.font)}, sans-serif`;
 
-/** Layout a doc into lines of styled runs within width px. Cached on the doc. */
+/** Lay a document out into lines of styled runs within its wrap width.
+ *  Cached on the doc — invalidated when wrap width or palette changes. */
 export function layoutTextDocument(doc, ctx, palette) {
   if (doc._layout && doc._layoutW === doc.wrapW && doc._layoutPal === palette) return doc._layout;
   const chps = doc.text.length ? resolveTextStyles(doc, palette) : [];
@@ -180,12 +193,14 @@ export function layoutTextDocument(doc, ctx, palette) {
   return lines;
 }
 
+/** True when two resolved styles draw identically — used to merge word runs. */
 function sameStyle(a, b) {
   if (!a || !b) return true;
   return a.font === b.font && a.dyp === b.dyp && a.grfont === b.grfont && a.fore === b.fore && a.back === b.back && a.off === b.off;
 }
 
-/** Lay out + position a tbox's lines/runs in box-pixel space (for draw + hit-test). */
+/** Position a textbox's lines/runs in box pixel space — applies wrap width,
+ *  justification, indent, and the scroll offset. Shared by draw and hit-test. */
 function positionLines(textbox, ctx, palette) {
   const doc = textbox.rtxt, w = textbox.r - textbox.l, h = textbox.b - textbox.t;
   doc.wrapW = w - 2 * (K_BORDER + K_INDENT);
@@ -206,7 +221,8 @@ function positionLines(textbox, ctx, palette) {
   return out;
 }
 
-/** Text metrics for the scroll-hold check (TBOX::FNeedToScroll). */
+/** Document height and max scroll offset — used by the player to decide when
+ *  a textbox needs to hold the frame and scroll (credits behavior). */
 export function measureTextbox(textbox, ctx, palette?) {
   if (!textbox?.rtxt) return { docH: 0, maxScroll: 0 };
   const lines = positionLines(textbox, ctx, palette);
@@ -215,7 +231,8 @@ export function measureTextbox(textbox, ctx, palette?) {
   return { docH, maxScroll: Math.max(0, docH - inner) };
 }
 
-/** Pixel point (view coords) -> character position in the doc. */
+/** Hit-test a view-space point to a character position in the document —
+ *  clamps vertically to the nearest line, then binary-walks the hit run. */
 export function hitTestTextbox(textbox, ctx, palette, px, py) {
   const doc = textbox.rtxt;
   const lines = positionLines(textbox, ctx, palette);
@@ -241,7 +258,8 @@ export function hitTestTextbox(textbox, ctx, palette, px, py) {
   return cp;
 }
 
-/** cp -> {x,y,h} caret geometry in view px (for drawing the caret/selection). */
+/** Caret geometry for a character position — {x,y,h} in view pixels, for
+ *  drawing the editing caret and anchors. */
 export function caretRect(textbox, ctx, palette, cp) {
   const doc = textbox.rtxt, lines = positionLines(textbox, ctx, palette);
   const defH = (doc.dypFont || 14) * 1.2;
@@ -258,7 +276,7 @@ export function caretRect(textbox, ctx, palette, cp) {
   return { x: lr ? lr.x + lr.w : textbox.l + K_BORDER + K_INDENT, y: last.y, h: last.h };
 }
 
-/** Runs+span rects covering cp range [a,b) — for drawing selection highlight. */
+/** Rects covering character range [a,b) — the selection highlight bands. */
 export function caretRangeRects(textbox, ctx, palette, a, b) {
   const lines = positionLines(textbox, ctx, palette), rects = [];
   for (const ln of lines) {
@@ -277,11 +295,11 @@ export function caretRangeRects(textbox, ctx, palette, a, b) {
 
 /**
  * Draw all visible text boxes for a frame into a 2d context.
- * textbox._scv is the player-managed scroll offset (credits boxes hold the frame
- * and scroll at TEXTBOX_SCROLL_PIXELS_PER_SECOND, like MVIE's kdtsScrolling alarm).
- * sel: {chrome, textbox, a, b, caret} — chrome gets the frame + resize anchors
- * (TBXB border selection); textbox gets the text selection/caret (TBXG focus).
- * The two differ in the original: border clicks select, interior clicks focus.
+ * textbox._scv is the player-managed scroll offset — credits boxes hold the
+ * frame and scroll at TEXTBOX_SCROLL_PIXELS_PER_SECOND.
+ * sel: {chrome, textbox, a, b, caret} — `chrome` gets the border frame + resize
+ * anchors (border click selection); `textbox` gets the text selection/caret
+ * (interior click focus). The two are distinct: border selects, interior edits.
  */
 export function drawTextboxes(ctx, textboxes, palette, W, H, sel) {
   ctx.clearRect(0, 0, W, H);
@@ -327,8 +345,8 @@ export function drawTextboxes(ctx, textboxes, palette, W, H, sel) {
         ctx.fillRect(c.x, c.y, 1, c.h);
       }
     }
-    if (sel && sel.chrome === textbox) { // TBXB chrome: frame + 8 resize anchors (kdzpBorderTbox band)
-      ctx.strokeStyle = textbox.fStory ? '#000' : '#ff0'; ctx.lineWidth = 1; // FrameRcApt: kacrBlack story / kacrYellow credits
+    if (sel && sel.chrome === textbox) { // chrome selection: frame + 8 resize anchors on the border band
+      ctx.strokeStyle = textbox.fStory ? '#000' : '#ff0'; ctx.lineWidth = 1; // black frame for story, yellow for credits
       ctx.strokeRect(l + 0.5, t + 0.5, w - 1, h - 1);
       const hs = K_BORDER;
       ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000';

@@ -34,7 +34,10 @@ await expansionPacks.applyAll();
 movieDocument.newMovie(); // empty doc so the view has a appState.moviePlayer before the first message
 
 const qs = new URLSearchParams(location.search);
-/** @param {{url: string, scene?: number, frame?: number, play?: boolean}} m */
+/** Load a movie by URL into the receiver — called for CAF 'movie' messages and
+ *  the ?3mm= standalone test param. `scene`/`frame` position the playhead,
+ *  `play` starts playback; errors land on the view's status line.
+ *  @param {{url: string, scene?: number, frame?: number, play?: boolean}} m */
 async function loadMovie(m) {
   const { url, scene, frame, play } = m;
   const err = await movieDocument.openMovieUrl(url, false); // receiver docs aren't autosaved locally

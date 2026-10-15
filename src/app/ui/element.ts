@@ -1,5 +1,9 @@
 // Retained-mode element tree for the 640x480 canvas UI.
 // Coordinate space is always virtual 640x480 pixels — no units, no %.
+/** Canvas-UI element — the base unit of the retained tree. Position/size in
+ *  virtual pixels; `add`/`remove` manage children, `dirty`/`invalidate` mark
+ *  repaint rects, `hitTest` finds the deepest pickable element, `draw(ctx)`
+ *  paints in local space, and the on* pointer hooks drive interaction. */
 export class Element {
   // The codebase hangs transient fields off elements (faces, hit state,
   // view refs) — formalized as an index signature until the subclasses
@@ -22,11 +26,16 @@ export class Element {
   /** Owning UiRoot — setter propagates to the whole subtree so dirty() works
    *  on elements added before the view was attached to the root. */
   set root(v) { this._uiRoot = v; for (const c of this.children) c.root = v; }
+  /** The owning UiRoot (null while detached). */
   get root() { return this._uiRoot; }
 
+  /** Attach a child — inherits the root so dirty() works pre-mount. */
   add(el) { el.parent = this; el.root = this.root; this.children.push(el); return el; }
+  /** Detach a child. */
   remove(el) { const i = this.children.indexOf(el); if (i >= 0) { el.parent = el.root = null; this.children.splice(i, 1); } return el; }
+  /** Detach all children. */
   clear() { for (const c of this.children) { c.parent = c.root = null; } this.children.length = 0; }
+  /** Point-in-rect test in parent space. */
   contains(px, py) { return px >= this.x && py >= this.y && px < this.x + this.w && py < this.y + this.h; }
 
   /** Deepest visible pickable element under (px,py), coords in this element's
@@ -76,10 +85,10 @@ export class Element {
   abs() { let x = this.x, y = this.y, p = this.parent; while (p) { x += p.x; y += p.y; p = p.parent; } return [x, y]; }
 
   // Pointer event hooks — subclass overrides. Returning true stops propagation.
-  onPointerDown(e) {} // eslint-disable-line no-unused-vars
-  onPointerMove(e) {} // eslint-disable-line no-unused-vars
-  onPointerUp(e) {} // eslint-disable-line no-unused-vars
-  onPointerEnter() {}
-  onPointerLeave() {}
-  onClick(e) {} // eslint-disable-line no-unused-vars
+  /** Pointer pressed inside the element's rect. */ onPointerDown(e) {} // eslint-disable-line no-unused-vars
+  /** Pointer moved while captured/hovering. */   onPointerMove(e) {} // eslint-disable-line no-unused-vars
+  /** Pointer released. */                        onPointerUp(e) {} // eslint-disable-line no-unused-vars
+  /** Pointer entered the rect. */                onPointerEnter() {}
+  /** Pointer left the rect. */                   onPointerLeave() {}
+  /** A completed press (down+up) on the element. */ onClick(e) {} // eslint-disable-line no-unused-vars
 }

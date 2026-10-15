@@ -1,4 +1,4 @@
-// Browser audio playback for 3DMM movie sounds (Web Audio).
+// Browser audio playback for movie sounds (Web Audio).
 // MSND chunks hold a WAVE kid (raw .wav bytes) or a MIDS kid (MIDI event
 // stream — rendered through an SF2/DLS soundfont when one is available,
 // with a small oscillator synth as fallback).
@@ -6,7 +6,8 @@ import { STY } from '../format/content.ts';
 import { decodeWavAdpcm } from '../format/wav.ts';
 import { parseMids } from '../format/mids.ts';
 
-// rough GM program -> [wave, attack, sustain, release] for the MIDS preview synth
+/** Rough General-MIDI program -> [wave, attack, sustain, release] table for
+ *  the oscillator fallback synth used when no soundfont is available. */
 const _gm = (p) =>
   p < 8 ? ['triangle', 0.005, 0.35, 0.15] :  // piano family — percussive
   p < 16 ? ['triangle', 0.01, 0.4, 0.1] :    // chromatic percussion
@@ -25,6 +26,10 @@ const _gm = (p) =>
   p < 120 ? ['triangle', 0.005, 0.4, 0.1] :  // percussive
   ['sine', 0.02, 0.5, 0.1];                  // sfx
 
+/** Movie sound output — a per-class channel map (actor/scene + style) fed by
+ *  decoded MSND buffers, with queueing, looping, preview, and a master volume.
+ *  `play(ev)` handles playback events; `preview(it)` backs the sound browsers;
+ *  `stopAll`/`stopLoops`/`setMuted`/`suspend` are the transport controls. */
 export class SoundQueue {
   [k: string]: any; // transient fields — real declarations can replace incrementally
   constructor(contentLibrary) {
@@ -55,10 +60,13 @@ export class SoundQueue {
     if (this.master) this.master.gain.value = this.volume;
   }
 
+  /** Log a sound problem once per distinct message. */
   _warn(msg) {
     if (!this.warnings.includes(msg)) { this.warnings.push(msg); console.warn('[sound]', msg); }
   }
 
+  /** Decode-and-cache an MSND's audio — WAVE kid via ADPCM/PCM decode,
+   *  MIDS kid via the MIDI path. Resolves to null when there's no audio. */
   _buffer(msnd) {
     const key = `${msnd.chunkyFile.name}:${msnd.cno}`;
     if (!this.buffers.has(key)) {
@@ -74,10 +82,9 @@ export class SoundQueue {
     return this.buffers.get(key);
   }
 
-  // The original played MIDI through the OS GM wavetable (gm.dls). We render
-  // the same event stream through a real SF2/SF3/DLS bank via spessasynth_core
-  // — bank lookup: ?sf=<url>, then data/gm.dls, data/soundfont.{dls,sf3,sf2}
-  // under the app base. null when nothing loads -> _oscBuffer fallback.
+  /** Lazily load the MIDI bank — ?sf=<url> first, then gm.dls / soundfont.{dls,
+   *  sf3, sf2} under the app base. Resolves null when nothing loads (the
+   *  oscillator fallback then handles MIDI). */
   _sfBank() {
     if (this._bankP === undefined) {
       this._bankP = (async () => {
@@ -100,7 +107,8 @@ export class SoundQueue {
     return this._bankP;
   }
 
-  // Run parsed MIDS events through the soundfont into an AudioBuffer (or null).
+  /** Render parsed MIDS events through the soundfont into an AudioBuffer,
+   *  or null when no bank is loaded. */
   async _sfBuffer(evs) {
     const bank = await this._sfBank();
     if (!bank || !evs.length) return null;
@@ -133,7 +141,8 @@ export class SoundQueue {
     return buf;
   }
 
-  // User-imported .mid files are SMF, not MIDS — render via the sequencer.
+  /** Render user-imported standard .mid (SMF) bytes through the soundfont —
+   *  SMF files go through the sequencer rather than the raw-event path. */
   async _sfSmfBuffer(bytes) {
     const bank = await this._sfBank();
     if (!bank) return null;
@@ -154,10 +163,12 @@ export class SoundQueue {
     return buf;
   }
 
-  // Render a MIDS event stream to an AudioBuffer with a small GM-ish synth.
+  /** Render an MSND's MIDS chunk to an AudioBuffer — SMF payloads go through
+   *  the sequencer path, raw MIDS events through the soundfont, falling back
+   *  to the oscillator synth when no bank loaded. */
   async _midiBuffer(msnd) {
     const data = msnd.chunkyFile.data('MIDS', msnd.midiCno);
-    const smf = data[0] === 0x4d && data[1] === 0x54 && data[2] === 0x68 && data[3] === 0x64; // 'MThd'
+    const smf = data[0] === 0x4d && data[1] === 0x54 && data[2] === 0x68 && data[3] === 0x64; // 'MThd' magic — an embedded standard MIDI file
     if (smf) return this._sfSmfBuffer(data);
     const evs = parseMids(data);
     if (!evs.length) return null;
@@ -167,7 +178,8 @@ export class SoundQueue {
     return this._oscBuffer(evs);
   }
 
-  // Fallback when no soundfont is present: the rough oscillator preview.
+  /** Fallback MIDI render when no soundfont is present — a rough per-program
+   *  oscillator synth producing stereo output through an OfflineAudioContext. */
   _oscBuffer(evs) {
     const dur = evs[evs.length - 1].ts / 1000 + 1.5;
     const oc = new OfflineAudioContext(2, Math.ceil(dur * 44100), 44100);
@@ -211,6 +223,8 @@ export class SoundQueue {
     return oc.startRendering();
   }
 
+  /** Decode raw .wav bytes — the custom ADPCM decoder first, then the
+   *  browser's decodeAudioData for plain PCM. */
   async _decode(data) {
     const pcm = decodeWavAdpcm(data);
     if (pcm) {
@@ -293,7 +307,7 @@ export class SoundQueue {
     for (const t of tags) {
       const tag = t.tag || t;
       let buf = null, isMidi = false, vlm0 = 1;
-      if (tag.sid === 'usr') { // user-imported/recorded — no MSND chunk to fetch
+      if (tag.sid === 'usr') { // user-imported/recorded sound — resolved via the userSnd callback, not MSND
         const u = await this.userSnd?.(tag.cno);
         if (!u?.buf) { this._warn(`missing user sound ${tag.cno}`); continue; }
         buf = u.buf; isMidi = !!u.midi;
@@ -306,17 +320,20 @@ export class SoundQueue {
       }
       const vlm = Math.max(0, Math.min(1, (d.vlm || 1) * vlm0));
       const key = this._key(ev, sty);
-      // motion-match re-enqueue is low-priority: skip while this exact sound still
-      // plays on the channel (it re-fires when the cel comes around after it ends)
+      // Motion-match re-enqueue is low-priority: skip while this exact sound
+      // still plays on the channel (it re-fires when the cel comes around)
       if (d.mm) { const ch = this.channels.get(key); if (ch?.current && ch.curCno === tag.cno) continue; }
       this._enqueue(key, buf, vlm, d.fLoop || isMidi, i > 0 || d.fQueue, tag.cno);
       i++;
     }
   }
 
-  // Sound "class": actor sounds queue on (arid, sty), scene sounds on (0, sty)
+  /** Channel key for a sound event — actor sounds queue per (arid, style),
+   *  scene sounds per (0, style). */
   _key(ev, sty) { return `${ev.scope === 'actor' ? `a${ev.arid}` : 's'}:${sty ?? 0}`; }
 
+  /** Queue a decoded buffer on a channel — `queued` appends behind the current
+   *  source, otherwise it preempts (clearing the queue). */
   _enqueue(key, buf, vlm, loop, queued, cno = 0) {
     let ch = this.channels.get(key);
     if (!ch) this.channels.set(key, (ch = { current: null, queue: [] }));
@@ -326,6 +343,8 @@ export class SoundQueue {
     this._start(key, ch, { buf, vlm, loop, cno });
   }
 
+  /** Start a buffer source on a channel with its gain and loop flag; on end,
+   *  the channel advances to the next queued item. */
   _start(key, ch, item) {
     const src = this.ctx.createBufferSource();
     src.buffer = item.buf;

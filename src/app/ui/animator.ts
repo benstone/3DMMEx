@@ -1,5 +1,6 @@
 // Animator — tween manager driven by UiRoot's RAF. Supports view transitions
 // (animate-in/out) and element property tweens (tooltips, easels, buttons).
+/** Easing functions for tweens. */
 export const EASE = {
   linear: (t) => t,
   out: (t) => 1 - (1 - t) * (1 - t),          // easeOutQuad
@@ -7,6 +8,9 @@ export const EASE = {
   inout: (t) => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2),
 };
 
+/** Tween manager — `add`/`tween` queue jobs, `tick(now)` advances them
+ *  (called by UiRoot's RAF), `cancel` drops one. `onTick` is the owner's
+ *  redraw callback. */
 export class Animator {
   onTick: (() => void) | null;
   jobs = new Set<any>();
@@ -17,6 +21,7 @@ export class Animator {
    * @param {{dur: number, ease?: (t: number) => number, fn: (t: number) => void, done?: () => void, t0?: number}} job
    */
   add(job) { job.t0 = performance.now(); job.ease ??= EASE.out; this.jobs.add(job); this.onTick?.(); return job; }
+  /** Drop a queued/running tween. */
   cancel(job) { this.jobs.delete(job); }
 
   /**
@@ -34,6 +39,7 @@ export class Animator {
     });
   }
 
+  /** Advance every job — calls each fn(eased t), then done() at t=1. */
   tick(now) {
     if (!this.jobs.size) return;
     for (const j of [...this.jobs]) {
@@ -42,5 +48,6 @@ export class Animator {
       if (t >= 1) { this.jobs.delete(j); j.done?.(); }
     }
   }
+  /** Any jobs queued? UiRoot skips its RAF when nothing's moving. */
   get active() { return this.jobs.size > 0; }
 }
