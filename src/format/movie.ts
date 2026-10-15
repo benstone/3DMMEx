@@ -195,7 +195,7 @@ function aevData(e, tagFor) {
   switch (e.aet) {
     case AET.Add: xyz(d); w.bra(d.xa).bra(d.ya).bra(d.za); break;
     case AET.Actn: w.i32(d.anid).i32(d.celn); break;
-    case AET.Cost: w.i32(d.ibset).i32(d.cmid).i32(d.fCmtl ? 1 : 0).tag(tagFor(d.tag).tag); break;
+    case AET.Cost: w.i32(d.ibset).i32(d.cmid).i32(d.fCmtl ? 1 : 0).tag(d.tag ? tagFor(d.tag).tag : { sid: -1, ctg: 'MTRL', cno: 0 }); break;
     case AET.RotF: case AET.RotH: for (const v of d) w.brs(v); break;
     case AET.Pull: case AET.Move: case AET.Tweak: xyz(d); break;
     case AET.Size: case AET.Step: w.brs(d); break;

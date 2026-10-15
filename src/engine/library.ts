@@ -64,6 +64,7 @@ export class Library {
 
   /** Locate the chunky file holding a tag's chunk — the movie file wins for sid 0. */
   resolve(tag) {
+    if (!tag) return null;
     if (tag.sid === 0 && this.movieFile?.has(tag.ctg, tag.cno)) return this.movieFile;
     for (const chunkyFile of this.content) if (chunkyFile.has(tag.ctg, tag.cno)) return chunkyFile;
     if (this.movieFile?.has(tag.ctg, tag.cno)) return this.movieFile;

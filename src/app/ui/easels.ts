@@ -35,6 +35,9 @@ import { uiSounds } from './uiSounds.ts';
 const SORTER_X = 20, SORTER_Y = 65;
 /** Transition button order -> movie transition ids (cut, dissolve, fade-black, fade-white). */
 const T4 = [0, 3, 1, 2];
+/** Scene-record -> rendered thumbnail canvas — a WeakMap so scene records stay
+ *  structuredClone-able (a canvas stored on the scene breaks scene chops). */
+const sceneThumbCache = new WeakMap();
 
 /** A sorter cell — frame + scene thumb + the 4 transition buttons. */
 class SorterCell extends Element {
@@ -121,11 +124,12 @@ export class SorterEasel extends EaselView {
   }
 
   /** A scene's 143x80 thumbnail canvas — the stored THUM bitmap, else a live
-   *  render of the scene's first frame, else a name placeholder; cached on
-   *  the scene record. */
+   *  render of the scene's first frame, else a name placeholder; cached in a
+   *  WeakMap (a canvas on the scene record would break structuredClone). */
   thumbCv(scene) {
-    if (!scene._tcv) {
-      const c = offscreenCanvas(143, 80);
+    let c = sceneThumbCache.get(scene);
+    if (!c) {
+      c = offscreenCanvas(143, 80);
       const x = c.getContext('2d');
       if (scene.thumb) { try { x.drawImage(thumbnails.mbmpToCanvas(parseMbmp(scene.thumb), 143, 80), 0, 0); } catch { x.fillStyle = '#111'; x.fillRect(0, 0, 143, 80); } }
       else { // no stored thumbnail — render the scene's first frame
@@ -137,9 +141,9 @@ export class SorterEasel extends EaselView {
           x.fillText((scene.name || 'scene').slice(0, 20), 71, 40);
         }
       }
-      scene._tcv = c;
+      sceneThumbCache.set(scene, c);
     }
-    return scene._tcv;
+    return c;
   }
 
   /** Render `scene`'s first frame offscreen through a throwaway MoviePlayer
@@ -384,7 +388,7 @@ export class ListenerEasel extends EaselView {
     this.a = a;
     const s = appState.moviePlayer.scene;
     const evs0 = a ? structuredClone(a.data.events) : structuredClone(s.frameEvents);
-    modalSlot.cleanup = () => this.restore(evs0); // Esc/cancel restores the snapshot
+    this.onModalClose = () => this.restore(evs0); // Esc/cancel restores the snapshot
     const X = a ? 182 : 116, Y = 100; // panel origin
     this.makeImage(a ? 'e4parmm' : 'e4par', X, Y, a ? 277 : 408, 236);
     // columns: sty, slider left/right, icon x, nuke x, name-plate x
@@ -393,7 +397,7 @@ export class ListenerEasel extends EaselView {
       : [[STY.Sfx, 70, 120, 13, 101, 12], [STY.Speech, 201, 251, 144, 232, 143], [STY.Midi, 332, 382, 275, 363, 274]];
     for (const [sty, sl, sr, ix, nx, ex] of cols) this.buildCol(sty, X, Y, sl, sr, ix, nx, ex);
     this.makeButton('e4can', 'e4canc', X + (a ? 149 : 280), Y + 183, 50, 48, () => modalSlot.close());
-    this.makeButton('e4okay', 'e4okayc', X + (a ? 199 : 330), Y + 183, 50, 48, () => { modalSlot.cleanup = null; modalSlot.close(); });
+    this.makeButton('e4okay', 'e4okayc', X + (a ? 199 : 330), Y + 183, 50, 48, () => { this.onModalClose = null; modalSlot.close(); });
   }
 
   /** Put the open-time event snapshot back — Cancel/Esc path. */
@@ -510,7 +514,7 @@ export class SpletterEasel extends EaselView {
     this.nameInput.maxLength = 50; this.nameInput.value = this.state.text; this.nameInput.placeholder = 'type 3D text';
     // preview: a live Actor over a freshly built template
     const previewRenderer = this.previewRenderer = new THREE.WebGLRenderer({ canvas: pv });
-    modalSlot.cleanup = () => previewRenderer.dispose();
+    this.onModalClose = () => previewRenderer.dispose();
     this.previewScene = new THREE.Scene();
     this.previewCamera = new THREE.PerspectiveCamera(25, 492 / 238, 0.1, 10000);
     this.previewActor = null; this.meshes = [];
@@ -752,7 +756,7 @@ export class ActionBrowser extends EaselView {
       this.add(b); this.cells.push(b);
     }
     this.cycleTimer = setInterval(() => { if (this.cycling) { this.celn = (this.celn + 1) % this.ccel; this.pose(); } }, 1000 / FPS); // the preview cycles cels
-    modalSlot.cleanup = () => { clearInterval(this.cycleTimer); previewRenderer.dispose(); };
+    this.onModalClose = () => { clearInterval(this.cycleTimer); previewRenderer.dispose(); };
     this.makeButton('fwd', 'fwdc', X + 204, Y + 320, 59, 46, () => { this.pageIndex = Math.min(this.pageCount() - 1, this.pageIndex + 1); this.render(); }).clickSound = 'pagedn';
     this.makeButton('bback', 'bbackc', X + 54, Y + 320, 59, 46, () => { this.pageIndex = Math.max(0, this.pageIndex - 1); this.render(); }).clickSound = 'pageup';
     this.makeButton('b5celbk', 'b5celbks', X + 447, Y + 290, 27, 16, () => this.step(-1)).clickSound = 'systepb';
@@ -882,7 +886,7 @@ export class CostumeEasel extends EaselView {
     this.accessoriesMode = false; // costumes vs accessories mode
     this.ray = new THREE.Raycaster(); this.ndc = new THREE.Vector2();
     this.previewElement.onPointerDown = (e) => this.pickPart(e); // click a body part for its next costume
-    modalSlot.cleanup = () => previewRenderer.dispose();
+    this.onModalClose = () => previewRenderer.dispose();
     this.costB = new CostumeModeButton('e2cost', 'e2costs', 134, false, this);
     this.accB = new CostumeModeButton('e2acc', 'e2accs', 218, true, this);
     this.costB.clickSound = 'costume'; this.accB.clickSound = 'acesory';

@@ -138,24 +138,56 @@ export class SoundEdits {
     }
   } else {
     after.nfrmFirst = f;
+    after.thumb = null; // the stored thumbnail shows the old first frame — let the sorter re-render
     const hasSev = (l, c) => l.some((e) => e.sevt === SEVT.AddActr && e.data === c);
-    const present = new Set([...appState.moviePlayer.actors].filter(([, a]) => a.onStage).map(([c]) => c));
-    const reAdd = new Set([...after.actors.keys()].filter((c) => present.has(c) && !hasSev(after.startEvents, c)));
+    // preserve the background + camera live at the chop frame — the original
+    // keeps the current background and the most recent camera change; without
+    // this the chopped scene snaps back to camera 0 (or a missing background)
+    // and every actor looks deleted
+    const lastSev = (sevt) => {
+      let hit = null;
+      for (const e of after.startEvents) if (e.sevt === sevt) hit = e;
+      for (const e of after.frameEvents) if (e.sevt === sevt && e.nfrm <= f) hit = e;
+      return hit;
+    };
+    const bkgd = lastSev(SEVT.SetBkgd), cam = lastSev(SEVT.ChngCamera);
     after.frameEvents = after.frameEvents.filter((e) => e.nfrm >= f);
+    if (bkgd && !after.startEvents.includes(bkgd)) after.frameEvents.push({ sevt: SEVT.SetBkgd, nfrm: f, data: bkgd.data });
+    if (cam && !after.startEvents.includes(cam)) after.frameEvents.push({ sevt: SEVT.ChngCamera, nfrm: f, data: cam.data });
     for (const [c, a] of [...after.actors]) {
       if (a.nfrmLast < f) { after.actors.delete(c); continue; }
       a.nfrmFirst = Math.max(a.nfrmFirst, f);
-      a.events = a.events.filter((e) => e.nfrm > f);
-      const rt = appState.moviePlayer.actors.get(c), rot = s.actors.get(c).events.find((e) => e.aet === AET.Add)?.data || {};
-      if (rt?.onStage) { // collapse pre-current state into Add+Actn at f
-        const p0 = a.route[0] || { x: 0, y: 0, z: 0 }, su = rt.dxyzSubRte;
-        a.events.unshift(
-          { aet: AET.Add, nfrm: f, rtel: { irpt: 0, dwrOffset: 0, dnfrm: 0 },
-            data: { x: su.x + rt.xyz.x - p0.x, y: su.y + rt.xyz.y - p0.y, z: su.z + rt.xyz.z - p0.z, xa: rot.xa || 0, ya: rot.ya || 0, za: rot.za || 0 } },
-          { aet: AET.Actn, nfrm: f, rtel: { irpt: 0, dwrOffset: 0, dnfrm: 0 }, data: { anid: rt.anid || 0, celn: rt.celn || 0 } });
-      } else if (!a.events.length) after.actors.delete(c);
+      const rt = appState.moviePlayer.actors.get(c);
+      if (rt?.onStage) { // collapse pre-current state into events at f (like the original's back-chop)
+        const nrtel = { irpt: 0, dwrOffset: 0, dnfrm: 0 };
+        // rebase the route on the current interpolated point — the new first
+        // node keeps the leftover segment length; later events renumber
+        const irpt = Math.min(rt.rtel?.irpt || 0, a.route.length - 1);
+        const head = { x: rt.xyz.x, y: rt.xyz.y, z: rt.xyz.z, dwr: Math.max(0, (a.route[irpt]?.dwr || 0) - (rt.rtel?.dwrOffset || 0)) };
+        const rot = a.events.find((e) => e.aet === AET.Add)?.data || {};
+        const kept = a.events.filter((e) => e.nfrm > f);
+        // state events before f replay at f so costume/size/step/freeze survive;
+        // Add/Actn/Rem are re-synthesized, Snd/Move/Tweak/rotations are baked in
+        const moved = a.events.filter((e) => e.nfrm <= f && [AET.Cost, AET.Pull, AET.Size, AET.Step, AET.Freeze].includes(e.aet))
+          .map((e) => ({ ...e, nfrm: f, rtel: { ...nrtel } }));
+        a.route = [head, ...a.route.slice(irpt + 1)];
+        for (const e of kept) if (e.rtel) e.rtel = { ...e.rtel, irpt: Math.max(0, (e.rtel.irpt || 0) - irpt) };
+        a.events = [
+          { aet: AET.Add, nfrm: f, rtel: { ...nrtel }, data: { x: rt.dxyzSubRte.x, y: rt.dxyzSubRte.y, z: rt.dxyzSubRte.z, xa: rot.xa || 0, ya: rot.ya || 0, za: rot.za || 0 } },
+          ...moved,
+          ...(rt.xfrm ? [{ aet: rt.useCur ? AET.RotH : AET.RotF, nfrm: f, rtel: { ...nrtel }, data: (rt.useCur ? rt.xfrm.cur : rt.xfrm.fwd).slice() }] : []),
+          { aet: AET.Actn, nfrm: f, rtel: { ...nrtel }, data: { anid: rt.anid || 0, celn: rt.celn || 0 } },
+          ...kept];
+      } else {
+        a.events = a.events.filter((e) => e.nfrm >= f);
+        if (!a.events.length) after.actors.delete(c);
+      }
     }
-    for (const c of reAdd) if (after.actors.has(c) && !hasSev(after.frameEvents, c)) after.frameEvents.push({ sevt: SEVT.AddActr, nfrm: f, data: c });
+    // every surviving actor needs an AddActr — the original keeps actors in
+    // the scene list through a chop, so one that re-Adds later must stay present
+    for (const c of after.actors.keys())
+      if (!hasSev(after.startEvents, c) && !hasSev(after.frameEvents, c))
+        after.frameEvents.push({ sevt: SEVT.AddActr, nfrm: f, data: c });
     for (const [c, t] of [...after.textboxes]) { // visible textboxes get their start shifted to cur
       if (t.nfrmMax <= f) { after.textboxes.delete(c); continue; }
       if (t.nfrmFirst < f) { t.nfrmFirst = f; if (!after.frameEvents.some((e) => e.sevt === SEVT.AddTbox && e.data === c)) after.frameEvents.push({ sevt: SEVT.AddTbox, nfrm: f, data: c }); }
