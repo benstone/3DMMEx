@@ -649,10 +649,12 @@ export class StudioView extends View {
   appState.soundQueue.setVolume(parseFloat(localStorage.getItem('vol3dmm') || '1'));
   (V as any)._stSliders = stSliders;
   const ACTIONS = {
-    frmRWEnd: () => { if (!appState.moviePlayer.scene) return; uiSounds.play('gofrstf'); playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmFirst); playbackLoop.drawFrame(); },
-    frmRW: () => { if (!appState.moviePlayer.scene) return; uiSounds.play('goprevf'); playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.frame - 1); playbackLoop.drawFrame(); },
-    frmFW: () => { if (!appState.moviePlayer.scene) return; uiSounds.play('gonextf'); playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.frame + 1); playbackLoop.drawFrame(); },
-    frmFWEnd: () => { if (!appState.moviePlayer.scene) return; uiSounds.play('golastf'); playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmLast); playbackLoop.drawFrame(); },
+    // the sound rides the click, not the outcome — the original binds the go*f
+    // waves to krepClicked / the step command, so a sceneless click still ticks
+    frmRWEnd: () => { uiSounds.play('gofrstf'); if (!appState.moviePlayer.scene) return; playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmFirst); playbackLoop.drawFrame(); },
+    frmRW: () => { uiSounds.play('goprevf'); if (!appState.moviePlayer.scene) return; playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.frame - 1); playbackLoop.drawFrame(); },
+    frmFW: () => { uiSounds.play('gonextf'); if (!appState.moviePlayer.scene) return; playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.frame + 1); playbackLoop.drawFrame(); },
+    frmFWEnd: () => { uiSounds.play('golastf'); if (!appState.moviePlayer.scene) return; playbackLoop.setPlaying(false); appState.moviePlayer.gotoFrame(appState.moviePlayer.scene.nfrmLast); playbackLoop.drawFrame(); },
     scnRWEnd: () => { uiSounds.play('gofrsts'); playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(0); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
     scnRW: () => { uiSounds.play('goprevs'); playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(Math.max(0, appState.moviePlayer.sceneIndex - 1)); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
     scnFW: () => { uiSounds.play('gonexts'); playbackLoop.setPlaying(false); appState.moviePlayer.loadScene(Math.min(appState.moviePlayer.movie.scenes.length - 1, appState.moviePlayer.sceneIndex + 1)); appState.setSelectedTextboxId(-1); appState.setFocusedTextboxId(-1); appState.setTextboxSelection(null); appState.setTextboxAttachment(null); appState.textboxSelections.clear(); playbackLoop.drawFrame(); },
@@ -668,6 +670,19 @@ export class StudioView extends View {
     const b = new StudioButton(up, dn, x, y, w, h, ACTIONS[id] ? () => ACTIONS[id]() : null, TIP_IDS.has(id) ? id : null);
     b.syncFace = () => { b.faceOverride = null; b.dirty(); };
     V.add(b); namedElements['stb_' + id] = b;
+  }
+  { // the frame/scene STEP buttons are the original's BUTTONHOLDGOB — they
+    // fire on press and auto-repeat while held (each invoke sounds + steps);
+    // the END buttons stay click-once
+    for (const id of ['frmRW', 'frmFW', 'scnRW', 'scnFW']) {
+      const b = namedElements['stb_' + id];
+      const down = b.onPointerDown.bind(b), up = b.onPointerUp.bind(b), leave = b.onPointerLeave.bind(b);
+      let tm: any = 0;
+      b.onPointerDown = () => { down(); if (b.enabled) { ACTIONS[id](); tm = setInterval(() => ACTIONS[id](), 140); } };
+      b.onPointerUp = () => { clearInterval(tm); tm = 0; up(); };
+      b.onPointerLeave = () => { if (tm) { clearInterval(tm); tm = 0; } leave(); };
+      b.onClick = () => {}; // the press already invoked — no second fire on release
+    }
   }
   { // undo uses state faces (undo/undos=redo/undod), not the generic up/down pair
     const b = namedElements.stb_undo;
