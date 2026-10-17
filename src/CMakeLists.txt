@@ -437,6 +437,15 @@ if (APPLE)
         message("Using ad-hoc signing for bundle")
     endif()
 
+    # Add brotli to the search path as it's required by the latest freetype
+    # TODO: remove if fontconfig is replaced
+    find_library(BROTLICOMMON_LIBRARY brotlicommon)
+    set(bundle_search_paths "${DOWNLOADED_FRAMEWORKS_PATH}")
+    if (BROTLICOMMON_LIBRARY)
+        get_filename_component(brotli_lib_path "${BROTLICOMMON_LIBRARY}" DIRECTORY)
+        list(APPEND bundle_search_paths "${brotli_lib_path}")
+    endif()
+
     install(CODE "
         include(BundleUtilities)
 
@@ -444,7 +453,7 @@ if (APPLE)
         fixup_bundle(
             \"\${install_prefix}/3D Movie Maker.app\"
             \"\"
-            \"${DOWNLOADED_FRAMEWORKS_PATH}\"
+            \"${bundle_search_paths}\"
         )
 
         execute_process(
