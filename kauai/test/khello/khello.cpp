@@ -133,7 +133,7 @@ PCSZ mpfcustpsz[] = {
 };
 
 // Entrypoint
-void FrameMain(void)
+int32_t FrameMain(void)
 {
     // TODO: offscreen drawing is broken?
     bool fOffscreenDrawing = fFalse;
@@ -149,7 +149,7 @@ void FrameMain(void)
         grfApp |= fappOnscreen;
     }
 
-    vapp.Run(grfApp, fgobNil, kginDefault);
+    return vapp.Run(grfApp, fgobNil, kginDefault);
 }
 
 // Returns the name of the application

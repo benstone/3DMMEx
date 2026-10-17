@@ -42,6 +42,5 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
 #endif // UNICODE
 #endif // _MSC_VER
 
-    FrameMain();
-    return 0;
+    return FrameMain();
 }

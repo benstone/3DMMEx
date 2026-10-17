@@ -98,9 +98,9 @@ RTCLASS(APP)
 /***************************************************************************
     Main for a frame app.
 ***************************************************************************/
-void FrameMain(void)
+int32_t FrameMain(void)
 {
-    vapp.Run(fappNil, fgobNil, kginDefault);
+    return vapp.Run(fappNil, fgobNil, kginDefault);
 }
 
 /***************************************************************************

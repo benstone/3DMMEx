@@ -44,9 +44,9 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
 #endif // UNICODE
 #endif // _MSC_VER
 
-    FrameMain();
+    int32_t lwExitCode = FrameMain();
     SDL_Quit();
-    return 0;
+    return lwExitCode;
 }
 
 #else // !WIN32
@@ -61,9 +61,9 @@ int main(int argc, char *argv[])
     APPB::CreateConsole();
 #endif
     vpappb->SetArgv(argv, argc);
-    FrameMain();
+    int32_t lwExitCode = FrameMain();
     SDL_Quit();
-    return 0;
+    return lwExitCode;
 }
 
 #endif // WIN32

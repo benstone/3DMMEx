@@ -91,10 +91,10 @@ RTCLASS(KWA)
 /***************************************************************************
     Entry point for a Kauai-based app.
 ***************************************************************************/
-void FrameMain(void)
+int32_t FrameMain(void)
 {
     Debug(vcactAV = 2;) // Speeds up the debug build
-        vapp.Run(fappOffscreen, fgobNil, kginMark);
+        return vapp.Run(fappOffscreen, fgobNil, kginMark);
 }
 
 /******************************************************************************
@@ -108,8 +108,10 @@ void FrameMain(void)
         long ginDef  -- default GOB invalidation
 
 ************************************************************ PETED ***********/
-void APP::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
+int32_t APP::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
 {
+    int32_t lwExitCode = 1;
+
     /* Don't bother w/ AssertThis; we'd have to use AssertBaseThis, or
         possibly the parent's AssertValid, which gets done almost right
         away anyway */
@@ -127,24 +129,27 @@ void APP::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
 #ifdef WIN
     __try
     {
-        APP_PAR::Run(grfapp, grfgob, ginDef);
+        lwExitCode = APP_PAR::Run(grfapp, grfgob, ginDef);
     }
     __except (UnhandledExceptionFilter(GetExceptionInformation()))
 #else
     try
     {
-        APP_PAR::Run(grfapp, grfgob, ginDef);
+        lwExitCode = APP_PAR::Run(grfapp, grfgob, ginDef);
     }
     catch (...)
 #endif
     {
         PDLG pdlg;
 
-        pdlg = DLG::PdlgNew(dlidAbnormalExit, pvNil, pvNil);
-        if (pdlg != pvNil)
+        if (!_fUnattended)
         {
-            pdlg->IditDo();
-            ReleasePpo(&pdlg);
+            pdlg = DLG::PdlgNew(dlidAbnormalExit, pvNil, pvNil);
+            if (pdlg != pvNil)
+            {
+                pdlg->IditDo();
+                ReleasePpo(&pdlg);
+            }
         }
 
         _fQuit = fTrue;
@@ -154,6 +159,8 @@ void APP::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
 #endif // WIN
         _CleanUp();
     }
+
+    return lwExitCode;
 }
 
 /***************************************************************************

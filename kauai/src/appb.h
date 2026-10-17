@@ -159,6 +159,7 @@ class APPB : public APPB_PAR
 
     PSZ *_rgpszArgv = pvNil; // Command-line arguments
     int32_t _cpszArgv = 0;   // Number of command-line arguments
+    int32_t _lwExitCode = 0; // Process exit code
 
     // initialization, running and clean up
     virtual bool _FInit(uint32_t grfapp, uint32_t grfgob, int32_t ginDef);
@@ -247,11 +248,12 @@ class APPB : public APPB_PAR
     }
 
     // initialization, running and quitting
-    virtual void Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef);
+    virtual int32_t Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef);
     virtual void Quit(bool fForce);
     virtual void Abort(void);
     virtual void TopOfLoop(void);
     void SetArgv(PSZ *rgpszArgv, int32_t cpszArgv);
+    void SetExitCode(int32_t lwExitCode);
     bool FSetWindowIcon(const uint8_t *prgb, int32_t cb);
 
     // look for the next key event in the system event queue
@@ -361,7 +363,7 @@ extern PCEX vpcex;
 extern PSNDM vpsndm;
 
 // main entry point for the client app
-void FrameMain(void);
+int32_t FrameMain(void);
 
 // alert button kinds
 enum

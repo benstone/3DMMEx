@@ -259,7 +259,7 @@ class APP : public APP_PAR
 #ifdef WIN
     virtual void UpdateHwnd(KWND hwnd, RC *prc, uint32_t grfapp = fappNil) override;
 #endif // WIN
-    virtual void Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef) override;
+    virtual int32_t Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef) override;
 #ifdef BUG1085
     virtual void HideCurs(void) override;
     virtual void ShowCurs(void) override;

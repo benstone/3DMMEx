@@ -61,7 +61,7 @@ APPB::~APPB(void)
 /***************************************************************************
     Calls _FInit and if successful, calls _Loop then _CleanUp.
 ***************************************************************************/
-void APPB::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
+int32_t APPB::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
 {
     AssertThis(0);
 
@@ -69,6 +69,7 @@ void APPB::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
         _Loop();
 
     _CleanUp();
+    return _lwExitCode;
 }
 
 /***************************************************************************
@@ -1539,6 +1540,16 @@ void APPB::SetArgv(PSZ *rgpszArgv, int32_t cpszArgv)
 
     _rgpszArgv = rgpszArgv;
     _cpszArgv = cpszArgv;
+}
+
+/***************************************************************************
+    Set exit code for app
+***************************************************************************/
+void APPB::SetExitCode(int32_t lwExitCode)
+{
+    AssertThis(0);
+
+    _lwExitCode = lwExitCode;
 }
 
 #ifdef DEBUG

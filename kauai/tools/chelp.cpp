@@ -39,11 +39,12 @@ PSPLC vpsplc;
 /***************************************************************************
     Main for a frame app.
 ***************************************************************************/
-void FrameMain(void)
+int32_t FrameMain(void)
 {
     vpstrg = &_strg;
-    vapp.Run(fappNil, fgobNil, kginDefault);
+    int32_t lwExitCode = vapp.Run(fappNil, fgobNil, kginDefault);
     ReleasePpo(&vpsplc);
+    return lwExitCode;
 }
 
 #ifdef DEBUG
