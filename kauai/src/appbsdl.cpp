@@ -617,10 +617,11 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
         OutputDebugString(stn2.Psz());
         OutputDebugString(PszLit("\n"));
     }
-#else  // !WIN
+#endif // WIN
+
     U8SZ u8szT;
     stn0.GetUtf8Sz(u8szT);
-    fprintf(stderr, "%s\n", u8szT);
+    fprintf(stderr, "Assertion Failed: %s\n", u8szT);
     if (stn1.Cch() > 0)
     {
         stn1.GetUtf8Sz(u8szT);
@@ -631,7 +632,12 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
         stn2.GetUtf8Sz(u8szT);
         fprintf(stderr, "%s\n", u8szT);
     }
-#endif // WIN
+    fflush(stderr);
+
+    if (_fUnattended)
+    {
+        abort();
+    }
 
     stn0.FAppendSz(PszLit("\n"));
     stn0.FAppendStn(&stn1);

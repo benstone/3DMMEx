@@ -991,6 +991,26 @@ bool APPB::FAssertProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg, void *pv,
         OutputDebugString(PszLit("\n"));
     }
 
+    U8SZ u8szT;
+    stn0.GetUtf8Sz(u8szT);
+    fprintf(stderr, "Assertion Failed: %s\n", u8szT);
+    if (stn1.Cch() > 0)
+    {
+        stn1.GetUtf8Sz(u8szT);
+        fprintf(stderr, "%s\n", u8szT);
+    }
+    if (stn2.Cch() > 0)
+    {
+        stn2.GetUtf8Sz(u8szT);
+        fprintf(stderr, "%s\n", u8szT);
+    }
+    fflush(stderr);
+
+    if (_fUnattended)
+    {
+        abort();
+    }
+
     if (std::this_thread::get_id() != vwig.tidMain)
     {
         // can't use a dialog - it may cause grid - lock

@@ -117,6 +117,7 @@ class APPB : public APPB_PAR
     bool _fForeground : 1;      // whether we're the foreground app
     bool _fEndModal : 1;        // set to end the topmost modal loop
     bool _fFlushCursor : 1;     // flush cursor events when setting cursor position
+    bool _fUnattended : 1;      // unattended testing mode
 
     PGL _pglmkrgn;           // list of marked regions for fast updating
     int32_t _onnDefFixed;    // default fixed pitch font
@@ -239,6 +240,10 @@ class APPB : public APPB_PAR
     bool FForeground(void)
     {
         return _fForeground;
+    }
+    bool FUnattended() const
+    {
+        return _fUnattended;
     }
 
     // initialization, running and quitting
