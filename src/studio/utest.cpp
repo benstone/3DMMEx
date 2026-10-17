@@ -2271,8 +2271,18 @@ void APP::_ParseCommandLine(void)
     {
         pch = _rgpszArgv[ipsz];
 
-        // Look for /options or -options
-        if (*pch == ChLit('/') || *pch == ChLit('-'))
+        // Look for /options or -options on Windows
+        // Or just -options on other systems
+        bool fIsOption = fFalse;
+        if (CchSz(pch) >= 2)
+        {
+            fIsOption = *pch == ChLit('-');
+#ifdef WIN32
+            fIsOption |= (*pch == ChLit('/'));
+#endif // WIN32
+        }
+
+        if (fIsOption)
         {
             switch (ChUpper(*(pch + 1)))
             {
