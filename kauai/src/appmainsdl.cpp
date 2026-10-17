@@ -30,6 +30,11 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
     APPB::CreateConsole();
 #endif
 
+#ifdef _MSC_VER
+    // Prevent the MSVC C runtime showing a dialog box on abort()
+    _set_abort_behavior(0, _WRITE_ABORT_MSG);
+#endif // _MSC_VER
+
     // Get argc/argv from MSVC CRT globals
 #ifdef _MSC_VER
 #ifdef UNICODE
