@@ -1183,7 +1183,3 @@ CHUNK (kcctgGst kcnoGstMisc "Miscellaneous strings")
 	ITEM "14" idsTboxDypFont
 	ITEM "10" idsMovieNameDypFont
 ENDCHUNK
-
-
-
-
