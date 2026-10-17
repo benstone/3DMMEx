@@ -19,6 +19,20 @@
   * New keyboard shortcuts for scrolling in browser dialogs
   * High-quality sound import
 
+## Getting Started
+
+Windows and macOS users can download a release from the [releases page](https://github.com/benstone/3DMMEx/releases). Unpack the ZIP file and run 3DMOVIE.EXE / 3D Movie Maker. Linux users can follow the build instructions below to compile from source.
+
+3DMMEx will default to running in full-screen mode. You can switch to windowed mode by pressing Alt-Enter.
+
+On Windows you can change application settings by pressing Ctrl-Shift-I to open the Product Information dialog box. There is no settings UI for Linux/macOS yet, so to change settings you will need to edit the configuration file and restart. This file is located in:
+
+* Windows: `%APPDATA%\3DMMEx\3dmovie.ini`
+* macOS: `~/Library/Application Support/3DMMEx/3dmovie.ini`
+* Linux: `${XDG_CONFIG_HOME}/3DMMEx/3dmovie.ini` or `~/.config/3DMMEx/3dmovie.ini`
+
+For help with making a movie, check out the Help Machine in the Studio or the tutorials in the Projects Room.
+
 ## Build
 
 ### Requirements
