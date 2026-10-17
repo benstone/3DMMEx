@@ -67,6 +67,12 @@ int32_t APPB::Run(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
 
     if (_FInit(grfapp, grfgob, ginDef))
         _Loop();
+    else
+    {
+        // Set the exit code if _FInit didn't already
+        if (_lwExitCode == 0)
+            SetExitCode(1);
+    }
 
     _CleanUp();
     return _lwExitCode;

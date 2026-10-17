@@ -3890,6 +3890,15 @@ void APP::DisplayErrors(void)
 
         vpers->Clear();
 
+        // If running in unattended mode, exit the app
+        if (_fUnattended)
+        {
+            fprintf(stderr, "Error erc=%d\n", erc);
+            SetExitCode(1);
+            Quit(fTrue);
+            return;
+        }
+
         //
         // Convert to help topic number
         //
