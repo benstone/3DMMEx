@@ -2307,6 +2307,11 @@ void APP::_ParseCommandLine(void)
                     _stnProductShort.SetRgch(pch, pchT - pch);
             }
             break;
+            case ChLit('A'): {
+                _fAutoPlay = fTrue;
+                _fUnattended = fTrue;
+            }
+            break;
             default:
                 Warn("Bad command-line switch");
                 break;
