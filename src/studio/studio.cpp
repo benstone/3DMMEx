@@ -1591,6 +1591,17 @@ void STDIO::PlayStopped(void)
     vpappb->FGetProp(kpridAutoPlay, &fAutoPlay);
     if (fAutoPlay)
     {
+        if (_pmvie->Iscen() != (_pmvie->Cscen() - 1))
+        {
+            Bug("Stopped before reaching last scene");
+            vpapp->SetExitCode(1);
+        }
+        else if (_pmvie->Pscen() != pvNil && _pmvie->Pscen()->Nfrm() != _pmvie->Pscen()->NfrmLast())
+        {
+            Bug("Stopped before reaching last frame");
+            vpapp->SetExitCode(1);
+        }
+
         vpapp->Quit(fTrue);
     }
 }
