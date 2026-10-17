@@ -2312,6 +2312,24 @@ void APP::_ParseCommandLine(void)
                 _fUnattended = fTrue;
             }
             break;
+            case ChLit('C'): {
+                // Set time scale, eg:
+                // -C100 = 100%
+                // -C200 = 200%
+
+                pch += 2;
+                pchT = pch;
+                _SkipToSpace(&pchT);
+                STN stnT;
+                stnT.SetRgch(pch, pchT - pch);
+                int32_t lwScale = 0;
+                if (stnT.FGetLw(&lwScale, 0))
+                {
+                    lwScale = LwMulDiv(lwScale, kluTimeScaleNormal, 100);
+                    vpusac->Scale(lwScale);
+                }
+            }
+            break;
             default:
                 Warn("Bad command-line switch");
                 break;
