@@ -1585,6 +1585,14 @@ void STDIO::PlayStopped(void)
     }
 
     vpappb->FSetProp(kpridToolTipDelay, _dtimToolTipDelay);
+
+    // If the autoplay mode is set, exit the app when the movie is stopped.
+    int32_t fAutoPlay = fFalse;
+    vpappb->FGetProp(kpridAutoPlay, &fAutoPlay);
+    if (fAutoPlay)
+    {
+        vpapp->Quit(fTrue);
+    }
 }
 
 /***************************************************************************

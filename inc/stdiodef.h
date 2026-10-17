@@ -908,6 +908,7 @@
 #define kcpridUserData 8
 
 #define kpridFirstTimeUser 0x23510
+#define kpridAutoPlay 0x23511
 
 #define kidStudioLim 0x23600
 

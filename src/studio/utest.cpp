@@ -470,6 +470,12 @@ bool APP::_FInit(uint32_t grfapp, uint32_t grfgob, int32_t ginDef)
             _fDontReportInitFailure = fTrue;
             goto LFail;
         }
+
+        if (_fAutoPlay)
+        {
+            AssertDo(FSetProp(kpridAutoPlay, 1), "Cannot set autoplay property");
+            vpcex->EnqueueCid(cidPlay, _pstdio);
+        }
     }
 
     EnsureInteractive();
@@ -3860,6 +3866,10 @@ bool APP::FInsertCD(PSTN pstnTitle)
 
     STN stnBackup;
     bool tRet;
+
+    // If in unattended mode, we cannot insert any CD
+    if (vapp._fUnattended)
+        return fFalse;
 
     stnBackup = PszLit("I can't find the CD '%s'  Please insert it.  Should I look again?");
     tRet = vpapp->TModal(vpapp->PcrmAll(), ktpcQueryCD, &stnBackup, bkYesNo, kstidQueryCD, pstnTitle);

@@ -134,7 +134,8 @@ class APP : public APP_PAR
         _fMainWindowCreated : 1, _fMinimized : 1,
         _fRunInWindow : 1, // run in a window (as opposed to fullscreen)
         _fFontError : 1,   // Have we already seen a font error?
-        _fInPortfolio : 1; // Is the portfolio active?
+        _fInPortfolio : 1, // Is the portfolio active?
+        _fAutoPlay : 1;    // Automatically play the movie and exit
     PCEX _pcex;            // Pointer to suspended cex.
     FNI _fniPortfolioDoc;  // document last opened in portfolio
     PMVIE _pmvieHandoff;   // Stores movie for studio to use
