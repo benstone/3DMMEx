@@ -1160,6 +1160,13 @@ bool APP::_FCantFindFileDialog(PSTN pstnFile)
 
     PDLG pdlg;
 
+    if (FUnattended())
+    {
+        U8SZ u8sz;
+        pstnFile->GetUtf8Sz(u8sz);
+        fprintf(stderr, "warning: could not find file: %s\n", u8sz);
+    }
+
     pdlg = DLG::PdlgNew(dlidCantFindFile, pvNil, pvNil);
     if (pvNil == pdlg)
         return fFalse;
