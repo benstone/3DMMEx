@@ -92,6 +92,56 @@ void APPB::Quit(bool fForce)
     }
 }
 
+/*
+ * Create debug console window and wire up std streams
+ */
+void APPB::CreateConsole()
+{
+    // This is only needed on Windows, but shared across GUI implementations
+#ifdef WIN32
+
+    // Check if the process's stdin/stdout/stderr are already redirected
+    bool fStdin = fFalse, fStdout = fFalse, fStderr = fFalse;
+    HANDLE hStream;
+    hStream = GetStdHandle(STD_INPUT_HANDLE);
+    if (hStream != NULL && hStream != INVALID_HANDLE_VALUE)
+        fStdin = fTrue;
+
+    hStream = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hStream != NULL && hStream != INVALID_HANDLE_VALUE)
+        fStdout = fTrue;
+
+    hStream = GetStdHandle(STD_ERROR_HANDLE);
+    if (hStream != NULL && hStream != INVALID_HANDLE_VALUE)
+        fStderr = fTrue;
+
+    // If any are not redirected, we need a console
+    bool fHasConsole = fFalse;
+    if (!fStdin || !fStdout || !fStderr)
+    {
+        fHasConsole = AttachConsole(ATTACH_PARENT_PROCESS);
+
+        // Only create a new console in debug builds
+        if (!fHasConsole)
+        {
+            Debug(fHasConsole = AllocConsole());
+        }
+    }
+
+    // Reopen stdin/stdout/stderr if we changed the console
+    FILE *fDummy;
+    if (fHasConsole)
+    {
+        if (!fStdout)
+            freopen_s(&fDummy, "CONOUT$", "w", stdout);
+        if (!fStderr)
+            freopen_s(&fDummy, "CONOUT$", "w", stderr);
+        if (!fStdin)
+            freopen_s(&fDummy, "CONIN$", "r", stdin);
+    }
+#endif // WIN32
+}
+
 /***************************************************************************
     Return a default app name.
 ***************************************************************************/

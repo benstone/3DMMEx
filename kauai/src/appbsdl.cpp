@@ -6,7 +6,6 @@
     SDL base application class.
 
 ***************************************************************************/
-#include <iostream>
 #include "frame.h"
 #include "fcntl.h"
 #include "stdio.h"
@@ -36,29 +35,6 @@ typedef struct SDL_Event_KauaiCmd_t
     CMD cmd;
 } SDL_Event_KauaiCmd;
 static_assert(SIZEOF(SDL_Event_KauaiCmd) < SIZEOF(SDL_Event), "Event extension does not fit in SDL_Event");
-
-/*
- * Create debug console window and wire up std streams
- */
-void APPB::CreateConsole()
-{
-    // This is only needed on Windows
-#ifdef WIN32
-    if (!AllocConsole())
-    {
-        return;
-    }
-
-    FILE *fDummy;
-    freopen_s(&fDummy, "CONOUT$", "w", stdout);
-    freopen_s(&fDummy, "CONOUT$", "w", stderr);
-    freopen_s(&fDummy, "CONIN$", "r", stdin);
-#endif // WIN32
-    std::cout.clear();
-    std::clog.clear();
-    std::cerr.clear();
-    std::cin.clear();
-}
 
 /***************************************************************************
     Shutdown immediately.

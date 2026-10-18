@@ -24,9 +24,7 @@ int WINAPI WinMain(HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR pszs, int wShow)
     vwig.pszCmdLine = GetCommandLine();
     vwig.wShow = wShow;
     vwig.tidMain = std::this_thread::get_id();
-#ifdef DEBUG
     APPB::CreateConsole();
-#endif
 
 #ifdef _MSC_VER
     // Prevent the MSVC C runtime showing a dialog box on abort()
