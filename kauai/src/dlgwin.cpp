@@ -382,6 +382,12 @@ int32_t DLG::IditDo(int32_t iditFocus)
     int32_t idit;
     DLGI dlgi;
 
+    if (vpappb != pvNil && vpappb->FUnattended())
+    {
+        fprintf(stderr, "warning: suppressing dialog box in unattended mode. _rid=%d\n", _rid);
+        return ivNil;
+    }
+
     dlgi.pdlg = this;
     dlgi.iditFocus = iditFocus;
     idit = DialogBoxParam(vwig.hinst, MIR(_rid), vwig.hwndApp, &_FDlgCore, (LPARAM)&dlgi);

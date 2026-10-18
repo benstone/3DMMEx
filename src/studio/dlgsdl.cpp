@@ -17,6 +17,13 @@ bool DLG::_FInit(void)
     bool fRet = fFalse;
     const int32_t kcdit = 2;
 
+    // Can't display dialogs in unattended mode
+    if (vpappb != pvNil && vpappb->FUnattended())
+    {
+        fprintf(stderr, "warning: suppressing dialog box in unattended mode. _rid=%d\n", _rid);
+        goto LFail;
+    }
+
     // We only support certain dialog boxes
     if (_rid != dlidAbnormalExit && _rid != dlidInitFailed && _rid != dlidInitFailedOOM && _rid != dlidGenericErrorBox)
         goto LFail;
