@@ -30,6 +30,8 @@
         <true/>
         <key>NSHumanReadableCopyright</key>
         <string>${MACOSX_BUNDLE_COPYRIGHT}</string>
+        <key>LSMinimumSystemVersion</key>
+        <string>${CMAKE_OSX_DEPLOYMENT_TARGET}</string>
         <key>NSMicrophoneUsageDescription</key>
         <string>3D Movie Maker needs your microphone to record speech and sound effects.</string>
 </dict>
