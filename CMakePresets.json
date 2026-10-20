@@ -211,6 +211,36 @@
             }
         },
         {
+            "name": "macos",
+            "hidden": true,
+            "inherits": "base",
+            "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+            "cacheVariables": {
+                "CMAKE_OSX_DEPLOYMENT_TARGET": "12.0",
+                "CMAKE_OSX_ARCHITECTURES": "arm64",
+                "VCPKG_TARGET_TRIPLET": "arm64-osx-release",
+                "VCPKG_OVERLAY_TRIPLETS": "${sourceDir}/cmake/vcpkg",
+                "CMAKE_PROJECT_INCLUDE": "${sourceDir}/cmake/vcpkg/ConfigureVcpkg.cmake",
+                "3DMM_GUI": "SDL"
+            }
+        },
+        {
+            "name": "macos-debug",
+            "displayName": "macOS Debug",
+            "inherits": "macos",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "macos-relwithdebinfo",
+            "displayName": "macOS RelWithDebInfo",
+            "inherits": "macos",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
+        {
             "displayName": "SDL Debug",
             "name": "sdl-debug",
             "inherits": "base",

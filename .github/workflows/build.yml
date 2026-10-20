@@ -204,27 +204,29 @@ jobs:
     name: macOS arm64 Release
     runs-on: macos-latest
     steps:
-      - name: Install dependencies with homebrew
+      # unfortunately we need autotools because gperf needs it, iconv needs gperf, and fontconfig needs iconv. :(
+      - name: Install dependencies
         run: |
-          brew update
-          brew install fontconfig fluidsynth
+          brew install autoconf autoconf-archive automake libtool
       - name: Check out repository code
         uses: actions/checkout@v4
+      - name: Run vcpkg
+        uses: lukka/run-vcpkg@v11
       - name: CMake Generate
         run: |
-          cmake --preset sdl-relwithdebinfo
+          cmake --preset macos-relwithdebinfo
       - name: CMake Build
         run: |
-          cmake --build build/sdl-relwithdebinfo --target tools studio tests
+          cmake --build build/macos-relwithdebinfo --target tools studio tests
       - name: Run tests
         run: |
-          ctest --test-dir build/sdl-relwithdebinfo --output-on-failure --timeout 60
+          ctest --test-dir build/macos-relwithdebinfo --output-on-failure --timeout 60
       - name: CMake Install
         run: |
-          cmake --install build/sdl-relwithdebinfo --prefix dist/sdl-relwithdebinfo
+          cmake --install build/macos-relwithdebinfo --prefix dist/macos-relwithdebinfo
       - name: Upload Release
         uses: actions/upload-artifact@v4
         with:
           name: 3DMMEx macOS arm64 Release
           path: |
-            dist/sdl-relwithdebinfo
+            dist/macos-relwithdebinfo

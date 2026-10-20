@@ -1,0 +1,21 @@
+{
+  "dependencies": [
+    "sdl2",
+    "sdl2-ttf",
+    "fontconfig",
+    {
+      "name": "fluidsynth",
+      "features": [
+        "sndfile"
+      ]
+    },
+    {
+      "name": "libsndfile",
+      "default-features": false,
+      "features": [
+        "external-libs"
+      ]
+    }
+  ],
+  "builtin-baseline": "469a0504e4a6ebf6173d1c0f51a7fa34c382fd43"
+}
