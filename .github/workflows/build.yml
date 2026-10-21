@@ -6,7 +6,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: CMake Generate
         shell: cmd
         run: |
@@ -44,7 +44,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: CMake Generate
         shell: cmd
         run: |
@@ -65,7 +65,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: CMake Generate
         shell: cmd
         run: |
@@ -86,7 +86,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Use Visual Studio clang
         # Move the separate Github Action LLVM install out of the way to prevent it from being
         # detected by cmake: this causes us to fall back to the version provided by VS instead
@@ -132,7 +132,7 @@ jobs:
     if: github.event.repository.visibility == 'public'
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: CMake Generate
         shell: cmd
         run: |
@@ -174,7 +174,7 @@ jobs:
           sudo apt-get update &&
           sudo apt-get install -y g++ cmake libsdl2-dev libsdl2-ttf-dev libgtk-3-dev libfluidsynth-dev fluidsynth libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-good zenity ninja-build
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: CMake Generate
         run: |
           cmake --preset sdl-debug
@@ -211,7 +211,7 @@ jobs:
         run: |
           brew install autoconf autoconf-archive automake libtool
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Restore vcpkg cache
         id: restore-cache
         uses: actions/cache/restore@v6
