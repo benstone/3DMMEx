@@ -214,19 +214,19 @@ jobs:
         uses: lukka/run-vcpkg@v11
       - name: CMake Generate
         run: |
-          cmake --preset macos-relwithdebinfo
+          cmake --preset arm64-macos-relwithdebinfo
       - name: CMake Build
         run: |
-          cmake --build build/macos-relwithdebinfo --target tools studio tests
+          cmake --build build/arm64-macos-relwithdebinfo --target tools studio tests
       - name: Run tests
         run: |
-          ctest --test-dir build/macos-relwithdebinfo --output-on-failure --timeout 60
+          ctest --test-dir build/arm64-macos-relwithdebinfo --output-on-failure --timeout 60
       - name: CMake Install
         run: |
-          cmake --install build/macos-relwithdebinfo --prefix dist/macos-relwithdebinfo
+          cmake --install build/arm64-macos-relwithdebinfo --prefix dist/arm64-macos-relwithdebinfo
       - name: Upload Release
         uses: actions/upload-artifact@v4
         with:
           name: 3DMMEx macOS arm64 Release
           path: |
-            dist/macos-relwithdebinfo
+            dist/arm64-macos-relwithdebinfo
