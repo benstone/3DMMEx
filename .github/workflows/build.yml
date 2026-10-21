@@ -26,14 +26,14 @@ jobs:
         run: |
           cmake --install build/x86-msvc-relwithdebinfo --prefix dist/x86-msvc-relwithdebinfo
       - name: Upload debug symbols
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3DMMEx Windows x86 debug symbols
           path: |
             build/x86-msvc-relwithdebinfo/src/3dmovie.pdb
             build/x86-msvc-relwithdebinfo/src/chomp/studio/*.i
       - name: Upload Release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3DMMEx Windows x86
           path: |
@@ -113,14 +113,14 @@ jobs:
           move dist\x64-clangcl-relwithdebinfo\3dmovie.exe dist\x64-clangcl-relwithdebinfo\3dmovie-x64.exe
           move build\x64-clangcl-relwithdebinfo\src\3dmovie.pdb build\x64-clangcl-relwithdebinfo\src\3dmovie-x64.pdb
       - name: Upload debug symbols
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3DMMEx Windows x64 debug symbols
           path: |
             build/x64-clangcl-relwithdebinfo/src/3dmovie-x64.pdb
             build/x64-clangcl-relwithdebinfo/src/chomp/studio/*.i
       - name: Upload Release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3DMMEx Windows x64
           path: |
@@ -152,14 +152,14 @@ jobs:
         run: |
           cmake --install build/arm64-msvc-relwithdebinfo --prefix dist/arm64-msvc-relwithdebinfo
       - name: Upload debug symbols
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3DMMEx Windows ARM64 debug symbols
           path: |
             build/arm64-msvc-relwithdebinfo/src/3dmovie.pdb
             build/arm64-msvc-relwithdebinfo/src/chomp/studio/*.i
       - name: Upload Release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3DMMEx Windows ARM64
           path: |
@@ -188,13 +188,13 @@ jobs:
         run: |
           cmake --install build/sdl-debug --prefix dist/sdl-debug
       - name: Upload debug files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3DMMEx Linux gcc x86_64 debug files
           path: |
             build/sdl-debug/src/chomp/studio/*.i
       - name: Upload Debug
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3DMMEx Linux gcc x86_64 Debug
           path: |
@@ -240,7 +240,7 @@ jobs:
           path: ${{ github.workspace }}/vcpkg_cache
           key: vcpkg-${{ github.job }}-${{ hashFiles('vcpkg.json')}}
       - name: Upload Release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: 3DMMEx macOS arm64 Release
           path: |
