@@ -1588,8 +1588,7 @@ void STDIO::PlayStopped(void)
 
     // If the autoplay mode is set, exit the app when the movie is stopped.
     int32_t fAutoPlay = fFalse;
-    vpappb->FGetProp(kpridAutoPlay, &fAutoPlay);
-    if (fAutoPlay)
+    if (vpappb->FGetProp(kpridAutoPlay, &fAutoPlay) && fAutoPlay)
     {
         if (_pmvie->Iscen() != (_pmvie->Cscen() - 1))
         {
