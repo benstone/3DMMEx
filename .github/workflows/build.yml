@@ -203,6 +203,8 @@ jobs:
   compile-macos-release:
     name: macOS arm64 Release
     runs-on: macos-latest
+    env:
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/vcpkg_cache,readwrite
     steps:
       # unfortunately we need autotools because gperf needs it, iconv needs gperf, and fontconfig needs iconv. :(
       - name: Install dependencies
@@ -210,6 +212,13 @@ jobs:
           brew install autoconf autoconf-archive automake libtool
       - name: Check out repository code
         uses: actions/checkout@v4
+      - name: Restore vcpkg cache
+        id: restore-cache
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ github.workspace }}/vcpkg_cache
+          key: vcpkg-${{ github.job }}-${{ hashFiles('vcpkg.json') }}
+          restore-keys: vcpkg-${{ github.job }}-
       - name: Run vcpkg
         uses: lukka/run-vcpkg@v11
       - name: CMake Generate
@@ -224,6 +233,12 @@ jobs:
       - name: CMake Install
         run: |
           cmake --install build/arm64-macos-relwithdebinfo --prefix dist/arm64-macos-relwithdebinfo
+      - name: Save vcpkg cache
+        uses: actions/cache/save@v6
+        if: always() && steps.restore-cache.outputs.cache-hit != 'true'
+        with:
+          path: ${{ github.workspace }}/vcpkg_cache
+          key: vcpkg-${{ github.job }}-${{ hashFiles('vcpkg.json')}}
       - name: Upload Release
         uses: actions/upload-artifact@v4
         with:
