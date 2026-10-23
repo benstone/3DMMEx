@@ -53,9 +53,9 @@ For help with making a movie, check out the Help Machine in the Studio or the tu
     * Ubuntu: `sudo apt install g++ cmake ninja-build libsdl2-dev libsdl2-ttf-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgtk-3-dev libfontconfig-dev zenity`
 * macOS:
   * Xcode tools
-  * Development libraries for fontconfig and FluidSynth
-  * Installing dependencies:
-    * `brew install fontconfig fluidsynth`
+  * vcpkg
+    * vcpkg will download and build SDL2, Fontconfig, FluidSynth, and their dependencies.
+    * Some dependencies require autotools when building. You can install that with Homebrew: `brew install autoconf autoconf-archive automake libtool`
 
 ### Building
 
@@ -77,6 +77,16 @@ Use CMake to build the project. The project includes a CMakePresets.json file th
   * A ZIP archive containing a portable install is created in the build directory.
   * If WiX is installed, an MSI package is also created.
 
+#### Building on macOS
+
+* Set `VCPKG_ROOT` to your vcpkg checkout
+* Run `cmake --preset <preset-name>`
+  * Apple Silicon / ARM64: `arm64-macos-debug` or `arm64-macos-relwithdebinfo`
+  * Intel: `x86_64-macos-debug` or `x86_64-macos-relwithdebinfo`
+* Run `cmake --build build/<preset-name> --target install`
+* To run 3DMM, run `dist/<preset-name>/3D Movie Maker.app`
+  * The current deployment target is macOS 12.0 and later
+
 #### Building on other platforms
 
 * Run `cmake --preset <preset-name>`
@@ -84,7 +94,6 @@ Use CMake to build the project. The project includes a CMakePresets.json file th
 * Run `cmake --build build/<preset-name> --target install`
 * To run tests, run `ctest --test-dir build/<preset-name>`
 * To run 3DMM, run `dist/<preset-name>/3dmovie`
-  * On macOS, run `dist/<preset-name>/3D Movie Maker.app`
 
 ## Contributing
 
