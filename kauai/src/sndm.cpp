@@ -45,6 +45,18 @@ void SNDV::EndSynch(void)
 }
 
 /***************************************************************************
+    Return fTrue if a chunk can be played by this device.
+***************************************************************************/
+bool SNDV::FCanPlay(PRCA prca, CTG ctg, CNO cno)
+{
+    AssertThis(0);
+    AssertPo(prca, 0);
+
+    // Assume we can play the sound
+    return fTrue;
+}
+
+/***************************************************************************
     Constructor for the sound manager.
 ***************************************************************************/
 SNDM::SNDM(void)
@@ -514,6 +526,21 @@ void SNDM::EndSynch(void)
         _pglsndmpe->Get(isndmpe, &sndmpe);
         sndmpe.psndv->EndSynch();
     }
+}
+
+/***************************************************************************
+    Check if any sound device can play this chunk.
+***************************************************************************/
+bool SNDM::FCanPlay(PRCA prca, CTG ctg, CNO cno)
+{
+    AssertThis(0);
+    AssertPo(prca, 0);
+    SNDMPE sndmpe;
+
+    if (!_FFindCtg(ctg, &sndmpe))
+        return fFalse;
+
+    return sndmpe.psndv->FCanPlay(prca, ctg, cno);
 }
 
 /***************************************************************************

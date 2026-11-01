@@ -70,6 +70,8 @@ class SNDV : public SNDV_PAR
     virtual void Flush(void) = 0;
     virtual void BeginSynch(void);
     virtual void EndSynch(void);
+
+    virtual bool FCanPlay(PRCA prca, CTG ctg, CNO cno);
 };
 
 /****************************************
@@ -136,6 +138,8 @@ class SNDM : public SNDM_PAR
     virtual void Flush(void) override;
     virtual void BeginSynch(void) override;
     virtual void EndSynch(void) override;
+
+    virtual bool FCanPlay(PRCA prca, CTG ctg, CNO cno) override;
 };
 
 /***************************************************************************
