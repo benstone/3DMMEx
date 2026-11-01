@@ -1723,15 +1723,25 @@ void APPB::WarnProcApp(PSZS pszsFile, int32_t lwLine, PSZS pszsMsg)
     stnFile.SetSzs(pszsFile);
     stnMsg.SetSzs(pszsMsg);
 
+    stn.FFormatSz(PszLit("%s(%d): %s"), &stnFile, lwLine, &stnMsg);
+
+    // Log to stderr
+    U8SZ u8szT;
+    stn.GetUtf8Sz(u8szT);
+    fprintf(stderr, "%s\n", u8szT);
+
+    // Log to warning file
 #ifdef WIN
-    stn.FFormatSz(PszLit("%s(%d): %s\xD\xA"), &stnFile, lwLine, &stnMsg);
-    OutputDebugString(stn.Psz());
-#elif defined(MAC)
-    stn.FFormatSz(PszLit("%s(%d): %s\xD"), &stnFile, lwLine, &stnMsg);
+    stn.FAppendSz(PszLit("\r\n"));
 #else
-    stn.FFormatSz(PszLit("%s(%d): %s\xA"), &stnFile, lwLine, &stnMsg);
+    stn.FAppendSz(PszLit("\n"));
 #endif
     _pfilWarn->FWriteRgbSeq(stn.Prgch(), stn.Cch(), &_fpCur);
+
+#ifdef WIN
+    // Log to debugger on Windows
+    OutputDebugString(stn.Psz());
+#endif // WIN
 
 LDone:
     _fInWarn = fFalse;
