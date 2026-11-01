@@ -402,6 +402,24 @@ bool APPB::_FTranslateKeyEvt(PEVT pevt, PCMD_KEY pcmd)
         pcmd->vk = pevt->key.keysym.sym;
         pcmd->ch = ChLit(0);
 
+        // Ensure return and tab keys are passed through as characters
+        // These are not passed through SDL_TEXTINPUT
+        int32_t sym = pevt->key.keysym.sym;
+        switch (sym)
+        {
+        case SDL_KeyCode::SDLK_RETURN:
+        case SDL_KeyCode::SDLK_RETURN2:
+        case SDL_KeyCode::SDLK_KP_ENTER:
+            pcmd->ch = kchReturn;
+            break;
+        case SDL_KeyCode::SDLK_TAB:
+            pcmd->ch = kchTab;
+            break;
+        default:
+            // do not map to a character
+            break;
+        }
+
         grfcust &= ~kgrfcustUser;
         if (pevt->key.keysym.mod & SDL_Keymod::KMOD_CTRL)
             grfcust |= fcustCmd;
