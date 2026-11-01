@@ -955,3 +955,22 @@ void SDAM::EndSynch(void)
         _fGrouped = fFalse;
     }
 }
+
+/***************************************************************************
+    Return fTrue if a chunk can be played by this device.
+***************************************************************************/
+bool SDAM::FCanPlay(PRCA prca, CTG ctg, CNO cno)
+{
+    AssertPo(prca, 0);
+
+    // Try loading the sound. If we can load it, we can play it.
+    bool fCanPlay = fFalse;
+    PBACO pbaco = prca->PbacoFetch(ctg, cno, CAMS::FReadCams);
+    if (pbaco != pvNil)
+    {
+        fCanPlay = fTrue;
+    }
+
+    ReleasePpo(&pbaco);
+    return fCanPlay;
+}

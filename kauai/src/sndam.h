@@ -70,6 +70,7 @@ class SDAM : public SDAM_PAR
     virtual int32_t VlmCur(void) override;
     virtual void BeginSynch(void) override;
     virtual void EndSynch(void) override;
+    virtual bool FCanPlay(PRCA prca, CTG ctg, CNO cno) override;
 };
 
 #endif //! SNDAM_H
