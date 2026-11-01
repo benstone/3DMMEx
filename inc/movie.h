@@ -613,6 +613,7 @@ class MVIE : public MVIE_PAR
     void _SetTitle(PFNI pfni = pvNil);            // Set the title of the movie based on given file name.
     bool _FIsChild(PCFL pcfl, CTG ctg, CNO cno);
     bool _FSetPfilSave(PFNI pfni);
+    bool _FValidateUserSnds(void);
 
   public:
     //

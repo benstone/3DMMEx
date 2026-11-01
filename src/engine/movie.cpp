@@ -435,6 +435,14 @@ PMVIE MVIE::PmvieNew(bool fHalfMode, PMCC pmcc, FNI *pfni, CNO cno)
     {
     }
 
+#ifdef DEBUG
+    //
+    // Check that all user sounds in this movie can be played
+    // TODO: Show a warning if we cannot decode all sounds
+    //
+    (void)pmvie->_FValidateUserSnds();
+#endif // DEBUG
+
     fSuccess = fTrue;
 
 LFail:
@@ -5832,6 +5840,60 @@ bool MVIE::FUnusedSndsUser(bool *pfHaveValid)
         }
     }
     return fUnused;
+}
+
+/***************************************************************************
+ *
+ * Ensure that all user sounds can be played.
+ *
+ * Parameters:
+ *  None.
+ *
+ * Returns:
+ *  fTrue if all user sounds can be played
+ *
+ **************************************************************************/
+
+bool MVIE::_FValidateUserSnds(void)
+{
+    AssertThis(0);
+
+    bool fValid = fTrue;
+    int32_t icki, ccki;
+    PCFL pcfl;
+
+    if (pvNil == _pcrfAutoSave)
+        return fTrue;
+
+    pcfl = _pcrfAutoSave->Pcfl();
+    ccki = pcfl->CckiCtg(kctgMsnd);
+    for (icki = 0; icki < ccki; icki++)
+    {
+        CKI cki;
+        KID kid;
+
+        AssertDo(pcfl->FGetCkiCtg(kctgMsnd, icki, &cki), "Should never fail");
+        Assert(_FIsChild(pcfl, cki.ctg, cki.cno), "Not a child of MVIE chunk");
+
+        if (pcfl->FGetKidChid(cki.ctg, cki.cno, kchidSnd, &kid))
+        {
+            if (!vpsndm->FCanPlay(_pcrfAutoSave, kid.cki.ctg, kid.cki.cno))
+            {
+                fValid = fFalse;
+#ifdef DEBUG
+                STN stnSoundName;
+                pcfl->FGetName(cki.ctg, cki.cno, &stnSoundName);
+
+                STN stnT;
+                stnT.FFormatSz("Cannot decode user sound \"%s\" (%f:%d) in movie \"%s\"", &stnSoundName, cki.ctg,
+                               cki.cno, &_stnTitle);
+                Warn(stnT.Psz());
+#endif // DEBUG
+            }
+        }
+    }
+
+    return fValid;
 }
 
 /***************************************************************************
