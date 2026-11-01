@@ -677,6 +677,47 @@ void MiniaudioDevice::Flush(void)
     Unlock();
 }
 
+bool MiniaudioDevice::FCanPlay(PRCA prca, CTG ctg, CNO cno)
+{
+    AssertThis(0);
+    AssertPo(prca, 0);
+
+    bool fCanPlay = fFalse;
+
+    Lock();
+
+    // Load the sound data
+    PMiniaudioCachedSound pmacs =
+        (PMiniaudioCachedSound)prca->PbacoFetch(ctg, cno, MiniaudioCachedSound::FReadMiniaudioCachedSound);
+    if (pmacs != pvNil)
+    {
+        ma_decoder decoder;
+        ma_sound sound;
+        BLCKReadContext ctx;
+
+        ClearPb(&decoder, SIZEOF(decoder));
+        ClearPb(&sound, SIZEOF(sound));
+        ClearPb(&ctx, SIZEOF(ctx));
+
+        Assert(pmacs->FIs(kclsMiniaudioCachedSound), "That's not a Miniaudio sound!");
+
+        // Try decoding the sound
+        if (FLoadSoundFromBlock(pmacs->Pblck(), &ctx, &decoder, &sound))
+        {
+            fCanPlay = fTrue;
+
+            ma_sound_uninit(&sound);
+            (void)ma_decoder_uninit(&decoder);
+        }
+
+        ReleasePpo(&pmacs);
+    }
+
+    Unlock();
+
+    return fCanPlay;
+}
+
 #ifdef DEBUG
 void MiniaudioDevice::AssertValid(uint32_t grf)
 {

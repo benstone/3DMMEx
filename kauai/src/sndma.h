@@ -188,6 +188,8 @@ class MiniaudioDevice : public MiniaudioDevice_PAR
     virtual bool FPlayingAll(int32_t sqn = sqnNil, int32_t scl = sclNil) override;
 
     virtual void Flush(void) override;
+
+    virtual bool FCanPlay(PRCA prca, CTG ctg, CNO cno) override;
 };
 
 #endif // SNDMA_H
