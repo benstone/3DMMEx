@@ -253,7 +253,6 @@ bool MiniaudioDevice::FLoadSoundFromBlock(PBLCK pblck, BLCKReadContext *preadctx
     // Initialise the decoder.
     // The decoder reads the sound data from a block.
     result = ma_decoder_init(BlockRead, BlockSeek, preadctx, pvNil, pdecoder);
-    AssertMaSuccess(result, "ma_decoder_init failed");
     if (result == MA_SUCCESS)
     {
         // Initialise the sound that reads from the decoder
@@ -264,6 +263,14 @@ bool MiniaudioDevice::FLoadSoundFromBlock(PBLCK pblck, BLCKReadContext *preadctx
         {
             (void)ma_decoder_uninit(pdecoder);
         }
+    }
+    else
+    {
+#ifdef DEBUG
+        STN stnErr;
+        stnErr.FFormatSz(PszLit("ma_decoder_init failed: 0x%x"), result);
+        Warn(stnErr.Psz());
+#endif // DEBUG
     }
 
     return (result == MA_SUCCESS);
