@@ -4217,6 +4217,10 @@ void APP::DisplayErrors(void)
             erc = ktpcercSocCantCopyMsnd;
             break;
 
+        case ercSocCantPlayAllSnds:
+            erc = ktpcercSocCantPlayAllSnds;
+            break;
+
         default:
             return;
         }

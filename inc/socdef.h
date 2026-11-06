@@ -82,6 +82,7 @@
 #define ercSocInvalidFilename 100044
 #define ercSocNoSndOnPaste 100045
 #define ercSocCantCopyMsnd 100046
+#define ercSocCantPlayAllSnds 100047
 // *If you add anything below this line you need to notify leannp about it so she can make a help topic for it*
 
 /***************************************************************************

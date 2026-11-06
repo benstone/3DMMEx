@@ -989,6 +989,7 @@
 #define ktpcercSocGenericError 0x20005856
 #define ktpcercSocNoSndOnPaste 0x20005857
 #define ktpcercSocCantCopyMsnd 0x20005858
+#define ktpcercSocCantPlayAllSnds 0x20005859
 // *If you add anything below this line you need to notify leannp about it so she can make a help topic for it*
 
 //////////////////////////////////// Waves

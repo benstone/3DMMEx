@@ -435,13 +435,14 @@ PMVIE MVIE::PmvieNew(bool fHalfMode, PMCC pmcc, FNI *pfni, CNO cno)
     {
     }
 
-#ifdef DEBUG
     //
     // Check that all user sounds in this movie can be played
-    // TODO: Show a warning if we cannot decode all sounds
+    // Show a warning if we cannot play all of the sounds
     //
-    (void)pmvie->_FValidateUserSnds();
-#endif // DEBUG
+    if (!pmvie->_FValidateUserSnds())
+    {
+        PushErc(ercSocCantPlayAllSnds);
+    }
 
     fSuccess = fTrue;
 
